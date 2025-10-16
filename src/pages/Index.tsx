@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Users, Briefcase, TrendingUp } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.jpg";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 
 const Index = () => {
@@ -19,15 +18,8 @@ const Index = () => {
       </header>
 
       <main>
-        <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroBanner})` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-background/90 to-background/70" />
-          </div>
-          
-          <div className="relative z-10 container mx-auto px-4 text-center">
+        <section className="relative min-h-[600px] flex items-center justify-center bg-gradient-to-b from-background to-muted">
+          <div className="relative z-10 container mx-auto px-4 text-center py-20">
             <img 
               src={usSkiLogo} 
               alt="U.S. Ski & Snowboard" 
