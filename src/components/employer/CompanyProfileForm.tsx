@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, Building2 } from "lucide-react";
 
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
@@ -27,6 +28,8 @@ interface CompanyProfileFormProps {
 
 const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfileFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(existingProfile?.logo_url || null);
+  const [uploading, setUploading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -38,6 +41,57 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     },
   });
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${userId}/logo.${fileExt}`;
+
+      // Delete old logo if exists
+      if (logoUrl) {
+        const oldPath = logoUrl.split("/").pop();
+        if (oldPath) {
+          await supabase.storage.from("company-logos").remove([`${userId}/${oldPath}`]);
+        }
+      }
+
+      // Upload new logo
+      const { error: uploadError } = await supabase.storage
+        .from("company-logos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("company-logos")
+        .getPublicUrl(filePath);
+
+      setLogoUrl(publicUrl);
+      toast.success("Logo uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast.error("Failed to upload logo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
@@ -47,6 +101,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         industry: values.industry || null,
         contact_person: values.contact_person || null,
         opportunities_offered: values.opportunities_offered || null,
+        logo_url: logoUrl,
       };
 
       let error;
@@ -78,6 +133,48 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex flex-col items-center gap-4">
+          <Avatar className="h-32 w-32">
+            {logoUrl ? (
+              <AvatarImage src={logoUrl} alt="Company logo" className="object-cover" />
+            ) : (
+              <AvatarFallback>
+                <Building2 className="h-16 w-16 text-muted-foreground" />
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <div className="flex flex-col items-center gap-2">
+            <input
+              type="file"
+              id="logo-upload"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="hidden"
+              disabled={uploading}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => document.getElementById("logo-upload")?.click()}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Logo
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-muted-foreground">Max 5MB, JPG/PNG</p>
+          </div>
+        </div>
+
         <FormField
           control={form.control}
           name="company_name"

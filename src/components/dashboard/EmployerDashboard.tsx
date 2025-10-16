@@ -129,8 +129,12 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
               <Card className="shadow-elegant">
                 <CardHeader>
                   <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center">
-                      <Briefcase className="h-8 w-8 text-accent" />
+                    <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center overflow-hidden">
+                      {profile?.logo_url ? (
+                        <img src={profile.logo_url} alt={profile.company_name} className="h-full w-full object-cover" />
+                      ) : (
+                        <Briefcase className="h-8 w-8 text-accent" />
+                      )}
                     </div>
                     <div>
                       <CardTitle>Welcome, {profile?.company_name || user.email}</CardTitle>
@@ -176,7 +180,7 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <div className="grid md:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -213,16 +217,6 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                   <CardContent>
                     <p className="text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
                     <p className="text-sm text-muted-foreground mt-1">Declined</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Active Searches</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-foreground">0</p>
-                    <p className="text-sm text-muted-foreground mt-1">Saved searches</p>
                   </CardContent>
                 </Card>
               </div>
