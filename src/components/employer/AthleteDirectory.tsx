@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +27,7 @@ interface AthleteProfile {
 }
 
 const AthleteDirectory = () => {
+  const navigate = useNavigate();
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfile | null>(null);
@@ -108,6 +110,9 @@ const AthleteDirectory = () => {
       setRequestMessage("");
       setOpportunityType("");
       setShowRequestDialog(false);
+      
+      // Navigate back to dashboard
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
