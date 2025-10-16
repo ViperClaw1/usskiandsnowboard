@@ -1,0 +1,1 @@
+SELECT public.clear_connection_requests();
