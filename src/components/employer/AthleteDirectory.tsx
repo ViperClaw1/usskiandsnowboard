@@ -161,7 +161,7 @@ const AthleteDirectory = () => {
             </CardHeader>
             <CardContent className="pt-0">
               {athlete.bio && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{athlete.bio}</p>
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2 text-center">{athlete.bio}</p>
               )}
               {athlete.skills && athlete.skills.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center">
