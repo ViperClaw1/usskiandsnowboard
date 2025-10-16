@@ -56,7 +56,7 @@ const Employers = () => {
   };
 
   const handleEmployerClick = () => {
-    navigate("/auth");
+    navigate("/auth?type=athlete");
   };
 
   return (

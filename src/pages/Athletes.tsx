@@ -62,7 +62,7 @@ const Athletes = () => {
   };
 
   const handleAthleteClick = () => {
-    navigate("/auth");
+    navigate("/auth?type=employer");
   };
 
   return (
