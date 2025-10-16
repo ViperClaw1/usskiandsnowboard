@@ -46,7 +46,16 @@ const News = () => {
             <div className="max-w-4xl mx-auto space-y-6">
               <Card className="shadow-elegant hover:shadow-hover transition-shadow">
                 <CardHeader>
-                  <CardTitle>2025-26 Stifel U.S. Freestyle Ski Team Announced</CardTitle>
+                  <CardTitle>
+                    <a 
+                      href="https://usskiandsnowboard.org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      2025-26 Stifel U.S. Freestyle Ski Team Announced
+                    </a>
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">October 15, 2025 • Park City, Utah</p>
                 </CardHeader>
                 <CardContent>
@@ -58,7 +67,16 @@ const News = () => {
 
               <Card className="shadow-elegant hover:shadow-hover transition-shadow">
                 <CardHeader>
-                  <CardTitle>2025-26 Stifel U.S. Cross Country Ski Team Announced</CardTitle>
+                  <CardTitle>
+                    <a 
+                      href="https://usskiandsnowboard.org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      2025-26 Stifel U.S. Cross Country Ski Team Announced
+                    </a>
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">2025</p>
                 </CardHeader>
                 <CardContent>
@@ -70,7 +88,16 @@ const News = () => {
 
               <Card className="shadow-elegant hover:shadow-hover transition-shadow">
                 <CardHeader>
-                  <CardTitle>2025-26 Stifel U.S. Alpine Ski Team Announced</CardTitle>
+                  <CardTitle>
+                    <a 
+                      href="https://usskiandsnowboard.org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      2025-26 Stifel U.S. Alpine Ski Team Announced
+                    </a>
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">2025</p>
                 </CardHeader>
                 <CardContent>
@@ -82,7 +109,16 @@ const News = () => {
 
               <Card className="shadow-elegant hover:shadow-hover transition-shadow">
                 <CardHeader>
-                  <CardTitle>Kate Delson is 'On The Rise'</CardTitle>
+                  <CardTitle>
+                    <a 
+                      href="https://usskiandsnowboard.org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      Kate Delson is 'On The Rise'
+                    </a>
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">2025</p>
                 </CardHeader>
                 <CardContent>
@@ -94,7 +130,16 @@ const News = () => {
 
               <Card className="shadow-elegant hover:shadow-hover transition-shadow">
                 <CardHeader>
-                  <CardTitle>Two-Time Olympian Casey Larson Announces Retirement from Competitive Ski Jumping</CardTitle>
+                  <CardTitle>
+                    <a 
+                      href="https://usskiandsnowboard.org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      Two-Time Olympian Casey Larson Announces Retirement from Competitive Ski Jumping
+                    </a>
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">2025</p>
                 </CardHeader>
                 <CardContent>
@@ -106,7 +151,16 @@ const News = () => {
 
               <Card className="shadow-elegant hover:shadow-hover transition-shadow">
                 <CardHeader>
-                  <CardTitle>Kylie Kariotis is 'On The Rise'</CardTitle>
+                  <CardTitle>
+                    <a 
+                      href="https://usskiandsnowboard.org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      Kylie Kariotis is 'On The Rise'
+                    </a>
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">2025</p>
                 </CardHeader>
                 <CardContent>
@@ -118,7 +172,16 @@ const News = () => {
 
               <Card className="shadow-elegant hover:shadow-hover transition-shadow">
                 <CardHeader>
-                  <CardTitle>Stifel U.S. Ski Team Fundraiser Raises Record $1.375 Million in St. Louis</CardTitle>
+                  <CardTitle>
+                    <a 
+                      href="https://usskiandsnowboard.org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      Stifel U.S. Ski Team Fundraiser Raises Record $1.375 Million in St. Louis
+                    </a>
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">2025</p>
                 </CardHeader>
                 <CardContent>
