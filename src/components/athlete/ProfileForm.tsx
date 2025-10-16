@@ -38,6 +38,8 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
     sport_discipline: "",
     bio: "",
     career_interests: "",
@@ -53,25 +55,43 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
   const loadExistingProfile = async () => {
     try {
-      const { data, error } = await supabase
+      // Load athlete profile
+      const { data: athleteData, error: athleteError } = await supabase
         .from("athlete_profiles")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (athleteError) throw athleteError;
 
-      if (data) {
+      // Load user profile (name)
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", userId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (athleteData) {
         setFormData({
-          sport_discipline: data.sport_discipline || "",
-          bio: data.bio || "",
-          career_interests: data.career_interests?.join(", ") || "",
-          skills: data.skills?.join(", ") || "",
-          geographic_preferences: data.geographic_preferences?.join(", ") || "",
-          availability: data.availability || "",
-          is_public: data.is_public ?? true
+          first_name: profileData?.first_name || "",
+          last_name: profileData?.last_name || "",
+          sport_discipline: athleteData.sport_discipline || "",
+          bio: athleteData.bio || "",
+          career_interests: athleteData.career_interests?.join(", ") || "",
+          skills: athleteData.skills?.join(", ") || "",
+          geographic_preferences: athleteData.geographic_preferences?.join(", ") || "",
+          availability: athleteData.availability || "",
+          is_public: athleteData.is_public ?? true
         });
-        setPhotoUrl(data.photo_url || "");
+        setPhotoUrl(athleteData.photo_url || "");
+      } else if (profileData) {
+        setFormData(prev => ({
+          ...prev,
+          first_name: profileData.first_name || "",
+          last_name: profileData.last_name || ""
+        }));
       }
     } catch (error: any) {
       console.error("Error loading profile:", error);
@@ -129,6 +149,17 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     try {
       // Upload photo if there's a new one
       const uploadedPhotoUrl = await uploadPhoto();
+
+      // Update user profile (name)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          first_name: formData.first_name,
+          last_name: formData.last_name
+        })
+        .eq("id", userId);
+
+      if (profileError) throw profileError;
 
       // Convert comma-separated strings to arrays
       const career_interests = formData.career_interests
@@ -197,6 +228,29 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="first_name">First Name *</Label>
+          <Input
+            id="first_name"
+            placeholder="First name"
+            value={formData.first_name}
+            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="last_name">Last Name *</Label>
+          <Input
+            id="last_name"
+            placeholder="Last name"
+            value={formData.last_name}
+            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+            required
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label>Profile Photo</Label>
         <div className="flex items-center gap-4">

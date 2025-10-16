@@ -45,7 +45,10 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
     try {
       const { data, error } = await supabase
         .from("athlete_profiles")
-        .select("*")
+        .select(`
+          *,
+          profiles!inner(full_name)
+        `)
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -130,7 +133,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <CardTitle>Welcome, {user.email}</CardTitle>
+                      <CardTitle>Welcome, {profile?.profiles?.full_name || user.email}</CardTitle>
                       <CardDescription>
                         {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
                       </CardDescription>
