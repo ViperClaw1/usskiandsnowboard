@@ -9,7 +9,7 @@ const Index = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-10 hover:opacity-80 transition-opacity" />
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[50px] hover:opacity-80 transition-opacity" />
           </Link>
           <nav className="flex items-center gap-6">
             <Link to="/athletes" className="text-foreground hover:text-primary font-medium transition-colors">
