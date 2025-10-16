@@ -7,7 +7,18 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-end">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <nav className="flex items-center gap-8">
+            <Link to="/athletes" className="text-foreground hover:text-primary font-medium transition-colors">
+              Athletes
+            </Link>
+            <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors">
+              Employers
+            </Link>
+            <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors">
+              News
+            </Link>
+          </nav>
           <Link to="/auth">
             <Button>Sign In</Button>
           </Link>
