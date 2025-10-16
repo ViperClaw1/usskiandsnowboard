@@ -100,7 +100,7 @@ const Auth = () => {
         <Card className="shadow-elegant">
           <CardHeader>
             <CardTitle>
-              {userType === "athlete" ? "Athlete Portal" : "Employer Portal"}
+              {userType === "athlete" ? "Athlete Portal" : "Partner Portal"}
             </CardTitle>
             <CardDescription>
               {userType === "athlete" 
@@ -126,7 +126,7 @@ const Auth = () => {
                   onClick={() => setUserType("employer")}
                   className="w-full"
                 >
-                  Employer
+                  Partner
                 </Button>
               </div>
             </div>
