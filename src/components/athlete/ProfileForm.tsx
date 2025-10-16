@@ -120,7 +120,22 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     setUploading(true);
     try {
       const fileExt = photoFile.name.split('.').pop();
-      const fileName = `${userId}/profile.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${userId}/profile-${timestamp}.${fileExt}`;
+
+      // Delete old photos in user folder
+      try {
+        const { data: files } = await supabase.storage
+          .from('athlete-photos')
+          .list(userId);
+        
+        if (files && files.length > 0) {
+          const filesToDelete = files.map(file => `${userId}/${file.name}`);
+          await supabase.storage.from('athlete-photos').remove(filesToDelete);
+        }
+      } catch (error) {
+        console.error("Error deleting old photos:", error);
+      }
 
       const { error: uploadError } = await supabase.storage
         .from('athlete-photos')
@@ -132,7 +147,8 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .from('athlete-photos')
         .getPublicUrl(fileName);
 
-      return data.publicUrl;
+      // Cache-bust in UI
+      return `${data.publicUrl}?v=${timestamp}`;
     } catch (error: any) {
       console.error("Error uploading photo:", error);
       toast.error("Failed to upload photo");
@@ -195,7 +211,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         geographic_preferences,
         availability: formData.availability,
         is_public: formData.is_public,
-        photo_url: uploadedPhotoUrl || photoUrl,
+        photo_url: uploadedPhotoUrl ? uploadedPhotoUrl.split('?')[0] : (photoUrl ? photoUrl.split('?')[0] : null),
         profile_completeness: completeness
       };
 
