@@ -1,108 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Definition of the design system - US Ski & Snowboard Style
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
+    /* White background */
     --background: 0 0% 100%;
-    --foreground: 215 25% 15%;
+    --foreground: 215 28% 17%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 215 28% 17%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 215 28% 17%;
 
-    --primary: 215 85% 25%;
+    /* Navy Blue - Primary (like US Ski & Snowboard) */
+    --primary: 215 65% 25%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 215 85% 45%;
+    --primary-glow: 215 55% 35%;
 
-    --secondary: 215 20% 92%;
-    --secondary-foreground: 215 25% 15%;
+    /* Bright Red - Secondary/Accent (like US Ski & Snowboard red) */
+    --secondary: 355 84% 50%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 215 20% 95%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 200 95% 50%;
+    --accent: 355 84% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 215 85% 25%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 215 65% 25%;
 
-    --radius: 0.75rem;
+    --radius: 0.25rem;
     
-    --gradient-hero: linear-gradient(135deg, hsl(215 85% 25%), hsl(215 85% 35%));
-    --gradient-card: linear-gradient(to bottom, hsl(0 0% 100%), hsl(215 20% 98%));
-    --shadow-elegant: 0 4px 24px -4px hsl(215 85% 25% / 0.12);
-    --shadow-hover: 0 8px 32px -4px hsl(215 85% 25% / 0.18);
+    /* US Ski & Snowboard inspired gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(215 65% 25%), hsl(215 65% 35%));
+    --gradient-card: linear-gradient(to bottom, hsl(0 0% 100%), hsl(210 40% 98%));
+    --gradient-accent: linear-gradient(135deg, hsl(355 84% 50%), hsl(355 84% 60%));
+    
+    /* Athletic shadows */
+    --shadow-elegant: 0 4px 20px -4px hsl(215 65% 25% / 0.15);
+    --shadow-hover: 0 8px 30px -4px hsl(215 65% 25% / 0.25);
 
     --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-foreground: 215 28% 17%;
+    --sidebar-primary: 215 65% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 215 28% 17%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 215 65% 25%;
   }
 
   .dark {
-    --background: 215 30% 8%;
+    /* Dark navy background */
+    --background: 215 40% 15%;
     --foreground: 0 0% 98%;
 
-    --card: 215 25% 12%;
+    --card: 215 35% 18%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 215 25% 12%;
+    --popover: 215 35% 18%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 215 85% 55%;
+    /* Lighter navy for dark mode primary */
+    --primary: 215 65% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 215 85% 65%;
+    --primary-glow: 215 65% 55%;
 
-    --secondary: 215 20% 18%;
-    --secondary-foreground: 0 0% 98%;
+    /* Keep red bright in dark mode */
+    --secondary: 355 84% 55%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 215 20% 16%;
-    --muted-foreground: 215 15% 65%;
+    --muted: 215 30% 25%;
+    --muted-foreground: 215 16% 65%;
 
-    --accent: 200 95% 55%;
+    --accent: 355 84% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 50.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 20%;
-    --input: 215 20% 20%;
-    --ring: 215 85% 55%;
+    --border: 215 30% 28%;
+    --input: 215 30% 28%;
+    --ring: 215 65% 45%;
     
-    --gradient-hero: linear-gradient(135deg, hsl(215 85% 25%), hsl(215 85% 40%));
-    --gradient-card: linear-gradient(to bottom, hsl(215 25% 12%), hsl(215 25% 14%));
-    --shadow-elegant: 0 4px 24px -4px hsl(215 85% 55% / 0.2);
-    --shadow-hover: 0 8px 32px -4px hsl(215 85% 55% / 0.3);
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --gradient-hero: linear-gradient(135deg, hsl(215 65% 25%), hsl(215 65% 40%));
+    --gradient-card: linear-gradient(to bottom, hsl(215 35% 18%), hsl(215 35% 20%));
+    --gradient-accent: linear-gradient(135deg, hsl(355 84% 50%), hsl(355 84% 60%));
+    --shadow-elegant: 0 4px 20px -4px hsl(215 65% 15% / 0.4);
+    --shadow-hover: 0 8px 30px -4px hsl(215 65% 15% / 0.6);
+
+    --sidebar-background: 215 40% 12%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 215 65% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 215 30% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 215 30% 20%;
+    --sidebar-ring: 215 65% 45%;
   }
 }
 
@@ -113,5 +120,11 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 500;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
   }
 }
