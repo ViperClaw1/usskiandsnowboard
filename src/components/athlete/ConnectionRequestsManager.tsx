@@ -108,7 +108,19 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
 
       if (error) throw error;
 
-      toast.success(`Connection ${status}`);
+      if (status === "accepted" && selectedRequest) {
+        // Get user email
+        const { data: { user } } = await supabase.auth.getUser();
+        const userEmail = user?.email || "your email";
+        const companyName = selectedRequest.employer_profiles.company_name;
+        
+        toast.success(`Please check your email (${userEmail}) for an introduction to ${companyName}!`, {
+          duration: 6000,
+        });
+      } else {
+        toast.success(`Connection ${status}`);
+      }
+      
       setSelectedRequest(null);
       loadRequests();
     } catch (error) {
