@@ -14,16 +14,330 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      athlete_profiles: {
+        Row: {
+          availability: string | null
+          bio: string | null
+          career_interests: string[] | null
+          created_at: string
+          geographic_preferences: string[] | null
+          id: string
+          is_public: boolean | null
+          photo_url: string | null
+          profile_completeness: number | null
+          skills: string[] | null
+          sport_discipline: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability?: string | null
+          bio?: string | null
+          career_interests?: string[] | null
+          created_at?: string
+          geographic_preferences?: string[] | null
+          id?: string
+          is_public?: boolean | null
+          photo_url?: string | null
+          profile_completeness?: number | null
+          skills?: string[] | null
+          sport_discipline?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability?: string | null
+          bio?: string | null
+          career_interests?: string[] | null
+          created_at?: string
+          geographic_preferences?: string[] | null
+          id?: string
+          is_public?: boolean | null
+          photo_url?: string | null
+          profile_completeness?: number | null
+          skills?: string[] | null
+          sport_discipline?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certifications: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          id: string
+          issue_date: string | null
+          issuer: string | null
+          name: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          name: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certifications_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connection_requests: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          employer_id: string
+          id: string
+          message: string | null
+          opportunity_type: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          employer_id: string
+          id?: string
+          message?: string | null
+          opportunity_type?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          employer_id?: string
+          id?: string
+          message?: string | null
+          opportunity_type?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connection_requests_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_requests_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          degree: string | null
+          graduation_year: number | null
+          id: string
+          school: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          degree?: string | null
+          graduation_year?: number | null
+          id?: string
+          school: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          degree?: string | null
+          graduation_year?: number | null
+          id?: string
+          school?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employer_profiles: {
+        Row: {
+          company_name: string
+          contact_person: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          opportunities_offered: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          opportunities_offered?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          opportunities_offered?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experience: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_current: boolean | null
+          organization: string | null
+          start_date: string | null
+          title: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean | null
+          organization?: string | null
+          start_date?: string | null
+          title: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean | null
+          organization?: string | null
+          start_date?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "athlete" | "employer" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +464,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["athlete", "employer", "admin"],
+    },
   },
 } as const
