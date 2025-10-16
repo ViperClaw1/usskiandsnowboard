@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
+import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AthleteProfile {
@@ -70,6 +71,7 @@ const Athletes = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
+            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 hover:opacity-80 transition-opacity md:hidden" />
             <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[63px] hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
           <nav className="flex items-center gap-6">

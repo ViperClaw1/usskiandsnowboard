@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
+import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -93,6 +94,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="mb-8">
           <Link to="/">
+            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 hover:opacity-80 transition-opacity md:hidden" />
             <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
         </div>
