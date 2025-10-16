@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Mountain, Users, Briefcase, TrendingUp } from "lucide-react";
+import { Users, Briefcase, TrendingUp } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
+import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 
 const Index = () => {
   return (
@@ -9,8 +10,7 @@ const Index = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Mountain className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold text-foreground">U.S. Ski & Snowboard</span>
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-10" />
           </div>
           <Link to="/auth">
             <Button>Sign In</Button>
@@ -28,6 +28,11 @@ const Index = () => {
           </div>
           
           <div className="relative z-10 container mx-auto px-4 text-center">
+            <img 
+              src={usSkiLogo} 
+              alt="U.S. Ski & Snowboard" 
+              className="h-24 md:h-32 mx-auto mb-8 animate-fade-in"
+            />
             <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 animate-fade-in">
               Athlete Career Dashboard
             </h1>
