@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface AthleteProfile {
   id: string;
@@ -22,10 +26,31 @@ const AthleteDirectory = () => {
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfile | null>(null);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [employerProfileId, setEmployerProfileId] = useState<string | null>(null);
+  const [requestMessage, setRequestMessage] = useState("");
+  const [opportunityType, setOpportunityType] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   useEffect(() => {
     loadAthletes();
+    loadEmployerProfile();
   }, []);
+
+  const loadEmployerProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("employer_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (data) {
+      setEmployerProfileId(data.id);
+    }
+  };
 
   const loadAthletes = async () => {
     try {
@@ -45,6 +70,43 @@ const AthleteDirectory = () => {
       console.error("Error loading athletes:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendRequest = async () => {
+    if (!employerProfileId || !selectedAthlete) {
+      toast.error("Unable to send request");
+      return;
+    }
+
+    if (!requestMessage.trim()) {
+      toast.error("Please include a message with your request");
+      return;
+    }
+
+    setSendingRequest(true);
+    try {
+      const { error } = await supabase
+        .from("connection_requests")
+        .insert({
+          athlete_id: selectedAthlete.id,
+          employer_id: employerProfileId,
+          message: requestMessage,
+          opportunity_type: opportunityType || null,
+          status: "pending"
+        });
+
+      if (error) throw error;
+
+      toast.success("Connection request sent!");
+      setRequestMessage("");
+      setOpportunityType("");
+      setShowRequestDialog(false);
+    } catch (error) {
+      console.error("Error sending request:", error);
+      toast.error("Failed to send connection request");
+    } finally {
+      setSendingRequest(false);
     }
   };
 
@@ -107,7 +169,7 @@ const AthleteDirectory = () => {
       </div>
 
       {selectedAthlete && (
-        <Dialog open={!!selectedAthlete} onOpenChange={() => setSelectedAthlete(null)}>
+        <Dialog open={!!selectedAthlete && !showRequestDialog} onOpenChange={(open) => !open && setSelectedAthlete(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Athlete Profile</DialogTitle>
@@ -168,6 +230,70 @@ const AthleteDirectory = () => {
                   <p className="text-sm text-muted-foreground">{selectedAthlete.geographic_preferences.join(", ")}</p>
                 </div>
               )}
+
+              <Button 
+                onClick={() => {
+                  setShowRequestDialog(true);
+                }}
+                className="w-full"
+              >
+                Request Connection
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {selectedAthlete && showRequestDialog && (
+        <Dialog open={showRequestDialog} onOpenChange={(open) => {
+          setShowRequestDialog(open);
+          if (!open) {
+            setRequestMessage("");
+            setOpportunityType("");
+          }
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Request Connection</DialogTitle>
+              <DialogDescription>
+                Send a connection request to this athlete
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
+                <Textarea
+                  id="opportunity-type"
+                  placeholder="e.g., Internship, Full-time, Part-time..."
+                  value={opportunityType}
+                  onChange={(e) => setOpportunityType(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="message">Message *</Label>
+                <Textarea
+                  id="message"
+                  placeholder="Introduce your company and explain the opportunity..."
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  className="mt-2 min-h-[100px]"
+                />
+              </div>
+              <Button
+                onClick={handleSendRequest}
+                disabled={sendingRequest || !requestMessage.trim()}
+                className="w-full"
+              >
+                {sendingRequest ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Request"
+                )}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
