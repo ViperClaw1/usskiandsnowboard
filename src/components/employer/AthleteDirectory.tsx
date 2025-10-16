@@ -36,7 +36,12 @@ const AthleteDirectory = () => {
         `)
         .eq("is_public", true);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading athletes:", error);
+        throw error;
+      }
+      
+      console.log("Loaded athletes:", data);
       setAthletes(data || []);
     } catch (error) {
       console.error("Error loading athletes:", error);
