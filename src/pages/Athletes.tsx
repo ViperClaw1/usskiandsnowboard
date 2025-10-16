@@ -1,10 +1,59 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Target, Briefcase, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+
+interface AthleteProfile {
+  id: string;
+  user_id: string;
+  photo_url: string | null;
+  sport_discipline: string | null;
+  bio: string | null;
+  skills: string[] | null;
+  availability: string | null;
+  profiles: {
+    full_name: string;
+  } | null;
+}
+
 
 const Athletes = () => {
+  const navigate = useNavigate();
+  const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAthletes();
+  }, []);
+
+  const loadAthletes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("athlete_profiles")
+        .select(`
+          *,
+          profiles!inner(full_name)
+        `)
+        .eq("is_public", true);
+
+      if (error) throw error;
+      setAthletes(data || []);
+    } catch (error) {
+      console.error("Error loading athletes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAthleteClick = () => {
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -12,7 +61,7 @@ const Athletes = () => {
           <Link to="/">
             <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-10 hover:opacity-80 transition-opacity" />
           </Link>
-          <nav className="flex items-center gap-8">
+          <nav className="flex items-center gap-6">
             <Link to="/athletes" className="text-primary font-medium">
               Athletes
             </Link>
@@ -22,82 +71,85 @@ const Athletes = () => {
             <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors">
               News
             </Link>
+            <Link to="/auth">
+              <Button>Sign In</Button>
+            </Link>
           </nav>
-          <Link to="/auth">
-            <Button>Sign In</Button>
-          </Link>
         </div>
       </header>
 
       <main>
-        <section className="py-20 bg-gradient-to-b from-background to-muted">
+        <section className="py-12 bg-gradient-to-b from-background to-muted">
           <div className="container mx-auto px-4 text-center">
-            <Users className="h-16 w-16 mx-auto mb-6 text-primary" />
-            <h1 className="text-5xl font-bold text-foreground mb-6">
-              For Athletes
+            <h1 className="text-4xl font-bold text-foreground mb-4">
+              U.S. Ski & Snowboard Athletes
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Build your professional profile and connect with career opportunities that match your skills and ambitions beyond the slopes.
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Discover talented athletes ready for their next career opportunity
             </p>
-            <Link to="/auth">
-              <Button size="lg">Get Started</Button>
-            </Link>
           </div>
         </section>
 
-        <section className="py-20">
+        <section className="py-12">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Why Join Our Platform?</h2>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <Target className="h-12 w-12 text-primary mb-4" />
-                  <CardTitle>Showcase Your Skills</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Create a comprehensive profile highlighting your athletic achievements, transferable skills, education, and career interests.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <Briefcase className="h-12 w-12 text-primary mb-4" />
-                  <CardTitle>Connect with Employers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Access a network of employers actively seeking talented athletes for internships, full-time positions, and unique opportunities.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <TrendingUp className="h-12 w-12 text-primary mb-4" />
-                  <CardTitle>Plan Your Future</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Transition smoothly from competitive sports to your next career chapter with guidance and connections tailored to your goals.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 bg-muted">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-6 text-foreground">Ready to Take the Next Step?</h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join hundreds of U.S. Ski & Snowboard athletes building their careers beyond competition.
-            </p>
-            <Link to="/auth">
-              <Button size="lg">Create Your Profile</Button>
-            </Link>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : athletes.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No athlete profiles available yet.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {athletes.map((athlete) => (
+                  <Card 
+                    key={athlete.id} 
+                    className="shadow-elegant hover:shadow-hover transition-shadow cursor-pointer"
+                    onClick={handleAthleteClick}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center gap-4 mb-4">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={athlete.photo_url || undefined} />
+                          <AvatarFallback>
+                            {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-lg">{athlete.profiles?.full_name || 'Athlete'}</CardTitle>
+                          {athlete.sport_discipline && (
+                            <Badge variant="secondary" className="mt-1">
+                              {athlete.sport_discipline}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {athlete.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
+                      )}
+                      {athlete.skills && athlete.skills.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium mb-2">Skills</p>
+                          <div className="flex flex-wrap gap-2">
+                            {athlete.skills.slice(0, 3).map((skill, idx) => (
+                              <Badge key={idx} variant="outline">{skill}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {athlete.availability && (
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-medium">Availability:</span> {athlete.availability}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>

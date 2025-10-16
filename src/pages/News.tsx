@@ -12,7 +12,7 @@ const News = () => {
           <Link to="/">
             <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-10 hover:opacity-80 transition-opacity" />
           </Link>
-          <nav className="flex items-center gap-8">
+          <nav className="flex items-center gap-6">
             <Link to="/athletes" className="text-foreground hover:text-primary font-medium transition-colors">
               Athletes
             </Link>
@@ -22,10 +22,10 @@ const News = () => {
             <Link to="/news" className="text-primary font-medium">
               News
             </Link>
+            <Link to="/auth">
+              <Button>Sign In</Button>
+            </Link>
           </nav>
-          <Link to="/auth">
-            <Button>Sign In</Button>
-          </Link>
         </div>
       </header>
 
