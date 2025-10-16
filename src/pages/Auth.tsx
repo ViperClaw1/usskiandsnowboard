@@ -16,6 +16,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [userType, setUserType] = useState<"athlete" | "employer">("athlete");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -42,7 +43,10 @@ const Auth = () => {
         email,
         password,
         options: {
-          data: { full_name: fullName },
+          data: { 
+            full_name: fullName,
+            user_type: userType 
+          },
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
@@ -91,12 +95,38 @@ const Auth = () => {
         
         <Card className="shadow-elegant">
           <CardHeader>
-            <CardTitle>Athlete Career Dashboard</CardTitle>
+            <CardTitle>
+              {userType === "athlete" ? "Athlete Portal" : "Employer Portal"}
+            </CardTitle>
             <CardDescription>
-              Connect athletes with career opportunities
+              {userType === "athlete" 
+                ? "Access your career opportunities dashboard" 
+                : "Find talented athletes for your organization"}
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-6">
+              <Label className="mb-3 block">I am a:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={userType === "athlete" ? "default" : "outline"}
+                  onClick={() => setUserType("athlete")}
+                  className="w-full"
+                >
+                  Athlete
+                </Button>
+                <Button
+                  type="button"
+                  variant={userType === "employer" ? "default" : "outline"}
+                  onClick={() => setUserType("employer")}
+                  className="w-full"
+                >
+                  Employer
+                </Button>
+              </div>
+            </div>
+
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
