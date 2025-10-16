@@ -66,15 +66,23 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       const fileExt = file.name.split(".").pop();
       const filePath = `${userId}/logo.${fileExt}`;
 
-      // Delete old logo if exists
+      // Delete old logo if exists - list all files in user folder and delete them
       if (logoUrl) {
-        const oldPath = logoUrl.split("/").pop();
-        if (oldPath) {
-          await supabase.storage.from("company-logos").remove([`${userId}/${oldPath}`]);
+        try {
+          const { data: files } = await supabase.storage
+            .from("company-logos")
+            .list(userId);
+          
+          if (files && files.length > 0) {
+            const filesToDelete = files.map(file => `${userId}/${file.name}`);
+            await supabase.storage.from("company-logos").remove(filesToDelete);
+          }
+        } catch (error) {
+          console.error("Error deleting old logo:", error);
         }
       }
 
-      // Upload new logo
+      // Upload new logo with upsert
       const { error: uploadError } = await supabase.storage
         .from("company-logos")
         .upload(filePath, file, { upsert: true });
