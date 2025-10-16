@@ -66,7 +66,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     setUploading(true);
     try {
       const fileExt = file.name.split(".").pop();
-      const filePath = `${userId}/logo.${fileExt}`;
+      const timestamp = Date.now();
+      const filePath = `${userId}/logo-${timestamp}.${fileExt}`;
 
       // Delete old logo if exists - list all files in user folder and delete them
       if (logoUrl) {
@@ -96,7 +97,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         .from("company-logos")
         .getPublicUrl(filePath);
 
-      setLogoUrl(publicUrl);
+      // Cache-bust in UI to avoid stale image
+      setLogoUrl(`${publicUrl}?v=${timestamp}`);
       toast.success("Logo uploaded successfully!");
     } catch (error) {
       console.error("Error uploading logo:", error);
@@ -118,7 +120,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         opportunities_offered: values.opportunities_offered || null,
         website: values.website || null,
         linkedin_url: values.linkedin_url || null,
-        logo_url: logoUrl,
+        logo_url: logoUrl ? logoUrl.split('?')[0] : null,
       };
 
       let error;
