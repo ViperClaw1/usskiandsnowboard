@@ -2,7 +2,7 @@ import { User } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, Briefcase, Search, Building2 } from "lucide-react";
@@ -114,6 +114,7 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Company Profile</DialogTitle>
+                            <DialogDescription>Fill in your company details to access the athlete directory.</DialogDescription>
                           </DialogHeader>
                           <CompanyProfileForm
                             userId={user.id}

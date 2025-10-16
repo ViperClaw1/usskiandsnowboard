@@ -8,14 +8,10 @@ import { Loader2 } from "lucide-react";
 interface AthleteProfile {
   id: string;
   user_id: string;
-  bio: string;
-  sport_discipline: string;
-  skills: string[];
-  photo_url: string;
-  profiles: {
-    full_name: string;
-    email: string;
-  };
+  bio: string | null;
+  sport_discipline: string | null;
+  skills: string[] | null;
+  photo_url: string | null;
 }
 
 const AthleteDirectory = () => {
@@ -30,10 +26,7 @@ const AthleteDirectory = () => {
     try {
       const { data, error } = await supabase
         .from("athlete_profiles")
-        .select(`
-          *,
-          profiles!inner(full_name, email)
-        `)
+        .select("*")
         .eq("is_public", true);
 
       if (error) {
@@ -73,13 +66,11 @@ const AthleteDirectory = () => {
           <CardHeader>
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={athlete.photo_url} alt={athlete.profiles.full_name} />
-                <AvatarFallback>
-                  {athlete.profiles.full_name?.split(" ").map(n => n[0]).join("").toUpperCase() || "A"}
-                </AvatarFallback>
+                <AvatarImage src={athlete.photo_url ?? undefined} alt="Athlete profile photo" />
+                <AvatarFallback>AT</AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-lg">{athlete.profiles.full_name || "Anonymous Athlete"}</CardTitle>
+                <CardTitle className="text-lg">Athlete</CardTitle>
                 {athlete.sport_discipline && (
                   <p className="text-sm text-muted-foreground">{athlete.sport_discipline}</p>
                 )}
