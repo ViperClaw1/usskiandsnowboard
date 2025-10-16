@@ -126,7 +126,15 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
 
       if (error) throw error;
 
-      toast.success("Request accepted!");
+      // Get user email
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || "your email";
+      const athleteName = selectedRequest.athlete_profiles.profiles?.full_name || "the athlete";
+      
+      toast.success(`Please check your email (${userEmail}) for an introduction to ${athleteName}!`, {
+        duration: 6000,
+      });
+      
       setShowAcceptDialog(false);
       setAcceptanceMessage("");
       setSelectedRequest(null);
