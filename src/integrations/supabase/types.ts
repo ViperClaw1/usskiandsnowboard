@@ -285,6 +285,36 @@ export type Database = {
           },
         ]
       }
+      news_articles: {
+        Row: {
+          created_at: string
+          date: string | null
+          excerpt: string | null
+          id: string
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          excerpt?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          excerpt?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

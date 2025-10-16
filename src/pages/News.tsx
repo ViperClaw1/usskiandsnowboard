@@ -1,11 +1,26 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Newspaper } from "lucide-react";
+import { Newspaper, Loader2, ExternalLink } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const News = () => {
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ['news-articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -46,152 +61,72 @@ const News = () => {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto space-y-6">
-              <Card className="shadow-elegant hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <CardTitle>
-                    <a 
-                      href="https://usskiandsnowboard.org" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      2025-26 Stifel U.S. Freestyle Ski Team Announced
-                    </a>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">October 15, 2025 • Park City, Utah</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    U.S. Ski & Snowboard officially announced the 30 athletes who have accepted their nominations are named to the 2025-26 Stifel U.S. Freestyle Ski Team rosters for moguls and aerials.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <CardTitle>
-                    <a 
-                      href="https://usskiandsnowboard.org" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      2025-26 Stifel U.S. Cross Country Ski Team Announced
-                    </a>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">2025</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    U.S. Ski & Snowboard officially announces the 21 athletes who have formally accepted their nominations to the 2025-26 Stifel U.S. Cross Country Ski Team. The team was nominated based on pre-determined selection criteria.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <CardTitle>
-                    <a 
-                      href="https://usskiandsnowboard.org" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      2025-26 Stifel U.S. Alpine Ski Team Announced
-                    </a>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">2025</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    U.S. Ski & Snowboard has officially announced the 49 athletes named to the Stifel U.S. Alpine Ski Team for the 2025-26 season.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <CardTitle>
-                    <a 
-                      href="https://usskiandsnowboard.org" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      Kate Delson is 'On The Rise'
-                    </a>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">2025</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Kate Delson made an immeasurable impact on the World Cup during her first full season on the circuit. Between her first podiums, first World Cup wins, and a World Championships silver medal, Kate was unstoppable. Delson got her start as a skier before transitioning to snowboarding, where her passion was in the park. Growing up in Mammoth Lakes, California, it was only a matter of time before Delson found herself on the snow.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <CardTitle>
-                    <a 
-                      href="https://usskiandsnowboard.org" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      Two-Time Olympian Casey Larson Announces Retirement from Competitive Ski Jumping
-                    </a>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">2025</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    After more than a decade on the international stage, two-time Olympian Casey Larson of the Stifel U.S. Ski Jumping Team announced his retirement from competitive ski jumping.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <CardTitle>
-                    <a 
-                      href="https://usskiandsnowboard.org" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      Kylie Kariotis is 'On The Rise'
-                    </a>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">2025</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    The 2024-25 season was nothing short of spectacular for Kylie Kariotis. Despite previously starting in only six World Cups, Kariotis took the circuit by storm this year and earned personal bests week after week, traveling across the world when she previously thought she was going to be competing in NorAms. Her steady rise in results led her to a fourth-place finish at the Beidahu World Cup, which was enough to earn a spot on her first World Championships team. This was not an opportunity she took lightly, and she ended up finishing fourth in dual moguls at World Championships.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant hover:shadow-hover transition-shadow">
-                <CardHeader>
-                  <CardTitle>
-                    <a 
-                      href="https://usskiandsnowboard.org" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:text-primary transition-colors"
-                    >
-                      Stifel U.S. Ski Team Fundraiser Raises Record $1.375 Million in St. Louis
-                    </a>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">2025</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    In its 10th year, Ron Kruszewski, Chairman of the Board and Chief Executive Officer of Stifel Financial Corp. and U.S. Ski & Snowboard Trustee, hosted the annual Stifel U.S. Ski Team fundraiser in St. Louis. The yearly event broke previous records, raising $1.375 million for all ski teams under the U.S. Ski & Snowboard umbrella, including alpine, cross country, freestyle, freeski, ski jumping, nordic combined and Para alpine.
-                  </p>
-                </CardContent>
-              </Card>
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : articles && articles.length > 0 ? (
+                <>
+                  {articles.map((article) => (
+                    <Card key={article.id} className="shadow-elegant hover:shadow-hover transition-shadow">
+                      <CardHeader>
+                        <CardTitle>
+                          <a 
+                            href={article.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-primary transition-colors flex items-center gap-2"
+                          >
+                            {article.title}
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </CardTitle>
+                        {article.date && (
+                          <p className="text-sm text-muted-foreground mt-2">{article.date}</p>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground">
+                          {article.excerpt}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  <div className="flex justify-center pt-8">
+                    <Button asChild variant="outline" size="lg">
+                      <a 
+                        href="https://www.usskiandsnowboard.org/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        More News at U.S. Ski & Snowboard
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <Card className="shadow-elegant">
+                  <CardContent className="py-12 text-center">
+                    <p className="text-muted-foreground">
+                      No news articles available at the moment. Check back soon!
+                    </p>
+                    <Button asChild variant="outline" size="lg" className="mt-4">
+                      <a 
+                        href="https://www.usskiandsnowboard.org/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        Visit U.S. Ski & Snowboard
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </section>
