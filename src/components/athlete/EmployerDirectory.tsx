@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ interface EmployerProfile {
 }
 
 const EmployerDirectory = () => {
+  const navigate = useNavigate();
   const [employers, setEmployers] = useState<EmployerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [athleteProfileId, setAthleteProfileId] = useState<string | null>(null);
@@ -127,6 +129,9 @@ const EmployerDirectory = () => {
       
       // Add to existing requests
       setExistingRequests(prev => new Set([...prev, employerId]));
+      
+      // Navigate back to dashboard
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
