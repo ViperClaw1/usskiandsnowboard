@@ -21,31 +21,36 @@ Deno.serve(async (req) => {
   try {
     console.log('Starting news scraping...');
 
-    // Fetch the US Ski & Snowboard homepage
+    // Fetch the US Ski & Snowboard homepage  
     const response = await fetch('https://www.usskiandsnowboard.org/');
     const html = await response.text();
     
     console.log('Fetched homepage, parsing articles...');
 
-    // Parse articles from the HTML
     const articles: NewsArticle[] = [];
-    
-    // Regex patterns to extract article information
-    const articlePattern = /<a[^>]*href="(https:\/\/www\.usskiandsnowboard\.org\/news\/[^"]+)"[^>]*>[\s\S]*?<h1[^>]*>(.*?)<\/h1>[\s\S]*?<\/a>[\s\S]*?<p[^>]*>(.*?)<\/p>/gi;
-    
-    let match;
     const seenUrls = new Set<string>();
     
-    while ((match = articlePattern.exec(html)) !== null && articles.length < 10) {
+    // Parse the HTML to find news article sections
+    // Pattern: Image link, "Top News", Title with link, Excerpt text, "Read More" link
+    const articleSectionPattern = /\[!\[.*?\]\(.*?\)\]\((https:\/\/www\.usskiandsnowboard\.org\/news\/[^)]+)\)[\s\S]*?Top News[\s\S]*?#\s*\[([^\]]+)\]\([^)]+\)[\s\S]*?((?:(?!Top News|Read More|\[!\[).)+)/gi;
+    
+    let match;
+    while ((match = articleSectionPattern.exec(html)) !== null) {
       const url = match[1];
-      const title = match[2].replace(/<[^>]*>/g, '').trim();
-      const excerpt = match[3].replace(/<[^>]*>/g, '').trim();
+      const title = match[2].trim();
+      const excerpt = match[3]
+        .replace(/<[^>]+>/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .trim()
+        .substring(0, 500);
       
       // Skip duplicates
-      if (seenUrls.has(url)) continue;
+      if (seenUrls.has(url) || !title || title.length < 5) {
+        continue;
+      }
       seenUrls.add(url);
       
-      // Extract date from the URL or use current date
+      // Extract date from URL
       const dateMatch = url.match(/\/(\d{4})-(\d{2})\//);
       const date = dateMatch ? `${dateMatch[1]}-${dateMatch[2]}` : new Date().toISOString().split('T')[0];
       
@@ -53,11 +58,49 @@ Deno.serve(async (req) => {
         title,
         url,
         date,
-        excerpt: excerpt.substring(0, 500), // Limit excerpt length
+        excerpt: excerpt || title,
       });
+      
+      console.log(`Parsed article: ${title}`);
     }
 
-    console.log(`Parsed ${articles.length} articles`);
+    // Alternative parsing method if the first one doesn't find enough articles
+    if (articles.length < 5) {
+      console.log('Using alternative parsing method...');
+      
+      // Look for markdown-style links to news articles
+      const linkPattern = /\[([^\]]+)\]\((https:\/\/www\.usskiandsnowboard\.org\/news\/[^)]+)\s*"([^"]+)"\)/g;
+      
+      while ((match = linkPattern.exec(html)) !== null) {
+        const title = match[1].trim() || match[3].trim();
+        const url = match[2];
+        
+        if (seenUrls.has(url) || !title || title.length < 5 || title === 'Read More') {
+          continue;
+        }
+        seenUrls.add(url);
+        
+        // Find excerpt by looking ahead in the text
+        const matchIndex = match.index;
+        const remainingText = html.substring(matchIndex, matchIndex + 1000);
+        const excerptMatch = remainingText.match(/\n\n([^\n\[]+)/);
+        const excerpt = excerptMatch ? excerptMatch[1].trim().substring(0, 500) : '';
+        
+        const dateMatch = url.match(/\/(\d{4})-(\d{2})\//);
+        const date = dateMatch ? `${dateMatch[1]}-${dateMatch[2]}` : new Date().toISOString().split('T')[0];
+        
+        articles.push({
+          title,
+          url,
+          date,
+          excerpt: excerpt || title,
+        });
+        
+        console.log(`Parsed article (alt method): ${title}`);
+      }
+    }
+
+    console.log(`Total articles parsed: ${articles.length}`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
