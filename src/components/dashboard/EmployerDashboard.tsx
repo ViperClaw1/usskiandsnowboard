@@ -87,13 +87,9 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
   };
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error("Failed to sign out");
-    } else {
-      toast.success("Signed out successfully");
-      navigate("/");
-    }
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
+    navigate("/");
   };
 
   const handleProfileSuccess = () => {
