@@ -16,6 +16,8 @@ const formSchema = z.object({
   industry: z.string().optional(),
   contact_person: z.string().optional(),
   opportunities_offered: z.string().optional(),
+  website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  linkedin_url: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -38,6 +40,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       industry: existingProfile?.industry || "",
       contact_person: existingProfile?.contact_person || "",
       opportunities_offered: existingProfile?.opportunities_offered || "",
+      website: existingProfile?.website || "",
+      linkedin_url: existingProfile?.linkedin_url || "",
     },
   });
 
@@ -101,6 +105,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         industry: values.industry || null,
         contact_person: values.contact_person || null,
         opportunities_offered: values.opportunities_offered || null,
+        website: values.website || null,
+        linkedin_url: values.linkedin_url || null,
         logo_url: logoUrl,
       };
 
@@ -229,6 +235,34 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
                   className="min-h-[100px]"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="website"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Website</FormLabel>
+              <FormControl>
+                <Input placeholder="https://www.yourcompany.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="linkedin_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>LinkedIn URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://www.linkedin.com/company/yourcompany" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

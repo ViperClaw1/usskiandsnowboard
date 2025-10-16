@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX } from "lucide-react";
+import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
@@ -141,6 +141,32 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                       <CardDescription>
                         {profile ? "Discover talented athletes for your opportunities" : "Set up your company profile and start discovering talent"}
                       </CardDescription>
+                      {profile && (profile.website || profile.linkedin_url) && (
+                        <div className="flex items-center gap-3 mt-2">
+                          {profile.website && (
+                            <a 
+                              href={profile.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <Globe className="h-4 w-4" />
+                              Website
+                            </a>
+                          )}
+                          {profile.linkedin_url && (
+                            <a 
+                              href={profile.linkedin_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <Linkedin className="h-4 w-4" />
+                              LinkedIn
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardHeader>

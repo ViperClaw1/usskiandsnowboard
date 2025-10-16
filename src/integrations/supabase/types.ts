@@ -195,10 +195,12 @@ export type Database = {
           created_at: string
           id: string
           industry: string | null
+          linkedin_url: string | null
           logo_url: string | null
           opportunities_offered: string | null
           updated_at: string
           user_id: string
+          website: string | null
         }
         Insert: {
           company_name: string
@@ -206,10 +208,12 @@ export type Database = {
           created_at?: string
           id?: string
           industry?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null
           updated_at?: string
           user_id: string
+          website?: string | null
         }
         Update: {
           company_name?: string
@@ -217,10 +221,12 @@ export type Database = {
           created_at?: string
           id?: string
           industry?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null
           updated_at?: string
           user_id?: string
+          website?: string | null
         }
         Relationships: [
           {
