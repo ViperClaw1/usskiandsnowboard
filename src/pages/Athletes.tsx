@@ -36,12 +36,23 @@ const Athletes = () => {
       const { data, error } = await supabase
         .from("athlete_profiles")
         .select(`
-          *,
+          id,
+          user_id,
+          photo_url,
+          sport_discipline,
+          bio,
+          skills,
+          availability,
           profiles!inner(full_name)
         `)
         .eq("is_public", true);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+      
+      console.log("Loaded athletes:", data);
       setAthletes(data || []);
     } catch (error) {
       console.error("Error loading athletes:", error);

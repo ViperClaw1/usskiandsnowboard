@@ -31,9 +31,22 @@ const Employers = () => {
     try {
       const { data, error } = await supabase
         .from("employer_profiles")
-        .select("*");
+        .select(`
+          id,
+          user_id,
+          company_name,
+          industry,
+          logo_url,
+          about,
+          opportunities_offered
+        `);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+      
+      console.log("Loaded employers:", data);
       setEmployers(data || []);
     } catch (error) {
       console.error("Error loading employers:", error);
