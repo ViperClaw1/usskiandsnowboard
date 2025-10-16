@@ -190,6 +190,7 @@ export type Database = {
       }
       employer_profiles: {
         Row: {
+          about: string | null
           company_name: string
           contact_person: string | null
           created_at: string
@@ -203,6 +204,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          about?: string | null
           company_name: string
           contact_person?: string | null
           created_at?: string
@@ -216,6 +218,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          about?: string | null
           company_name?: string
           contact_person?: string | null
           created_at?: string

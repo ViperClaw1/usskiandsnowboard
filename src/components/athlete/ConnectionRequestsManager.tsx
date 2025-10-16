@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, CheckCircle, XCircle, Building2 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 interface ConnectionRequest {
@@ -16,8 +17,10 @@ interface ConnectionRequest {
   employer_profiles: {
     company_name: string;
     industry: string | null;
+    about: string | null;
     opportunities_offered: string | null;
     contact_person: string | null;
+    logo_url: string | null;
   };
 }
 
@@ -47,8 +50,10 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
           employer_profiles (
             company_name,
             industry,
+            about,
             opportunities_offered,
-            contact_person
+            contact_person,
+            logo_url
           )
         `)
         .eq("athlete_id", athleteProfileId)
@@ -114,9 +119,15 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
           <Card key={request.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedRequest(request)}>
             <CardHeader>
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-accent" />
-                </div>
+                <Avatar className="h-12 w-12">
+                  {request.employer_profiles.logo_url ? (
+                    <AvatarImage src={request.employer_profiles.logo_url} alt={request.employer_profiles.company_name} className="object-cover" />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-6 w-6 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 <div className="flex-1">
                   <CardTitle className="text-base">{request.employer_profiles.company_name}</CardTitle>
                   {request.employer_profiles.industry && (
@@ -127,6 +138,9 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
               </div>
             </CardHeader>
             <CardContent>
+              {request.employer_profiles.about && (
+                <p className="text-sm mb-2 text-muted-foreground line-clamp-2">{request.employer_profiles.about}</p>
+              )}
               {request.opportunity_type && (
                 <p className="text-sm mb-2">
                   <span className="font-medium">Opportunity:</span> {request.opportunity_type}
@@ -148,9 +162,15 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
             </DialogHeader>
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Building2 className="h-8 w-8 text-accent" />
-                </div>
+                <Avatar className="h-16 w-16">
+                  {selectedRequest.employer_profiles.logo_url ? (
+                    <AvatarImage src={selectedRequest.employer_profiles.logo_url} alt={selectedRequest.employer_profiles.company_name} className="object-cover" />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-8 w-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 <div>
                   <h3 className="font-semibold">{selectedRequest.employer_profiles.company_name}</h3>
                   {selectedRequest.employer_profiles.industry && (
@@ -158,6 +178,13 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
                   )}
                 </div>
               </div>
+
+              {selectedRequest.employer_profiles.about && (
+                <div>
+                  <h4 className="font-medium mb-2">About</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.about}</p>
+                </div>
+              )}
 
               {selectedRequest.employer_profiles.opportunities_offered && (
                 <div>

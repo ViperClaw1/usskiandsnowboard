@@ -15,6 +15,7 @@ const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
   industry: z.string().optional(),
   contact_person: z.string().optional(),
+  about: z.string().optional(),
   opportunities_offered: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   linkedin_url: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
@@ -39,6 +40,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       company_name: existingProfile?.company_name || "",
       industry: existingProfile?.industry || "",
       contact_person: existingProfile?.contact_person || "",
+      about: existingProfile?.about || "",
       opportunities_offered: existingProfile?.opportunities_offered || "",
       website: existingProfile?.website || "",
       linkedin_url: existingProfile?.linkedin_url || "",
@@ -112,6 +114,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         company_name: values.company_name,
         industry: values.industry || null,
         contact_person: values.contact_person || null,
+        about: values.about || null,
         opportunities_offered: values.opportunities_offered || null,
         website: values.website || null,
         linkedin_url: values.linkedin_url || null,
@@ -225,6 +228,24 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
               <FormLabel>Contact Person</FormLabel>
               <FormControl>
                 <Input placeholder="Enter contact person name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="about"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>About</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Tell athletes about your company and culture..."
+                  className="min-h-[100px]"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

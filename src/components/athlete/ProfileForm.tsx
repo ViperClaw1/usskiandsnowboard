@@ -177,6 +177,16 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .map(s => s.trim())
         .filter(s => s);
 
+      // Calculate profile completeness dynamically
+      let completeness = 0;
+      if (formData.first_name && formData.last_name) completeness += 20;
+      if (formData.sport_discipline) completeness += 20;
+      if (formData.bio) completeness += 20;
+      if (career_interests.length > 0) completeness += 10;
+      if (skills.length > 0) completeness += 10;
+      if (formData.availability) completeness += 10;
+      if (uploadedPhotoUrl || photoUrl) completeness += 10;
+
       const profileData = {
         sport_discipline: formData.sport_discipline,
         bio: formData.bio,
@@ -186,7 +196,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         availability: formData.availability,
         is_public: formData.is_public,
         photo_url: uploadedPhotoUrl || photoUrl,
-        profile_completeness: 60
+        profile_completeness: completeness
       };
 
       // Check if profile exists
