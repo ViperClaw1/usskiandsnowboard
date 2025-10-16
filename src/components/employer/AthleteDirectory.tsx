@@ -61,7 +61,7 @@ const AthleteDirectory = () => {
         .from("athlete_profiles")
         .select(`
           *,
-          profiles!inner(full_name)
+          profiles(full_name)
         `)
         .eq("is_public", true);
 
