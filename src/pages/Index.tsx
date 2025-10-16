@@ -100,8 +100,8 @@ const Index = () => {
 
         <section className="py-20">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-6 text-foreground">Ready to Get Started?</h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">Ready to Get Started?</h2>
+            <p className="text-base text-muted-foreground mb-8 max-w-2xl mx-auto">
               Join the platform today and be part of helping athletes succeed 
               not only in sport but also in life beyond competition.
             </p>
