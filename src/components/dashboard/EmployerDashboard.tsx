@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Briefcase, Search, Building2 } from "lucide-react";
+import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
+import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
+import ConnectionsList from "@/components/employer/ConnectionsList";
 
 interface EmployerDashboardProps {
   user: User;
@@ -20,10 +22,22 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
   const [loading, setLoading] = useState(true);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showDirectory, setShowDirectory] = useState(false);
+  const [showPendingRequests, setShowPendingRequests] = useState(false);
+  const [showAcceptedConnections, setShowAcceptedConnections] = useState(false);
+  const [showRejectedConnections, setShowRejectedConnections] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [acceptedCount, setAcceptedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
 
   useEffect(() => {
     loadProfile();
   }, [user.id]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      loadConnectionCounts();
+    }
+  }, [profile]);
 
   const loadProfile = async () => {
     try {
@@ -39,6 +53,36 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
       console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadConnectionCounts = async () => {
+    if (!profile?.id) return;
+
+    try {
+      const { count: pending } = await supabase
+        .from("connection_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("employer_id", profile.id)
+        .eq("status", "pending");
+
+      const { count: accepted } = await supabase
+        .from("connection_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("employer_id", profile.id)
+        .eq("status", "accepted");
+
+      const { count: rejected } = await supabase
+        .from("connection_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("employer_id", profile.id)
+        .eq("status", "rejected");
+
+      setPendingCount(pending || 0);
+      setAcceptedCount(accepted || 0);
+      setRejectedCount(rejected || 0);
+    } catch (error) {
+      console.error("Error loading counts:", error);
     }
   };
 
@@ -80,7 +124,7 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid gap-6">
-          {!showDirectory ? (
+          {!showDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
               <Card className="shadow-elegant">
                 <CardHeader>
@@ -132,39 +176,58 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-4 gap-6">
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Pending Requests</CardTitle>
+                      <Users className="h-5 w-5 text-accent" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-accent">{pendingCount}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Connections Made</CardTitle>
+                      <UserCheck className="h-5 w-5 text-primary" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-primary">{acceptedCount}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Accepted</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowRejectedConnections(true)}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Connections Declined</CardTitle>
+                      <UserX className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Declined</p>
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Active Searches</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-primary">0</p>
-                    <p className="text-sm text-muted-foreground mt-1">Saved searches</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Pending Requests</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-accent">0</p>
-                    <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Connections Made</CardTitle>
-                  </CardHeader>
-                  <CardContent>
                     <p className="text-3xl font-bold text-foreground">0</p>
-                    <p className="text-sm text-muted-foreground mt-1">Total</p>
+                    <p className="text-sm text-muted-foreground mt-1">Saved searches</p>
                   </CardContent>
                 </Card>
               </div>
             </>
-          ) : (
+          ) : showDirectory ? (
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Athlete Directory</h2>
@@ -173,6 +236,36 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 </Button>
               </div>
               <AthleteDirectory />
+            </div>
+          ) : showPendingRequests ? (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Pending Connection Requests</h2>
+                <Button variant="outline" onClick={() => { setShowPendingRequests(false); loadConnectionCounts(); }}>
+                  Back to Dashboard
+                </Button>
+              </div>
+              {profile?.id && <ConnectionRequestsManager employerProfileId={profile.id} />}
+            </div>
+          ) : showAcceptedConnections ? (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Connections Made</h2>
+                <Button variant="outline" onClick={() => setShowAcceptedConnections(false)}>
+                  Back to Dashboard
+                </Button>
+              </div>
+              {profile?.id && <ConnectionsList employerProfileId={profile.id} status="accepted" />}
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Connections Declined</h2>
+                <Button variant="outline" onClick={() => setShowRejectedConnections(false)}>
+                  Back to Dashboard
+                </Button>
+              </div>
+              {profile?.id && <ConnectionsList employerProfileId={profile.id} status="rejected" />}
             </div>
           )}
         </div>
