@@ -39,13 +39,13 @@ const Index = () => {
               empowering transitions from competition to meaningful careers.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
+              <Link to="/auth?type=athlete">
                 <Button size="lg" className="w-full sm:w-auto">
                   <Users className="mr-2 h-5 w-5" />
                   I'm an Athlete
                 </Button>
               </Link>
-              <Link to="/auth">
+              <Link to="/auth?type=employer">
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                   <Briefcase className="mr-2 h-5 w-5" />
                   I'm an Employer
