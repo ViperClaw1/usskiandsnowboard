@@ -93,7 +93,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="mb-8">
           <Link to="/">
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 hover:opacity-80 transition-opacity" />
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
         </div>
         
