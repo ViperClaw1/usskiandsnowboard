@@ -7,10 +7,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-10" />
-          </div>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-end">
           <Link to="/auth">
             <Button>Sign In</Button>
           </Link>
