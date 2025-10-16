@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ProfileForm from "@/components/athlete/ProfileForm";
 
 interface AthleteDashboardProps {
   user: User;
@@ -12,6 +15,7 @@ interface AthleteDashboardProps {
 
 const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
   const navigate = useNavigate();
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -21,6 +25,12 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
       toast.success("Signed out successfully");
       navigate("/");
     }
+  };
+
+  const handleProfileComplete = () => {
+    setShowProfileDialog(false);
+    toast.success("Profile updated! Refreshing...");
+    setTimeout(() => window.location.reload(), 1000);
   };
 
   return (
@@ -54,7 +64,9 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 <p className="text-sm text-muted-foreground">
                   Your profile is <span className="font-semibold text-foreground">0% complete</span>
                 </p>
-                <Button>Complete Your Profile</Button>
+                <Button onClick={() => setShowProfileDialog(true)}>
+                  Complete Your Profile
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -92,6 +104,18 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
           </div>
         </div>
       </main>
+
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Complete Your Athlete Profile</DialogTitle>
+            <DialogDescription>
+              Share your athletic background, skills, and career interests
+            </DialogDescription>
+          </DialogHeader>
+          <ProfileForm userId={user.id} onComplete={handleProfileComplete} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
