@@ -20,6 +20,9 @@ interface AthleteProfile {
   availability: string | null;
   career_interests: string[] | null;
   geographic_preferences: string[] | null;
+  profiles: {
+    full_name: string | null;
+  };
 }
 
 const AthleteDirectory = () => {
@@ -56,7 +59,10 @@ const AthleteDirectory = () => {
     try {
       const { data, error } = await supabase
         .from("athlete_profiles")
-        .select("*")
+        .select(`
+          *,
+          profiles!inner(full_name)
+        `)
         .eq("is_public", true);
 
       if (error) {
@@ -138,11 +144,15 @@ const AthleteDirectory = () => {
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={athlete.photo_url ?? undefined} alt="Athlete profile photo" className="object-cover" />
-                  <AvatarFallback>AT</AvatarFallback>
+                  <AvatarImage src={athlete.photo_url ?? undefined} alt={athlete.profiles.full_name ?? "Athlete"} className="object-cover" />
+                  <AvatarFallback>
+                    {athlete.profiles.full_name
+                      ? athlete.profiles.full_name.split(" ").map(n => n[0]).join("").toUpperCase()
+                      : "AT"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="text-center">
-                  <CardTitle className="text-lg">Athlete</CardTitle>
+                  <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
                   {athlete.sport_discipline && (
                     <p className="text-sm text-muted-foreground">{athlete.sport_discipline}</p>
                   )}
@@ -172,16 +182,20 @@ const AthleteDirectory = () => {
         <Dialog open={!!selectedAthlete && !showRequestDialog} onOpenChange={(open) => !open && setSelectedAthlete(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Athlete Profile</DialogTitle>
+              <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"} - Profile Details</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
-                  <AvatarFallback>AT</AvatarFallback>
+                  <AvatarFallback>
+                    {selectedAthlete.profiles.full_name
+                      ? selectedAthlete.profiles.full_name.split(" ").map(n => n[0]).join("").toUpperCase()
+                      : "AT"}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg">Athlete Profile</h3>
+                  <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
                   {selectedAthlete.sport_discipline && (
                     <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
                   )}
