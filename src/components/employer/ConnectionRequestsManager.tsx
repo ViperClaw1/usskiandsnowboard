@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,6 +37,8 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<ConnectionRequest | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
+  const [acceptanceMessage, setAcceptanceMessage] = useState("");
 
   useEffect(() => {
     if (employerProfileId) {
@@ -79,22 +83,55 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
     }
   };
 
-  const handleUpdateStatus = async (requestId: string, status: "accepted" | "rejected") => {
+  const handleAcceptRequest = async () => {
+    if (!selectedRequest) return;
+
+    if (!acceptanceMessage.trim()) {
+      toast.error("Please include a message with your acceptance");
+      return;
+    }
+
     setProcessing(true);
     try {
       const { error } = await supabase
         .from("connection_requests")
-        .update({ status })
+        .update({ 
+          status: "accepted",
+          message: acceptanceMessage 
+        })
+        .eq("id", selectedRequest.id);
+
+      if (error) throw error;
+
+      toast.success("Request accepted!");
+      setShowAcceptDialog(false);
+      setAcceptanceMessage("");
+      setSelectedRequest(null);
+      loadRequests();
+    } catch (error) {
+      console.error("Error accepting request:", error);
+      toast.error("Failed to accept request");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    setProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("connection_requests")
+        .update({ status: "rejected" })
         .eq("id", requestId);
 
       if (error) throw error;
 
-      toast.success(`Connection ${status}`);
+      toast.success("Request rejected");
       setSelectedRequest(null);
       loadRequests();
     } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update connection status");
+      console.error("Error rejecting request:", error);
+      toast.error("Failed to reject request");
     } finally {
       setProcessing(false);
     }
@@ -208,15 +245,17 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
 
               <div className="flex gap-4">
                 <Button
-                  onClick={() => handleUpdateStatus(selectedRequest.id, "accepted")}
+                  onClick={() => {
+                    setShowAcceptDialog(true);
+                  }}
                   disabled={processing}
                   className="flex-1"
                 >
-                  {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                  <CheckCircle className="mr-2 h-4 w-4" />
                   Accept
                 </Button>
                 <Button
-                  onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
+                  onClick={() => handleRejectRequest(selectedRequest.id)}
                   disabled={processing}
                   variant="destructive"
                   className="flex-1"
@@ -225,6 +264,51 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                   Reject
                 </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Accept Request Dialog with Message */}
+      {selectedRequest && showAcceptDialog && (
+        <Dialog open={showAcceptDialog} onOpenChange={(open) => {
+          setShowAcceptDialog(open);
+          if (!open) {
+            setAcceptanceMessage("");
+          }
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Accept Connection Request</DialogTitle>
+              <DialogDescription>
+                Send a personalized message to {selectedRequest.athlete_profiles.profiles?.full_name || "the athlete"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="acceptance-message">Your Message *</Label>
+                <Textarea
+                  id="acceptance-message"
+                  placeholder="Introduce yourself and explain the opportunity..."
+                  value={acceptanceMessage}
+                  onChange={(e) => setAcceptanceMessage(e.target.value)}
+                  className="mt-2 min-h-[120px]"
+                />
+              </div>
+              <Button
+                onClick={handleAcceptRequest}
+                disabled={processing || !acceptanceMessage.trim()}
+                className="w-full"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Accept & Send Message"
+                )}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
