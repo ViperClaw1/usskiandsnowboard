@@ -1,121 +1,115 @@
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/components/auth/AuthContext';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Users, Briefcase, Target } from 'lucide-react';
-import heroImage from '@/assets/hero-background.jpg';
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Mountain, Users, Briefcase, TrendingUp } from "lucide-react";
+import heroBanner from "@/assets/hero-banner.jpg";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `linear-gradient(to right, hsl(var(--background) / 0.95), hsl(var(--background) / 0.7)), url(${heroImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        
-        <div className="container relative z-10 px-4 mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-foreground animate-fade-in">
-            Athlete Career Dashboard
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-3xl mx-auto">
-            Connecting U.S. Ski & Snowboard athletes with meaningful career opportunities beyond competition
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => navigate(user ? '/dashboard' : '/auth')}
-              className="text-lg px-8 shadow-[var(--shadow-hover)] hover:shadow-[var(--shadow-elegant)] transition-all"
-            >
-              {user ? 'Go to Dashboard' : 'Get Started'}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => navigate('/auth')}
-              className="text-lg px-8"
-            >
-              Learn More
-            </Button>
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Mountain className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold text-foreground">U.S. Ski & Snowboard</span>
           </div>
+          <Link to="/auth">
+            <Button>Sign In</Button>
+          </Link>
         </div>
-      </section>
+      </header>
 
-      {/* Features Section */}
-      <section className="py-20 bg-card">
-        <div className="container px-4 mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 text-foreground">
-            How It Works
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="text-center p-8 rounded-lg bg-gradient-to-b from-background to-secondary shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4 text-foreground">For Athletes</h3>
-              <p className="text-muted-foreground">
-                Create your professional profile showcasing skills, experience, and career aspirations. Connect with employers seeking talented individuals.
-              </p>
-            </div>
-
-            <div className="text-center p-8 rounded-lg bg-gradient-to-b from-background to-secondary shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all">
-              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
-                <Briefcase className="h-8 w-8 text-accent-foreground" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4 text-foreground">For Employers</h3>
-              <p className="text-muted-foreground">
-                Search and discover motivated, high-performing athletes. Request connections to explore internships, jobs, and mentorship opportunities.
-              </p>
-            </div>
-
-            <div className="text-center p-8 rounded-lg bg-gradient-to-b from-background to-secondary shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all">
-              <div className="w-16 h-16 bg-primary-glow rounded-full flex items-center justify-center mx-auto mb-6">
-                <Target className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4 text-foreground">Impact & Results</h3>
-              <p className="text-muted-foreground">
-                Track meaningful outcomes from connections to placements. Demonstrate tangible impact for donors, sponsors, and trustees.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary via-primary-glow to-accent">
-        <div className="container px-4 mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6 text-primary-foreground">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Join the platform connecting athletes with their next career opportunity
-          </p>
-          <Button 
-            size="lg"
-            variant="secondary"
-            onClick={() => navigate('/auth')}
-            className="text-lg px-8 shadow-lg hover:shadow-xl transition-all"
+      <main>
+        <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroBanner})` }}
           >
-            Create Your Account
-          </Button>
-        </div>
-      </section>
+            <div className="absolute inset-0 bg-gradient-to-r from-background/90 to-background/70" />
+          </div>
+          
+          <div className="relative z-10 container mx-auto px-4 text-center">
+            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 animate-fade-in">
+              Athlete Career Dashboard
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Connecting U.S. Ski & Snowboard athletes with career opportunities, 
+              empowering transitions from competition to meaningful careers.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/auth">
+                <Button size="lg" className="w-full sm:w-auto">
+                  <Users className="mr-2 h-5 w-5" />
+                  I'm an Athlete
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                  <Briefcase className="mr-2 h-5 w-5" />
+                  I'm an Employer
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
 
-      {/* Footer */}
-      <footer className="py-8 bg-card border-t border-border">
-        <div className="container px-4 mx-auto text-center">
-          <p className="text-muted-foreground">
-            © 2025 U.S. Ski & Snowboard Athlete Career Dashboard. All rights reserved.
-          </p>
+        <section className="py-20 bg-secondary/30">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">How It Works</h2>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-card p-8 rounded-lg shadow-elegant text-center">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-foreground">For Athletes</h3>
+                <p className="text-muted-foreground">
+                  Create a comprehensive professional profile showcasing your skills, 
+                  experience, and career interests beyond the slopes.
+                </p>
+              </div>
+
+              <div className="bg-card p-8 rounded-lg shadow-elegant text-center">
+                <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                  <Briefcase className="h-8 w-8 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-foreground">For Employers</h3>
+                <p className="text-muted-foreground">
+                  Discover talented, driven athletes ready for career opportunities. 
+                  Search by skills, interests, and location.
+                </p>
+              </div>
+
+              <div className="bg-card p-8 rounded-lg shadow-elegant text-center">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-foreground">Make Connections</h3>
+                <p className="text-muted-foreground">
+                  Our admin team facilitates introductions, tracking outcomes from 
+                  interviews to placements.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-6 text-foreground">Ready to Get Started?</h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Join the platform today and be part of helping athletes succeed 
+              not only in sport but also in life beyond competition.
+            </p>
+            <Link to="/auth">
+              <Button size="lg">Create Your Account</Button>
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t bg-card py-8">
+        <div className="container mx-auto px-4 text-center text-muted-foreground">
+          <p>&copy; 2025 U.S. Ski & Snowboard. All rights reserved.</p>
         </div>
       </footer>
     </div>
