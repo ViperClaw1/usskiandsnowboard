@@ -19,6 +19,10 @@ interface ConnectionRequest {
     sport_discipline: string | null;
     skills: string[] | null;
     photo_url: string | null;
+    user_id: string;
+    profiles: {
+      full_name: string | null;
+    };
   };
 }
 
@@ -49,7 +53,11 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
             bio,
             sport_discipline,
             skills,
-            photo_url
+            photo_url,
+            user_id,
+            profiles (
+              full_name
+            )
           )
         `)
         .eq("employer_id", employerProfileId)
@@ -120,7 +128,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                   <AvatarFallback>AT</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <CardTitle className="text-base">Connection Request</CardTitle>
+                  <CardTitle className="text-base">
+                    {request.athlete_profiles.profiles?.full_name || "Athlete"}
+                  </CardTitle>
                   {request.athlete_profiles.sport_discipline && (
                     <p className="text-sm text-muted-foreground">{request.athlete_profiles.sport_discipline}</p>
                   )}
@@ -155,7 +165,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                   <AvatarFallback>AT</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold">Athlete Profile</h3>
+                  <h3 className="font-semibold">
+                    {selectedRequest.athlete_profiles.profiles?.full_name || "Athlete"}
+                  </h3>
                   {selectedRequest.athlete_profiles.sport_discipline && (
                     <p className="text-sm text-muted-foreground">{selectedRequest.athlete_profiles.sport_discipline}</p>
                   )}

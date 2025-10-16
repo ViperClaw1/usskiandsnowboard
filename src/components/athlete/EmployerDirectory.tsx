@@ -25,6 +25,7 @@ const EmployerDirectory = () => {
   const [opportunityType, setOpportunityType] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
   const [openDialogId, setOpenDialogId] = useState<string | null>(null);
+  const [existingRequests, setExistingRequests] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadEmployers();
@@ -43,6 +44,23 @@ const EmployerDirectory = () => {
 
     if (data) {
       setAthleteProfileId(data.id);
+      loadExistingRequests(data.id);
+    }
+  };
+
+  const loadExistingRequests = async (athleteId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("connection_requests")
+        .select("employer_id")
+        .eq("athlete_id", athleteId);
+
+      if (error) throw error;
+
+      const requestedEmployerIds = new Set(data?.map(r => r.employer_id) || []);
+      setExistingRequests(requestedEmployerIds);
+    } catch (error) {
+      console.error("Error loading existing requests:", error);
     }
   };
 
@@ -74,6 +92,11 @@ const EmployerDirectory = () => {
       return;
     }
 
+    if (existingRequests.has(employerId)) {
+      toast.error("You have already sent a request to this employer");
+      return;
+    }
+
     if (!requestMessage.trim()) {
       toast.error("Please include a message with your request");
       return;
@@ -97,6 +120,9 @@ const EmployerDirectory = () => {
       setRequestMessage("");
       setOpportunityType("");
       setOpenDialogId(null);
+      
+      // Add to existing requests
+      setExistingRequests(prev => new Set([...prev, employerId]));
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
@@ -153,7 +179,12 @@ const EmployerDirectory = () => {
             
             <Dialog open={openDialogId === employer.id} onOpenChange={(open) => setOpenDialogId(open ? employer.id : null)}>
               <DialogTrigger asChild>
-                <Button className="w-full">Request Connection</Button>
+                <Button 
+                  className="w-full" 
+                  disabled={existingRequests.has(employer.id)}
+                >
+                  {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
+                </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
