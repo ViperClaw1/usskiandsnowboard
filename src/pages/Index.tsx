@@ -7,7 +7,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-end">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link to="/">
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-10 hover:opacity-80 transition-opacity" />
+          </Link>
           <nav className="flex items-center gap-6">
             <Link to="/athletes" className="text-foreground hover:text-primary font-medium transition-colors">
               Athletes
@@ -28,11 +31,6 @@ const Index = () => {
       <main>
         <section className="relative min-h-[600px] flex items-center justify-center bg-gradient-to-b from-background to-muted">
           <div className="relative z-10 container mx-auto px-4 text-center py-20">
-            <img 
-              src={usSkiLogo} 
-              alt="U.S. Ski & Snowboard" 
-              className="h-24 md:h-32 mx-auto mb-8 animate-fade-in"
-            />
             <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 animate-fade-in">
               Athlete Career Dashboard
             </h1>
