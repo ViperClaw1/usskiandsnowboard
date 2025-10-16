@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Mountain } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -80,13 +81,10 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center mb-8">
-          <Mountain className="h-12 w-12 text-primary mr-3" />
-          <h1 className="text-3xl font-bold text-foreground">
-            U.S. Ski & Snowboard
-          </h1>
+          <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16" />
         </div>
         
         <Card className="shadow-elegant">
