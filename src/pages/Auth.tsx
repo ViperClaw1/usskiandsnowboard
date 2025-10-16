@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,8 +83,10 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center mb-8">
-          <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16" />
+        <div className="mb-8">
+          <Link to="/">
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 hover:opacity-80 transition-opacity" />
+          </Link>
         </div>
         
         <Card className="shadow-elegant">
