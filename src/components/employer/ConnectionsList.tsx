@@ -28,6 +28,27 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
     if (employerProfileId) {
       loadConnections();
     }
+
+    // Set up real-time subscription for connection updates
+    const channel = supabase
+      .channel('employer_connections_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_requests',
+          filter: `employer_id=eq.${employerProfileId}`
+        },
+        () => {
+          loadConnections();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [employerProfileId, status]);
 
   const loadConnections = async () => {

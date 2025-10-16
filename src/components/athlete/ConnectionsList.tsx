@@ -27,6 +27,27 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
     if (athleteProfileId) {
       loadConnections();
     }
+
+    // Set up real-time subscription for connection updates
+    const channel = supabase
+      .channel('athlete_connections_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_requests',
+          filter: `athlete_id=eq.${athleteProfileId}`
+        },
+        () => {
+          loadConnections();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [athleteProfileId, status]);
 
   const loadConnections = async () => {
