@@ -99,10 +99,12 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
   const handleUpdateStatus = async (requestId: string, status: "accepted" | "rejected") => {
     setProcessing(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("connection_requests")
         .update({ status })
-        .eq("id", requestId);
+        .eq("id", requestId)
+        .select("id, status")
+        .single();
 
       if (error) throw error;
 

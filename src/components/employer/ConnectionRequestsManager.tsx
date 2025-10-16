@@ -114,13 +114,15 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
 
     setProcessing(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("connection_requests")
         .update({ 
           status: "accepted",
           message: acceptanceMessage 
         })
-        .eq("id", selectedRequest.id);
+        .eq("id", selectedRequest.id)
+        .select("id, status")
+        .single();
 
       if (error) throw error;
 
@@ -140,10 +142,12 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
   const handleRejectRequest = async (requestId: string) => {
     setProcessing(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("connection_requests")
         .update({ status: "rejected" })
-        .eq("id", requestId);
+        .eq("id", requestId)
+        .select("id, status")
+        .single();
 
       if (error) throw error;
 
