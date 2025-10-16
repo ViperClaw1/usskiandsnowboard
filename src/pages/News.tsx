@@ -32,7 +32,6 @@ const News = () => {
       <main>
         <section className="py-20 bg-gradient-to-b from-background to-muted">
           <div className="container mx-auto px-4 text-center">
-            <Newspaper className="h-16 w-16 mx-auto mb-6 text-primary" />
             <h1 className="text-5xl font-bold text-foreground mb-6">
               Latest News
             </h1>
