@@ -38,6 +38,27 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
     if (athleteProfileId) {
       loadRequests();
     }
+
+    // Set up real-time subscription for connection requests
+    const channel = supabase
+      .channel('connection_requests_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_requests',
+          filter: `athlete_id=eq.${athleteProfileId}`
+        },
+        () => {
+          loadRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [athleteProfileId]);
 
   const loadRequests = async () => {
