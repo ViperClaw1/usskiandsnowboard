@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, MapPin, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProfileForm from "@/components/athlete/ProfileForm";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface AthleteDashboardProps {
   user: User;
@@ -16,6 +18,29 @@ interface AthleteDashboardProps {
 const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
   const navigate = useNavigate();
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProfile();
+  }, [user.id]);
+
+  const loadProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("athlete_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error: any) {
+      console.error("Error loading profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -29,8 +54,8 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
 
   const handleProfileComplete = () => {
     setShowProfileDialog(false);
-    toast.success("Profile updated! Refreshing...");
-    setTimeout(() => window.location.reload(), 1000);
+    loadProfile();
+    toast.success("Profile updated successfully!");
   };
 
   return (
@@ -50,24 +75,87 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
           <Card className="shadow-elegant">
             <CardHeader>
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <UserIcon className="h-8 w-8 text-primary" />
-                </div>
-                <div>
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={profile?.photo_url} />
+                  <AvatarFallback>
+                    <UserIcon className="h-8 w-8 text-primary" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
                   <CardTitle>Welcome, {user.email}</CardTitle>
-                  <CardDescription>Complete your athlete profile to get started</CardDescription>
+                  <CardDescription>
+                    {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Your profile is <span className="font-semibold text-foreground">0% complete</span>
-                </p>
-                <Button onClick={() => setShowProfileDialog(true)}>
-                  Complete Your Profile
-                </Button>
-              </div>
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Loading profile...</p>
+              ) : profile ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Your profile is <span className="font-semibold text-foreground">{profile.profile_completeness}% complete</span>
+                    </p>
+                    <Badge variant={profile.is_public ? "default" : "secondary"}>
+                      {profile.is_public ? "Public" : "Private"}
+                    </Badge>
+                  </div>
+                  
+                  {profile.sport_discipline && (
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-1">Sport</p>
+                      <p className="text-sm text-muted-foreground">{profile.sport_discipline}</p>
+                    </div>
+                  )}
+
+                  {profile.bio && (
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-1">Bio</p>
+                      <p className="text-sm text-muted-foreground">{profile.bio}</p>
+                    </div>
+                  )}
+
+                  {profile.skills && profile.skills.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-2">Skills</p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.skills.map((skill: string) => (
+                          <Badge key={skill} variant="outline">{skill}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {profile.availability && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Briefcase className="h-4 w-4" />
+                      {profile.availability}
+                    </div>
+                  )}
+
+                  {profile.geographic_preferences && profile.geographic_preferences.length > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      {profile.geographic_preferences.join(", ")}
+                    </div>
+                  )}
+
+                  <Button onClick={() => setShowProfileDialog(true)} variant="outline">
+                    Edit Profile
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Your profile is <span className="font-semibold text-foreground">0% complete</span>
+                  </p>
+                  <Button onClick={() => setShowProfileDialog(true)}>
+                    Complete Your Profile
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
