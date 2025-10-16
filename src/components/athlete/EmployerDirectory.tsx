@@ -15,6 +15,10 @@ interface EmployerProfile {
   industry: string | null;
   opportunities_offered: string | null;
   contact_person: string | null;
+  logo_url: string | null;
+  about: string | null;
+  website: string | null;
+  linkedin_url: string | null;
 }
 
 const EmployerDirectory = () => {
@@ -154,7 +158,15 @@ const EmployerDirectory = () => {
         <Card key={employer.id}>
           <CardHeader>
             <div className="flex items-center gap-3 mb-2">
-              <Building2 className="h-8 w-8 text-primary" />
+              {employer.logo_url ? (
+                <img 
+                  src={employer.logo_url} 
+                  alt={`${employer.company_name} logo`}
+                  className="h-12 w-12 object-contain rounded"
+                />
+              ) : (
+                <Building2 className="h-8 w-8 text-primary" />
+              )}
               <div>
                 <CardTitle className="text-lg">{employer.company_name}</CardTitle>
                 {employer.industry && (
@@ -164,6 +176,12 @@ const EmployerDirectory = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {employer.about && (
+              <div>
+                <p className="text-sm font-medium mb-1">About</p>
+                <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
+              </div>
+            )}
             {employer.opportunities_offered && (
               <div>
                 <p className="text-sm font-medium mb-1">Opportunities</p>
