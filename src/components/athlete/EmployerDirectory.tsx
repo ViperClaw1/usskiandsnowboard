@@ -76,8 +76,8 @@ const EmployerDirectory = () => {
         .select("*");
 
       if (error) {
-        toast.error("Failed to load employers");
-        console.error("Error loading employers:", error);
+        toast.error("Failed to load partners");
+        console.error("Error loading partners:", error);
         return;
       }
 
@@ -97,7 +97,7 @@ const EmployerDirectory = () => {
     }
 
     if (existingRequests.has(employerId)) {
-      toast.error("You have already sent a request to this employer");
+      toast.error("You have already sent a request to this partner");
       return;
     }
 
@@ -147,7 +147,7 @@ const EmployerDirectory = () => {
     return (
       <div className="text-center p-8">
         <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-muted-foreground">No employers found</p>
+        <p className="text-muted-foreground">No partners found</p>
       </div>
     );
   }

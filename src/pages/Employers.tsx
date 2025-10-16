@@ -71,7 +71,7 @@ const Employers = () => {
               Athletes
             </Link>
             <Link to="/employers" className="text-primary font-medium">
-              Employers
+              Partners
             </Link>
             <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors">
               News
@@ -90,7 +90,7 @@ const Employers = () => {
               Partner Organizations
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Companies seeking talented U.S. Ski & Snowboard athletes
+              Companies partnering with talented U.S. Ski & Snowboard athletes
             </p>
           </div>
         </section>
@@ -103,7 +103,7 @@ const Employers = () => {
               </div>
             ) : employers.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No employer profiles available yet.</p>
+                <p className="text-muted-foreground">No partner profiles available yet.</p>
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

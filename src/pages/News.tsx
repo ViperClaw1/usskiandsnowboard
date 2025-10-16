@@ -17,7 +17,7 @@ const News = () => {
               Athletes
             </Link>
             <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors">
-              Employers
+              Partners
             </Link>
             <Link to="/news" className="text-primary font-medium">
               News
@@ -62,7 +62,7 @@ const News = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    We're continuously improving our platform to better serve athletes and employers. Stay tuned for new features and enhancements.
+                    We're continuously improving our platform to better serve athletes and partners. Stay tuned for new features and enhancements.
                   </p>
                 </CardContent>
               </Card>

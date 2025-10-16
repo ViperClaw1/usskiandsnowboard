@@ -77,7 +77,7 @@ const Athletes = () => {
               Athletes
             </Link>
             <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors">
-              Employers
+              Partners
             </Link>
             <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors">
               News

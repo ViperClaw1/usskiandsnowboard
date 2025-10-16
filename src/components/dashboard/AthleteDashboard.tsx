@@ -199,7 +199,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                         </Button>
                         <Button onClick={() => setShowEmployerDirectory(true)}>
                           <Building2 className="h-4 w-4 mr-2" />
-                          Browse Employers
+                          Browse Partners
                         </Button>
                       </div>
                     </div>
@@ -226,7 +226,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold text-accent">{pendingCount}</p>
-                    <p className="text-sm text-muted-foreground mt-1">From employers</p>
+                    <p className="text-sm text-muted-foreground mt-1">From partners</p>
                   </CardContent>
                 </Card>
 

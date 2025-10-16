@@ -16,7 +16,7 @@ const Index = () => {
               Athletes
             </Link>
             <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors">
-              Employers
+              Partners
             </Link>
             <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors">
               News
@@ -48,7 +48,7 @@ const Index = () => {
               <Link to="/auth?type=employer">
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                   <Briefcase className="mr-2 h-5 w-5" />
-                  I'm an Employer
+                  I'm a Partner
                 </Button>
               </Link>
             </div>
@@ -75,7 +75,7 @@ const Index = () => {
                 <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
                   <Briefcase className="h-8 w-8 text-accent" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">For Employers</h3>
+                <h3 className="text-xl font-semibold mb-3 text-foreground">For Partners</h3>
                 <p className="text-muted-foreground">
                   Discover talented, driven athletes ready for career opportunities. 
                   Search by skills, interests, and location.
