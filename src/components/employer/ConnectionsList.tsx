@@ -272,25 +272,20 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                 </div>
                 
                 <div className="space-y-2 text-sm">
-                  <div className="min-h-[1.25rem]">
-                    <span className="text-muted-foreground">Membership: </span>
+                  <div className="min-h-[2.5rem]">
+                    <span className="text-muted-foreground">Career Interest: </span>
                     <span className="font-medium">
-                      {connection.athlete_profiles.years_of_membership ? `${connection.athlete_profiles.years_of_membership} years` : "Not specified"}
-                    </span>
-                  </div>
-                  
-                  <div className="min-h-[1.25rem]">
-                    <span className="text-muted-foreground">Availability: </span>
-                    <span className="font-medium">
-                      {connection.athlete_profiles.availability || "Not specified"}
+                      {connection.athlete_profiles.career_interests && connection.athlete_profiles.career_interests.length > 0
+                        ? connection.athlete_profiles.career_interests.slice(0, 2).join(", ") + (connection.athlete_profiles.career_interests.length > 2 ? "..." : "")
+                        : "Not specified"}
                     </span>
                   </div>
                   
                   <div className="min-h-[2.5rem]">
-                    <span className="text-muted-foreground">Interests: </span>
+                    <span className="text-muted-foreground">Skills: </span>
                     <span className="font-medium">
-                      {connection.athlete_profiles.career_interests && connection.athlete_profiles.career_interests.length > 0
-                        ? connection.athlete_profiles.career_interests.slice(0, 2).join(", ") + (connection.athlete_profiles.career_interests.length > 2 ? "..." : "")
+                      {connection.athlete_profiles.skills && connection.athlete_profiles.skills.length > 0
+                        ? connection.athlete_profiles.skills.slice(0, 2).join(", ") + (connection.athlete_profiles.skills.length > 2 ? "..." : "")
                         : "Not specified"}
                     </span>
                   </div>
@@ -301,6 +296,13 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                       {connection.athlete_profiles.geographic_preferences && connection.athlete_profiles.geographic_preferences.length > 0
                         ? connection.athlete_profiles.geographic_preferences.slice(0, 2).join(", ") + (connection.athlete_profiles.geographic_preferences.length > 2 ? "..." : "")
                         : "Not specified"}
+                    </span>
+                  </div>
+                  
+                  <div className="min-h-[1.25rem]">
+                    <span className="text-muted-foreground">Availability: </span>
+                    <span className="font-medium">
+                      {connection.athlete_profiles.availability || "Not specified"}
                     </span>
                   </div>
                 </div>
