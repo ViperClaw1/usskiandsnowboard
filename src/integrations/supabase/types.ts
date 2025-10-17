@@ -20,6 +20,7 @@ export type Database = {
           bio: string | null
           career_interests: string[] | null
           created_at: string
+          email: string | null
           geographic_preferences: string[] | null
           id: string
           instagram_url: string | null
@@ -39,6 +40,7 @@ export type Database = {
           bio?: string | null
           career_interests?: string[] | null
           created_at?: string
+          email?: string | null
           geographic_preferences?: string[] | null
           id?: string
           instagram_url?: string | null
@@ -58,6 +60,7 @@ export type Database = {
           bio?: string | null
           career_interests?: string[] | null
           created_at?: string
+          email?: string | null
           geographic_preferences?: string[] | null
           id?: string
           instagram_url?: string | null
@@ -205,7 +208,9 @@ export type Database = {
           about: string | null
           company_name: string
           company_size: string | null
+          contact_email: string | null
           contact_person: string | null
+          contact_title: string | null
           created_at: string
           hq_location: string | null
           id: string
@@ -221,7 +226,9 @@ export type Database = {
           about?: string | null
           company_name: string
           company_size?: string | null
+          contact_email?: string | null
           contact_person?: string | null
+          contact_title?: string | null
           created_at?: string
           hq_location?: string | null
           id?: string
@@ -237,7 +244,9 @@ export type Database = {
           about?: string | null
           company_name?: string
           company_size?: string | null
+          contact_email?: string | null
           contact_person?: string | null
+          contact_title?: string | null
           created_at?: string
           hq_location?: string | null
           id?: string

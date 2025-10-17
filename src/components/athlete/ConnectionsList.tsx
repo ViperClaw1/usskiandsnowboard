@@ -15,6 +15,8 @@ interface Connection {
     about: string | null;
     opportunities_offered: string | null;
     contact_person: string | null;
+    contact_title: string | null;
+    contact_email: string | null;
     logo_url: string | null;
     website: string | null;
     linkedin_url: string | null;
@@ -75,6 +77,8 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
             about,
             opportunities_offered,
             contact_person,
+            contact_title,
+            contact_email,
             logo_url,
             website,
             linkedin_url,
@@ -201,10 +205,25 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
                 </div>
               )}
 
-              {selectedConnection.employer_profiles.contact_person && (
+              {(selectedConnection.employer_profiles.contact_person || 
+                selectedConnection.employer_profiles.contact_title || 
+                selectedConnection.employer_profiles.contact_email) && (
                 <div>
-                  <h4 className="font-medium mb-2">Contact Person</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.contact_person}</p>
+                  <h4 className="font-medium mb-2">Contact Information</h4>
+                  {selectedConnection.employer_profiles.contact_person && (
+                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.contact_person}</p>
+                  )}
+                  {selectedConnection.employer_profiles.contact_title && (
+                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.contact_title}</p>
+                  )}
+                  {selectedConnection.employer_profiles.contact_email && (
+                    <a 
+                      href={`mailto:${selectedConnection.employer_profiles.contact_email}`}
+                      className="text-sm text-primary hover:underline block"
+                    >
+                      {selectedConnection.employer_profiles.contact_email}
+                    </a>
+                  )}
                 </div>
               )}
 

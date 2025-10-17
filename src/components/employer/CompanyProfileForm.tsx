@@ -18,6 +18,8 @@ const formSchema = z.object({
   company_size: z.string().optional(),
   hq_location: z.string().optional(),
   contact_person: z.string().optional(),
+  contact_title: z.string().optional(),
+  contact_email: z.string().email("Invalid email address").optional().or(z.literal("")),
   about: z.string().optional(),
   opportunities_offered: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
@@ -78,6 +80,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       company_size: existingProfile?.company_size || "",
       hq_location: existingProfile?.hq_location || "",
       contact_person: existingProfile?.contact_person || "",
+      contact_title: existingProfile?.contact_title || "",
+      contact_email: existingProfile?.contact_email || "",
       about: existingProfile?.about || "",
       opportunities_offered: existingProfile?.opportunities_offered || "",
       website: existingProfile?.website || "",
@@ -156,6 +160,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         company_size: values.company_size || null,
         hq_location: values.hq_location || null,
         contact_person: values.contact_person || null,
+        contact_title: values.contact_title || null,
+        contact_email: values.contact_email || null,
         about: values.about || null,
         opportunities_offered: values.opportunities_offered || null,
         website: values.website || null,
@@ -319,6 +325,34 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
               <FormLabel>Contact Person</FormLabel>
               <FormControl>
                 <Input placeholder="Enter contact person name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="contact_title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Title</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., HR Manager, Talent Acquisition" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="contact_email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Email</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="contact@company.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

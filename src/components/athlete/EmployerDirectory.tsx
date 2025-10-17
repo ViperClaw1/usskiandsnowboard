@@ -19,6 +19,8 @@ interface EmployerProfile {
   hq_location: string | null;
   opportunities_offered: string | null;
   contact_person: string | null;
+  contact_title: string | null;
+  contact_email: string | null;
   logo_url: string | null;
   about: string | null;
   website: string | null;
@@ -404,10 +406,24 @@ const EmployerDirectory = () => {
                   <p className="text-sm text-muted-foreground">{employer.opportunities_offered}</p>
                 </div>
               )}
-              {employer.contact_person && (
+              {(employer.contact_person || employer.contact_title || employer.contact_email) && (
                 <div>
                   <p className="text-sm font-medium mb-1">Contact</p>
-                  <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
+                  {employer.contact_person && (
+                    <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
+                  )}
+                  {employer.contact_title && (
+                    <p className="text-sm text-muted-foreground">{employer.contact_title}</p>
+                  )}
+                  {employer.contact_email && (
+                    <a 
+                      href={`mailto:${employer.contact_email}`}
+                      className="text-sm text-primary hover:underline block"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {employer.contact_email}
+                    </a>
+                  )}
                 </div>
               )}
               

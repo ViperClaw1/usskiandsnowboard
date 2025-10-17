@@ -40,6 +40,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
+    email: "",
     sport_discipline: "",
     bio: "",
     career_interests: "",
@@ -67,10 +68,10 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       if (athleteError) throw athleteError;
 
-      // Load user profile (name)
+      // Load user profile (name and email)
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("first_name, last_name")
+        .select("first_name, last_name, email")
         .eq("id", userId)
         .single();
 
@@ -80,6 +81,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         setFormData({
           first_name: profileData?.first_name || "",
           last_name: profileData?.last_name || "",
+          email: athleteData.email || profileData?.email || "",
           sport_discipline: athleteData.sport_discipline || "",
           bio: athleteData.bio || "",
           career_interests: athleteData.career_interests?.join(", ") || "",
@@ -96,7 +98,8 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         setFormData(prev => ({
           ...prev,
           first_name: profileData.first_name || "",
-          last_name: profileData.last_name || ""
+          last_name: profileData.last_name || "",
+          email: profileData.email || ""
         }));
       }
     } catch (error: any) {
@@ -210,6 +213,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
       if (uploadedPhotoUrl || photoUrl) completeness += 10;
 
       const profileData = {
+        email: formData.email,
         sport_discipline: formData.sport_discipline,
         bio: formData.bio,
         career_interests,
@@ -284,6 +288,18 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
             required
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email Address *</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="your.email@example.com"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+        />
       </div>
 
       <div className="space-y-2">

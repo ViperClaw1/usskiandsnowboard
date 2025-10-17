@@ -14,6 +14,7 @@ import { toast } from "sonner";
 interface AthleteProfile {
   id: string;
   user_id: string;
+  email: string | null;
   bio: string | null;
   sport_discipline: string | null;
   skills: string[] | null;
@@ -353,6 +354,18 @@ const AthleteDirectory = () => {
                 <div>
                   <h4 className="font-medium mb-2">Geographic Preferences</h4>
                   <p className="text-sm text-muted-foreground">{selectedAthlete.geographic_preferences.join(", ")}</p>
+                </div>
+              )}
+
+              {selectedAthlete.email && (
+                <div>
+                  <h4 className="font-medium mb-2">Contact Email</h4>
+                  <a 
+                    href={`mailto:${selectedAthlete.email}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {selectedAthlete.email}
+                  </a>
                 </div>
               )}
 
