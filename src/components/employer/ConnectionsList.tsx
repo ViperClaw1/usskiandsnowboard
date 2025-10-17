@@ -135,9 +135,13 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   .getPublicUrl(`${conn.athlete_profiles.user_id}/lifestyle/${file.name}`);
                 return urlData.publicUrl;
               });
-            } else if (conn.athlete_profiles.photo_url) {
-              // Fallback to profile photo if no lifestyle photos exist
-              photoUrls = [conn.athlete_profiles.photo_url];
+              console.log(`Loaded ${photoUrls.length} lifestyle photos for ${conn.athlete_profiles.user_id}`);
+            } else {
+              console.log(`No lifestyle photos found for ${conn.athlete_profiles.user_id}`);
+              if (conn.athlete_profiles.photo_url) {
+                // Fallback to profile photo if no lifestyle photos exist
+                photoUrls = [conn.athlete_profiles.photo_url];
+              }
             }
 
             return {
@@ -400,6 +404,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
 
               {selectedConnection.athlete_profiles.lifestyle_photos && selectedConnection.athlete_profiles.lifestyle_photos.length > 0 && (
                 <div className="space-y-3">
+                  <h4 className="font-medium">Athlete Highlights</h4>
                   <div className="relative w-full max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                     <img
                       src={selectedConnection.athlete_profiles.lifestyle_photos[currentPhotoIndex]}
