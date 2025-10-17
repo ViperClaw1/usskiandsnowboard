@@ -192,8 +192,10 @@ export type Database = {
         Row: {
           about: string | null
           company_name: string
+          company_size: string | null
           contact_person: string | null
           created_at: string
+          hq_location: string | null
           id: string
           industry: string | null
           linkedin_url: string | null
@@ -206,8 +208,10 @@ export type Database = {
         Insert: {
           about?: string | null
           company_name: string
+          company_size?: string | null
           contact_person?: string | null
           created_at?: string
+          hq_location?: string | null
           id?: string
           industry?: string | null
           linkedin_url?: string | null
@@ -220,8 +224,10 @@ export type Database = {
         Update: {
           about?: string | null
           company_name?: string
+          company_size?: string | null
           contact_person?: string | null
           created_at?: string
+          hq_location?: string | null
           id?: string
           industry?: string | null
           linkedin_url?: string | null

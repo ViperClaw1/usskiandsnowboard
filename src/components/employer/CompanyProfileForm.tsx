@@ -14,6 +14,8 @@ import { Loader2, Upload, Building2 } from "lucide-react";
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
   industry: z.string().optional(),
+  company_size: z.string().optional(),
+  hq_location: z.string().optional(),
   contact_person: z.string().optional(),
   about: z.string().optional(),
   opportunities_offered: z.string().optional(),
@@ -39,6 +41,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     defaultValues: {
       company_name: existingProfile?.company_name || "",
       industry: existingProfile?.industry || "",
+      company_size: existingProfile?.company_size || "",
+      hq_location: existingProfile?.hq_location || "",
       contact_person: existingProfile?.contact_person || "",
       about: existingProfile?.about || "",
       opportunities_offered: existingProfile?.opportunities_offered || "",
@@ -115,6 +119,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         user_id: userId,
         company_name: values.company_name,
         industry: values.industry || null,
+        company_size: values.company_size || null,
+        hq_location: values.hq_location || null,
         contact_person: values.contact_person || null,
         about: values.about || null,
         opportunities_offered: values.opportunities_offered || null,
@@ -216,6 +222,34 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
               <FormLabel>Industry</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Technology, Healthcare, Finance" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="company_size"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Company Size</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., 1-10, 11-50, 51-200, 201-500, 500+" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="hq_location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>HQ Location</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., San Francisco, CA" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
