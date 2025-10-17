@@ -90,7 +90,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-foreground">Make Connections</h3>
                 <p className="text-muted-foreground">
-                  Our admin team facilitates introductions, tracking outcomes from 
+                  Our Athlete Development team facilitates introductions, tracking outcomes from 
                   interviews to placements.
                 </p>
               </div>
