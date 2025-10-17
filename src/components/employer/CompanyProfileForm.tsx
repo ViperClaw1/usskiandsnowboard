@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -234,9 +235,21 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
           render={({ field }) => (
             <FormItem>
               <FormLabel>Company Size</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., 1-10, 11-50, 51-200, 201-500, 500+" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select company size" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="1-10">1-10 employees</SelectItem>
+                  <SelectItem value="11-50">11-50 employees</SelectItem>
+                  <SelectItem value="51-200">51-200 employees</SelectItem>
+                  <SelectItem value="201-500">201-500 employees</SelectItem>
+                  <SelectItem value="501-1000">501-1000 employees</SelectItem>
+                  <SelectItem value="1000+">1000+ employees</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
