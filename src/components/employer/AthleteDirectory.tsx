@@ -110,26 +110,34 @@ const AthleteDirectory = () => {
       // Load lifestyle photos for each athlete
       const athletesWithPhotos = await Promise.all(
         (data || []).map(async (athlete) => {
-          const { data: photoFiles } = await supabase.storage
-            .from("athlete-photos")
-            .list(`${athlete.user_id}/lifestyle`, {
-              limit: 5,
-              sortBy: { column: "created_at", order: "desc" },
-            });
+          try {
+            const { data: photoFiles } = await supabase.storage
+              .from("athlete-photos")
+              .list(`${athlete.user_id}/lifestyle`, {
+                limit: 5,
+                sortBy: { column: "created_at", order: "desc" },
+              });
 
-          if (photoFiles && photoFiles.length > 0) {
-            const photoUrls = photoFiles.map((file) => {
-              const { data: urlData } = supabase.storage
-                .from("athlete-photos")
-                .getPublicUrl(`${athlete.user_id}/lifestyle/${file.name}`);
-              return urlData.publicUrl;
-            });
-            return { ...athlete, lifestyle_photos: photoUrls };
+            if (photoFiles && photoFiles.length > 0) {
+              const photoUrls = photoFiles.map((file) => {
+                const { data: urlData } = supabase.storage
+                  .from("athlete-photos")
+                  .getPublicUrl(`${athlete.user_id}/lifestyle/${file.name}`);
+                return urlData.publicUrl;
+              });
+              console.log(`Loaded ${photoUrls.length} photos for athlete ${athlete.user_id}`);
+              return { ...athlete, lifestyle_photos: photoUrls };
+            }
+            console.log(`No photos found for athlete ${athlete.user_id}`);
+            return { ...athlete, lifestyle_photos: [] };
+          } catch (error) {
+            console.error(`Error loading photos for athlete ${athlete.user_id}:`, error);
+            return { ...athlete, lifestyle_photos: [] };
           }
-          return { ...athlete, lifestyle_photos: [] };
         })
       );
       
+      console.log("Athletes with photos:", athletesWithPhotos);
       setAthletes(athletesWithPhotos);
     } catch (error) {
       console.error("Error loading athletes:", error);
