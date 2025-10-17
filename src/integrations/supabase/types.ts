@@ -24,11 +24,13 @@ export type Database = {
           id: string
           is_public: boolean | null
           photo_url: string | null
+          professional_highlights: string | null
           profile_completeness: number | null
           skills: string[] | null
           sport_discipline: string | null
           updated_at: string
           user_id: string
+          years_of_membership: number | null
         }
         Insert: {
           availability?: string | null
@@ -39,11 +41,13 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           photo_url?: string | null
+          professional_highlights?: string | null
           profile_completeness?: number | null
           skills?: string[] | null
           sport_discipline?: string | null
           updated_at?: string
           user_id: string
+          years_of_membership?: number | null
         }
         Update: {
           availability?: string | null
@@ -54,11 +58,13 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           photo_url?: string | null
+          professional_highlights?: string | null
           profile_completeness?: number | null
           skills?: string[] | null
           sport_discipline?: string | null
           updated_at?: string
           user_id?: string
+          years_of_membership?: number | null
         }
         Relationships: [
           {

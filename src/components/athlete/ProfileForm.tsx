@@ -46,6 +46,8 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     skills: "",
     geographic_preferences: "",
     availability: "",
+    professional_highlights: "",
+    years_of_membership: "",
     is_public: true
   });
 
@@ -83,6 +85,8 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           skills: athleteData.skills?.join(", ") || "",
           geographic_preferences: athleteData.geographic_preferences?.join(", ") || "",
           availability: athleteData.availability || "",
+          professional_highlights: athleteData.professional_highlights || "",
+          years_of_membership: athleteData.years_of_membership?.toString() || "",
           is_public: athleteData.is_public ?? true
         });
         setPhotoUrl(athleteData.photo_url || "");
@@ -210,6 +214,8 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         skills,
         geographic_preferences,
         availability: formData.availability,
+        professional_highlights: formData.professional_highlights || null,
+        years_of_membership: formData.years_of_membership ? parseInt(formData.years_of_membership) : null,
         is_public: formData.is_public,
         photo_url: uploadedPhotoUrl ? uploadedPhotoUrl.split('?')[0] : (photoUrl ? photoUrl.split('?')[0] : null),
         profile_completeness: completeness
@@ -347,6 +353,34 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         <p className="text-xs text-muted-foreground">
           {formData.bio.length}/500 characters
         </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="professional_highlights">Professional Highlights</Label>
+        <Textarea
+          id="professional_highlights"
+          placeholder="Notable achievements, awards, championships, or career milestones..."
+          value={formData.professional_highlights}
+          onChange={(e) => setFormData({ ...formData, professional_highlights: e.target.value })}
+          rows={3}
+          maxLength={500}
+        />
+        <p className="text-xs text-muted-foreground">
+          {formData.professional_highlights.length}/500 characters
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="years_of_membership">Years of U.S. Ski & Snowboard Membership</Label>
+        <Input
+          id="years_of_membership"
+          type="number"
+          min="0"
+          max="100"
+          placeholder="e.g., 5"
+          value={formData.years_of_membership}
+          onChange={(e) => setFormData({ ...formData, years_of_membership: e.target.value })}
+        />
       </div>
 
       <div className="space-y-2">
