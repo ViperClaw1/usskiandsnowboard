@@ -223,103 +223,19 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                 <Badge variant="secondary">Pending</Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               <p className="text-xs text-muted-foreground/70">
                 Request Date: {format(new Date(request.created_at), "MMM d, yyyy")}
               </p>
               
               {request.athlete_profiles.bio && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Bio</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{request.athlete_profiles.bio}</p>
-                </div>
-              )}
-
-              {request.athlete_profiles.professional_highlights && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Professional Highlights</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{request.athlete_profiles.professional_highlights}</p>
-                </div>
-              )}
-
-              {request.athlete_profiles.years_of_membership && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Years of Membership</p>
-                  <p className="text-sm text-muted-foreground">{request.athlete_profiles.years_of_membership} years</p>
-                </div>
-              )}
-
-              {request.athlete_profiles.skills && request.athlete_profiles.skills.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Skills</p>
-                  <div className="flex flex-wrap gap-1">
-                    {request.athlete_profiles.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">{skill}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {request.athlete_profiles.career_interests && request.athlete_profiles.career_interests.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Career Interests</p>
-                  <div className="flex flex-wrap gap-1">
-                    {request.athlete_profiles.career_interests.map((interest, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">{interest}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {request.athlete_profiles.availability && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Availability</p>
-                  <p className="text-sm text-muted-foreground">{request.athlete_profiles.availability}</p>
-                </div>
-              )}
-
-              {request.athlete_profiles.geographic_preferences && request.athlete_profiles.geographic_preferences.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Geographic Preferences</p>
-                  <p className="text-sm text-muted-foreground">{request.athlete_profiles.geographic_preferences.join(", ")}</p>
-                </div>
-              )}
-
-              {request.athlete_profiles.email && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Email</p>
-                  <p className="text-sm text-muted-foreground">{request.athlete_profiles.email}</p>
-                </div>
-              )}
-
-              {request.athlete_profiles.instagram_url && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Instagram</p>
-                  <a 
-                    href={request.athlete_profiles.instagram_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline flex items-center gap-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Instagram className="h-3 w-3" />
-                    View Profile
-                  </a>
-                </div>
+                <p className="text-sm text-muted-foreground line-clamp-2">{request.athlete_profiles.bio}</p>
               )}
 
               {request.opportunity_type && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Requested Opportunity</p>
-                  <p className="text-sm text-muted-foreground">{request.opportunity_type}</p>
-                </div>
-              )}
-              
-              {request.message && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Message</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{request.message}</p>
-                </div>
+                <p className="text-sm">
+                  <span className="font-medium">Opportunity:</span> {request.opportunity_type}
+                </p>
               )}
             </CardContent>
           </Card>
