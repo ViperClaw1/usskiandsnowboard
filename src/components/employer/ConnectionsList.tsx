@@ -135,7 +135,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         {connections.map((connection) => (
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
             <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
                   <AvatarFallback>AT</AvatarFallback>
@@ -152,68 +152,12 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   {status === "accepted" ? "Connected" : "Declined"}
                 </Badge>
               </div>
-              
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground/70">
-                  {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
-                </p>
-                
-                <div>
-                  <p className="text-xs font-medium mb-1">Bio</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {connection.athlete_profiles.bio || "No bio provided"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium mb-1">Professional Highlights</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {connection.athlete_profiles.professional_highlights || "Not provided"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium mb-1">Skills</p>
-                  <div className="flex flex-wrap gap-1">
-                    {connection.athlete_profiles.skills && connection.athlete_profiles.skills.length > 0 ? (
-                      connection.athlete_profiles.skills.map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">{skill}</Badge>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No skills listed</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium mb-1">Career Interests</p>
-                  <div className="flex flex-wrap gap-1">
-                    {connection.athlete_profiles.career_interests && connection.athlete_profiles.career_interests.length > 0 ? (
-                      connection.athlete_profiles.career_interests.map((interest, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">{interest}</Badge>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No interests listed</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium mb-1">Availability</p>
-                  <p className="text-sm text-muted-foreground">
-                    {connection.athlete_profiles.availability || "Not specified"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium mb-1">Geographic Preferences</p>
-                  <p className="text-sm text-muted-foreground">
-                    {connection.athlete_profiles.geographic_preferences && connection.athlete_profiles.geographic_preferences.length > 0
-                      ? connection.athlete_profiles.geographic_preferences.join(", ")
-                      : "Not specified"}
-                  </p>
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground/70">
+                {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
+              </p>
+              {connection.athlete_profiles.bio && (
+                <p className="text-sm text-muted-foreground line-clamp-2 mt-2">{connection.athlete_profiles.bio}</p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -243,28 +187,29 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                 </div>
               </div>
 
-              {selectedConnection.athlete_profiles.bio && (
-                <div>
-                  <h4 className="font-medium mb-2">Bio</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.bio}</p>
-                </div>
-              )}
+              <div>
+                <h4 className="font-medium mb-2">Bio</h4>
+                <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.bio || "No bio provided"}</p>
+              </div>
 
-              {selectedConnection.athlete_profiles.professional_highlights && (
-                <div>
-                  <h4 className="font-medium mb-2">Professional Highlights</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.professional_highlights}</p>
-                </div>
-              )}
+              <div>
+                <h4 className="font-medium mb-2">Professional Highlights</h4>
+                <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.professional_highlights || "Not provided"}</p>
+              </div>
 
-              {selectedConnection.athlete_profiles.years_of_membership && (
+              {selectedConnection.athlete_profiles.years_of_membership ? (
                 <div>
                   <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
                   <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.years_of_membership} years</p>
                 </div>
+              ) : (
+                <div>
+                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                </div>
               )}
 
-              {selectedConnection.athlete_profiles.instagram_url && (
+              {selectedConnection.athlete_profiles.instagram_url ? (
                 <div>
                   <h4 className="font-medium mb-2">Instagram</h4>
                   <a 
@@ -276,38 +221,49 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                     View Profile
                   </a>
                 </div>
+              ) : (
+                <div>
+                  <h4 className="font-medium mb-2">Instagram</h4>
+                  <p className="text-sm text-muted-foreground">Not provided</p>
+                </div>
               )}
 
-              {selectedConnection.athlete_profiles.skills && selectedConnection.athlete_profiles.skills.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Skills</h4>
+              <div>
+                <h4 className="font-medium mb-2">Skills</h4>
+                {selectedConnection.athlete_profiles.skills && selectedConnection.athlete_profiles.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedConnection.athlete_profiles.skills.map((skill, index) => (
                       <Badge key={index} variant="secondary">{skill}</Badge>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">No skills listed</p>
+                )}
+              </div>
 
-              {selectedConnection.athlete_profiles.career_interests && selectedConnection.athlete_profiles.career_interests.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Career Interests</h4>
+              <div>
+                <h4 className="font-medium mb-2">Career Interests</h4>
+                {selectedConnection.athlete_profiles.career_interests && selectedConnection.athlete_profiles.career_interests.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedConnection.athlete_profiles.career_interests.map((interest, index) => (
                       <Badge key={index} variant="outline">{interest}</Badge>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">No interests listed</p>
+                )}
+              </div>
 
-              {selectedConnection.athlete_profiles.geographic_preferences && selectedConnection.athlete_profiles.geographic_preferences.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Geographic Preferences</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.geographic_preferences.join(", ")}</p>
-                </div>
-              )}
+              <div>
+                <h4 className="font-medium mb-2">Geographic Preferences</h4>
+                <p className="text-sm text-muted-foreground">
+                  {selectedConnection.athlete_profiles.geographic_preferences && selectedConnection.athlete_profiles.geographic_preferences.length > 0
+                    ? selectedConnection.athlete_profiles.geographic_preferences.join(", ")
+                    : "Not specified"}
+                </p>
+              </div>
 
-              {selectedConnection.athlete_profiles.email && (
+              {selectedConnection.athlete_profiles.email ? (
                 <div>
                   <h4 className="font-medium mb-2">Contact Email</h4>
                   <a 
@@ -317,14 +273,17 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                     {selectedConnection.athlete_profiles.email}
                   </a>
                 </div>
-              )}
-
-              {selectedConnection.athlete_profiles.availability && (
+              ) : (
                 <div>
-                  <h4 className="font-medium mb-2">Availability</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.availability}</p>
+                  <h4 className="font-medium mb-2">Contact Email</h4>
+                  <p className="text-sm text-muted-foreground">Not provided</p>
                 </div>
               )}
+
+              <div>
+                <h4 className="font-medium mb-2">Availability</h4>
+                <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.availability || "Not specified"}</p>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
