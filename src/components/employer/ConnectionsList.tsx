@@ -285,51 +285,6 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
-              {selectedConnection.athlete_profiles.lifestyle_photos && selectedConnection.athlete_profiles.lifestyle_photos.length > 0 && (
-                <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden">
-                  <img
-                    src={selectedConnection.athlete_profiles.lifestyle_photos[currentPhotoIndex]}
-                    alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  {selectedConnection.athlete_profiles.lifestyle_photos.length > 1 && (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
-                        onClick={() => setCurrentPhotoIndex((prev) => 
-                          prev === 0 ? selectedConnection.athlete_profiles.lifestyle_photos!.length - 1 : prev - 1
-                        )}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
-                        onClick={() => setCurrentPhotoIndex((prev) => 
-                          prev === selectedConnection.athlete_profiles.lifestyle_photos!.length - 1 ? 0 : prev + 1
-                        )}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                        {selectedConnection.athlete_profiles.lifestyle_photos.map((_, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setCurrentPhotoIndex(idx)}
-                            className={`h-2 w-2 rounded-full transition-colors ${
-                              idx === currentPhotoIndex ? 'bg-white' : 'bg-white/50'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
@@ -442,6 +397,37 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                 <h4 className="font-medium mb-2">Availability</h4>
                 <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.availability || "Not specified"}</p>
               </div>
+
+              {selectedConnection.athlete_profiles.lifestyle_photos && selectedConnection.athlete_profiles.lifestyle_photos.length > 0 && (
+                <div className="space-y-3">
+                  <div className="relative w-full max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                    <img
+                      src={selectedConnection.athlete_profiles.lifestyle_photos[currentPhotoIndex]}
+                      alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
+                      className="max-w-full max-h-[400px] object-contain"
+                    />
+                  </div>
+                  {selectedConnection.athlete_profiles.lifestyle_photos.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {selectedConnection.athlete_profiles.lifestyle_photos.map((photo, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentPhotoIndex(idx)}
+                          className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                            idx === currentPhotoIndex ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <img
+                            src={photo}
+                            alt={`Thumbnail ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
