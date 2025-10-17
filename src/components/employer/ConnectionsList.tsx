@@ -249,28 +249,34 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredConnections.map((connection) => (
-          <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors aspect-square flex flex-col" onClick={() => setSelectedConnection(connection)}>
-              <CardContent className="p-4 flex flex-col h-full">
-                <div className="flex flex-col items-center text-center mb-3">
-                  <Avatar className="h-16 w-16 mb-2">
+          <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex flex-col items-center text-center">
+                  <Avatar className="h-16 w-16 mb-3">
                     <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
                     <AvatarFallback>AT</AvatarFallback>
                   </Avatar>
-                  <p className="font-medium text-sm">
-                    {connection.athlete_profiles.profiles?.full_name || "Athlete"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {connection.athlete_profiles.sport_discipline || "Sport not specified"}
-                  </p>
-                  <Badge variant={status === "accepted" ? "default" : "secondary"} className="mt-2">
-                    {status === "accepted" ? "Connected" : "Declined"}
-                  </Badge>
+                  <div className="w-full space-y-1">
+                    <p className="font-medium text-sm min-h-[1.25rem]">
+                      {connection.athlete_profiles.profiles?.full_name || "Athlete"}
+                    </p>
+                    <p className="text-xs text-muted-foreground min-h-[1rem]">
+                      {connection.athlete_profiles.sport_discipline || "Sport not specified"}
+                    </p>
+                    <div className="flex justify-center min-h-[1.5rem] mt-2">
+                      <Badge variant={status === "accepted" ? "default" : "secondary"}>
+                        {status === "accepted" ? "Connected" : "Declined"}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 flex flex-col justify-between">
+                <div className="min-h-[4.5rem]">
                   <p className="text-sm text-muted-foreground line-clamp-3">
                     {connection.athlete_profiles.bio || "\u00A0"}
                   </p>
-                  <p className="text-xs text-muted-foreground/70 mt-2">
+                </div>
+                <div className="min-h-[1.25rem]">
+                  <p className="text-xs text-muted-foreground/70 text-center">
                     {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
                   </p>
                 </div>
