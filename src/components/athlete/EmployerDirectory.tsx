@@ -7,7 +7,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Loader2, FilterX } from "lucide-react";
+import { Building2, Loader2, FilterX, Link as LinkIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 interface EmployerProfile {
@@ -359,19 +361,23 @@ const EmployerDirectory = () => {
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredEmployers.map((employer) => (
-          <Card key={employer.id}>
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                {employer.logo_url ? (
-                  <img 
-                    src={employer.logo_url} 
-                    alt={`${employer.company_name} logo`}
-                    className="h-12 w-12 object-contain rounded"
-                  />
-                ) : (
-                  <Building2 className="h-8 w-8 text-primary" />
-                )}
-                <div>
+          <Card key={employer.id} className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col items-center gap-3">
+                <Avatar className="h-24 w-24">
+                  {employer.logo_url ? (
+                    <img 
+                      src={employer.logo_url} 
+                      alt={`${employer.company_name} logo`}
+                      className="h-full w-full object-contain p-2"
+                    />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-12 w-12 text-primary" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="text-center w-full">
                   <CardTitle className="text-lg">{employer.company_name}</CardTitle>
                   {employer.industry && (
                     <p className="text-sm text-muted-foreground">{employer.industry}</p>
@@ -379,50 +385,48 @@ const EmployerDirectory = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {employer.about && (
-                <div>
-                  <p className="text-sm font-medium mb-1">About</p>
-                  <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
-                </div>
+                <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
               )}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {employer.company_size && (
-                  <div>
-                    <p className="font-medium">Size</p>
-                    <p className="text-muted-foreground">{employer.company_size}</p>
-                  </div>
-                )}
-                {employer.hq_location && (
-                  <div>
-                    <p className="font-medium">Location</p>
-                    <p className="text-muted-foreground">{employer.hq_location}</p>
-                  </div>
-                )}
-              </div>
+
               {employer.opportunities_offered && (
                 <div>
-                  <p className="text-sm font-medium mb-1">Opportunities</p>
-                  <p className="text-sm text-muted-foreground">{employer.opportunities_offered}</p>
+                  <p className="text-xs font-semibold text-foreground mb-1">Opportunities</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{employer.opportunities_offered}</p>
                 </div>
               )}
-              {(employer.contact_person || employer.contact_title || employer.contact_email) && (
+
+              <div className="flex flex-wrap gap-2">
+                {employer.company_size && (
+                  <Badge variant="outline" className="text-xs">{employer.company_size}</Badge>
+                )}
+                {employer.hq_location && (
+                  <Badge variant="outline" className="text-xs">{employer.hq_location}</Badge>
+                )}
+              </div>
+
+              {employer.website && (
+                <div className="flex items-center gap-2">
+                  <LinkIcon className="h-3 w-3 text-muted-foreground" />
+                  <a 
+                    href={employer.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline truncate"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {employer.website.replace(/^https?:\/\//, '')}
+                  </a>
+                </div>
+              )}
+
+              {employer.contact_person && (
                 <div>
-                  <p className="text-sm font-medium mb-1">Contact</p>
-                  {employer.contact_person && (
-                    <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
-                  )}
+                  <p className="text-xs font-semibold text-foreground mb-1">Contact</p>
+                  <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
                   {employer.contact_title && (
-                    <p className="text-sm text-muted-foreground">{employer.contact_title}</p>
-                  )}
-                  {employer.contact_email && (
-                    <a 
-                      href={`mailto:${employer.contact_email}`}
-                      className="text-sm text-primary hover:underline block"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {employer.contact_email}
-                    </a>
+                    <p className="text-xs text-muted-foreground">{employer.contact_title}</p>
                   )}
                 </div>
               )}
