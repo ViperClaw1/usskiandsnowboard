@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -183,31 +183,52 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
           </p>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredConnections.map((connection) => (
-          <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0" style={{ width: '40px', height: '40px' }}>
+          <Card key={connection.id} className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50" onClick={() => setSelectedConnection(connection)}>
+            <CardHeader className="pb-3">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex-shrink-0" style={{ width: '96px', height: '96px' }}>
                   {connection.employer_profiles.logo_url ? (
                     <img 
                       src={connection.employer_profiles.logo_url} 
-                      alt={connection.employer_profiles.company_name} 
+                      alt={connection.employer_profiles.company_name}
                       className="w-full h-full object-contain rounded"
-                      style={{ width: '40px', height: '40px' }}
+                      style={{ width: '96px', height: '96px' }}
                     />
                   ) : (
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-24 w-24">
                       <AvatarFallback>
-                        <Building2 className="h-5 w-5 text-muted-foreground" />
+                        <Building2 className="h-12 w-12 text-muted-foreground" />
                       </AvatarFallback>
                     </Avatar>
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{connection.employer_profiles.company_name}</p>
+                <div className="text-center w-full">
+                  <CardTitle className="text-lg">{connection.employer_profiles.company_name}</CardTitle>
                   {connection.employer_profiles.industry && (
-                    <p className="text-xs text-muted-foreground">{connection.employer_profiles.industry}</p>
+                    <p className="text-sm text-muted-foreground">{connection.employer_profiles.industry}</p>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {connection.employer_profiles.about && (
+                <p className="text-sm text-muted-foreground line-clamp-3">{connection.employer_profiles.about}</p>
+              )}
+              {connection.employer_profiles.opportunities_offered && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Opportunities</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{connection.employer_profiles.opportunities_offered}</p>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {connection.employer_profiles.company_size && (
+                    <Badge variant="outline" className="text-xs">{connection.employer_profiles.company_size}</Badge>
+                  )}
+                  {connection.employer_profiles.hq_location && (
+                    <Badge variant="outline" className="text-xs">{connection.employer_profiles.hq_location}</Badge>
                   )}
                 </div>
                 <Badge variant={status === "accepted" ? "default" : "secondary"}>
