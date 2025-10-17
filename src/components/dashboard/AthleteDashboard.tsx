@@ -124,7 +124,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 <CardContent className="p-4 sm:p-6">
                   <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
                     {/* Left Half - Welcome Section */}
-                    <div className="flex flex-col justify-center min-w-0">
+                    <div className="flex flex-col justify-center min-w-0 w-full mx-auto max-w-sm sm:max-w-md md:max-w-none">
                       <div className="flex items-start gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4 lg:mb-6">
                         <Avatar className="h-12 w-12 sm:h-14 sm:w-14 lg:h-20 lg:w-20 shrink-0">
                           <AvatarImage src={profile?.photo_url} />
@@ -218,7 +218,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
 
                     {/* Right Half - Photo Uploader */}
                     <div className="flex items-center justify-center">
-                      <div className="w-full max-w-sm sm:max-w-md mx-auto">
+                      <div className="w-full max-w-sm sm:max-w-md md:max-w-none mx-auto">
                         <PhotoUploader userId={user.id} />
                       </div>
                     </div>
