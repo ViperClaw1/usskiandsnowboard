@@ -136,7 +136,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         {loading ? (
           <div className="flex gap-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-32 h-32 bg-muted animate-pulse rounded-lg flex-shrink-0" />
+              <div key={i} className="w-32 h-32 aspect-square bg-muted animate-pulse rounded-lg flex-shrink-0" />
             ))}
           </div>
         ) : photos.length === 0 ? (
@@ -144,7 +144,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="w-32 h-32 border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
+                className="w-32 h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
               >
                 <Upload className="h-8 w-8 text-muted-foreground/30" />
               </div>
@@ -153,7 +153,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         ) : (
           <div className="flex gap-3 pb-2">
             {photos.map((photoUrl, index) => (
-              <div key={index} className="relative w-32 h-32 flex-shrink-0 group">
+              <div key={index} className="relative w-32 h-32 aspect-square flex-shrink-0 group">
                 <img
                   src={photoUrl}
                   alt={`Lifestyle photo ${index + 1}`}
@@ -173,7 +173,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
               [...Array(5 - photos.length)].map((_, i) => (
                 <div
                   key={`empty-${i}`}
-                  className="w-32 h-32 border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
+                  className="w-32 h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
                 >
                   <Upload className="h-8 w-8 text-muted-foreground/30" />
                 </div>
