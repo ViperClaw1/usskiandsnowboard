@@ -88,10 +88,9 @@ const Index = () => {
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <TrendingUp className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Make Connections</h3>
+                <h3 className="text-xl font-semibold mb-3 text-foreground">Engage</h3>
                 <p className="text-muted-foreground">
-                  Our Athlete Development team facilitates introductions, tracking outcomes from 
-                  interviews to placements.
+                  Our Athlete Development team helps optimize Athlete profiles, curate partners, and facilitates actionable connections
                 </p>
               </div>
             </div>
