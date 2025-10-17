@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MapPin, Briefcase, Building2, Users, UserCheck, UserX } from "lucide-react";
+import { LogOut, User as UserIcon, MapPin, Briefcase, Building2, Users, UserCheck, UserX, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProfileForm from "@/components/athlete/ProfileForm";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
@@ -254,7 +254,10 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Profile Views</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Profile Views</CardTitle>
+                      <Eye className="h-5 w-5 text-primary" />
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <p className="text-3xl font-bold text-foreground">{profile?.profile_views || 0}</p>
