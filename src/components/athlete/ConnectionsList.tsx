@@ -18,6 +18,8 @@ interface Connection {
     logo_url: string | null;
     website: string | null;
     linkedin_url: string | null;
+    company_size: string | null;
+    hq_location: string | null;
   };
   created_at: string;
 }
@@ -75,7 +77,9 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
             contact_person,
             logo_url,
             website,
-            linkedin_url
+            linkedin_url,
+            company_size,
+            hq_location
           )
         `)
         .eq("athlete_id", athleteProfileId)
@@ -174,6 +178,21 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
                   <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.about}</p>
                 </div>
               )}
+
+              <div className="grid grid-cols-2 gap-4">
+                {selectedConnection.employer_profiles.company_size && (
+                  <div>
+                    <h4 className="font-medium mb-2">Company Size</h4>
+                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.company_size}</p>
+                  </div>
+                )}
+                {selectedConnection.employer_profiles.hq_location && (
+                  <div>
+                    <h4 className="font-medium mb-2">HQ Location</h4>
+                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.hq_location}</p>
+                  </div>
+                )}
+              </div>
 
               {selectedConnection.employer_profiles.opportunities_offered && (
                 <div>
