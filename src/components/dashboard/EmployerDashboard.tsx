@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, Linkedin } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
@@ -28,9 +29,11 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
   const [pendingCount, setPendingCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
+  const [featuredAthletes, setFeaturedAthletes] = useState<any[]>([]);
 
   useEffect(() => {
     loadProfile();
+    loadFeaturedAthletes();
   }, [user.id]);
 
   useEffect(() => {
@@ -86,6 +89,26 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
       setRejectedCount(rejected || 0);
     } catch (error) {
       console.error("Error loading counts:", error);
+    }
+  };
+
+  const loadFeaturedAthletes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("athlete_profiles")
+        .select(`
+          id,
+          photo_url,
+          sport_discipline,
+          profiles!inner(full_name)
+        `)
+        .eq("is_public", true)
+        .limit(3);
+
+      if (error) throw error;
+      setFeaturedAthletes(data || []);
+    } catch (error) {
+      console.error("Error loading featured athletes:", error);
     }
   };
 
@@ -222,7 +245,41 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                         <p className="text-3xl font-bold text-accent">{pendingCount}</p>
                         <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
                       </CardContent>
-                    </Card>
+              </Card>
+
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl">Browse Athletes</CardTitle>
+                    <Button onClick={handleBrowseAthletes}>
+                      <Search className="h-4 w-4 mr-2" />
+                      Browse Athletes
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-6">
+                    {featuredAthletes.length > 0 ? (
+                      featuredAthletes.map((athlete) => (
+                        <div key={athlete.id} className="flex flex-col items-center text-center space-y-3">
+                          <Avatar className="h-20 w-20">
+                            <AvatarImage src={athlete.photo_url ?? undefined} />
+                            <AvatarFallback>AT</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
+                            <p className="text-xs text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-3 text-center py-8">
+                        <p className="text-sm text-muted-foreground">No featured athletes available</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
                     <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
                       <CardHeader>
