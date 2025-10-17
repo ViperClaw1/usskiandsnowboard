@@ -230,34 +230,34 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
 
               <Card className="shadow-elegant">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl">Browse Athletes</CardTitle>
+                  <CardTitle className="text-2xl">Browse Athletes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <div className="flex gap-4 flex-1">
+                      {featuredAthletes.length > 0 ? (
+                        featuredAthletes.map((athlete) => (
+                          <div key={athlete.id} className="flex items-center gap-3">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src={athlete.photo_url ?? undefined} />
+                              <AvatarFallback>AT</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
+                              <p className="text-xs text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex-1 text-center py-4">
+                          <p className="text-sm text-muted-foreground">No featured athletes available</p>
+                        </div>
+                      )}
+                    </div>
                     <Button onClick={handleBrowseAthletes}>
                       <Search className="h-4 w-4 mr-2" />
                       Browse Athletes
                     </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-6">
-                    {featuredAthletes.length > 0 ? (
-                      featuredAthletes.map((athlete) => (
-                        <div key={athlete.id} className="flex flex-col items-center text-center space-y-3">
-                          <Avatar className="h-20 w-20">
-                            <AvatarImage src={athlete.photo_url ?? undefined} />
-                            <AvatarFallback>AT</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
-                            <p className="text-xs text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="col-span-3 text-center py-8">
-                        <p className="text-sm text-muted-foreground">No featured athletes available</p>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
