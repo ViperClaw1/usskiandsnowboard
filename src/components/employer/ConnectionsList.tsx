@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -45,6 +46,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSport, setFilterSport] = useState("");
   const [filterAvailability, setFilterAvailability] = useState("");
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   useEffect(() => {
     if (employerProfileId) {
@@ -234,16 +236,6 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
           {filteredConnections.map((connection) => (
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
               <CardContent className="p-4">
-                {connection.athlete_profiles.lifestyle_photos && connection.athlete_profiles.lifestyle_photos.length > 0 && (
-                  <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted mb-3">
-                    <img
-                      src={connection.athlete_profiles.lifestyle_photos[0]}
-                      alt={`${connection.athlete_profiles.profiles?.full_name || 'Athlete'} lifestyle photo`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
                 <div className="flex items-center gap-3 mb-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
@@ -282,6 +274,51 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
+              {selectedConnection.athlete_profiles.lifestyle_photos && selectedConnection.athlete_profiles.lifestyle_photos.length > 0 && (
+                <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden">
+                  <img
+                    src={selectedConnection.athlete_profiles.lifestyle_photos[currentPhotoIndex]}
+                    alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {selectedConnection.athlete_profiles.lifestyle_photos.length > 1 && (
+                    <>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
+                        onClick={() => setCurrentPhotoIndex((prev) => 
+                          prev === 0 ? selectedConnection.athlete_profiles.lifestyle_photos!.length - 1 : prev - 1
+                        )}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full"
+                        onClick={() => setCurrentPhotoIndex((prev) => 
+                          prev === selectedConnection.athlete_profiles.lifestyle_photos!.length - 1 ? 0 : prev + 1
+                        )}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                        {selectedConnection.athlete_profiles.lifestyle_photos.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentPhotoIndex(idx)}
+                            className={`h-2 w-2 rounded-full transition-colors ${
+                              idx === currentPhotoIndex ? 'bg-white' : 'bg-white/50'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
