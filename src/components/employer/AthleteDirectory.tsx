@@ -26,6 +26,7 @@ interface AthleteProfile {
   years_of_membership: number | null;
   instagram_url: string | null;
   profile_views: number | null;
+  sponsors: string[] | null;
   profiles: {
     full_name: string | null;
   };
@@ -426,6 +427,17 @@ const AthleteDirectory = () => {
                     <Instagram className="h-4 w-4" />
                     View Profile
                   </a>
+                </div>
+              )}
+
+              {selectedAthlete.sponsors && selectedAthlete.sponsors.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Sponsors</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAthlete.sponsors.map((sponsor, index) => (
+                      <Badge key={index} variant="outline">{sponsor}</Badge>
+                    ))}
+                  </div>
                 </div>
               )}
 
