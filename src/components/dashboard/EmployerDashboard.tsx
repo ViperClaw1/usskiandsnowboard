@@ -36,8 +36,11 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
   useEffect(() => {
     if (profile?.id) {
       loadConnectionCounts();
+    } else if (!loading && profile === null) {
+      // Automatically open profile creation dialog if no profile exists
+      setShowProfileDialog(true);
     }
-  }, [profile]);
+  }, [profile, loading]);
 
   const loadProfile = async () => {
     try {
