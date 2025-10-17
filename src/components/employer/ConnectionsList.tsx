@@ -271,7 +271,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   </div>
                 </div>
                 
-                <div className="space-y-2 text-sm">
+                <div className="space-y-1 text-sm">
                   <div className="min-h-[2.5rem]">
                     <span className="text-muted-foreground">Career Interest: </span>
                     <span className="font-medium">
