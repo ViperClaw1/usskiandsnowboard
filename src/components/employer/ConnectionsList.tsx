@@ -75,6 +75,11 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
     };
   }, [employerProfileId, status]);
 
+  // Reset carousel index when opening a new athlete
+  useEffect(() => {
+    setCurrentPhotoIndex(0);
+  }, [selectedConnection?.id]);
+
   const loadConnections = async () => {
     setLoading(true);
     try {
@@ -122,12 +127,18 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                 sortBy: { column: 'created_at', order: 'desc' },
               });
 
-            const photoUrls = (photoFiles || []).map((file) => {
-              const { data: urlData } = supabase.storage
-                .from('athlete-photos')
-                .getPublicUrl(`${conn.athlete_profiles.user_id}/lifestyle/${file.name}`);
-              return urlData.publicUrl;
-            });
+            let photoUrls: string[] = [];
+            if (photoFiles && photoFiles.length > 0) {
+              photoUrls = photoFiles.map((file) => {
+                const { data: urlData } = supabase.storage
+                  .from('athlete-photos')
+                  .getPublicUrl(`${conn.athlete_profiles.user_id}/lifestyle/${file.name}`);
+                return urlData.publicUrl;
+              });
+            } else if (conn.athlete_profiles.photo_url) {
+              // Fallback to profile photo if no lifestyle photos exist
+              photoUrls = [conn.athlete_profiles.photo_url];
+            }
 
             return {
               ...conn,
