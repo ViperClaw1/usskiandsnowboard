@@ -440,14 +440,14 @@ const EmployerDirectory = () => {
                     {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] flex flex-col">
                   <DialogHeader>
                     <DialogTitle>Request Connection</DialogTitle>
                     <DialogDescription>
                       Send a connection request to {employer.company_name}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                     <div>
                       <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
                       <Textarea
@@ -468,6 +468,8 @@ const EmployerDirectory = () => {
                         className="mt-2 min-h-[100px]"
                       />
                     </div>
+                  </div>
+                  <div className="pt-4 border-t">
                     <Button
                       onClick={() => handleSendRequest(employer.id)}
                       disabled={sendingRequest || !requestMessage.trim()}
