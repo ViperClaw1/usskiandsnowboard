@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 interface AthleteProfile {
@@ -21,6 +21,9 @@ interface AthleteProfile {
   availability: string | null;
   career_interests: string[] | null;
   geographic_preferences: string[] | null;
+  professional_highlights: string | null;
+  years_of_membership: number | null;
+  instagram_url: string | null;
   profiles: {
     full_name: string | null;
   };
@@ -211,6 +214,35 @@ const AthleteDirectory = () => {
                 <div>
                   <h4 className="font-medium mb-2">Bio</h4>
                   <p className="text-sm text-muted-foreground">{selectedAthlete.bio}</p>
+                </div>
+              )}
+
+              {selectedAthlete.professional_highlights && (
+                <div>
+                  <h4 className="font-medium mb-2">Professional Highlights</h4>
+                  <p className="text-sm text-muted-foreground">{selectedAthlete.professional_highlights}</p>
+                </div>
+              )}
+
+              {selectedAthlete.years_of_membership && (
+                <div>
+                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                  <p className="text-sm text-muted-foreground">{selectedAthlete.years_of_membership} years</p>
+                </div>
+              )}
+
+              {selectedAthlete.instagram_url && (
+                <div>
+                  <h4 className="font-medium mb-2">Instagram</h4>
+                  <a 
+                    href={selectedAthlete.instagram_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-2"
+                  >
+                    <Instagram className="h-4 w-4" />
+                    View Profile
+                  </a>
                 </div>
               )}
 

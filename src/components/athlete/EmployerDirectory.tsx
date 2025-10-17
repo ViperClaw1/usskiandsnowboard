@@ -14,6 +14,8 @@ interface EmployerProfile {
   user_id: string;
   company_name: string;
   industry: string | null;
+  company_size: string | null;
+  hq_location: string | null;
   opportunities_offered: string | null;
   contact_person: string | null;
   logo_url: string | null;
@@ -187,6 +189,20 @@ const EmployerDirectory = () => {
                 <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
               </div>
             )}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {employer.company_size && (
+                <div>
+                  <p className="font-medium">Size</p>
+                  <p className="text-muted-foreground">{employer.company_size}</p>
+                </div>
+              )}
+              {employer.hq_location && (
+                <div>
+                  <p className="font-medium">Location</p>
+                  <p className="text-muted-foreground">{employer.hq_location}</p>
+                </div>
+              )}
+            </div>
             {employer.opportunities_offered && (
               <div>
                 <p className="text-sm font-medium mb-1">Opportunities</p>

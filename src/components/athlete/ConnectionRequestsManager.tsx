@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, CheckCircle, XCircle, Building2 } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Building2, Globe, Linkedin } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
@@ -17,10 +17,14 @@ interface ConnectionRequest {
   employer_profiles: {
     company_name: string;
     industry: string | null;
+    company_size: string | null;
+    hq_location: string | null;
     about: string | null;
     opportunities_offered: string | null;
     contact_person: string | null;
     logo_url: string | null;
+    website: string | null;
+    linkedin_url: string | null;
   };
 }
 
@@ -71,10 +75,14 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
           employer_profiles (
             company_name,
             industry,
+            company_size,
+            hq_location,
             about,
             opportunities_offered,
             contact_person,
-            logo_url
+            logo_url,
+            website,
+            linkedin_url
           )
         `)
         .eq("athlete_id", athleteProfileId)
@@ -221,6 +229,21 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
                 </div>
               )}
 
+              <div className="grid grid-cols-2 gap-4">
+                {selectedRequest.employer_profiles.company_size && (
+                  <div>
+                    <h4 className="font-medium mb-2">Company Size</h4>
+                    <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.company_size}</p>
+                  </div>
+                )}
+                {selectedRequest.employer_profiles.hq_location && (
+                  <div>
+                    <h4 className="font-medium mb-2">HQ Location</h4>
+                    <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.hq_location}</p>
+                  </div>
+                )}
+              </div>
+
               {selectedRequest.employer_profiles.opportunities_offered && (
                 <div>
                   <h4 className="font-medium mb-2">Opportunities Offered</h4>
@@ -232,6 +255,36 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
                 <div>
                   <h4 className="font-medium mb-2">Contact Person</h4>
                   <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.contact_person}</p>
+                </div>
+              )}
+
+              {selectedRequest.employer_profiles.website && (
+                <div>
+                  <h4 className="font-medium mb-2">Website</h4>
+                  <a 
+                    href={selectedRequest.employer_profiles.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    Visit Website
+                  </a>
+                </div>
+              )}
+
+              {selectedRequest.employer_profiles.linkedin_url && (
+                <div>
+                  <h4 className="font-medium mb-2">LinkedIn</h4>
+                  <a 
+                    href={selectedRequest.employer_profiles.linkedin_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-2"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    View Company
+                  </a>
                 </div>
               )}
 

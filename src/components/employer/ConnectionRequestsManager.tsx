@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 interface ConnectionRequest {
@@ -21,6 +21,9 @@ interface ConnectionRequest {
     sport_discipline: string | null;
     skills: string[] | null;
     photo_url: string | null;
+    professional_highlights: string | null;
+    years_of_membership: number | null;
+    instagram_url: string | null;
     user_id: string;
     profiles: {
       full_name: string | null;
@@ -79,6 +82,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
             sport_discipline,
             skills,
             photo_url,
+            professional_highlights,
+            years_of_membership,
+            instagram_url,
             user_id,
             profiles (
               full_name
@@ -248,6 +254,35 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                 <div>
                   <h4 className="font-medium mb-2">Bio</h4>
                   <p className="text-sm text-muted-foreground">{selectedRequest.athlete_profiles.bio}</p>
+                </div>
+              )}
+
+              {selectedRequest.athlete_profiles.professional_highlights && (
+                <div>
+                  <h4 className="font-medium mb-2">Professional Highlights</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.athlete_profiles.professional_highlights}</p>
+                </div>
+              )}
+
+              {selectedRequest.athlete_profiles.years_of_membership && (
+                <div>
+                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.athlete_profiles.years_of_membership} years</p>
+                </div>
+              )}
+
+              {selectedRequest.athlete_profiles.instagram_url && (
+                <div>
+                  <h4 className="font-medium mb-2">Instagram</h4>
+                  <a 
+                    href={selectedRequest.athlete_profiles.instagram_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-2"
+                  >
+                    <Instagram className="h-4 w-4" />
+                    View Profile
+                  </a>
                 </div>
               )}
 
