@@ -296,9 +296,12 @@ const AthleteDirectory = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground line-clamp-3 min-h-[3.75rem]">
-                {athlete.bio || "No bio provided"}
-              </p>
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
+                <p className="text-sm text-muted-foreground line-clamp-3 min-h-[3.75rem]">
+                  {athlete.bio || "No bio provided"}
+                </p>
+              </div>
               
               <div className="min-h-[2.5rem]">
                 <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
