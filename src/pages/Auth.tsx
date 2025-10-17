@@ -111,27 +111,29 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-6">
-              <Label className="mb-3 block">I am a:</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant={userType === "athlete" ? "default" : "outline"}
-                  onClick={() => setUserType("athlete")}
-                  className="w-full"
-                >
-                  Athlete
-                </Button>
-                <Button
-                  type="button"
-                  variant={userType === "employer" ? "default" : "outline"}
-                  onClick={() => setUserType("employer")}
-                  className="w-full"
-                >
-                  Partner
-                </Button>
+            {!typeParam && (
+              <div className="mb-6">
+                <Label className="mb-3 block">I am a:</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={userType === "athlete" ? "default" : "outline"}
+                    onClick={() => setUserType("athlete")}
+                    className="w-full"
+                  >
+                    Athlete
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={userType === "employer" ? "default" : "outline"}
+                    onClick={() => setUserType("employer")}
+                    className="w-full"
+                  >
+                    Partner
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
 
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2 mb-6">
