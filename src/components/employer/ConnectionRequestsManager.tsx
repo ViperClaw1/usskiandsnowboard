@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle, XCircle, Instagram } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, CheckCircle, XCircle, Instagram, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -47,6 +48,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
   const [processing, setProcessing] = useState(false);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [acceptanceMessage, setAcceptanceMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterSport, setFilterSport] = useState("");
+  const [filterAvailability, setFilterAvailability] = useState("");
 
   useEffect(() => {
     if (employerProfileId) {
@@ -185,6 +189,30 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
     }
   };
 
+  const filteredRequests = useMemo(() => {
+    return requests.filter((request) => {
+      const matchesSearch = !searchTerm || 
+        request.athlete_profiles.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.athlete_profiles.bio?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSport = !filterSport || 
+        request.athlete_profiles.sport_discipline === filterSport;
+      
+      const matchesAvailability = !filterAvailability || 
+        request.athlete_profiles.availability === filterAvailability;
+      
+      return matchesSearch && matchesSport && matchesAvailability;
+    });
+  }, [requests, searchTerm, filterSport, filterAvailability]);
+
+  const uniqueSports = useMemo(() => {
+    return Array.from(new Set(requests.map(r => r.athlete_profiles.sport_discipline).filter(Boolean)));
+  }, [requests]);
+
+  const uniqueAvailability = useMemo(() => {
+    return Array.from(new Set(requests.map(r => r.athlete_profiles.availability).filter(Boolean)));
+  }, [requests]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -193,18 +221,51 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
     );
   }
 
-  if (requests.length === 0) {
-    return (
-      <div className="text-center p-8">
-        <p className="text-muted-foreground">No pending connection requests</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2">
-        {requests.map((request) => (
+      <div className="mb-4 space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or bio..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={filterSport}
+            onChange={(e) => setFilterSport(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Sports</option>
+            {uniqueSports.map(sport => (
+              <option key={sport} value={sport}>{sport}</option>
+            ))}
+          </select>
+          <select
+            value={filterAvailability}
+            onChange={(e) => setFilterAvailability(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Availability</option>
+            {uniqueAvailability.map(avail => (
+              <option key={avail} value={avail}>{avail}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {filteredRequests.length === 0 ? (
+        <div className="text-center p-8">
+          <p className="text-muted-foreground">
+            {requests.length === 0 ? "No pending connection requests" : "No requests match your filters"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {filteredRequests.map((request) => (
           <Card key={request.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedRequest(request)}>
             <CardHeader>
               <div className="flex items-center gap-4">
@@ -252,6 +313,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
           </Card>
         ))}
       </div>
+      )}
 
       {selectedRequest && (
         <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
