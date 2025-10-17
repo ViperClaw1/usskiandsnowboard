@@ -175,9 +175,7 @@ const AthleteDirectory = () => {
       setRequestMessage("");
       setOpportunityType("");
       setShowRequestDialog(false);
-      
-      // Navigate back to dashboard
-      navigate("/dashboard");
+      setSelectedAthlete(null); // Close the athlete card dialog
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
