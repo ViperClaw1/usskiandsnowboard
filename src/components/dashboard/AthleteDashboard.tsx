@@ -125,18 +125,18 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
                     {/* Left Half - Welcome Section */}
                     <div className="flex flex-col justify-center min-w-0">
-                      <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <Avatar className="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 shrink-0">
+                      <div className="flex items-start gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4 lg:mb-6">
+                        <Avatar className="h-12 w-12 sm:h-14 sm:w-14 lg:h-20 lg:w-20 shrink-0">
                           <AvatarImage src={profile?.photo_url} />
                           <AvatarFallback>
-                            <UserIcon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-primary" />
+                            <UserIcon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-10 lg:w-10 text-primary" />
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold leading-tight truncate">
+                          <h2 className="text-base sm:text-lg lg:text-2xl font-bold leading-tight truncate">
                             Welcome, {profile?.profiles?.full_name || user.email?.split('@')[0] || 'Athlete'}
                           </h2>
-                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                             {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
                           </p>
                         </div>
@@ -145,12 +145,12 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                       {loading ? (
                         <p className="text-sm text-muted-foreground">Loading profile...</p>
                       ) : profile ? (
-                        <div className="space-y-3 sm:space-y-4">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm text-muted-foreground">
+                        <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               Your profile is <span className="font-semibold text-foreground">{profile.profile_completeness}% complete</span>
                             </p>
-                            <Badge variant={profile.is_public ? "default" : "secondary"}>
+                            <Badge variant={profile.is_public ? "default" : "secondary"} className="text-xs">
                               {profile.is_public ? "Public" : "Private"}
                             </Badge>
                           </div>
@@ -194,22 +194,22 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                             </div>
                           )}
 
-                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
-                            <Button onClick={() => setShowProfileDialog(true)} variant="outline" className="w-full sm:w-auto">
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-3">
+                            <Button onClick={() => setShowProfileDialog(true)} variant="outline" size="sm" className="w-full sm:w-auto h-8 text-xs">
                               Edit Profile
                             </Button>
-                            <Button onClick={() => setShowEmployerDirectory(true)} className="w-full sm:w-auto">
-                              <Building2 className="h-4 w-4 mr-2" />
+                            <Button onClick={() => setShowEmployerDirectory(true)} size="sm" className="w-full sm:w-auto h-8 text-xs">
+                              <Building2 className="h-3 w-3 mr-1.5" />
                               Browse Partners
                             </Button>
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-4">
-                          <p className="text-sm text-muted-foreground">
+                        <div className="space-y-2 sm:space-y-3">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             Your profile is <span className="font-semibold text-foreground">0% complete</span>
                           </p>
-                          <Button onClick={() => setShowProfileDialog(true)} className="w-full sm:w-auto">
+                          <Button onClick={() => setShowProfileDialog(true)} size="sm" className="w-full sm:w-auto h-8 text-xs">
                             Complete Your Profile
                           </Button>
                         </div>
@@ -226,8 +226,8 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <div className="mt-6 sm:mt-8 mb-3 sm:mb-4">
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Partner Connections</h2>
+              <div className="mt-4 sm:mt-6 lg:mt-8 mb-2 sm:mb-3 lg:mb-4">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">Partner Connections</h2>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
