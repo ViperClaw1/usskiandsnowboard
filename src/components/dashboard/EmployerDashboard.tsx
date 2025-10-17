@@ -205,50 +205,53 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <div className="mt-8 mb-4">
-                <h2 className="text-2xl font-bold text-foreground">Athlete Connections</h2>
-              </div>
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Athlete Connections</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">Pending Requests</CardTitle>
+                          <Users className="h-5 w-5 text-accent" />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold text-accent">{pendingCount}</p>
+                        <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
+                      </CardContent>
+                    </Card>
 
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Pending Requests</CardTitle>
-                      <Users className="h-5 w-5 text-accent" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-accent">{pendingCount}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
-                  </CardContent>
-                </Card>
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">Connections Made</CardTitle>
+                          <UserCheck className="h-5 w-5 text-primary" />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold text-primary">{acceptedCount}</p>
+                        <p className="text-sm text-muted-foreground mt-1">Accepted</p>
+                      </CardContent>
+                    </Card>
 
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Connections Made</CardTitle>
-                      <UserCheck className="h-5 w-5 text-primary" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">{acceptedCount}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Accepted</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowRejectedConnections(true)}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Connections Declined</CardTitle>
-                      <UserX className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Declined</p>
-                  </CardContent>
-                </Card>
-              </div>
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowRejectedConnections(true)}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">Connections Declined</CardTitle>
+                          <UserX className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
+                        <p className="text-sm text-muted-foreground mt-1">Declined</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           ) : showDirectory ? (
             <div>
