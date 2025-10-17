@@ -107,34 +107,34 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Athlete Dashboard</h1>
-          <Button variant="ghost" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
+        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Athlete Dashboard</h1>
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sign Out</span>
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="grid gap-4 sm:gap-6">
           {!showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
               <Card className="shadow-elegant">
-                <CardContent className="pt-6">
-                  <div className="grid md:grid-cols-2 gap-8">
+                <CardContent className="pt-4 sm:pt-6">
+                  <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
                     {/* Left Half - Welcome Section */}
                     <div className="flex flex-col justify-center">
-                      <div className="flex items-center gap-4 mb-6">
-                        <Avatar className="h-20 w-20">
+                      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
                           <AvatarImage src={profile?.photo_url} />
                           <AvatarFallback>
-                            <UserIcon className="h-10 w-10 text-primary" />
+                            <UserIcon className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h2 className="text-3xl font-bold">Welcome, {profile?.profiles?.full_name || user.email}</h2>
-                          <p className="text-muted-foreground mt-1">
+                          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">Welcome, {profile?.profiles?.full_name || user.email}</h2>
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
                           </p>
                         </div>
@@ -143,7 +143,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                       {loading ? (
                         <p className="text-sm text-muted-foreground">Loading profile...</p>
                       ) : profile ? (
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                           <div className="flex items-center justify-between">
                             <p className="text-sm text-muted-foreground">
                               Your profile is <span className="font-semibold text-foreground">{profile.profile_completeness}% complete</span>
@@ -163,7 +163,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                           {profile.bio && (
                             <div>
                               <p className="text-sm font-medium text-foreground mb-1">Bio</p>
-                              <p className="text-sm text-muted-foreground">{profile.bio}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-3">{profile.bio}</p>
                             </div>
                           )}
 
@@ -192,11 +192,11 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                             </div>
                           )}
 
-                          <div className="flex gap-4 pt-4">
-                            <Button onClick={() => setShowProfileDialog(true)} variant="outline">
+                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                            <Button onClick={() => setShowProfileDialog(true)} variant="outline" className="w-full sm:w-auto">
                               Edit Profile
                             </Button>
-                            <Button onClick={() => setShowEmployerDirectory(true)}>
+                            <Button onClick={() => setShowEmployerDirectory(true)} className="w-full sm:w-auto">
                               <Building2 className="h-4 w-4 mr-2" />
                               Browse Partners
                             </Button>
@@ -207,7 +207,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                           <p className="text-sm text-muted-foreground">
                             Your profile is <span className="font-semibold text-foreground">0% complete</span>
                           </p>
-                          <Button onClick={() => setShowProfileDialog(true)}>
+                          <Button onClick={() => setShowProfileDialog(true)} className="w-full sm:w-auto">
                             Complete Your Profile
                           </Button>
                         </div>
@@ -224,69 +224,69 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <div className="mt-8 mb-4">
-                <h2 className="text-2xl font-bold text-foreground">Partner Connections</h2>
+              <div className="mt-6 sm:mt-8 mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Partner Connections</h2>
               </div>
 
-              <div className="grid md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
-                  <CardHeader>
+                  <CardHeader className="pb-2 sm:pb-4">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Pending Requests</CardTitle>
-                      <Users className="h-5 w-5 text-accent" />
+                      <CardTitle className="text-sm sm:text-base lg:text-lg">Pending Requests</CardTitle>
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-accent">{pendingCount}</p>
-                    <p className="text-sm text-muted-foreground mt-1">From partners</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-accent">{pendingCount}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">From partners</p>
                   </CardContent>
                 </Card>
 
                 <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
-                  <CardHeader>
+                  <CardHeader className="pb-2 sm:pb-4">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Connections Made</CardTitle>
-                      <UserCheck className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-sm sm:text-base lg:text-lg">Connections Made</CardTitle>
+                      <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-primary">{acceptedCount}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Accepted</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-primary">{acceptedCount}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Accepted</p>
                   </CardContent>
                 </Card>
 
                 <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowRejectedConnections(true)}>
-                  <CardHeader>
+                  <CardHeader className="pb-2 sm:pb-4">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Connections Declined</CardTitle>
-                      <UserX className="h-5 w-5 text-muted-foreground" />
+                      <CardTitle className="text-sm sm:text-base lg:text-lg">Connections Declined</CardTitle>
+                      <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Declined</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Declined</p>
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pb-2 sm:pb-4">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Profile Views</CardTitle>
-                      <Eye className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-sm sm:text-base lg:text-lg">Profile Views</CardTitle>
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-foreground">{profile?.profile_views || 0}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Total views</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground">{profile?.profile_views || 0}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Total views</p>
                   </CardContent>
                 </Card>
               </div>
             </>
           ) : showEmployerDirectory ? (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Employer Directory</h2>
-                <Button variant="outline" onClick={() => setShowEmployerDirectory(false)}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Employer Directory</h2>
+                <Button variant="outline" onClick={() => setShowEmployerDirectory(false)} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
@@ -294,9 +294,9 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
             </div>
           ) : showPendingRequests ? (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Pending Connection Requests</h2>
-                <Button variant="outline" onClick={() => { setShowPendingRequests(false); loadConnectionCounts(); }}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Pending Connection Requests</h2>
+                <Button variant="outline" onClick={() => { setShowPendingRequests(false); loadConnectionCounts(); }} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
@@ -304,9 +304,9 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
             </div>
           ) : showAcceptedConnections ? (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Connections Made</h2>
-                <Button variant="outline" onClick={() => setShowAcceptedConnections(false)}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Connections Made</h2>
+                <Button variant="outline" onClick={() => setShowAcceptedConnections(false)} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
@@ -314,9 +314,9 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
             </div>
           ) : (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Connections Declined</h2>
-                <Button variant="outline" onClick={() => setShowRejectedConnections(false)}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Connections Declined</h2>
+                <Button variant="outline" onClick={() => setShowRejectedConnections(false)} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
@@ -327,7 +327,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
       </main>
 
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           <DialogHeader>
             <DialogTitle>Complete Your Athlete Profile</DialogTitle>
             <DialogDescription>
