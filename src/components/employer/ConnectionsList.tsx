@@ -24,6 +24,7 @@ interface Connection {
     years_of_membership: number | null;
     instagram_url: string | null;
     user_id: string;
+    lifestyle_photos?: string[];
     profiles: {
       full_name: string | null;
     };
@@ -109,7 +110,44 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         return;
       }
 
-      setConnections(data || []);
+      const connectionsWithPhotos = await Promise.all(
+        (data || []).map(async (conn: any) => {
+          try {
+            const { data: photoFiles } = await supabase.storage
+              .from('athlete-photos')
+              .list(`${conn.athlete_profiles.user_id}/lifestyle`, {
+                limit: 5,
+                sortBy: { column: 'created_at', order: 'desc' },
+              });
+
+            const photoUrls = (photoFiles || []).map((file) => {
+              const { data: urlData } = supabase.storage
+                .from('athlete-photos')
+                .getPublicUrl(`${conn.athlete_profiles.user_id}/lifestyle/${file.name}`);
+              return urlData.publicUrl;
+            });
+
+            return {
+              ...conn,
+              athlete_profiles: {
+                ...conn.athlete_profiles,
+                lifestyle_photos: photoUrls,
+              },
+            };
+          } catch (e) {
+            console.error('Error loading lifestyle photos for athlete', conn.athlete_profiles.user_id, e);
+            return {
+              ...conn,
+              athlete_profiles: {
+                ...conn.athlete_profiles,
+                lifestyle_photos: [],
+              },
+            };
+          }
+        })
+      );
+
+      setConnections(connectionsWithPhotos);
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -195,8 +233,18 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         <div className="grid gap-3">
           {filteredConnections.map((connection) => (
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
+              <CardContent className="p-4">
+                {connection.athlete_profiles.lifestyle_photos && connection.athlete_profiles.lifestyle_photos.length > 0 && (
+                  <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted mb-3">
+                    <img
+                      src={connection.athlete_profiles.lifestyle_photos[0]}
+                      alt={`${connection.athlete_profiles.profiles?.full_name || 'Athlete'} lifestyle photo`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+                <div className="flex items-center gap-3 mb-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
                   <AvatarFallback>AT</AvatarFallback>
