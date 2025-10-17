@@ -188,15 +188,22 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
+                <div className="flex-shrink-0" style={{ width: '40px', height: '40px' }}>
                   {connection.employer_profiles.logo_url ? (
-                    <img src={connection.employer_profiles.logo_url} alt={connection.employer_profiles.company_name} className="object-cover rounded-full" />
+                    <img 
+                      src={connection.employer_profiles.logo_url} 
+                      alt={connection.employer_profiles.company_name} 
+                      className="w-full h-full object-contain rounded"
+                      style={{ width: '40px', height: '40px' }}
+                    />
                   ) : (
-                    <AvatarFallback>
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
-                    </AvatarFallback>
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>
+                        <Building2 className="h-5 w-5 text-muted-foreground" />
+                      </AvatarFallback>
+                    </Avatar>
                   )}
-                </Avatar>
+                </div>
                 <div className="flex-1">
                   <p className="font-medium text-sm">{connection.employer_profiles.company_name}</p>
                   {connection.employer_profiles.industry && (
@@ -221,15 +228,22 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
             </DialogHeader>
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
+                <div className="flex-shrink-0" style={{ width: '64px', height: '64px' }}>
                   {selectedConnection.employer_profiles.logo_url ? (
-                    <img src={selectedConnection.employer_profiles.logo_url} alt={selectedConnection.employer_profiles.company_name} className="object-cover rounded-full" />
+                    <img 
+                      src={selectedConnection.employer_profiles.logo_url} 
+                      alt={selectedConnection.employer_profiles.company_name} 
+                      className="w-full h-full object-contain rounded"
+                      style={{ width: '64px', height: '64px' }}
+                    />
                   ) : (
-                    <AvatarFallback>
-                      <Building2 className="h-8 w-8 text-muted-foreground" />
-                    </AvatarFallback>
+                    <Avatar className="h-16 w-16">
+                      <AvatarFallback>
+                        <Building2 className="h-8 w-8 text-muted-foreground" />
+                      </AvatarFallback>
+                    </Avatar>
                   )}
-                </Avatar>
+                </div>
                 <div>
                   <h3 className="font-semibold">{selectedConnection.employer_profiles.company_name}</h3>
                   {selectedConnection.employer_profiles.industry && (
