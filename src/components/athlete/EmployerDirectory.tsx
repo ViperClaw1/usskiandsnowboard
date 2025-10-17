@@ -164,6 +164,40 @@ const EmployerDirectory = () => {
     return [...new Set(industries)];
   }, [employers]);
 
+  // Comprehensive industry list
+  const industryOptions = [
+    "Technology & Software",
+    "Finance & Banking",
+    "Healthcare & Medical",
+    "Retail & E-commerce",
+    "Manufacturing",
+    "Construction & Real Estate",
+    "Education & Training",
+    "Hospitality & Tourism",
+    "Transportation & Logistics",
+    "Media & Entertainment",
+    "Consulting & Professional Services",
+    "Energy & Utilities",
+    "Telecommunications",
+    "Automotive",
+    "Aerospace & Defense",
+    "Agriculture & Farming",
+    "Biotechnology & Pharmaceuticals",
+    "Consumer Goods",
+    "Fashion & Apparel",
+    "Food & Beverage",
+    "Insurance",
+    "Legal Services",
+    "Marketing & Advertising",
+    "Mining & Metals",
+    "Non-Profit & Social Services",
+    "Publishing",
+    "Sports & Recreation",
+    "Government & Public Sector",
+    "Environmental Services",
+    "Other"
+  ];
+
   // Filter employers based on selected filters
   const filteredEmployers = useMemo(() => {
     return employers.filter(employer => {
@@ -239,8 +273,8 @@ const EmployerDirectory = () => {
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
                 <SelectItem value="all">All Industries</SelectItem>
-                {uniqueIndustries.map(industry => (
-                  <SelectItem key={industry} value={industry!}>{industry}</SelectItem>
+                {industryOptions.map(industry => (
+                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -301,8 +335,8 @@ const EmployerDirectory = () => {
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
               <SelectItem value="all">All Industries</SelectItem>
-              {uniqueIndustries.map(industry => (
-                <SelectItem key={industry} value={industry!}>{industry}</SelectItem>
+              {industryOptions.map(industry => (
+                <SelectItem key={industry} value={industry}>{industry}</SelectItem>
               ))}
             </SelectContent>
           </Select>
