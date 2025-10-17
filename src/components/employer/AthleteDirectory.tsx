@@ -467,13 +467,108 @@ const AthleteDirectory = () => {
 
               {selectedAthlete.email && (
                 <div>
-                  <h4 className="font-medium mb-2">Contact Email</h4>
-                  <a 
-                    href={`mailto:${selectedAthlete.email}`}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    {selectedAthlete.email}
-                  </a>
+                  <h4 className="font-medium mb-2">Email</h4>
+                  <p className="text-sm text-muted-foreground">{selectedAthlete.email}</p>
+                </div>
+              )}
+
+              {athleteEducation.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Education</h4>
+                  <div className="space-y-3">
+                    {athleteEducation.map((edu) => (
+                      <div key={edu.id} className="border-l-2 border-primary/20 pl-3">
+                        <p className="font-medium text-sm">{edu.school}</p>
+                        {edu.degree && <p className="text-sm text-muted-foreground">{edu.degree}</p>}
+                        {edu.graduation_year && (
+                          <p className="text-xs text-muted-foreground">Graduated {edu.graduation_year}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {athleteExperience.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Experience</h4>
+                  <div className="space-y-3">
+                    {athleteExperience.map((exp) => (
+                      <div key={exp.id} className="border-l-2 border-primary/20 pl-3">
+                        <p className="font-medium text-sm">{exp.title}</p>
+                        {exp.organization && (
+                          <p className="text-sm text-muted-foreground">{exp.organization}</p>
+                        )}
+                        {exp.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {exp.start_date && new Date(exp.start_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                          {' - '}
+                          {exp.is_current ? 'Present' : exp.end_date ? new Date(exp.end_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Present'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {athleteCertifications.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Certifications</h4>
+                  <div className="space-y-2">
+                    {athleteCertifications.map((cert) => (
+                      <div key={cert.id} className="border-l-2 border-primary/20 pl-3">
+                        <p className="font-medium text-sm">{cert.name}</p>
+                        {cert.issuer && <p className="text-sm text-muted-foreground">{cert.issuer}</p>}
+                        {cert.issue_date && (
+                          <p className="text-xs text-muted-foreground">
+                            Issued {new Date(cert.issue_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {athletePhotos.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Lifestyle Photos</h4>
+                  <div className="relative">
+                    <img 
+                      src={athletePhotos[currentPhotoIndex]} 
+                      alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                    {athletePhotos.length > 1 && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
+                          onClick={() => setCurrentPhotoIndex((prev) => 
+                            prev === 0 ? athletePhotos.length - 1 : prev - 1
+                          )}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
+                          onClick={() => setCurrentPhotoIndex((prev) => 
+                            prev === athletePhotos.length - 1 ? 0 : prev + 1
+                          )}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
+                          {currentPhotoIndex + 1} / {athletePhotos.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 
