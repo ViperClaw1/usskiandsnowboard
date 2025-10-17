@@ -132,7 +132,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         </label>
       </div>
 
-      <div className="overflow-x-auto -mx-1 px-1">
+      <div className="overflow-x-auto max-w-full" >
         {loading ? (
           <div className="flex gap-2 sm:gap-3">
             {[...Array(5)].map((_, i) => (

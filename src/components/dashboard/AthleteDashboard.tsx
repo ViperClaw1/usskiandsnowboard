@@ -218,7 +218,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
 
                     {/* Right Half - Photo Uploader */}
                     <div className="flex items-center justify-center">
-                      <div className="w-full">
+                      <div className="w-full max-w-sm sm:max-w-md mx-auto">
                         <PhotoUploader userId={user.id} />
                       </div>
                     </div>
