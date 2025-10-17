@@ -30,6 +30,7 @@ export type Database = {
           profile_completeness: number | null
           profile_views: number | null
           skills: string[] | null
+          sponsors: string[] | null
           sport_discipline: string | null
           updated_at: string
           user_id: string
@@ -50,6 +51,7 @@ export type Database = {
           profile_completeness?: number | null
           profile_views?: number | null
           skills?: string[] | null
+          sponsors?: string[] | null
           sport_discipline?: string | null
           updated_at?: string
           user_id: string
@@ -70,6 +72,7 @@ export type Database = {
           profile_completeness?: number | null
           profile_views?: number | null
           skills?: string[] | null
+          sponsors?: string[] | null
           sport_discipline?: string | null
           updated_at?: string
           user_id?: string

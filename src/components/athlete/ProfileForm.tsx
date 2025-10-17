@@ -50,6 +50,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     professional_highlights: "",
     years_of_membership: "",
     instagram_url: "",
+    sponsors: "",
     is_public: true
   });
 
@@ -91,6 +92,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           professional_highlights: athleteData.professional_highlights || "",
           years_of_membership: athleteData.years_of_membership?.toString() || "",
           instagram_url: athleteData.instagram_url || "",
+          sponsors: athleteData.sponsors?.join(", ") || "",
           is_public: athleteData.is_public ?? true
         });
         setPhotoUrl(athleteData.photo_url || "");
@@ -201,6 +203,11 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .split(",")
         .map(s => s.trim())
         .filter(s => s);
+      
+      const sponsors = formData.sponsors
+        .split(",")
+        .map(s => s.trim())
+        .filter(s => s);
 
       // Calculate profile completeness dynamically
       let completeness = 0;
@@ -223,6 +230,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         professional_highlights: formData.professional_highlights || null,
         years_of_membership: formData.years_of_membership ? parseInt(formData.years_of_membership) : null,
         instagram_url: formData.instagram_url || null,
+        sponsors,
         is_public: formData.is_public,
         photo_url: uploadedPhotoUrl ? uploadedPhotoUrl.split('?')[0] : (photoUrl ? photoUrl.split('?')[0] : null),
         profile_completeness: completeness
@@ -442,6 +450,19 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         />
         <p className="text-xs text-muted-foreground">
           Separate multiple skills with commas
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="sponsors">Sponsors</Label>
+        <Input
+          id="sponsors"
+          placeholder="e.g., Nike, Red Bull, Oakley"
+          value={formData.sponsors}
+          onChange={(e) => setFormData({ ...formData, sponsors: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">
+          Separate multiple sponsors with commas
         </p>
       </div>
 
