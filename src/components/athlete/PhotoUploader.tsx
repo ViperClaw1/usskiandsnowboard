@@ -136,7 +136,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         {loading ? (
           <div className="flex gap-2 sm:gap-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 aspect-square bg-muted animate-pulse rounded-lg flex-shrink-0" />
+              <div key={i} className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 aspect-square bg-muted animate-pulse rounded-lg flex-shrink-0" />
             ))}
           </div>
         ) : photos.length === 0 ? (
@@ -144,16 +144,16 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
+                className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
               >
-                <Upload className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-muted-foreground/30" />
+                <Upload className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-muted-foreground/30" />
               </div>
             ))}
           </div>
         ) : (
           <div className="flex gap-2 sm:gap-3 pb-2">
             {photos.map((photoUrl, index) => (
-              <div key={index} className="relative flex-shrink-0 group w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32">
+              <div key={index} className="relative flex-shrink-0 group w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32">
                 <img
                   src={photoUrl}
                   alt={`Lifestyle photo ${index + 1}`}
@@ -162,7 +162,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
                 <Button
                   size="icon"
                   variant="destructive"
-                  className="absolute top-1 right-1 h-5 w-5 sm:h-6 sm:w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 h-5 w-5 sm:h-6 sm:w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => handleDeletePhoto(photoUrl)}
                 >
                   <X className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -173,9 +173,9 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
               [...Array(5 - photos.length)].map((_, i) => (
                 <div
                   key={`empty-${i}`}
-                  className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
+                  className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
                 >
-                  <Upload className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-muted-foreground/30" />
+                  <Upload className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-muted-foreground/30" />
                 </div>
               ))}
           </div>
