@@ -14,8 +14,15 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast.success("Signed out successfully");
+    const { error } = await supabase.auth.signOut();
+    // Clear local state and navigate even if server-side logout fails
+    // (session might already be invalid)
+    if (error && error.message !== "Session from session_id claim in JWT does not exist") {
+      toast.error("Error signing out");
+      console.error("Sign out error:", error);
+    } else {
+      toast.success("Signed out successfully");
+    }
     navigate("/");
   };
 
