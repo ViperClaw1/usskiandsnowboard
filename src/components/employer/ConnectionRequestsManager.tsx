@@ -203,41 +203,48 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
 
   return (
     <>
-      <div className="max-h-[500px] overflow-y-auto pr-2">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {requests.map((request) => (
-            <Card key={request.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedRequest(request)}>
-              <CardContent className="p-3">
-                <div className="flex items-start gap-2 mb-2">
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarImage src={request.athlete_profiles.photo_url ?? undefined} />
-                    <AvatarFallback className="text-xs">AT</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {request.athlete_profiles.profiles?.full_name || "Athlete"}
-                    </p>
-                    {request.athlete_profiles.sport_discipline && (
-                      <p className="text-xs text-muted-foreground truncate">{request.athlete_profiles.sport_discipline}</p>
-                    )}
-                  </div>
-                  <Badge variant="secondary" className="text-xs flex-shrink-0">Pending</Badge>
+      <div className="grid gap-4 md:grid-cols-2">
+        {requests.map((request) => (
+          <Card key={request.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedRequest(request)}>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={request.athlete_profiles.photo_url ?? undefined} />
+                  <AvatarFallback>AT</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <CardTitle className="text-base">
+                    {request.athlete_profiles.profiles?.full_name || "Athlete"}
+                  </CardTitle>
+                  {request.athlete_profiles.sport_discipline && (
+                    <p className="text-sm text-muted-foreground">{request.athlete_profiles.sport_discipline}</p>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground/70 mb-1">
-                  {format(new Date(request.created_at), "MMM d, yyyy")}
+                <Badge variant="secondary">Pending</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-xs text-muted-foreground/70">
+                Request Date: {format(new Date(request.created_at), "MMM d, yyyy")}
+              </p>
+              
+              {request.athlete_profiles.bio && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{request.athlete_profiles.bio}</p>
+              )}
+
+              {request.opportunity_type && (
+                <p className="text-sm">
+                  <span className="font-medium">Opportunity:</span> {request.opportunity_type}
                 </p>
-                {request.athlete_profiles.bio && (
-                  <p className="text-xs text-muted-foreground line-clamp-2">{request.athlete_profiles.bio}</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {selectedRequest && (
         <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Connection Request Details</DialogTitle>
             </DialogHeader>
