@@ -220,6 +220,10 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 </div>
               </div>
 
+              <div className="mt-8 mb-4">
+                <h2 className="text-2xl font-bold text-foreground">Partner Connections</h2>
+              </div>
+
               <div className="grid md:grid-cols-4 gap-6">
                 <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
                   <CardHeader>
@@ -273,15 +277,6 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   </CardContent>
                 </Card>
               </div>
-
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Partner Connections</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">Partner connections coming soon...</p>
-                </CardContent>
-              </Card>
             </>
           ) : showEmployerDirectory ? (
             <div>
