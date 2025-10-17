@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, CheckCircle, XCircle, Building2, Globe, Linkedin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, CheckCircle, XCircle, Building2, Globe, Linkedin, Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
@@ -37,6 +38,9 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<ConnectionRequest | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
 
   useEffect(() => {
     if (athleteProfileId) {
@@ -139,6 +143,31 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
     }
   };
 
+  const filteredRequests = useMemo(() => {
+    return requests.filter((request) => {
+      const matchesSearch = !searchTerm || 
+        request.employer_profiles.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.employer_profiles.about?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.message?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesIndustry = !filterIndustry || 
+        request.employer_profiles.industry === filterIndustry;
+      
+      const matchesLocation = !filterLocation || 
+        request.employer_profiles.hq_location === filterLocation;
+      
+      return matchesSearch && matchesIndustry && matchesLocation;
+    });
+  }, [requests, searchTerm, filterIndustry, filterLocation]);
+
+  const uniqueIndustries = useMemo(() => {
+    return Array.from(new Set(requests.map(r => r.employer_profiles.industry).filter(Boolean)));
+  }, [requests]);
+
+  const uniqueLocations = useMemo(() => {
+    return Array.from(new Set(requests.map(r => r.employer_profiles.hq_location).filter(Boolean)));
+  }, [requests]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -147,18 +176,51 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
     );
   }
 
-  if (requests.length === 0) {
-    return (
-      <div className="text-center p-8">
-        <p className="text-muted-foreground">No pending connection requests</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2">
-        {requests.map((request) => (
+      <div className="mb-4 space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by company name, description, or message..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={filterIndustry}
+            onChange={(e) => setFilterIndustry(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Industries</option>
+            {uniqueIndustries.map(industry => (
+              <option key={industry} value={industry}>{industry}</option>
+            ))}
+          </select>
+          <select
+            value={filterLocation}
+            onChange={(e) => setFilterLocation(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Locations</option>
+            {uniqueLocations.map(location => (
+              <option key={location} value={location}>{location}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {filteredRequests.length === 0 ? (
+        <div className="text-center p-8">
+          <p className="text-muted-foreground">
+            {requests.length === 0 ? "No pending connection requests" : "No requests match your filters"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {filteredRequests.map((request) => (
           <Card key={request.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedRequest(request)}>
             <CardHeader>
               <div className="flex items-center gap-4">
@@ -196,6 +258,7 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
           </Card>
         ))}
       </div>
+      )}
 
       {selectedRequest && (
         <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
