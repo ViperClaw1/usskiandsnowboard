@@ -100,14 +100,13 @@ const Index = () => {
 
         <section className="py-20">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl font-bold mb-4 text-foreground">Ready to Get Started?</h2>
+            <h2 className="text-2xl font-bold mb-4 text-foreground">Learn more about US Ski & Snowboard</h2>
             <p className="text-base text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join the platform today and be part of helping athletes succeed 
-              not only in sport but also in life beyond competition.
+              Support the U.S. Ski & Snowboard Team and take your fandom to the next level
             </p>
-            <Link to="/auth">
-              <Button size="lg">Create Your Account</Button>
-            </Link>
+            <a href="https://insider.usskiandsnowboard.org/s/" target="_blank" rel="noopener noreferrer">
+              <Button size="lg">Become An Insider</Button>
+            </a>
           </div>
         </section>
       </main>
