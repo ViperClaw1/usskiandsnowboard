@@ -371,63 +371,11 @@ const AthleteDirectory = () => {
         <Dialog open={!!selectedAthlete && !showRequestDialog} onOpenChange={(open) => !open && setSelectedAthlete(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"} - Profile Details</DialogTitle>
+              <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
-              {athletePhotos.length > 0 && (
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src={athletePhotos[currentPhotoIndex]}
-                    alt={`${selectedAthlete.profiles.full_name} photo ${currentPhotoIndex + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  {athletePhotos.length > 1 && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCurrentPhotoIndex((prev) => 
-                            prev === 0 ? athletePhotos.length - 1 : prev - 1
-                          );
-                        }}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCurrentPhotoIndex((prev) => 
-                            prev === athletePhotos.length - 1 ? 0 : prev + 1
-                          );
-                        }}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                        {athletePhotos.map((_, index) => (
-                          <div
-                            key={index}
-                            className={`h-1.5 rounded-full transition-all ${
-                              index === currentPhotoIndex 
-                                ? "w-6 bg-primary" 
-                                : "w-1.5 bg-primary/30"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
+                <Avatar className="h-16 w-16">
                   <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
                   <AvatarFallback>
                     {selectedAthlete.profiles.full_name
@@ -436,7 +384,9 @@ const AthleteDirectory = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
+                  <h3 className="font-semibold">
+                    {selectedAthlete.profiles.full_name || "Athlete"}
+                  </h3>
                   {selectedAthlete.sport_discipline && (
                     <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
                   )}
@@ -524,64 +474,6 @@ const AthleteDirectory = () => {
                   >
                     {selectedAthlete.email}
                   </a>
-                </div>
-              )}
-
-              {athleteEducation.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Education</h4>
-                  <div className="space-y-3">
-                    {athleteEducation.map((edu) => (
-                      <div key={edu.id} className="border-l-2 border-primary/30 pl-3">
-                        <p className="font-medium text-sm">{edu.school}</p>
-                        {edu.degree && <p className="text-sm text-muted-foreground">{edu.degree}</p>}
-                        {edu.graduation_year && (
-                          <p className="text-xs text-muted-foreground">Class of {edu.graduation_year}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {athleteExperience.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Experience</h4>
-                  <div className="space-y-3">
-                    {athleteExperience.map((exp) => (
-                      <div key={exp.id} className="border-l-2 border-primary/30 pl-3">
-                        <p className="font-medium text-sm">{exp.title}</p>
-                        {exp.organization && (
-                          <p className="text-sm text-muted-foreground">{exp.organization}</p>
-                        )}
-                        {(exp.start_date || exp.end_date) && (
-                          <p className="text-xs text-muted-foreground">
-                            {exp.start_date} - {exp.is_current ? "Present" : exp.end_date || "N/A"}
-                          </p>
-                        )}
-                        {exp.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {athleteCertifications.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Certifications</h4>
-                  <div className="space-y-2">
-                    {athleteCertifications.map((cert) => (
-                      <div key={cert.id} className="border-l-2 border-primary/30 pl-3">
-                        <p className="font-medium text-sm">{cert.name}</p>
-                        {cert.issuer && <p className="text-sm text-muted-foreground">{cert.issuer}</p>}
-                        {cert.issue_date && (
-                          <p className="text-xs text-muted-foreground">Issued: {cert.issue_date}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
 
