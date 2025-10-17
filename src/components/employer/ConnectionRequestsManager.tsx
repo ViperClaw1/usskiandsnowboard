@@ -216,9 +216,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                   <CardTitle className="text-base">
                     {request.athlete_profiles.profiles?.full_name || "Athlete"}
                   </CardTitle>
-                  {request.athlete_profiles.sport_discipline && (
-                    <p className="text-sm text-muted-foreground">{request.athlete_profiles.sport_discipline}</p>
-                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {request.athlete_profiles.sport_discipline || "Sport not specified"}
+                  </p>
                 </div>
                 <Badge variant="secondary">Pending</Badge>
               </div>
@@ -228,14 +228,25 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                 Request Date: {format(new Date(request.created_at), "MMM d, yyyy")}
               </p>
               
-              {request.athlete_profiles.bio && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{request.athlete_profiles.bio}</p>
-              )}
-
-              {request.opportunity_type && (
-                <p className="text-sm">
-                  <span className="font-medium">Opportunity:</span> {request.opportunity_type}
+              <div>
+                <p className="text-xs font-medium mb-1">Bio</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {request.athlete_profiles.bio || "No bio provided"}
                 </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium mb-1">Opportunity Type</p>
+                <p className="text-sm text-muted-foreground">
+                  {request.opportunity_type || "Not specified"}
+                </p>
+              </div>
+
+              {request.message && (
+                <div>
+                  <p className="text-xs font-medium mb-1">Message</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{request.message}</p>
+                </div>
               )}
             </CardContent>
           </Card>

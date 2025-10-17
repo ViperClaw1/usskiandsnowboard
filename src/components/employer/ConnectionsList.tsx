@@ -135,7 +135,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         {connections.map((connection) => (
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
             <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
                   <AvatarFallback>AT</AvatarFallback>
@@ -144,20 +144,27 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   <p className="font-medium text-sm">
                     {connection.athlete_profiles.profiles?.full_name || "Athlete"}
                   </p>
-                  {connection.athlete_profiles.sport_discipline && (
-                    <p className="text-xs text-muted-foreground">{connection.athlete_profiles.sport_discipline}</p>
-                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {connection.athlete_profiles.sport_discipline || "Sport not specified"}
+                  </p>
                 </div>
                 <Badge variant={status === "accepted" ? "default" : "secondary"}>
                   {status === "accepted" ? "Connected" : "Declined"}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground/70">
-                {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
-              </p>
-              {connection.athlete_profiles.bio && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-2">{connection.athlete_profiles.bio}</p>
-              )}
+              
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground/70">
+                  {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
+                </p>
+                
+                <div>
+                  <p className="text-xs font-medium mb-1">Bio</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {connection.athlete_profiles.bio || "No bio provided"}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
