@@ -153,11 +153,12 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         ) : (
           <div className="flex gap-3 pb-2">
             {photos.map((photoUrl, index) => (
-              <div key={index} className="relative w-32 h-32 aspect-square flex-shrink-0 group">
+              <div key={index} className="relative flex-shrink-0 group" style={{ width: '128px', height: '128px' }}>
                 <img
                   src={photoUrl}
                   alt={`Lifestyle photo ${index + 1}`}
                   className="w-full h-full object-cover rounded-lg"
+                  style={{ width: '128px', height: '128px' }}
                 />
                 <Button
                   size="icon"
