@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Instagram } from "lucide-react";
+import { Loader2, Instagram, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface AthleteProfile {
@@ -68,6 +68,8 @@ const AthleteDirectory = () => {
   const [athleteEducation, setAthleteEducation] = useState<Education[]>([]);
   const [athleteExperience, setAthleteExperience] = useState<Experience[]>([]);
   const [athleteCertifications, setAthleteCertifications] = useState<Certification[]>([]);
+  const [athletePhotos, setAthletePhotos] = useState<string[]>([]);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   useEffect(() => {
     loadAthletes();
@@ -113,7 +115,7 @@ const AthleteDirectory = () => {
     }
   };
 
-  const loadAthleteDetails = async (athleteId: string) => {
+  const loadAthleteDetails = async (athleteId: string, userId: string) => {
     try {
       // Load education
       const { data: education } = await supabase
@@ -141,6 +143,27 @@ const AthleteDirectory = () => {
         .order("issue_date", { ascending: false });
       
       setAthleteCertifications(certifications || []);
+
+      // Load photos
+      const { data: photoFiles } = await supabase.storage
+        .from("athlete-photos")
+        .list(`${userId}/lifestyle`, {
+          limit: 100,
+          sortBy: { column: "created_at", order: "desc" },
+        });
+
+      if (photoFiles && photoFiles.length > 0) {
+        const photoUrls = photoFiles.map((file) => {
+          const { data: urlData } = supabase.storage
+            .from("athlete-photos")
+            .getPublicUrl(`${userId}/lifestyle/${file.name}`);
+          return urlData.publicUrl;
+        });
+        setAthletePhotos(photoUrls);
+        setCurrentPhotoIndex(0);
+      } else {
+        setAthletePhotos([]);
+      }
     } catch (error) {
       console.error("Error loading athlete details:", error);
     }
@@ -219,7 +242,7 @@ const AthleteDirectory = () => {
                 console.error("Error tracking view:", error);
               }
               // Load additional details
-              loadAthleteDetails(athlete.id);
+              loadAthleteDetails(athlete.id, athlete.user_id);
             }}
           >
             <CardHeader className="pb-3">
@@ -312,6 +335,58 @@ const AthleteDirectory = () => {
               <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"} - Profile Details</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
+              {athletePhotos.length > 0 && (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                  <img
+                    src={athletePhotos[currentPhotoIndex]}
+                    alt={`${selectedAthlete.profiles.full_name} photo ${currentPhotoIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {athletePhotos.length > 1 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentPhotoIndex((prev) => 
+                            prev === 0 ? athletePhotos.length - 1 : prev - 1
+                          );
+                        }}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentPhotoIndex((prev) => 
+                            prev === athletePhotos.length - 1 ? 0 : prev + 1
+                          );
+                        }}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                        {athletePhotos.map((_, index) => (
+                          <div
+                            key={index}
+                            className={`h-1.5 rounded-full transition-all ${
+                              index === currentPhotoIndex 
+                                ? "w-6 bg-primary" 
+                                : "w-1.5 bg-primary/30"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
