@@ -134,8 +134,8 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+      <header className="border-b bg-card w-full">
+        <div className="w-full px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
           <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-foreground truncate">Employer Dashboard</h1>
           <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
             <LogOut className="h-4 w-4" />
