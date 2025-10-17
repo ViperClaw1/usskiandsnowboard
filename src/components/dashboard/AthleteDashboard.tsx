@@ -251,15 +251,15 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Partners</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 lg:gap-8">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8">
                     <Button onClick={() => setShowEmployerDirectory(true)} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
                       <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Browse Partners
                     </Button>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center justify-center">
                       {featuredEmployers.length > 0 ? (
                         featuredEmployers.map((employer) => (
-                          <div key={employer.id} className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
+                          <div key={employer.id} className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
                             <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
                               <AvatarImage src={employer.logo_url ?? undefined} />
                               <AvatarFallback>
