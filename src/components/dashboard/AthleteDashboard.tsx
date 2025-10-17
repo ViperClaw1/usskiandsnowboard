@@ -105,35 +105,37 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Athlete Dashboard</h1>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Sign Out</span>
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+          <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-foreground truncate">Athlete Dashboard</h1>
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline ml-2">Sign Out</span>
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 sm:py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
         <div className="grid gap-4 sm:gap-6">
           {!showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
-              <Card className="shadow-elegant">
-                <CardContent className="pt-4 sm:pt-6">
+              <Card className="shadow-elegant overflow-hidden">
+                <CardContent className="p-4 sm:p-6">
                   <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
                     {/* Left Half - Welcome Section */}
-                    <div className="flex flex-col justify-center">
-                      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                    <div className="flex flex-col justify-center min-w-0">
+                      <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                        <Avatar className="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 shrink-0">
                           <AvatarImage src={profile?.photo_url} />
                           <AvatarFallback>
-                            <UserIcon className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                            <UserIcon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-primary" />
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">Welcome, {profile?.profiles?.full_name || user.email}</h2>
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold leading-tight truncate">
+                            Welcome, {profile?.profiles?.full_name || user.email?.split('@')[0] || 'Athlete'}
+                          </h2>
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
                           </p>
@@ -163,7 +165,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                           {profile.bio && (
                             <div>
                               <p className="text-sm font-medium text-foreground mb-1">Bio</p>
-                              <p className="text-sm text-muted-foreground line-clamp-3">{profile.bio}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-3 break-words">{profile.bio}</p>
                             </div>
                           )}
 
@@ -179,16 +181,16 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                           )}
 
                           {profile.availability && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Briefcase className="h-4 w-4" />
-                              {profile.availability}
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <Briefcase className="h-4 w-4 shrink-0 mt-0.5" />
+                              <span className="break-words">{profile.availability}</span>
                             </div>
                           )}
 
                           {profile.geographic_preferences && profile.geographic_preferences.length > 0 && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <MapPin className="h-4 w-4" />
-                              {profile.geographic_preferences.join(", ")}
+                            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                              <span className="break-words">{profile.geographic_preferences.join(", ")}</span>
                             </div>
                           )}
 
@@ -228,56 +230,56 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground">Partner Connections</h2>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
-                  <CardHeader className="pb-2 sm:pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm sm:text-base lg:text-lg">Pending Requests</CardTitle>
-                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowPendingRequests(true)}>
+                  <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Pending</CardTitle>
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-accent shrink-0" />
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl sm:text-3xl font-bold text-accent">{pendingCount}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">From partners</p>
+                  <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-accent">{pendingCount}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Partners</p>
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
-                  <CardHeader className="pb-2 sm:pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm sm:text-base lg:text-lg">Connections Made</CardTitle>
-                      <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowAcceptedConnections(true)}>
+                  <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Connected</CardTitle>
+                      <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl sm:text-3xl font-bold text-primary">{acceptedCount}</p>
+                  <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary">{acceptedCount}</p>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">Accepted</p>
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowRejectedConnections(true)}>
-                  <CardHeader className="pb-2 sm:pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm sm:text-base lg:text-lg">Connections Declined</CardTitle>
-                      <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowRejectedConnections(true)}>
+                  <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Declined</CardTitle>
+                      <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl sm:text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
+                  <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">Declined</p>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="pb-2 sm:pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm sm:text-base lg:text-lg">Profile Views</CardTitle>
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <Card className="overflow-hidden">
+                  <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Views</CardTitle>
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl sm:text-3xl font-bold text-foreground">{profile?.profile_views || 0}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Total views</p>
+                  <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{profile?.profile_views || 0}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Total</p>
                   </CardContent>
                 </Card>
               </div>
