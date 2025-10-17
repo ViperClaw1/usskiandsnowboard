@@ -164,6 +164,55 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                     {connection.athlete_profiles.bio || "No bio provided"}
                   </p>
                 </div>
+
+                <div>
+                  <p className="text-xs font-medium mb-1">Professional Highlights</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {connection.athlete_profiles.professional_highlights || "Not provided"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium mb-1">Skills</p>
+                  <div className="flex flex-wrap gap-1">
+                    {connection.athlete_profiles.skills && connection.athlete_profiles.skills.length > 0 ? (
+                      connection.athlete_profiles.skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">{skill}</Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No skills listed</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium mb-1">Career Interests</p>
+                  <div className="flex flex-wrap gap-1">
+                    {connection.athlete_profiles.career_interests && connection.athlete_profiles.career_interests.length > 0 ? (
+                      connection.athlete_profiles.career_interests.map((interest, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">{interest}</Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No interests listed</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium mb-1">Availability</p>
+                  <p className="text-sm text-muted-foreground">
+                    {connection.athlete_profiles.availability || "Not specified"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium mb-1">Geographic Preferences</p>
+                  <p className="text-sm text-muted-foreground">
+                    {connection.athlete_profiles.geographic_preferences && connection.athlete_profiles.geographic_preferences.length > 0
+                      ? connection.athlete_profiles.geographic_preferences.join(", ")
+                      : "Not specified"}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
