@@ -27,6 +27,7 @@ export type Database = {
           photo_url: string | null
           professional_highlights: string | null
           profile_completeness: number | null
+          profile_views: number | null
           skills: string[] | null
           sport_discipline: string | null
           updated_at: string
@@ -45,6 +46,7 @@ export type Database = {
           photo_url?: string | null
           professional_highlights?: string | null
           profile_completeness?: number | null
+          profile_views?: number | null
           skills?: string[] | null
           sport_discipline?: string | null
           updated_at?: string
@@ -63,6 +65,7 @@ export type Database = {
           photo_url?: string | null
           professional_highlights?: string | null
           profile_completeness?: number | null
+          profile_views?: number | null
           skills?: string[] | null
           sport_discipline?: string | null
           updated_at?: string

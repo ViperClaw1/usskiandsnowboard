@@ -257,8 +257,8 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                     <CardTitle className="text-lg">Profile Views</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-3xl font-bold text-foreground">0</p>
-                    <p className="text-sm text-muted-foreground mt-1">This month</p>
+                    <p className="text-3xl font-bold text-foreground">{profile?.profile_views || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Total views</p>
                   </CardContent>
                 </Card>
               </div>

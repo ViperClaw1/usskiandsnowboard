@@ -24,6 +24,7 @@ interface AthleteProfile {
   professional_highlights: string | null;
   years_of_membership: number | null;
   instagram_url: string | null;
+  profile_views: number | null;
   profiles: {
     full_name: string | null;
   };
@@ -147,7 +148,18 @@ const AthleteDirectory = () => {
           <Card 
             key={athlete.id} 
             className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50"
-            onClick={() => setSelectedAthlete(athlete)}
+            onClick={async () => {
+              setSelectedAthlete(athlete);
+              // Increment view count
+              try {
+                await supabase
+                  .from("athlete_profiles")
+                  .update({ profile_views: (athlete.profile_views || 0) + 1 })
+                  .eq("id", athlete.id);
+              } catch (error) {
+                console.error("Error tracking view:", error);
+              }
+            }}
           >
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
