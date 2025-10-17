@@ -234,26 +234,72 @@ const AthleteDirectory = () => {
                       : "AT"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="text-center">
+                <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
                   {athlete.sport_discipline && (
                     <p className="text-sm text-muted-foreground">{athlete.sport_discipline}</p>
                   )}
+                  {athlete.years_of_membership && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {athlete.years_of_membership} years U.S. Ski & Snowboard
+                    </p>
+                  )}
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="space-y-3">
               {athlete.bio && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2 text-center">{athlete.bio}</p>
+                <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
               )}
+              
+              {athlete.professional_highlights && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{athlete.professional_highlights}</p>
+                </div>
+              )}
+
+              {athlete.availability && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">{athlete.availability}</Badge>
+                </div>
+              )}
+
+              {athlete.career_interests && athlete.career_interests.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Interests</p>
+                  <div className="flex flex-wrap gap-1">
+                    {athlete.career_interests.slice(0, 2).map((interest, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">{interest}</Badge>
+                    ))}
+                    {athlete.career_interests.length > 2 && (
+                      <Badge variant="outline" className="text-xs">+{athlete.career_interests.length - 2}</Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {athlete.skills && athlete.skills.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {athlete.skills.slice(0, 3).map((skill, index) => (
-                    <Badge key={index} variant="secondary">{skill}</Badge>
-                  ))}
-                  {athlete.skills.length > 3 && (
-                    <Badge variant="outline">+{athlete.skills.length - 3} more</Badge>
-                  )}
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
+                  <div className="flex flex-wrap gap-1">
+                    {athlete.skills.slice(0, 3).map((skill, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">{skill}</Badge>
+                    ))}
+                    {athlete.skills.length > 3 && (
+                      <Badge variant="outline" className="text-xs">+{athlete.skills.length - 3}</Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {athlete.geographic_preferences && athlete.geographic_preferences.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Location Preferences</p>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {athlete.geographic_preferences.slice(0, 2).join(", ")}
+                    {athlete.geographic_preferences.length > 2 && ` +${athlete.geographic_preferences.length - 2} more`}
+                  </p>
                 </div>
               )}
             </CardContent>
