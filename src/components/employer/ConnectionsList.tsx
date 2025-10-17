@@ -247,33 +247,33 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
           </p>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredConnections.map((connection) => (
-          <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-2">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
-                  <AvatarFallback>AT</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
+          <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors aspect-square flex flex-col" onClick={() => setSelectedConnection(connection)}>
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex flex-col items-center text-center mb-3">
+                  <Avatar className="h-16 w-16 mb-2">
+                    <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
+                    <AvatarFallback>AT</AvatarFallback>
+                  </Avatar>
                   <p className="font-medium text-sm">
                     {connection.athlete_profiles.profiles?.full_name || "Athlete"}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {connection.athlete_profiles.sport_discipline || "Sport not specified"}
                   </p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">
+                  <Badge variant={status === "accepted" ? "default" : "secondary"} className="mt-2">
+                    {status === "accepted" ? "Connected" : "Declined"}
+                  </Badge>
+                </div>
+                <div className="flex-1 flex flex-col justify-between">
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {connection.athlete_profiles.bio || "\u00A0"}
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mt-2">
                     {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
                   </p>
                 </div>
-                <Badge variant={status === "accepted" ? "default" : "secondary"}>
-                  {status === "accepted" ? "Connected" : "Declined"}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground line-clamp-2 mt-2 min-h-[2.5rem]">
-                {connection.athlete_profiles.bio || "\u00A0"}
-              </p>
             </CardContent>
           </Card>
         ))}
