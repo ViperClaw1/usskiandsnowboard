@@ -29,6 +29,7 @@ interface AthleteProfile {
   profiles: {
     full_name: string | null;
   };
+  lifestyle_photos?: string[];
 }
 
 interface Education {
@@ -106,8 +107,30 @@ const AthleteDirectory = () => {
         throw error;
       }
       
-      console.log("Loaded athletes:", data);
-      setAthletes(data || []);
+      // Load lifestyle photos for each athlete
+      const athletesWithPhotos = await Promise.all(
+        (data || []).map(async (athlete) => {
+          const { data: photoFiles } = await supabase.storage
+            .from("athlete-photos")
+            .list(`${athlete.user_id}/lifestyle`, {
+              limit: 5,
+              sortBy: { column: "created_at", order: "desc" },
+            });
+
+          if (photoFiles && photoFiles.length > 0) {
+            const photoUrls = photoFiles.map((file) => {
+              const { data: urlData } = supabase.storage
+                .from("athlete-photos")
+                .getPublicUrl(`${athlete.user_id}/lifestyle/${file.name}`);
+              return urlData.publicUrl;
+            });
+            return { ...athlete, lifestyle_photos: photoUrls };
+          }
+          return { ...athlete, lifestyle_photos: [] };
+        })
+      );
+      
+      setAthletes(athletesWithPhotos);
     } catch (error) {
       console.error("Error loading athletes:", error);
     } finally {
@@ -247,14 +270,24 @@ const AthleteDirectory = () => {
           >
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={athlete.photo_url ?? undefined} alt={athlete.profiles.full_name ?? "Athlete"} className="object-cover" />
-                  <AvatarFallback>
-                    {athlete.profiles.full_name
-                      ? athlete.profiles.full_name.split(" ").map(n => n[0]).join("").toUpperCase()
-                      : "AT"}
-                  </AvatarFallback>
-                </Avatar>
+                {athlete.lifestyle_photos && athlete.lifestyle_photos.length > 0 ? (
+                  <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={athlete.lifestyle_photos[0]}
+                      alt={`${athlete.profiles.full_name} lifestyle photo`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={athlete.photo_url ?? undefined} alt={athlete.profiles.full_name ?? "Athlete"} className="object-cover" />
+                    <AvatarFallback>
+                      {athlete.profiles.full_name
+                        ? athlete.profiles.full_name.split(" ").map(n => n[0]).join("").toUpperCase()
+                        : "AT"}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
                   {athlete.sport_discipline && (
