@@ -131,36 +131,38 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
 
   return (
     <>
-      <div className="grid gap-3">
-        {connections.map((connection) => (
-          <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
-                  <AvatarFallback>AT</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">
-                    {connection.athlete_profiles.profiles?.full_name || "Athlete"}
-                  </p>
-                  {connection.athlete_profiles.sport_discipline && (
-                    <p className="text-xs text-muted-foreground">{connection.athlete_profiles.sport_discipline}</p>
-                  )}
+      <div className="max-h-[400px] overflow-y-auto pr-2">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          {connections.map((connection) => (
+            <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
+              <CardContent className="p-3">
+                <div className="flex items-start gap-2 mb-2">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
+                    <AvatarFallback className="text-xs">AT</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {connection.athlete_profiles.profiles?.full_name || "Athlete"}
+                    </p>
+                    {connection.athlete_profiles.sport_discipline && (
+                      <p className="text-xs text-muted-foreground truncate">{connection.athlete_profiles.sport_discipline}</p>
+                    )}
+                  </div>
+                  <Badge variant={status === "accepted" ? "default" : "secondary"} className="text-xs flex-shrink-0">
+                    {status === "accepted" ? "Connected" : "Declined"}
+                  </Badge>
                 </div>
-                <Badge variant={status === "accepted" ? "default" : "secondary"}>
-                  {status === "accepted" ? "Connected" : "Declined"}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground/70">
-                {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
-              </p>
-              {connection.athlete_profiles.bio && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-2">{connection.athlete_profiles.bio}</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                <p className="text-xs text-muted-foreground/70 mb-1">
+                  {format(new Date(connection.updated_at), "MMM d, yyyy")}
+                </p>
+                {connection.athlete_profiles.bio && (
+                  <p className="text-xs text-muted-foreground line-clamp-2">{connection.athlete_profiles.bio}</p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {selectedConnection && (
