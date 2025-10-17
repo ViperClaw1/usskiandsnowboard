@@ -99,7 +99,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="relative">
         <input
           type="file"
@@ -112,19 +112,19 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         />
         <label
           htmlFor="photo-upload"
-          className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-background hover:bg-muted/50 transition-colors ${
+          className={`flex flex-col items-center justify-center w-full h-40 sm:h-48 lg:h-64 border-2 border-dashed rounded-lg cursor-pointer bg-background hover:bg-muted/50 transition-colors ${
             uploading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
           {uploading ? (
             <div className="flex flex-col items-center">
-              <Loader2 className="h-12 w-12 animate-spin text-primary mb-2" />
-              <p className="text-sm text-muted-foreground">Uploading...</p>
+              <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 animate-spin text-primary mb-2" />
+              <p className="text-xs sm:text-sm text-muted-foreground">Uploading...</p>
             </div>
           ) : (
             <>
-              <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm italic text-muted-foreground/60 text-center px-4">
+              <Upload className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-muted-foreground mb-2 sm:mb-4" />
+              <p className="text-xs sm:text-sm italic text-muted-foreground/60 text-center px-3 sm:px-4">
                 Upload 5+ of your favorite lifestyle or competition photos
               </p>
             </>
@@ -132,41 +132,40 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         </label>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-1 px-1">
         {loading ? (
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-32 h-32 aspect-square bg-muted animate-pulse rounded-lg flex-shrink-0" />
+              <div key={i} className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 aspect-square bg-muted animate-pulse rounded-lg flex-shrink-0" />
             ))}
           </div>
         ) : photos.length === 0 ? (
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="w-32 h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
+                className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
               >
-                <Upload className="h-8 w-8 text-muted-foreground/30" />
+                <Upload className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-muted-foreground/30" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="flex gap-3 pb-2">
+          <div className="flex gap-2 sm:gap-3 pb-2">
             {photos.map((photoUrl, index) => (
-              <div key={index} className="relative flex-shrink-0 group" style={{ width: '128px', height: '128px' }}>
+              <div key={index} className="relative flex-shrink-0 group w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32">
                 <img
                   src={photoUrl}
                   alt={`Lifestyle photo ${index + 1}`}
                   className="w-full h-full object-cover rounded-lg"
-                  style={{ width: '128px', height: '128px' }}
                 />
                 <Button
                   size="icon"
                   variant="destructive"
-                  className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 h-5 w-5 sm:h-6 sm:w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => handleDeletePhoto(photoUrl)}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             ))}
@@ -174,9 +173,9 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
               [...Array(5 - photos.length)].map((_, i) => (
                 <div
                   key={`empty-${i}`}
-                  className="w-32 h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
+                  className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 aspect-square border-2 border-dashed border-muted rounded-lg flex-shrink-0 flex items-center justify-center"
                 >
-                  <Upload className="h-8 w-8 text-muted-foreground/30" />
+                  <Upload className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-muted-foreground/30" />
                 </div>
               ))}
           </div>
