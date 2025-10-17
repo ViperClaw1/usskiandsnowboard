@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface Connection {
   id: string;
@@ -27,6 +28,7 @@ interface Connection {
     };
   };
   created_at: string;
+  updated_at: string;
 }
 
 interface ConnectionsListProps {
@@ -74,6 +76,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         .select(`
           id,
           created_at,
+          updated_at,
           athlete_profiles (
             email,
             sport_discipline,
@@ -132,7 +135,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         {connections.map((connection) => (
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mb-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
                   <AvatarFallback>AT</AvatarFallback>
@@ -149,6 +152,9 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   {status === "accepted" ? "Connected" : "Declined"}
                 </Badge>
               </div>
+              <p className="text-xs text-muted-foreground/70">
+                {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
+              </p>
             </CardContent>
           </Card>
         ))}

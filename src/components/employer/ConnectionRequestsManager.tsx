@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle, XCircle, Instagram } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface ConnectionRequest {
   id: string;
@@ -223,6 +224,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
               </div>
             </CardHeader>
             <CardContent>
+              <p className="text-xs text-muted-foreground/70 mb-2">
+                Request Date: {format(new Date(request.created_at), "MMM d, yyyy")}
+              </p>
               {request.opportunity_type && (
                 <p className="text-sm mb-2">
                   <span className="font-medium">Opportunity:</span> {request.opportunity_type}
