@@ -298,34 +298,32 @@ const AthleteDirectory = () => {
                 )}
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
-                  {athlete.sport_discipline && (
-                    <p className="text-sm text-muted-foreground">{athlete.sport_discipline}</p>
-                  )}
-                  {athlete.years_of_membership && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {athlete.years_of_membership} years U.S. Ski & Snowboard
-                    </p>
-                  )}
+                  <p className="text-sm text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {athlete.years_of_membership ? `${athlete.years_of_membership} years U.S. Ski & Snowboard` : "\u00A0"}
+                  </p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {athlete.bio && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
-              )}
+              <p className="text-sm text-muted-foreground line-clamp-3 min-h-[3.75rem]">
+                {athlete.bio || "\u00A0"}
+              </p>
               
-              {athlete.professional_highlights && (
-                <div>
-                  <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{athlete.professional_highlights}</p>
-                </div>
-              )}
+              <div className="min-h-[2.5rem]">
+                {athlete.professional_highlights && (
+                  <>
+                    <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{athlete.professional_highlights}</p>
+                  </>
+                )}
+              </div>
 
-              {athlete.availability && (
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-h-[1.5rem]">
+                {athlete.availability && (
                   <Badge variant="outline" className="text-xs">{athlete.availability}</Badge>
-                </div>
-              )}
+                )}
+              </div>
 
               {athlete.career_interests && athlete.career_interests.length > 0 && (
                 <div>

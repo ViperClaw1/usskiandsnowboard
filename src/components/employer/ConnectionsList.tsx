@@ -263,17 +263,17 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   <p className="text-xs text-muted-foreground">
                     {connection.athlete_profiles.sport_discipline || "Sport not specified"}
                   </p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">
+                    {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
+                  </p>
                 </div>
                 <Badge variant={status === "accepted" ? "default" : "secondary"}>
                   {status === "accepted" ? "Connected" : "Declined"}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground/70">
-                {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-2 min-h-[2.5rem]">
+                {connection.athlete_profiles.bio || "\u00A0"}
               </p>
-              {connection.athlete_profiles.bio && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-2">{connection.athlete_profiles.bio}</p>
-              )}
             </CardContent>
           </Card>
         ))}
