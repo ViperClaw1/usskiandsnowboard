@@ -11,6 +11,7 @@ import ProfileForm from "@/components/athlete/ProfileForm";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import ConnectionRequestsManager from "@/components/athlete/ConnectionRequestsManager";
 import ConnectionsList from "@/components/athlete/ConnectionsList";
+import PhotoUploader from "@/components/athlete/PhotoUploader";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
@@ -119,24 +120,24 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
         <div className="grid gap-6">
           {!showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Left Half - Welcome Section */}
+                <div className="flex flex-col justify-center">
+                  <div className="flex items-center gap-4 mb-6">
+                    <Avatar className="h-20 w-20">
                       <AvatarImage src={profile?.photo_url} />
                       <AvatarFallback>
-                        <UserIcon className="h-8 w-8 text-primary" />
+                        <UserIcon className="h-10 w-10 text-primary" />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <CardTitle>Welcome, {profile?.profiles?.full_name || user.email}</CardTitle>
-                      <CardDescription>
+                    <div>
+                      <h2 className="text-3xl font-bold">Welcome, {profile?.profiles?.full_name || user.email}</h2>
+                      <p className="text-muted-foreground mt-1">
                         {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
-                      </CardDescription>
+                      </p>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
+
                   {loading ? (
                     <p className="text-sm text-muted-foreground">Loading profile...</p>
                   ) : profile ? (
@@ -189,7 +190,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                         </div>
                       )}
 
-                      <div className="flex gap-4">
+                      <div className="flex gap-4 pt-4">
                         <Button onClick={() => setShowProfileDialog(true)} variant="outline">
                           Edit Profile
                         </Button>
@@ -209,8 +210,15 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                       </Button>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Right Half - Photo Uploader */}
+                <div className="flex items-center justify-center">
+                  <div className="w-full">
+                    <PhotoUploader userId={user.id} />
+                  </div>
+                </div>
+              </div>
 
               <div className="grid md:grid-cols-4 gap-6">
                 <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
