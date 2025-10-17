@@ -270,12 +270,42 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                     </div>
                   </div>
                 </div>
-                <div className="min-h-[4.5rem]">
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {connection.athlete_profiles.bio || "\u00A0"}
-                  </p>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="min-h-[1.25rem]">
+                    <span className="text-muted-foreground">Membership: </span>
+                    <span className="font-medium">
+                      {connection.athlete_profiles.years_of_membership ? `${connection.athlete_profiles.years_of_membership} years` : "Not specified"}
+                    </span>
+                  </div>
+                  
+                  <div className="min-h-[1.25rem]">
+                    <span className="text-muted-foreground">Availability: </span>
+                    <span className="font-medium">
+                      {connection.athlete_profiles.availability || "Not specified"}
+                    </span>
+                  </div>
+                  
+                  <div className="min-h-[2.5rem]">
+                    <span className="text-muted-foreground">Interests: </span>
+                    <span className="font-medium">
+                      {connection.athlete_profiles.career_interests && connection.athlete_profiles.career_interests.length > 0
+                        ? connection.athlete_profiles.career_interests.slice(0, 2).join(", ") + (connection.athlete_profiles.career_interests.length > 2 ? "..." : "")
+                        : "Not specified"}
+                    </span>
+                  </div>
+                  
+                  <div className="min-h-[2.5rem]">
+                    <span className="text-muted-foreground">Location: </span>
+                    <span className="font-medium">
+                      {connection.athlete_profiles.geographic_preferences && connection.athlete_profiles.geographic_preferences.length > 0
+                        ? connection.athlete_profiles.geographic_preferences.slice(0, 2).join(", ") + (connection.athlete_profiles.geographic_preferences.length > 2 ? "..." : "")
+                        : "Not specified"}
+                    </span>
+                  </div>
                 </div>
-                <div className="min-h-[1.25rem]">
+                
+                <div className="min-h-[1.25rem] pt-2 border-t">
                   <p className="text-xs text-muted-foreground/70 text-center">
                     {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
                   </p>
