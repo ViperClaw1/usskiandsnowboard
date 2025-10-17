@@ -278,24 +278,14 @@ const AthleteDirectory = () => {
           >
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
-                {athlete.lifestyle_photos && athlete.lifestyle_photos.length > 0 ? (
-                  <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={athlete.lifestyle_photos[0]}
-                      alt={`${athlete.profiles.full_name} lifestyle photo`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={athlete.photo_url ?? undefined} alt={athlete.profiles.full_name ?? "Athlete"} className="object-cover" />
-                    <AvatarFallback>
-                      {athlete.profiles.full_name
-                        ? athlete.profiles.full_name.split(" ").map(n => n[0]).join("").toUpperCase()
-                        : "AT"}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={athlete.photo_url ?? undefined} alt={athlete.profiles.full_name ?? "Athlete"} className="object-cover" />
+                  <AvatarFallback>
+                    {athlete.profiles.full_name
+                      ? athlete.profiles.full_name.split(" ").map(n => n[0]).join("").toUpperCase()
+                      : "AT"}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
                   <p className="text-sm text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
