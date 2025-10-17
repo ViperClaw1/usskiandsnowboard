@@ -120,105 +120,109 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
         <div className="grid gap-6">
           {!showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Left Half - Welcome Section */}
-                <div className="flex flex-col justify-center">
-                  <div className="flex items-center gap-4 mb-6">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={profile?.photo_url} />
-                      <AvatarFallback>
-                        <UserIcon className="h-10 w-10 text-primary" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h2 className="text-3xl font-bold">Welcome, {profile?.profiles?.full_name || user.email}</h2>
-                      <p className="text-muted-foreground mt-1">
-                        {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {loading ? (
-                    <p className="text-sm text-muted-foreground">Loading profile...</p>
-                  ) : profile ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
-                          Your profile is <span className="font-semibold text-foreground">{profile.profile_completeness}% complete</span>
-                        </p>
-                        <Badge variant={profile.is_public ? "default" : "secondary"}>
-                          {profile.is_public ? "Public" : "Private"}
-                        </Badge>
+              <Card className="shadow-elegant">
+                <CardContent className="pt-6">
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {/* Left Half - Welcome Section */}
+                    <div className="flex flex-col justify-center">
+                      <div className="flex items-center gap-4 mb-6">
+                        <Avatar className="h-20 w-20">
+                          <AvatarImage src={profile?.photo_url} />
+                          <AvatarFallback>
+                            <UserIcon className="h-10 w-10 text-primary" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h2 className="text-3xl font-bold">Welcome, {profile?.profiles?.full_name || user.email}</h2>
+                          <p className="text-muted-foreground mt-1">
+                            {profile ? "Your athlete profile" : "Complete your athlete profile to get started"}
+                          </p>
+                        </div>
                       </div>
-                      
-                      {profile.sport_discipline && (
-                        <div>
-                          <p className="text-sm font-medium text-foreground mb-1">Sport</p>
-                          <p className="text-sm text-muted-foreground">{profile.sport_discipline}</p>
-                        </div>
-                      )}
 
-                      {profile.bio && (
-                        <div>
-                          <p className="text-sm font-medium text-foreground mb-1">Bio</p>
-                          <p className="text-sm text-muted-foreground">{profile.bio}</p>
-                        </div>
-                      )}
+                      {loading ? (
+                        <p className="text-sm text-muted-foreground">Loading profile...</p>
+                      ) : profile ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground">
+                              Your profile is <span className="font-semibold text-foreground">{profile.profile_completeness}% complete</span>
+                            </p>
+                            <Badge variant={profile.is_public ? "default" : "secondary"}>
+                              {profile.is_public ? "Public" : "Private"}
+                            </Badge>
+                          </div>
+                          
+                          {profile.sport_discipline && (
+                            <div>
+                              <p className="text-sm font-medium text-foreground mb-1">Sport</p>
+                              <p className="text-sm text-muted-foreground">{profile.sport_discipline}</p>
+                            </div>
+                          )}
 
-                      {profile.skills && profile.skills.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-foreground mb-2">Skills</p>
-                          <div className="flex flex-wrap gap-2">
-                            {profile.skills.map((skill: string) => (
-                              <Badge key={skill} variant="outline">{skill}</Badge>
-                            ))}
+                          {profile.bio && (
+                            <div>
+                              <p className="text-sm font-medium text-foreground mb-1">Bio</p>
+                              <p className="text-sm text-muted-foreground">{profile.bio}</p>
+                            </div>
+                          )}
+
+                          {profile.skills && profile.skills.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-foreground mb-2">Skills</p>
+                              <div className="flex flex-wrap gap-2">
+                                {profile.skills.map((skill: string) => (
+                                  <Badge key={skill} variant="outline">{skill}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {profile.availability && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Briefcase className="h-4 w-4" />
+                              {profile.availability}
+                            </div>
+                          )}
+
+                          {profile.geographic_preferences && profile.geographic_preferences.length > 0 && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <MapPin className="h-4 w-4" />
+                              {profile.geographic_preferences.join(", ")}
+                            </div>
+                          )}
+
+                          <div className="flex gap-4 pt-4">
+                            <Button onClick={() => setShowProfileDialog(true)} variant="outline">
+                              Edit Profile
+                            </Button>
+                            <Button onClick={() => setShowEmployerDirectory(true)}>
+                              <Building2 className="h-4 w-4 mr-2" />
+                              Browse Partners
+                            </Button>
                           </div>
                         </div>
-                      )}
-
-                      {profile.availability && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Briefcase className="h-4 w-4" />
-                          {profile.availability}
+                      ) : (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Your profile is <span className="font-semibold text-foreground">0% complete</span>
+                          </p>
+                          <Button onClick={() => setShowProfileDialog(true)}>
+                            Complete Your Profile
+                          </Button>
                         </div>
                       )}
+                    </div>
 
-                      {profile.geographic_preferences && profile.geographic_preferences.length > 0 && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
-                          {profile.geographic_preferences.join(", ")}
-                        </div>
-                      )}
-
-                      <div className="flex gap-4 pt-4">
-                        <Button onClick={() => setShowProfileDialog(true)} variant="outline">
-                          Edit Profile
-                        </Button>
-                        <Button onClick={() => setShowEmployerDirectory(true)}>
-                          <Building2 className="h-4 w-4 mr-2" />
-                          Browse Partners
-                        </Button>
+                    {/* Right Half - Photo Uploader */}
+                    <div className="flex items-center justify-center">
+                      <div className="w-full">
+                        <PhotoUploader userId={user.id} />
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Your profile is <span className="font-semibold text-foreground">0% complete</span>
-                      </p>
-                      <Button onClick={() => setShowProfileDialog(true)}>
-                        Complete Your Profile
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Half - Photo Uploader */}
-                <div className="flex items-center justify-center">
-                  <div className="w-full">
-                    <PhotoUploader userId={user.id} />
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
               <div className="mt-8 mb-4">
                 <h2 className="text-2xl font-bold text-foreground">Partner Connections</h2>
