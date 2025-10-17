@@ -219,10 +219,6 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                           />
                         </DialogContent>
                       </Dialog>
-                      <Button onClick={handleBrowseAthletes}>
-                        <Search className="h-4 w-4 mr-2" />
-                        Browse Athletes
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -233,8 +229,12 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                   <CardTitle className="text-2xl">Browse Athletes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-4">
-                    <div className="flex gap-4 flex-1">
+                  <div className="flex items-center gap-8">
+                    <Button onClick={handleBrowseAthletes}>
+                      <Search className="h-4 w-4 mr-2" />
+                      Browse Athletes
+                    </Button>
+                    <div className="flex gap-8 flex-1">
                       {featuredAthletes.length > 0 ? (
                         featuredAthletes.map((athlete) => (
                           <div key={athlete.id} className="flex items-center gap-3">
@@ -254,10 +254,6 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                         </div>
                       )}
                     </div>
-                    <Button onClick={handleBrowseAthletes}>
-                      <Search className="h-4 w-4 mr-2" />
-                      Browse Athletes
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
