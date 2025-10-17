@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           geographic_preferences: string[] | null
           id: string
+          instagram_url: string | null
           is_public: boolean | null
           photo_url: string | null
           professional_highlights: string | null
@@ -39,6 +40,7 @@ export type Database = {
           created_at?: string
           geographic_preferences?: string[] | null
           id?: string
+          instagram_url?: string | null
           is_public?: boolean | null
           photo_url?: string | null
           professional_highlights?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           created_at?: string
           geographic_preferences?: string[] | null
           id?: string
+          instagram_url?: string | null
           is_public?: boolean | null
           photo_url?: string | null
           professional_highlights?: string | null

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X, Instagram } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface ProfileFormProps {
@@ -48,6 +48,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     availability: "",
     professional_highlights: "",
     years_of_membership: "",
+    instagram_url: "",
     is_public: true
   });
 
@@ -87,6 +88,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           availability: athleteData.availability || "",
           professional_highlights: athleteData.professional_highlights || "",
           years_of_membership: athleteData.years_of_membership?.toString() || "",
+          instagram_url: athleteData.instagram_url || "",
           is_public: athleteData.is_public ?? true
         });
         setPhotoUrl(athleteData.photo_url || "");
@@ -216,6 +218,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         availability: formData.availability,
         professional_highlights: formData.professional_highlights || null,
         years_of_membership: formData.years_of_membership ? parseInt(formData.years_of_membership) : null,
+        instagram_url: formData.instagram_url || null,
         is_public: formData.is_public,
         photo_url: uploadedPhotoUrl ? uploadedPhotoUrl.split('?')[0] : (photoUrl ? photoUrl.split('?')[0] : null),
         profile_completeness: completeness
@@ -381,6 +384,21 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           value={formData.years_of_membership}
           onChange={(e) => setFormData({ ...formData, years_of_membership: e.target.value })}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="instagram_url">Instagram</Label>
+        <div className="relative">
+          <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="instagram_url"
+            type="url"
+            placeholder="https://instagram.com/yourusername"
+            value={formData.instagram_url}
+            onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+            className="pl-10"
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
