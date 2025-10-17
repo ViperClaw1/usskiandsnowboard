@@ -229,12 +229,12 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 lg:gap-8">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 lg:gap-8">
                     <Button onClick={handleBrowseAthletes} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
                       <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Browse Athletes
                     </Button>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 overflow-x-auto">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center">
                       {featuredAthletes.length > 0 ? (
                         featuredAthletes.map((athlete) => (
                           <div key={athlete.id} className="flex items-center gap-2 sm:gap-3 min-w-0">
