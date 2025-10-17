@@ -135,7 +135,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         {connections.map((connection) => (
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
             <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={connection.athlete_profiles.photo_url ?? undefined} />
                   <AvatarFallback>AT</AvatarFallback>
@@ -152,9 +152,91 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   {status === "accepted" ? "Connected" : "Declined"}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground/70">
-                {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
-              </p>
+
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground/70">
+                  {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
+                </p>
+
+                {connection.athlete_profiles.bio && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Bio</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{connection.athlete_profiles.bio}</p>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.professional_highlights && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Professional Highlights</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{connection.athlete_profiles.professional_highlights}</p>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.years_of_membership && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Years of Membership</p>
+                    <p className="text-sm text-muted-foreground">{connection.athlete_profiles.years_of_membership} years</p>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.skills && connection.athlete_profiles.skills.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Skills</p>
+                    <div className="flex flex-wrap gap-1">
+                      {connection.athlete_profiles.skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.career_interests && connection.athlete_profiles.career_interests.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Career Interests</p>
+                    <div className="flex flex-wrap gap-1">
+                      {connection.athlete_profiles.career_interests.map((interest, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">{interest}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.availability && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Availability</p>
+                    <p className="text-sm text-muted-foreground">{connection.athlete_profiles.availability}</p>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.geographic_preferences && connection.athlete_profiles.geographic_preferences.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Geographic Preferences</p>
+                    <p className="text-sm text-muted-foreground">{connection.athlete_profiles.geographic_preferences.join(", ")}</p>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.email && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Email</p>
+                    <p className="text-sm text-muted-foreground">{connection.athlete_profiles.email}</p>
+                  </div>
+                )}
+
+                {connection.athlete_profiles.instagram_url && (
+                  <div>
+                    <p className="text-xs font-medium mb-1">Instagram</p>
+                    <a 
+                      href={connection.athlete_profiles.instagram_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View Profile
+                    </a>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
