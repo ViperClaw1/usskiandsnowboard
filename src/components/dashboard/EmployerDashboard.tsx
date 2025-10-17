@@ -234,7 +234,7 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                       <Search className="h-4 w-4 mr-2" />
                       Browse Athletes
                     </Button>
-                    <div className="flex gap-8 flex-1">
+                    <div className="flex justify-evenly flex-1">
                       {featuredAthletes.length > 0 ? (
                         featuredAthletes.map((athlete) => (
                           <div key={athlete.id} className="flex items-center gap-3">
