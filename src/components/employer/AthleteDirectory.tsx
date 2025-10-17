@@ -337,6 +337,22 @@ const AthleteDirectory = () => {
               </div>
 
               <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Sponsors</p>
+                {athlete.sponsors && athlete.sponsors.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {athlete.sponsors.slice(0, 2).map((sponsor, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">{sponsor}</Badge>
+                    ))}
+                    {athlete.sponsors.length > 2 && (
+                      <Badge variant="outline" className="text-xs">+{athlete.sponsors.length - 2}</Badge>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Not specified</p>
+                )}
+              </div>
+
+              <div>
                 <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
                 {athlete.skills && athlete.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
