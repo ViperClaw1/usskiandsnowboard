@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, Building2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Building2, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface Connection {
@@ -35,6 +36,9 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
 
   useEffect(() => {
     if (athleteProfileId) {
@@ -104,6 +108,30 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
     }
   };
 
+  const filteredConnections = useMemo(() => {
+    return connections.filter((connection) => {
+      const matchesSearch = !searchTerm || 
+        connection.employer_profiles.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        connection.employer_profiles.about?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesIndustry = !filterIndustry || 
+        connection.employer_profiles.industry === filterIndustry;
+      
+      const matchesLocation = !filterLocation || 
+        connection.employer_profiles.hq_location === filterLocation;
+      
+      return matchesSearch && matchesIndustry && matchesLocation;
+    });
+  }, [connections, searchTerm, filterIndustry, filterLocation]);
+
+  const uniqueIndustries = useMemo(() => {
+    return Array.from(new Set(connections.map(c => c.employer_profiles.industry).filter(Boolean)));
+  }, [connections]);
+
+  const uniqueLocations = useMemo(() => {
+    return Array.from(new Set(connections.map(c => c.employer_profiles.hq_location).filter(Boolean)));
+  }, [connections]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-4">
@@ -112,18 +140,51 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
     );
   }
 
-  if (connections.length === 0) {
-    return (
-      <div className="text-center p-4">
-        <p className="text-sm text-muted-foreground">No {status} connections</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="grid gap-3">
-        {connections.map((connection) => (
+      <div className="mb-4 space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by company name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={filterIndustry}
+            onChange={(e) => setFilterIndustry(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Industries</option>
+            {uniqueIndustries.map(industry => (
+              <option key={industry} value={industry}>{industry}</option>
+            ))}
+          </select>
+          <select
+            value={filterLocation}
+            onChange={(e) => setFilterLocation(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Locations</option>
+            {uniqueLocations.map(location => (
+              <option key={location} value={location}>{location}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {filteredConnections.length === 0 ? (
+        <div className="text-center p-4">
+          <p className="text-sm text-muted-foreground">
+            {connections.length === 0 ? `No ${status} connections` : "No connections match your filters"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {filteredConnections.map((connection) => (
           <Card key={connection.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedConnection(connection)}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -150,6 +211,7 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
           </Card>
         ))}
       </div>
+      )}
 
       {selectedConnection && (
         <Dialog open={!!selectedConnection} onOpenChange={() => setSelectedConnection(null)}>
