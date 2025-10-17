@@ -205,6 +205,10 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 </CardContent>
               </Card>
 
+              <div className="mt-8 mb-4">
+                <h2 className="text-2xl font-bold text-foreground">Athlete Connections</h2>
+              </div>
+
               <div className="grid md:grid-cols-3 gap-6">
                 <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
                   <CardHeader>
