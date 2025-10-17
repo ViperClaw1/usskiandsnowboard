@@ -337,22 +337,6 @@ const AthleteDirectory = () => {
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Sponsors</p>
-                {athlete.sponsors && athlete.sponsors.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {athlete.sponsors.slice(0, 2).map((sponsor, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">{sponsor}</Badge>
-                    ))}
-                    {athlete.sponsors.length > 2 && (
-                      <Badge variant="outline" className="text-xs">+{athlete.sponsors.length - 2}</Badge>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not specified</p>
-                )}
-              </div>
-
-              <div>
                 <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
                 {athlete.skills && athlete.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
@@ -410,30 +394,36 @@ const AthleteDirectory = () => {
                 </div>
               </div>
 
-              {selectedAthlete.bio && (
-                <div>
-                  <h4 className="font-medium mb-2">Bio</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.bio}</p>
-                </div>
-              )}
+              <div>
+                <h4 className="font-medium mb-2">Bio</h4>
+                <p className="text-sm text-muted-foreground">{selectedAthlete.bio || "Not specified"}</p>
+              </div>
 
-              {selectedAthlete.professional_highlights && (
-                <div>
-                  <h4 className="font-medium mb-2">Professional Highlights</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.professional_highlights}</p>
-                </div>
-              )}
+              <div>
+                <h4 className="font-medium mb-2">Professional Highlights</h4>
+                <p className="text-sm text-muted-foreground">{selectedAthlete.professional_highlights || "Not specified"}</p>
+              </div>
 
-              {selectedAthlete.years_of_membership && (
-                <div>
-                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.years_of_membership} years</p>
-                </div>
-              )}
+              <div>
+                <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                <p className="text-sm text-muted-foreground">
+                  {selectedAthlete.years_of_membership ? `${selectedAthlete.years_of_membership} years` : "Not specified"}
+                </p>
+              </div>
 
-              {selectedAthlete.instagram_url && (
-                <div>
-                  <h4 className="font-medium mb-2">Instagram</h4>
+              <div>
+                <h4 className="font-medium mb-2">Availability</h4>
+                <p className="text-sm text-muted-foreground">{selectedAthlete.availability || "Not specified"}</p>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Email</h4>
+                <p className="text-sm text-muted-foreground">{selectedAthlete.email || "Not specified"}</p>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Instagram</h4>
+                {selectedAthlete.instagram_url ? (
                   <a 
                     href={selectedAthlete.instagram_url} 
                     target="_blank" 
@@ -443,66 +433,62 @@ const AthleteDirectory = () => {
                     <Instagram className="h-4 w-4" />
                     View Profile
                   </a>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {selectedAthlete.sponsors && selectedAthlete.sponsors.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Sponsors</h4>
+              <div>
+                <h4 className="font-medium mb-2">Sponsors</h4>
+                {selectedAthlete.sponsors && selectedAthlete.sponsors.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedAthlete.sponsors.map((sponsor, index) => (
                       <Badge key={index} variant="outline">{sponsor}</Badge>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {selectedAthlete.skills && selectedAthlete.skills.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Skills</h4>
+              <div>
+                <h4 className="font-medium mb-2">Skills</h4>
+                {selectedAthlete.skills && selectedAthlete.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedAthlete.skills.map((skill, index) => (
                       <Badge key={index} variant="secondary">{skill}</Badge>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {selectedAthlete.career_interests && selectedAthlete.career_interests.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Career Interests</h4>
+              <div>
+                <h4 className="font-medium mb-2">Career Interests</h4>
+                {selectedAthlete.career_interests && selectedAthlete.career_interests.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedAthlete.career_interests.map((interest, index) => (
                       <Badge key={index} variant="outline">{interest}</Badge>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {selectedAthlete.availability && (
-                <div>
-                  <h4 className="font-medium mb-2">Availability</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.availability}</p>
-                </div>
-              )}
-
-              {selectedAthlete.geographic_preferences && selectedAthlete.geographic_preferences.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Geographic Preferences</h4>
+              <div>
+                <h4 className="font-medium mb-2">Geographic Preferences</h4>
+                {selectedAthlete.geographic_preferences && selectedAthlete.geographic_preferences.length > 0 ? (
                   <p className="text-sm text-muted-foreground">{selectedAthlete.geographic_preferences.join(", ")}</p>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {selectedAthlete.email && (
-                <div>
-                  <h4 className="font-medium mb-2">Email</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.email}</p>
-                </div>
-              )}
-
-              {athleteEducation.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Education</h4>
+              <div>
+                <h4 className="font-medium mb-2">Education</h4>
+                {athleteEducation.length > 0 ? (
                   <div className="space-y-3">
                     {athleteEducation.map((edu) => (
                       <div key={edu.id} className="border-l-2 border-primary/20 pl-3">
@@ -514,12 +500,14 @@ const AthleteDirectory = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {athleteExperience.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Experience</h4>
+              <div>
+                <h4 className="font-medium mb-2">Experience</h4>
+                {athleteExperience.length > 0 ? (
                   <div className="space-y-3">
                     {athleteExperience.map((exp) => (
                       <div key={exp.id} className="border-l-2 border-primary/20 pl-3">
@@ -538,12 +526,14 @@ const AthleteDirectory = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {athleteCertifications.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Certifications</h4>
+              <div>
+                <h4 className="font-medium mb-2">Certifications</h4>
+                {athleteCertifications.length > 0 ? (
                   <div className="space-y-2">
                     {athleteCertifications.map((cert) => (
                       <div key={cert.id} className="border-l-2 border-primary/20 pl-3">
@@ -557,12 +547,14 @@ const AthleteDirectory = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {athletePhotos.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Lifestyle Photos</h4>
+              <div>
+                <h4 className="font-medium mb-2">Lifestyle Photos</h4>
+                {athletePhotos.length > 0 ? (
                   <div className="relative">
                     <img 
                       src={athletePhotos[currentPhotoIndex]} 
@@ -597,8 +589,10 @@ const AthleteDirectory = () => {
                       </>
                     )}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
               <Button
                 onClick={() => {
