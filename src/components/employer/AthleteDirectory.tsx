@@ -297,27 +297,28 @@ const AthleteDirectory = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground line-clamp-3 min-h-[3.75rem]">
-                {athlete.bio || "\u00A0"}
+                {athlete.bio || "No bio provided"}
               </p>
               
               <div className="min-h-[2.5rem]">
-                {athlete.professional_highlights && (
-                  <>
-                    <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{athlete.professional_highlights}</p>
-                  </>
-                )}
+                <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {athlete.professional_highlights || "Not specified"}
+                </p>
               </div>
 
               <div className="flex items-center gap-2 min-h-[1.5rem]">
-                {athlete.availability && (
+                <p className="text-xs font-semibold text-foreground">Availability:</p>
+                {athlete.availability ? (
                   <Badge variant="outline" className="text-xs">{athlete.availability}</Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Not specified</span>
                 )}
               </div>
 
-              {athlete.career_interests && athlete.career_interests.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-foreground mb-1">Interests</p>
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Interests</p>
+                {athlete.career_interests && athlete.career_interests.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {athlete.career_interests.slice(0, 2).map((interest, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">{interest}</Badge>
@@ -326,12 +327,14 @@ const AthleteDirectory = () => {
                       <Badge variant="outline" className="text-xs">+{athlete.career_interests.length - 2}</Badge>
                     )}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-xs text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {athlete.skills && athlete.skills.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
+                {athlete.skills && athlete.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {athlete.skills.slice(0, 3).map((skill, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">{skill}</Badge>
@@ -340,18 +343,22 @@ const AthleteDirectory = () => {
                       <Badge variant="outline" className="text-xs">+{athlete.skills.length - 3}</Badge>
                     )}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-xs text-muted-foreground">Not specified</p>
+                )}
+              </div>
 
-              {athlete.geographic_preferences && athlete.geographic_preferences.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-foreground mb-1">Location Preferences</p>
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Location Preferences</p>
+                {athlete.geographic_preferences && athlete.geographic_preferences.length > 0 ? (
                   <p className="text-xs text-muted-foreground line-clamp-1">
                     {athlete.geographic_preferences.slice(0, 2).join(", ")}
                     {athlete.geographic_preferences.length > 2 && ` +${athlete.geographic_preferences.length - 2} more`}
                   </p>
-                </div>
-              )}
+                ) : (
+                  <p className="text-xs text-muted-foreground">Not specified</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
