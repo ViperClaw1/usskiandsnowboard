@@ -37,6 +37,39 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
   const [logoUrl, setLogoUrl] = useState<string | null>(existingProfile?.logo_url || null);
   const [uploading, setUploading] = useState(false);
 
+  const industryOptions = [
+    "Technology & Software",
+    "Finance & Banking",
+    "Healthcare & Medical",
+    "Retail & E-commerce",
+    "Manufacturing",
+    "Construction & Real Estate",
+    "Education & Training",
+    "Hospitality & Tourism",
+    "Transportation & Logistics",
+    "Media & Entertainment",
+    "Consulting & Professional Services",
+    "Energy & Utilities",
+    "Telecommunications",
+    "Automotive",
+    "Aerospace & Defense",
+    "Agriculture & Farming",
+    "Biotechnology & Pharmaceuticals",
+    "Consumer Goods",
+    "Fashion & Apparel",
+    "Food & Beverage",
+    "Insurance",
+    "Legal Services",
+    "Marketing & Advertising",
+    "Mining & Metals",
+    "Non-Profit & Social Services",
+    "Publishing",
+    "Sports & Recreation",
+    "Government & Public Sector",
+    "Environmental Services",
+    "Other"
+  ];
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -221,9 +254,18 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
           render={({ field }) => (
             <FormItem>
               <FormLabel>Industry</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Technology, Healthcare, Finance" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select industry" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-popover z-50">
+                  {industryOptions.map(industry => (
+                    <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -241,7 +283,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
                     <SelectValue placeholder="Select company size" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
                   <SelectItem value="1-10">1-10 employees</SelectItem>
                   <SelectItem value="11-50">11-50 employees</SelectItem>
                   <SelectItem value="51-200">51-200 employees</SelectItem>
