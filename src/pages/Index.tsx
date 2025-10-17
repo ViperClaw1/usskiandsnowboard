@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Briefcase, TrendingUp } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+import { MobileNav } from "@/components/MobileNav";
 
 const Index = () => {
   return (
@@ -10,44 +11,45 @@ const Index = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
-            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 hover:opacity-80 transition-opacity md:hidden" />
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[63px] hover:opacity-80 transition-opacity hidden md:block" />
+            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-10 sm:h-12 hover:opacity-80 transition-opacity md:hidden" />
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[50px] lg:h-[63px] hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/athletes" className="text-foreground hover:text-primary font-medium transition-colors">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
+            <Link to="/athletes" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
               Athletes
             </Link>
-            <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors">
+            <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
               Partners
             </Link>
-            <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors">
+            <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
               News
             </Link>
             <Link to="/auth">
-              <Button>Sign In</Button>
+              <Button size="sm" className="lg:h-10">Sign In</Button>
             </Link>
           </nav>
+          <MobileNav />
         </div>
       </header>
 
       <main>
-        <section className="relative min-h-[600px] flex items-center justify-center bg-gradient-to-b from-background to-muted">
-          <div className="relative z-10 container mx-auto px-4 text-center py-20">
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 animate-fade-in">
+        <section className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center bg-gradient-to-b from-background to-muted">
+          <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-in">
               Athlete Career Dashboard
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Connecting U.S. Ski & Snowboard athletes with career opportunities, 
               empowering transitions from competition to meaningful careers.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth?type=athlete">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+              <Link to="/auth?type=athlete" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto">
                   <Users className="mr-2 h-5 w-5" />
                   I'm an Athlete
                 </Button>
               </Link>
-              <Link to="/auth?type=employer">
+              <Link to="/auth?type=employer" className="w-full sm:w-auto">
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                   <Briefcase className="mr-2 h-5 w-5" />
                   I'm a Partner
@@ -59,37 +61,37 @@ const Index = () => {
 
         <section className="pt-6 pb-10 bg-muted">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">How It Works</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-foreground">How It Works</h2>
             
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-card p-8 rounded-lg shadow-elegant text-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-primary" />
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+              <div className="bg-card p-6 sm:p-8 rounded-lg shadow-elegant text-center">
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">For Athletes</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Athletes</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Create a comprehensive professional profile showcasing your skills, 
                   experience, and career interests beyond the slopes.
                 </p>
               </div>
 
-              <div className="bg-card p-8 rounded-lg shadow-elegant text-center">
-                <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                  <Briefcase className="h-8 w-8 text-accent" />
+              <div className="bg-card p-6 sm:p-8 rounded-lg shadow-elegant text-center">
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                  <Briefcase className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">For Partners</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Partners</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Discover talented, driven athletes ready for career opportunities. 
                   Search by skills, interests, and location.
                 </p>
               </div>
 
-              <div className="bg-card p-8 rounded-lg shadow-elegant text-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-8 w-8 text-primary" />
+              <div className="bg-card p-6 sm:p-8 rounded-lg shadow-elegant text-center sm:col-span-2 md:col-span-1">
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Engage</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">Engage</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Our Athlete Development team helps optimize Athlete profiles, curate partners, and facilitates actionable connections
                 </p>
               </div>
@@ -97,14 +99,14 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="py-20">
+        <section className="py-12 sm:py-16 lg:py-20">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl font-bold mb-4 text-foreground">Learn more about US Ski & Snowboard</h2>
-            <p className="text-base text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-foreground">Learn more about US Ski & Snowboard</h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Support the U.S. Ski & Snowboard Team and take your fandom to the next level
             </p>
             <a href="https://insider.usskiandsnowboard.org/s/" target="_blank" rel="noopener noreferrer">
-              <Button size="lg">Become An Insider</Button>
+              <Button size="lg" className="w-full sm:w-auto">Become An Insider</Button>
             </a>
           </div>
         </section>
