@@ -17,6 +17,7 @@ interface ConnectionRequest {
   opportunity_type: string | null;
   created_at: string;
   athlete_profiles: {
+    email: string | null;
     bio: string | null;
     sport_discipline: string | null;
     skills: string[] | null;
@@ -24,6 +25,9 @@ interface ConnectionRequest {
     professional_highlights: string | null;
     years_of_membership: number | null;
     instagram_url: string | null;
+    availability: string | null;
+    career_interests: string[] | null;
+    geographic_preferences: string[] | null;
     user_id: string;
     profiles: {
       full_name: string | null;
@@ -78,6 +82,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
         .select(`
           *,
           athlete_profiles (
+            email,
             bio,
             sport_discipline,
             skills,
@@ -85,6 +90,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
             professional_highlights,
             years_of_membership,
             instagram_url,
+            availability,
+            career_interests,
+            geographic_preferences,
             user_id,
             profiles (
               full_name
@@ -294,6 +302,43 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                       <Badge key={index} variant="secondary">{skill}</Badge>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {selectedRequest.athlete_profiles.career_interests && selectedRequest.athlete_profiles.career_interests.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Career Interests</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRequest.athlete_profiles.career_interests.map((interest, index) => (
+                      <Badge key={index} variant="outline">{interest}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedRequest.athlete_profiles.availability && (
+                <div>
+                  <h4 className="font-medium mb-2">Availability</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.athlete_profiles.availability}</p>
+                </div>
+              )}
+
+              {selectedRequest.athlete_profiles.geographic_preferences && selectedRequest.athlete_profiles.geographic_preferences.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Geographic Preferences</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.athlete_profiles.geographic_preferences.join(", ")}</p>
+                </div>
+              )}
+
+              {selectedRequest.athlete_profiles.email && (
+                <div>
+                  <h4 className="font-medium mb-2">Contact Email</h4>
+                  <a 
+                    href={`mailto:${selectedRequest.athlete_profiles.email}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {selectedRequest.athlete_profiles.email}
+                  </a>
                 </div>
               )}
 

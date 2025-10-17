@@ -10,12 +10,17 @@ import { toast } from "sonner";
 interface Connection {
   id: string;
   athlete_profiles: {
+    email: string | null;
     sport_discipline: string | null;
     photo_url: string | null;
     bio: string | null;
     skills: string[] | null;
     availability: string | null;
     career_interests: string[] | null;
+    geographic_preferences: string[] | null;
+    professional_highlights: string | null;
+    years_of_membership: number | null;
+    instagram_url: string | null;
     user_id: string;
     profiles: {
       full_name: string | null;
@@ -70,12 +75,17 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
           id,
           created_at,
           athlete_profiles (
+            email,
             sport_discipline,
             photo_url,
             bio,
             skills,
             availability,
             career_interests,
+            geographic_preferences,
+            professional_highlights,
+            years_of_membership,
+            instagram_url,
             user_id,
             profiles (
               full_name
@@ -175,6 +185,34 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                 </div>
               )}
 
+              {selectedConnection.athlete_profiles.professional_highlights && (
+                <div>
+                  <h4 className="font-medium mb-2">Professional Highlights</h4>
+                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.professional_highlights}</p>
+                </div>
+              )}
+
+              {selectedConnection.athlete_profiles.years_of_membership && (
+                <div>
+                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.years_of_membership} years</p>
+                </div>
+              )}
+
+              {selectedConnection.athlete_profiles.instagram_url && (
+                <div>
+                  <h4 className="font-medium mb-2">Instagram</h4>
+                  <a 
+                    href={selectedConnection.athlete_profiles.instagram_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    View Profile
+                  </a>
+                </div>
+              )}
+
               {selectedConnection.athlete_profiles.skills && selectedConnection.athlete_profiles.skills.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Skills</h4>
@@ -194,6 +232,25 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                       <Badge key={index} variant="outline">{interest}</Badge>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {selectedConnection.athlete_profiles.geographic_preferences && selectedConnection.athlete_profiles.geographic_preferences.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Geographic Preferences</h4>
+                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.geographic_preferences.join(", ")}</p>
+                </div>
+              )}
+
+              {selectedConnection.athlete_profiles.email && (
+                <div>
+                  <h4 className="font-medium mb-2">Contact Email</h4>
+                  <a 
+                    href={`mailto:${selectedConnection.athlete_profiles.email}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {selectedConnection.athlete_profiles.email}
+                  </a>
                 </div>
               )}
 
