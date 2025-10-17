@@ -30,6 +30,30 @@ interface AthleteProfile {
   };
 }
 
+interface Education {
+  id: string;
+  school: string;
+  degree: string | null;
+  graduation_year: number | null;
+}
+
+interface Experience {
+  id: string;
+  title: string;
+  organization: string | null;
+  description: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean | null;
+}
+
+interface Certification {
+  id: string;
+  name: string;
+  issuer: string | null;
+  issue_date: string | null;
+}
+
 const AthleteDirectory = () => {
   const navigate = useNavigate();
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
@@ -40,6 +64,9 @@ const AthleteDirectory = () => {
   const [requestMessage, setRequestMessage] = useState("");
   const [opportunityType, setOpportunityType] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
+  const [athleteEducation, setAthleteEducation] = useState<Education[]>([]);
+  const [athleteExperience, setAthleteExperience] = useState<Experience[]>([]);
+  const [athleteCertifications, setAthleteCertifications] = useState<Certification[]>([]);
 
   useEffect(() => {
     loadAthletes();
@@ -82,6 +109,39 @@ const AthleteDirectory = () => {
       console.error("Error loading athletes:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAthleteDetails = async (athleteId: string) => {
+    try {
+      // Load education
+      const { data: education } = await supabase
+        .from("education")
+        .select("*")
+        .eq("athlete_id", athleteId)
+        .order("graduation_year", { ascending: false });
+      
+      setAthleteEducation(education || []);
+
+      // Load experience
+      const { data: experience } = await supabase
+        .from("experience")
+        .select("*")
+        .eq("athlete_id", athleteId)
+        .order("start_date", { ascending: false });
+      
+      setAthleteExperience(experience || []);
+
+      // Load certifications
+      const { data: certifications } = await supabase
+        .from("certifications")
+        .select("*")
+        .eq("athlete_id", athleteId)
+        .order("issue_date", { ascending: false });
+      
+      setAthleteCertifications(certifications || []);
+    } catch (error) {
+      console.error("Error loading athlete details:", error);
     }
   };
 
@@ -159,6 +219,8 @@ const AthleteDirectory = () => {
               } catch (error) {
                 console.error("Error tracking view:", error);
               }
+              // Load additional details
+              loadAthleteDetails(athlete.id);
             }}
           >
             <CardHeader className="pb-3">
@@ -294,7 +356,65 @@ const AthleteDirectory = () => {
                 </div>
               )}
 
-              <Button 
+              {athleteEducation.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Education</h4>
+                  <div className="space-y-3">
+                    {athleteEducation.map((edu) => (
+                      <div key={edu.id} className="border-l-2 border-primary/30 pl-3">
+                        <p className="font-medium text-sm">{edu.school}</p>
+                        {edu.degree && <p className="text-sm text-muted-foreground">{edu.degree}</p>}
+                        {edu.graduation_year && (
+                          <p className="text-xs text-muted-foreground">Class of {edu.graduation_year}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {athleteExperience.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Experience</h4>
+                  <div className="space-y-3">
+                    {athleteExperience.map((exp) => (
+                      <div key={exp.id} className="border-l-2 border-primary/30 pl-3">
+                        <p className="font-medium text-sm">{exp.title}</p>
+                        {exp.organization && (
+                          <p className="text-sm text-muted-foreground">{exp.organization}</p>
+                        )}
+                        {(exp.start_date || exp.end_date) && (
+                          <p className="text-xs text-muted-foreground">
+                            {exp.start_date} - {exp.is_current ? "Present" : exp.end_date || "N/A"}
+                          </p>
+                        )}
+                        {exp.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {athleteCertifications.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Certifications</h4>
+                  <div className="space-y-2">
+                    {athleteCertifications.map((cert) => (
+                      <div key={cert.id} className="border-l-2 border-primary/30 pl-3">
+                        <p className="font-medium text-sm">{cert.name}</p>
+                        {cert.issuer && <p className="text-sm text-muted-foreground">{cert.issuer}</p>}
+                        {cert.issue_date && (
+                          <p className="text-xs text-muted-foreground">Issued: {cert.issue_date}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button
                 onClick={() => {
                   setShowRequestDialog(true);
                 }}
