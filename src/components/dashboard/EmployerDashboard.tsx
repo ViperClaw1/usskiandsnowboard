@@ -133,47 +133,47 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Employer Dashboard</h1>
-          <Button variant="ghost" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+          <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-foreground truncate">Employer Dashboard</h1>
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline ml-2">Sign Out</span>
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
+        <div className="grid gap-4 sm:gap-6">
           {!showDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center overflow-hidden">
+              <Card className="shadow-elegant overflow-hidden">
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-full bg-accent/10 flex items-center justify-center overflow-hidden shrink-0">
                       {profile?.logo_url ? (
                         <img src={profile.logo_url} alt={profile.company_name} className="h-full w-full object-cover" />
                       ) : (
-                        <Briefcase className="h-8 w-8 text-accent" />
+                        <Briefcase className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-accent" />
                       )}
                     </div>
-                    <div>
-                      <CardTitle>Welcome, {profile?.company_name || user.email}</CardTitle>
-                      <CardDescription>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-lg sm:text-xl lg:text-2xl truncate">Welcome, {profile?.company_name || user.email?.split('@')[0] || 'Company'}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm mt-1">
                         {profile ? "Discover talented athletes for your opportunities" : "Set up your company profile and start discovering talent"}
                       </CardDescription>
                       {profile && (profile.website || profile.linkedin_url) && (
-                        <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
                           {profile.website && (
                             <a 
                               href={profile.website} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                              className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
                             >
-                              <Globe className="h-4 w-4" />
-                              Website
+                              <Globe className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                              <span className="truncate">Website</span>
                             </a>
                           )}
                           {profile.linkedin_url && (
@@ -181,10 +181,10 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                               href={profile.linkedin_url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                              className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
                             >
-                              <Linkedin className="h-4 w-4" />
-                              LinkedIn
+                              <Linkedin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                              <span className="truncate">LinkedIn</span>
                             </a>
                           )}
                         </div>
@@ -192,22 +192,22 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="space-y-3 sm:space-y-4">
                     {!profile && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Complete your company profile to access the athlete directory
                       </p>
                     )}
-                    <div className="flex gap-4">
+                    <div className="flex gap-3 sm:gap-4">
                       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
                         <DialogTrigger asChild>
-                          <Button variant={profile ? "outline" : "default"}>
-                            <Building2 className="h-4 w-4 mr-2" />
-                            {profile ? "Edit Company Profile" : "Complete Company Profile"}
+                          <Button variant={profile ? "outline" : "default"} size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+                            <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                            {profile ? "Edit Profile" : "Complete Profile"}
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
                           <DialogHeader>
                             <DialogTitle>Company Profile</DialogTitle>
                             <DialogDescription>Fill in your company details to access the athlete directory.</DialogDescription>
@@ -224,33 +224,33 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Browse Athletes</CardTitle>
+              <Card className="shadow-elegant overflow-hidden">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-8">
-                    <Button onClick={handleBrowseAthletes}>
-                      <Search className="h-4 w-4 mr-2" />
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 lg:gap-8">
+                    <Button onClick={handleBrowseAthletes} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
+                      <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Browse Athletes
                     </Button>
-                    <div className="flex justify-evenly flex-1">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 overflow-x-auto">
                       {featuredAthletes.length > 0 ? (
                         featuredAthletes.map((athlete) => (
-                          <div key={athlete.id} className="flex items-center gap-3">
-                            <Avatar className="h-16 w-16">
+                          <div key={athlete.id} className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
                               <AvatarImage src={athlete.photo_url ?? undefined} />
                               <AvatarFallback>AT</AvatarFallback>
                             </Avatar>
-                            <div>
-                              <p className="font-medium text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
-                              <p className="text-xs text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-xs sm:text-sm truncate">{athlete.profiles?.full_name || "Athlete"}</p>
+                              <p className="text-xs text-muted-foreground truncate">{athlete.sport_discipline || "Sport not specified"}</p>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="flex-1 text-center py-4">
-                          <p className="text-sm text-muted-foreground">No featured athletes available</p>
+                        <div className="flex-1 text-center py-3 sm:py-4">
+                          <p className="text-xs sm:text-sm text-muted-foreground">No featured athletes available</p>
                         </div>
                       )}
                     </div>
@@ -258,48 +258,48 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Athlete Connections</CardTitle>
+              <Card className="shadow-elegant overflow-hidden">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">Athlete Connections</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">Pending Requests</CardTitle>
-                          <Users className="h-5 w-5 text-accent" />
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-6">
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowPendingRequests(true)}>
+                      <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                        <div className="flex items-center justify-between gap-2">
+                          <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Pending</CardTitle>
+                          <Users className="h-4 w-4 sm:h-5 sm:w-5 text-accent shrink-0" />
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold text-accent">{pendingCount}</p>
-                        <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
+                      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-accent">{pendingCount}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Review</p>
                       </CardContent>
                     </Card>
 
-                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">Connections Made</CardTitle>
-                          <UserCheck className="h-5 w-5 text-primary" />
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowAcceptedConnections(true)}>
+                      <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                        <div className="flex items-center justify-between gap-2">
+                          <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Connected</CardTitle>
+                          <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold text-primary">{acceptedCount}</p>
-                        <p className="text-sm text-muted-foreground mt-1">Accepted</p>
+                      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary">{acceptedCount}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Accepted</p>
                       </CardContent>
                     </Card>
 
-                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowRejectedConnections(true)}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">Connections Declined</CardTitle>
-                          <UserX className="h-5 w-5 text-muted-foreground" />
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden col-span-2 lg:col-span-1" onClick={() => setShowRejectedConnections(true)}>
+                      <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                        <div className="flex items-center justify-between gap-2">
+                          <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Declined</CardTitle>
+                          <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
-                        <p className="text-sm text-muted-foreground mt-1">Declined</p>
+                      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Declined</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -308,9 +308,9 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
             </>
           ) : showDirectory ? (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Athlete Directory</h2>
-                <Button variant="outline" onClick={() => setShowDirectory(false)}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Athlete Directory</h2>
+                <Button variant="outline" onClick={() => setShowDirectory(false)} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
@@ -318,9 +318,9 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
             </div>
           ) : showPendingRequests ? (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Pending Connection Requests</h2>
-                <Button variant="outline" onClick={() => { setShowPendingRequests(false); loadConnectionCounts(); }}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Pending Connection Requests</h2>
+                <Button variant="outline" onClick={() => { setShowPendingRequests(false); loadConnectionCounts(); }} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
@@ -328,9 +328,9 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
             </div>
           ) : showAcceptedConnections ? (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Connections Made</h2>
-                <Button variant="outline" onClick={() => setShowAcceptedConnections(false)}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Connections Made</h2>
+                <Button variant="outline" onClick={() => setShowAcceptedConnections(false)} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
@@ -338,9 +338,9 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
             </div>
           ) : (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Connections Declined</h2>
-                <Button variant="outline" onClick={() => setShowRejectedConnections(false)}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Connections Declined</h2>
+                <Button variant="outline" onClick={() => setShowRejectedConnections(false)} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
               </div>
