@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PhotoUploaderProps {
@@ -12,6 +12,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadPhotos();
@@ -98,6 +99,29 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
     }
   };
 
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newPhotos = [...photos];
+    const draggedPhoto = newPhotos[draggedIndex];
+    newPhotos.splice(draggedIndex, 1);
+    newPhotos.splice(index, 0, draggedPhoto);
+    
+    setPhotos(newPhotos);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = async () => {
+    setDraggedIndex(null);
+    // Optionally save the order to database here if needed
+    toast.success("Photos reordered");
+  };
+
   return (
     <div className="space-y-3 sm:space-y-4">
       <div className="relative">
@@ -153,12 +177,24 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         ) : (
           <div className="flex gap-2 sm:gap-3 pb-2">
             {photos.map((photoUrl, index) => (
-              <div key={index} className="relative flex-shrink-0 group w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32">
+              <div
+                key={photoUrl}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`relative flex-shrink-0 group w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 cursor-move ${
+                  draggedIndex === index ? "opacity-50" : ""
+                }`}
+              >
                 <img
                   src={photoUrl}
                   alt={`Lifestyle photo ${index + 1}`}
                   className="w-full h-full object-cover rounded-lg"
                 />
+                <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-background/80 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <GripVertical className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                </div>
                 <Button
                   size="icon"
                   variant="destructive"
