@@ -273,6 +273,15 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   </CardContent>
                 </Card>
               </div>
+
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Partner Connections</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">Partner connections coming soon...</p>
+                </CardContent>
+              </Card>
             </>
           ) : showEmployerDirectory ? (
             <div>
