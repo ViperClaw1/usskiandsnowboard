@@ -230,25 +230,6 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
 
               <Card className="shadow-elegant">
                 <CardHeader>
-                  <CardTitle className="text-2xl">Athlete Connections</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">Pending Requests</CardTitle>
-                          <Users className="h-5 w-5 text-accent" />
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-3xl font-bold text-accent">{pendingCount}</p>
-                        <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
-                      </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant">
-                <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-2xl">Browse Athletes</CardTitle>
                     <Button onClick={handleBrowseAthletes}>
@@ -280,6 +261,25 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Athlete Connections</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowPendingRequests(true)}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">Pending Requests</CardTitle>
+                          <Users className="h-5 w-5 text-accent" />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-3xl font-bold text-accent">{pendingCount}</p>
+                        <p className="text-sm text-muted-foreground mt-1">Awaiting review</p>
+                      </CardContent>
+                    </Card>
 
                     <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setShowAcceptedConnections(true)}>
                       <CardHeader>
