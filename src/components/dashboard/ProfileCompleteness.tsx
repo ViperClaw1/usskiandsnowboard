@@ -30,7 +30,7 @@ export const ProfileCompleteness = ({
   return (
     <Card className="shadow-elegant">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Profile Completeness</CardTitle>
+        <CardTitle className="text-lg">Portfolio Completeness - {completeness}%</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
