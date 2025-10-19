@@ -18,6 +18,7 @@ interface RoleChangeDialogProps {
   role: string;
   action: 'grant' | 'revoke';
   isSelf: boolean;
+  currentRoles?: string[];
 }
 
 export const RoleChangeDialog = ({
@@ -28,9 +29,16 @@ export const RoleChangeDialog = ({
   role,
   action,
   isSelf,
+  currentRoles = [],
 }: RoleChangeDialogProps) => {
   const isAdminRole = role === 'admin';
   const isRevoking = action === 'revoke';
+  
+  // Check for conflicting roles
+  const conflictingRole = 
+    (role === 'athlete' && currentRoles.includes('employer')) ? 'employer' :
+    (role === 'employer' && currentRoles.includes('athlete')) ? 'athlete' :
+    null;
 
   const getTitle = () => {
     if (isSelf && isAdminRole && isRevoking) {
@@ -42,6 +50,10 @@ export const RoleChangeDialog = ({
   const getDescription = () => {
     if (isSelf && isAdminRole && isRevoking) {
       return "You cannot remove your own admin role to prevent account lockout. Please have another admin remove your role if needed.";
+    }
+
+    if (conflictingRole && action === 'grant') {
+      return `${userName} currently has the ${conflictingRole} role. Granting ${role} access will automatically remove their ${conflictingRole} role. Users can only be either an athlete or employer, not both. Do you want to proceed?`;
     }
 
     if (isAdminRole) {

@@ -40,17 +40,41 @@ export const UserRoleManager = ({
 
   const grantRoleMutation = useMutation({
     mutationFn: async (role: AppRole) => {
+      // If granting athlete or employer, check for conflicting role
+      const conflictingRole = 
+        role === 'athlete' ? 'employer' :
+        role === 'employer' ? 'athlete' :
+        null;
+      
+      // First, remove conflicting role if it exists
+      if (conflictingRole && roles.includes(conflictingRole)) {
+        const { error: revokeError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId)
+          .eq('role', conflictingRole);
+        
+        if (revokeError) throw revokeError;
+      }
+      
+      // Then grant the new role
       const { error } = await supabase
         .from('user_roles')
         .insert({ user_id: userId, role });
       
       if (error) throw error;
+      
+      return { role, conflictingRole };
     },
-    onSuccess: (_, role) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      const message = data.conflictingRole
+        ? `Switched from ${data.conflictingRole} to ${data.role} for ${userName || userEmail}`
+        : `${data.role} role granted to ${userName || userEmail}`;
+      
       toast({
-        title: "Role granted",
-        description: `${role} role granted to ${userName || userEmail}`,
+        title: "Role updated",
+        description: message,
       });
     },
     onError: (error: any) => {
@@ -89,7 +113,13 @@ export const UserRoleManager = ({
   });
 
   const handleRoleAction = (role: AppRole, action: 'grant' | 'revoke') => {
-    if (role === 'admin' || isSelf) {
+    // Check if granting a conflicting role
+    const hasConflictingRole = 
+      (role === 'athlete' && roles.includes('employer')) ||
+      (role === 'employer' && roles.includes('athlete'));
+    
+    // Always show dialog for admin changes, self-changes, or conflicting roles
+    if (role === 'admin' || isSelf || (action === 'grant' && hasConflictingRole)) {
       setPendingAction({ role, action });
       setDialogOpen(true);
     } else {
@@ -168,6 +198,7 @@ export const UserRoleManager = ({
         role={pendingAction?.role || 'admin'}
         action={pendingAction?.action || 'grant'}
         isSelf={isSelf}
+        currentRoles={roles}
       />
     </>
   );
