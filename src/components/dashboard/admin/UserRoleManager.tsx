@@ -119,7 +119,7 @@ export const UserRoleManager = ({
   return (
     <>
       <div className="flex items-center gap-2">
-        {roles.map(role => (
+        {(roles || []).map(role => (
           <Badge 
             key={role}
             variant={
@@ -146,7 +146,7 @@ export const UserRoleManager = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {availableRoles.filter(role => !roles.includes(role)).map(role => (
+            {availableRoles.filter(role => !(roles || []).includes(role)).map(role => (
               <DropdownMenuItem
                 key={role}
                 onClick={() => handleRoleAction(role, 'grant')}

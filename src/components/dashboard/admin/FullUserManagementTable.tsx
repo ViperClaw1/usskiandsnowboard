@@ -51,7 +51,7 @@ export const FullUserManagementTable = () => {
         
         return {
           ...profile,
-          roles: userRoles,
+          roles: userRoles.length > 0 ? userRoles : [],
         };
       });
     },
