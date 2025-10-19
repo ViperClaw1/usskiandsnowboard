@@ -20,14 +20,11 @@ export const ProfileCompleteness = ({
     return "text-muted-foreground";
   };
 
-  const getMilestoneIcon = (milestone: number) => {
-    if (completeness >= milestone) {
-      return <Check className="h-4 w-4" />;
-    }
-    return <Circle className="h-4 w-4" />;
-  };
-
-  const milestones = [0, 50, 100];
+  const milestones = [
+    { value: 0, position: '0%' },
+    { value: 50, position: '50%' },
+    { value: 100, position: '100%' }
+  ];
 
   return (
     <Card className="shadow-elegant">
@@ -39,26 +36,21 @@ export const ProfileCompleteness = ({
           <Progress value={completeness} className="h-3" />
           
           {/* Circle markers on the bar */}
-          <div className="absolute top-0 left-0 right-0 flex justify-between">
-            {milestones.map((milestone) => (
-              <div
-                key={milestone}
-                className={cn(
-                  "flex flex-col items-center -translate-x-2 first:translate-x-0 last:translate-x-0",
-                  getMilestoneColor(milestone)
-                )}
-                style={{ 
-                  marginLeft: milestone === 0 ? '0' : milestone === 50 ? 'calc(50% - 8px)' : 'auto',
-                  marginRight: milestone === 100 ? '0' : 'auto'
-                }}
-              >
-                <div className="bg-background rounded-full p-0.5">
-                  {getMilestoneIcon(milestone)}
-                </div>
-                <span className="text-xs font-medium mt-4">{milestone}%</span>
+          {milestones.map((milestone) => (
+            <div
+              key={milestone.value}
+              className={cn(
+                "absolute top-0 flex flex-col items-center -translate-x-2",
+                getMilestoneColor(milestone.value)
+              )}
+              style={{ left: milestone.position }}
+            >
+              <div className="bg-background rounded-full p-0.5">
+                <Circle className="h-4 w-4 fill-current" />
               </div>
-            ))}
-          </div>
+              <span className="text-xs font-medium mt-4">{milestone.value}%</span>
+            </div>
+          ))}
         </div>
 
         {missingFields.length > 0 && (
