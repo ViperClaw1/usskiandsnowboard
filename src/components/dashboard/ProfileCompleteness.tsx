@@ -30,10 +30,7 @@ export const ProfileCompleteness = ({
   return (
     <Card className="shadow-elegant">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <span>Profile Completeness</span>
-          <span className="text-2xl font-bold">{completeness}%</span>
-        </CardTitle>
+        <CardTitle className="text-lg">Profile Completeness</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
