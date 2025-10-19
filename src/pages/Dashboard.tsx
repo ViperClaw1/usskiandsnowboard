@@ -41,15 +41,26 @@ const Dashboard = () => {
 
   const loadUserRole = async (userId: string) => {
     try {
+      console.log("Loading role for user:", userId);
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .maybeSingle();
+        .order("role", { ascending: false }); // This will put 'employer' first, then 'athlete', then 'admin'
 
-      if (error && error.code !== "PGRST116") throw error;
+      console.log("Role query result:", { data, error });
+
+      if (error) throw error;
       
-      setRole(data?.role || null);
+      // Prioritize admin role if present, otherwise take the first role
+      let userRole = null;
+      if (data && data.length > 0) {
+        const adminRole = data.find(r => r.role === 'admin');
+        userRole = adminRole ? adminRole.role : data[0].role;
+      }
+      
+      console.log("Setting role to:", userRole);
+      setRole(userRole);
     } catch (error) {
       console.error("Error loading role:", error);
     } finally {
