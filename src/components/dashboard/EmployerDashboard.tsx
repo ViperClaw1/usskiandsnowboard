@@ -266,41 +266,41 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Athlete Connections</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-6">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowPendingRequests(true)}>
-                      <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                      <CardHeader className="p-4">
                         <div className="flex items-center justify-between gap-2">
                           <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Pending</CardTitle>
                           <Users className="h-4 w-4 sm:h-5 sm:w-5 text-accent shrink-0" />
                         </div>
                       </CardHeader>
-                      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                      <CardContent className="p-4 pt-0">
                         <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-accent">{pendingCount}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">Review</p>
                       </CardContent>
                     </Card>
 
                     <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowAcceptedConnections(true)}>
-                      <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                      <CardHeader className="p-4">
                         <div className="flex items-center justify-between gap-2">
                           <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Connected</CardTitle>
                           <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                         </div>
                       </CardHeader>
-                      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                      <CardContent className="p-4 pt-0">
                         <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary">{acceptedCount}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">Accepted</p>
                       </CardContent>
                     </Card>
 
                     <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden col-span-2 lg:col-span-1" onClick={() => setShowRejectedConnections(true)}>
-                      <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                      <CardHeader className="p-4">
                         <div className="flex items-center justify-between gap-2">
                           <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Declined</CardTitle>
                           <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
                         </div>
                       </CardHeader>
-                      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                      <CardContent className="p-4 pt-0">
                         <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-muted-foreground">{rejectedCount}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">Declined</p>
                       </CardContent>
@@ -310,10 +310,10 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
               </Card>
 
               <Card className="shadow-elegant overflow-hidden">
-                <CardHeader className="p-4 sm:p-6">
+                <CardHeader className="p-6">
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0 flex items-center min-h-[60px]">
+                <CardContent className="p-6 pt-0 flex items-center min-h-[60px]">
                   <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8 w-full">
                     <Button onClick={handleBrowseAthletes} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
                       <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />

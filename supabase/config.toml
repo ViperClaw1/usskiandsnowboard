@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.clear-all-users]
 verify_jwt = false
+
+[functions.send-connection-notification]
+verify_jwt = false
