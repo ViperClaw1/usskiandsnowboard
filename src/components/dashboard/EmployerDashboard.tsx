@@ -253,40 +253,6 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
 
               <Card className="shadow-elegant overflow-hidden">
                 <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 lg:gap-8">
-                    <Button onClick={handleBrowseAthletes} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
-                      <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                      Browse Athletes
-                    </Button>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center">
-                      {featuredAthletes.length > 0 ? (
-                        featuredAthletes.map((athlete) => (
-                          <div key={athlete.id} className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
-                            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
-                              <AvatarImage src={athlete.photo_url ?? undefined} />
-                              <AvatarFallback>AT</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1 sm:flex-initial">
-                              <p className="font-medium text-xs sm:text-sm truncate">{athlete.profiles?.full_name || "Athlete"}</p>
-                              <p className="text-xs text-muted-foreground truncate">{athlete.sport_discipline || "Sport not specified"}</p>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex-1 text-center py-3 sm:py-4">
-                          <p className="text-xs sm:text-sm text-muted-foreground">No featured athletes available</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-elegant overflow-hidden">
-                <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Athlete Connections</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0">
@@ -329,6 +295,40 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">Declined</p>
                       </CardContent>
                     </Card>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-elegant overflow-hidden">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 lg:gap-8">
+                    <Button onClick={handleBrowseAthletes} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
+                      <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                      Browse Athletes
+                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center">
+                      {featuredAthletes.length > 0 ? (
+                        featuredAthletes.map((athlete) => (
+                          <div key={athlete.id} className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
+                            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
+                              <AvatarImage src={athlete.photo_url ?? undefined} />
+                              <AvatarFallback>AT</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1 sm:flex-initial">
+                              <p className="font-medium text-xs sm:text-sm truncate">{athlete.profiles?.full_name || "Athlete"}</p>
+                              <p className="text-xs text-muted-foreground truncate">{athlete.sport_discipline || "Sport not specified"}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex-1 text-center py-3 sm:py-4">
+                          <p className="text-xs sm:text-sm text-muted-foreground">No featured athletes available</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
