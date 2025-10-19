@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, Linkedin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
+import { EmployerOnboardingWizard } from "@/components/employer/EmployerOnboardingWizard";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
@@ -220,10 +220,9 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                             <DialogTitle>Company Profile</DialogTitle>
                             <DialogDescription>Fill in your company details to access the athlete directory.</DialogDescription>
                           </DialogHeader>
-                          <CompanyProfileForm
-                            userId={user.id}
-                            existingProfile={profile}
-                            onSuccess={handleProfileSuccess}
+                          <EmployerOnboardingWizard
+                            user={user}
+                            onComplete={handleProfileSuccess}
                           />
                         </DialogContent>
                       </Dialog>

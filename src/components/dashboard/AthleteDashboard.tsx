@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, User as UserIcon, MapPin, Briefcase, Building2, Users, UserCheck, UserX, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ProfileForm from "@/components/athlete/ProfileForm";
+import { AthleteOnboardingWizard } from "@/components/athlete/AthleteOnboardingWizard";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import ConnectionRequestsManager from "@/components/athlete/ConnectionRequestsManager";
 import ConnectionsList from "@/components/athlete/ConnectionsList";
@@ -392,7 +392,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
               Share your athletic background, skills, and career interests
             </DialogDescription>
           </DialogHeader>
-          <ProfileForm userId={user.id} onComplete={handleProfileComplete} />
+          <AthleteOnboardingWizard user={user} onComplete={handleProfileComplete} />
         </DialogContent>
       </Dialog>
     </div>
