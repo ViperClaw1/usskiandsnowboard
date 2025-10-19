@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X } from "lucide-react";
+import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -46,6 +47,9 @@ const EmployerDirectory = () => {
   const [filterCompanySize, setFilterCompanySize] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [filterIndustry, setFilterIndustry] = useState<string>("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadEmployers();
@@ -237,6 +241,29 @@ const EmployerDirectory = () => {
     setFilterIndustry("all");
   };
 
+  // Pull to refresh functionality
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadEmployers();
+    setIsRefreshing(false);
+    setPullDistance(0);
+  };
+
+  const pullHandlers = useSwipeable({
+    onSwipedDown: (eventData) => {
+      if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0 && eventData.deltaY > 100) {
+        handleRefresh();
+      }
+    },
+    onSwiping: (eventData) => {
+      if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0 && eventData.deltaY > 0) {
+        setPullDistance(Math.min(eventData.deltaY, 100));
+      }
+    },
+    trackMouse: false,
+    trackTouch: true,
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -256,7 +283,18 @@ const EmployerDirectory = () => {
 
   if (filteredEmployers.length === 0 && employers.length > 0) {
     return (
-      <div>
+      <div ref={scrollContainerRef} {...pullHandlers} className="relative">
+        {/* Pull to refresh indicator */}
+        {pullDistance > 0 && (
+          <div 
+            className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 bg-primary/10 transition-all duration-200"
+            style={{ transform: `translateY(${pullDistance - 100}px)` }}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="ml-2 text-sm">{isRefreshing ? 'Refreshing...' : 'Pull to refresh'}</span>
+          </div>
+        )}
+
         {/* Search Bar */}
         <div className="mb-4">
           <div className="relative">
@@ -340,7 +378,18 @@ const EmployerDirectory = () => {
   }
 
   return (
-    <div>
+    <div ref={scrollContainerRef} {...pullHandlers} className="relative">
+      {/* Pull to refresh indicator */}
+      {pullDistance > 0 && (
+        <div 
+          className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 bg-primary/10 transition-all duration-200 z-50"
+          style={{ transform: `translateY(${pullDistance - 100}px)` }}
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="ml-2 text-sm">{isRefreshing ? 'Refreshing...' : 'Pull to refresh'}</span>
+        </div>
+      )}
+
       {/* Search Bar */}
       <div className="mb-4">
         <div className="relative">

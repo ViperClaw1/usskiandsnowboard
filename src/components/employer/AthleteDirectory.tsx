@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -74,6 +75,9 @@ const AthleteDirectory = () => {
   const [athletePhotos, setAthletePhotos] = useState<string[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadAthletes();
@@ -261,6 +265,67 @@ const AthleteDirectory = () => {
     });
   }, [athletes, searchTerm]);
 
+  // Pull to refresh functionality
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadAthletes();
+    setIsRefreshing(false);
+    setPullDistance(0);
+  };
+
+  const pullHandlers = useSwipeable({
+    onSwipedDown: (eventData) => {
+      if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0 && eventData.deltaY > 100) {
+        handleRefresh();
+      }
+    },
+    onSwiping: (eventData) => {
+      if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0 && eventData.deltaY > 0) {
+        setPullDistance(Math.min(eventData.deltaY, 100));
+      }
+    },
+    trackMouse: false,
+    trackTouch: true,
+  });
+
+  // Share profile functionality
+  const handleShareProfile = async (athlete: AthleteProfile) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${athlete.profiles.full_name || 'Athlete'} - U.S. Ski & Snowboard`,
+          text: `Check out ${athlete.profiles.full_name || 'this athlete'}'s profile: ${athlete.bio || athlete.sport_discipline || 'Athlete profile'}`,
+          url: window.location.href,
+        });
+        toast.success('Profile shared successfully!');
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      // Fallback: copy link to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Link copied to clipboard!');
+    }
+  };
+
+  // Swipe handlers for photo gallery
+  const photoSwipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (athletePhotos.length > 1) {
+        setCurrentPhotoIndex((prev) => (prev === athletePhotos.length - 1 ? 0 : prev + 1));
+      }
+    },
+    onSwipedRight: () => {
+      if (athletePhotos.length > 1) {
+        setCurrentPhotoIndex((prev) => (prev === 0 ? athletePhotos.length - 1 : prev - 1));
+      }
+    },
+    trackMouse: false,
+    trackTouch: true,
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -278,7 +343,18 @@ const AthleteDirectory = () => {
   }
 
   return (
-    <>
+    <div ref={scrollContainerRef} {...pullHandlers} className="relative">
+      {/* Pull to refresh indicator */}
+      {pullDistance > 0 && (
+        <div 
+          className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 bg-primary/10 transition-all duration-200"
+          style={{ transform: `translateY(${pullDistance - 100}px)` }}
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="ml-2 text-sm">{isRefreshing ? 'Refreshing...' : 'Pull to refresh'}</span>
+        </div>
+      )}
+
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative">
@@ -604,36 +680,46 @@ const AthleteDirectory = () => {
               <div>
                 <h4 className="font-medium mb-2">Lifestyle Photos</h4>
                 {athletePhotos.length > 0 ? (
-                  <div className="relative">
+                  <div className="relative touch-pan-y" {...photoSwipeHandlers}>
                     <img 
                       src={athletePhotos[currentPhotoIndex]} 
                       alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
-                      className="w-full h-64 object-cover rounded-lg"
+                      className="w-full h-64 object-cover rounded-lg select-none"
+                      draggable={false}
                     />
                     {athletePhotos.length > 1 && (
                       <>
                         <Button
                           variant="outline"
                           size="icon"
-                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
-                          onClick={() => setCurrentPhotoIndex((prev) => 
-                            prev === 0 ? athletePhotos.length - 1 : prev - 1
-                          )}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentPhotoIndex((prev) => 
+                              prev === 0 ? athletePhotos.length - 1 : prev - 1
+                            );
+                          }}
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="icon"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
-                          onClick={() => setCurrentPhotoIndex((prev) => 
-                            prev === athletePhotos.length - 1 ? 0 : prev + 1
-                          )}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentPhotoIndex((prev) => 
+                              prev === athletePhotos.length - 1 ? 0 : prev + 1
+                            );
+                          }}
                         >
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
                           {currentPhotoIndex + 1} / {athletePhotos.length}
+                        </div>
+                        <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground md:hidden">
+                          Swipe to navigate
                         </div>
                       </>
                     )}
@@ -643,14 +729,26 @@ const AthleteDirectory = () => {
                 )}
               </div>
 
-              <Button
-                onClick={() => {
-                  setShowRequestDialog(true);
-                }}
-                className="w-full"
-              >
-                Request Connection
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setShowRequestDialog(true);
+                  }}
+                  className="flex-1"
+                >
+                  Request Connection
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShareProfile(selectedAthlete);
+                  }}
+                  variant="outline"
+                  size="icon"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -712,7 +810,7 @@ const AthleteDirectory = () => {
           </DialogContent>
         </Dialog>
       )}
-    </>
+    </div>
   );
 };
 
