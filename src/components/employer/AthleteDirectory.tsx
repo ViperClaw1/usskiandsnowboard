@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Instagram, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 interface AthleteProfile {
@@ -72,6 +73,7 @@ const AthleteDirectory = () => {
   const [athleteCertifications, setAthleteCertifications] = useState<Certification[]>([]);
   const [athletePhotos, setAthletePhotos] = useState<string[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     loadAthletes();
@@ -239,6 +241,26 @@ const AthleteDirectory = () => {
     }
   };
 
+  // Filter athletes based on search term
+  const filteredAthletes = useMemo(() => {
+    if (!searchTerm.trim()) return athletes;
+    
+    const search = searchTerm.toLowerCase();
+    return athletes.filter(athlete => {
+      const searchableFields = [
+        athlete.profiles.full_name,
+        athlete.sport_discipline,
+        athlete.bio,
+        athlete.professional_highlights,
+        athlete.availability,
+        ...(athlete.skills || []),
+        ...(athlete.career_interests || []),
+      ].filter(Boolean).join(" ").toLowerCase();
+      
+      return searchableFields.includes(search);
+    });
+  }, [athletes, searchTerm]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -257,8 +279,35 @@ const AthleteDirectory = () => {
 
   return (
     <>
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search by name, sport, skills, interests..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <p className="text-sm text-muted-foreground mt-2">
+            Showing {filteredAthletes.length} of {athletes.length} athletes
+          </p>
+        )}
+      </div>
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {athletes.map((athlete) => (
+        {filteredAthletes.map((athlete) => (
           <Card 
             key={athlete.id} 
             className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50"

@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Loader2, FilterX, Link as LinkIcon } from "lucide-react";
+import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
@@ -41,6 +42,7 @@ const EmployerDirectory = () => {
   const [existingRequests, setExistingRequests] = useState<Set<string>>(new Set());
   
   // Filter states
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterCompanySize, setFilterCompanySize] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [filterIndustry, setFilterIndustry] = useState<string>("all");
@@ -202,17 +204,34 @@ const EmployerDirectory = () => {
     "Other"
   ];
 
-  // Filter employers based on selected filters
+  // Filter employers based on search term and selected filters
   const filteredEmployers = useMemo(() => {
     return employers.filter(employer => {
+      // Filter by dropdown selections
       if (filterCompanySize !== "all" && employer.company_size !== filterCompanySize) return false;
       if (filterLocation !== "all" && employer.hq_location !== filterLocation) return false;
       if (filterIndustry !== "all" && employer.industry !== filterIndustry) return false;
+      
+      // Filter by search term
+      if (searchTerm.trim()) {
+        const search = searchTerm.toLowerCase();
+        const searchableFields = [
+          employer.company_name,
+          employer.industry,
+          employer.about,
+          employer.opportunities_offered,
+          employer.contact_person,
+        ].filter(Boolean).join(" ").toLowerCase();
+        
+        if (!searchableFields.includes(search)) return false;
+      }
+      
       return true;
     });
-  }, [employers, filterCompanySize, filterLocation, filterIndustry]);
+  }, [employers, filterCompanySize, filterLocation, filterIndustry, searchTerm]);
 
   const clearFilters = () => {
+    setSearchTerm("");
     setFilterCompanySize("all");
     setFilterLocation("all");
     setFilterIndustry("all");
@@ -238,6 +257,28 @@ const EmployerDirectory = () => {
   if (filteredEmployers.length === 0 && employers.length > 0) {
     return (
       <div>
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by company, industry, opportunities..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-card rounded-lg border">
           <div>
             <Label htmlFor="filter-size" className="text-sm font-medium mb-2 block">Company Size</Label>
@@ -300,6 +341,28 @@ const EmployerDirectory = () => {
 
   return (
     <div>
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search by company, industry, opportunities..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-card rounded-lg border">
         <div>
           <Label htmlFor="filter-size" className="text-sm font-medium mb-2 block">Company Size</Label>
@@ -351,10 +414,10 @@ const EmployerDirectory = () => {
         <p className="text-sm text-muted-foreground">
           Showing {filteredEmployers.length} of {employers.length} partners
         </p>
-        {(filterCompanySize !== "all" || filterLocation !== "all" || filterIndustry !== "all") && (
+        {(searchTerm || filterCompanySize !== "all" || filterLocation !== "all" || filterIndustry !== "all") && (
           <Button variant="outline" size="sm" onClick={clearFilters}>
             <FilterX className="h-4 w-4 mr-2" />
-            Clear Filters
+            Clear All
           </Button>
         )}
       </div>
