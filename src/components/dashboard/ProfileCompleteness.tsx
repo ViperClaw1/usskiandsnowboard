@@ -46,7 +46,11 @@ export const ProfileCompleteness = ({
               style={{ left: milestone.position }}
             >
               <div className="bg-background rounded-full p-0.5">
-                <Circle className="h-4 w-4 fill-current" />
+                {completeness >= milestone.value ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Circle className="h-4 w-4" />
+                )}
               </div>
               <span className="text-xs font-medium mt-4">{milestone.value}%</span>
             </div>
