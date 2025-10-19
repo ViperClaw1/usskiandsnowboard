@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MultiSelect } from "@/components/ui/multi-select";
 import PhotoUploader from "./PhotoUploader";
 import { Sparkles, Upload } from "lucide-react";
-import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS } from "@/data/suggestions";
+import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
 
 interface AthleteOnboardingWizardProps {
   user: User;
@@ -502,7 +502,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
                 />
               </div>
               <div>
-                <Label htmlFor="years" className="text-base">Years of Membership</Label>
+                <Label htmlFor="years" className="text-base">Years of Team Membership</Label>
                 <Input
                   id="years"
                   {...register("yearsOfMembership")}
@@ -512,12 +512,13 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
                 />
               </div>
               <div>
-                <Label htmlFor="sponsors" className="text-base">Sponsors (comma-separated)</Label>
-                <Input
-                  id="sponsors"
-                  {...register("sponsors")}
-                  placeholder="Nike, Red Bull, Oakley"
-                  className="h-12 text-base mt-1"
+                <Label htmlFor="sponsors" className="text-base">Sponsors</Label>
+                <MultiSelect
+                  options={SPONSORS_OPTIONS}
+                  selected={watch("sponsors") ? watch("sponsors").split(",").map((s: string) => s.trim()).filter(Boolean) : []}
+                  onChange={(values) => setValue("sponsors", values.join(", "))}
+                  placeholder="Select sponsors..."
+                  className="mt-1"
                 />
               </div>
             </div>

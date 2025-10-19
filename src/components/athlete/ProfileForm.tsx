@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from "sonner";
 import { Loader2, Upload, X, Instagram } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { SKILLS_OPTIONS, CAREER_INTERESTS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
 
 interface ProfileFormProps {
   userId: string;
@@ -398,7 +400,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="years_of_membership">Years of U.S. Ski & Snowboard Membership</Label>
+        <Label htmlFor="years_of_membership">Years of Team Membership</Label>
         <Input
           id="years_of_membership"
           type="number"
@@ -455,15 +457,12 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       <div className="space-y-2">
         <Label htmlFor="sponsors">Sponsors</Label>
-        <Input
-          id="sponsors"
-          placeholder="e.g., Nike, Red Bull, Oakley"
-          value={formData.sponsors}
-          onChange={(e) => setFormData({ ...formData, sponsors: e.target.value })}
+        <MultiSelect
+          options={SPONSORS_OPTIONS}
+          selected={formData.sponsors ? formData.sponsors.split(", ").filter(Boolean) : []}
+          onChange={(values) => setFormData({ ...formData, sponsors: values.join(", ") })}
+          placeholder="Select sponsors..."
         />
-        <p className="text-xs text-muted-foreground">
-          Separate multiple sponsors with commas
-        </p>
       </div>
 
       <div className="space-y-2">

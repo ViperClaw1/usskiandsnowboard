@@ -63,3 +63,26 @@ export const SKILLS_OPTIONS = [
   { label: "Adaptability", value: "Adaptability" },
   { label: "Resilience", value: "Resilience" },
 ];
+
+export const SPONSORS_OPTIONS = [
+  { label: "Nike", value: "Nike" },
+  { label: "Red Bull", value: "Red Bull" },
+  { label: "Oakley", value: "Oakley" },
+  { label: "The North Face", value: "The North Face" },
+  { label: "Burton", value: "Burton" },
+  { label: "Salomon", value: "Salomon" },
+  { label: "K2", value: "K2" },
+  { label: "Rossignol", value: "Rossignol" },
+  { label: "GoPro", value: "GoPro" },
+  { label: "Monster Energy", value: "Monster Energy" },
+  { label: "Gatorade", value: "Gatorade" },
+  { label: "Under Armour", value: "Under Armour" },
+  { label: "Adidas", value: "Adidas" },
+  { label: "Patagonia", value: "Patagonia" },
+  { label: "Arc'teryx", value: "Arc'teryx" },
+  { label: "Smith Optics", value: "Smith Optics" },
+  { label: "Atomic", value: "Atomic" },
+  { label: "Head", value: "Head" },
+  { label: "Völkl", value: "Völkl" },
+  { label: "Dynastar", value: "Dynastar" },
+];
