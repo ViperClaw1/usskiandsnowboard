@@ -305,8 +305,6 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                           icon={Building2}
                           title="No Featured Partners"
                           description="Browse the full directory to find partner organizations"
-                          actionLabel="Browse All Partners"
-                          onAction={() => setShowEmployerDirectory(true)}
                         />
                       )}
                     </div>
