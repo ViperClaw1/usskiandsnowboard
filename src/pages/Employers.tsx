@@ -45,7 +45,7 @@ const Employers = () => {
           profile_views
         `)
         .order("profile_views", { ascending: false })
-        .limit(12);
+        .limit(3);
 
       if (error) {
         console.error("Database error:", error);

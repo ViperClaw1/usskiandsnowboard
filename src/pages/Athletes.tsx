@@ -51,7 +51,7 @@ const Athletes = () => {
         `)
         .eq("is_public", true)
         .order("profile_views", { ascending: false })
-        .limit(12);
+        .limit(3);
 
       if (error) {
         console.error("Database error:", error);
