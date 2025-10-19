@@ -11,8 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import PhotoUploader from "./PhotoUploader";
 import { Sparkles, Upload } from "lucide-react";
+import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS } from "@/data/suggestions";
 
 interface AthleteOnboardingWizardProps {
   user: User;
@@ -25,8 +27,8 @@ interface FormData {
   email: string;
   sport: string;
   bio: string;
-  careerInterests: string;
-  skills: string;
+  careerInterests: string[];
+  skills: string[];
   availability: string;
   instagram: string;
   highlights: string;
@@ -50,8 +52,8 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       email: user.email || "",
       sport: "",
       bio: "",
-      careerInterests: "",
-      skills: "",
+      careerInterests: [],
+      skills: [],
       availability: "",
       instagram: "",
       highlights: "",
@@ -102,8 +104,8 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       case 4: return formValues.email.trim().length > 0 && formValues.email.includes("@");
       case 5: return formValues.sport.trim().length > 0;
       case 6: return formValues.bio.trim().length > 0;
-      case 7: return formValues.careerInterests.trim().length > 0;
-      case 8: return formValues.skills.trim().length > 0;
+      case 7: return formValues.careerInterests.length > 0;
+      case 8: return formValues.skills.length > 0;
       case 9: return formValues.availability.trim().length > 0;
       case 10: return true; // Optional
       case 11: return true; // Review
@@ -143,14 +145,8 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       if (profileError) throw profileError;
 
       // Prepare athlete profile data
-      const careerInterestsArray = data.careerInterests
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const skillsArray = data.skills
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const careerInterestsArray = data.careerInterests.filter(Boolean);
+      const skillsArray = data.skills.filter(Boolean);
       const sponsorsArray = data.sponsors
         .split(",")
         .map((s) => s.trim())
@@ -410,13 +406,14 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         return (
           <OnboardingStep
             title="What career areas interest you?"
-            description="Separate multiple interests with commas"
+            description="Start typing and select from suggestions, or add your own"
           >
-            <Input
-              {...register("careerInterests", { required: true })}
-              placeholder="e.g., Marketing, Coaching, Business Development"
-              className="h-14 text-lg px-4 border-2"
-              autoFocus
+            <MultiSelect
+              options={CAREER_INTERESTS_OPTIONS}
+              selected={formValues.careerInterests}
+              onChange={(values) => setValue("careerInterests", values)}
+              placeholder="Type to search career interests..."
+              className="min-h-[56px]"
             />
             <StepNavigation
               currentStep={currentStep}
@@ -433,13 +430,14 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         return (
           <OnboardingStep
             title="What are your top skills?"
-            description="List your key skills, separated by commas"
+            description="Start typing and select from suggestions, or add your own"
           >
-            <Input
-              {...register("skills", { required: true })}
-              placeholder="e.g., Leadership, Communication, Excel, Public Speaking"
-              className="h-14 text-lg px-4 border-2"
-              autoFocus
+            <MultiSelect
+              options={SKILLS_OPTIONS}
+              selected={formValues.skills}
+              onChange={(values) => setValue("skills", values)}
+              placeholder="Type to search skills..."
+              className="min-h-[56px]"
             />
             <StepNavigation
               currentStep={currentStep}
@@ -560,11 +558,11 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Career Interests</p>
-                <p className="text-base">{formValues.careerInterests}</p>
+                <p className="text-base">{formValues.careerInterests.join(", ")}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Skills</p>
-                <p className="text-base">{formValues.skills}</p>
+                <p className="text-base">{formValues.skills.join(", ")}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Availability</p>
