@@ -2,8 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, Link as LinkIcon, TrendingUp, CheckCircle, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export const AdminStatsCards = () => {
+  const navigate = useNavigate();
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
@@ -24,7 +26,8 @@ export const AdminStatsCards = () => {
       subtitle: `${stats?.total_athletes || 0} athletes • ${stats?.total_employers || 0} employers`,
       icon: Users,
       color: "text-primary",
-      bgColor: "bg-primary/10"
+      bgColor: "bg-primary/10",
+      route: "/admin/users"
     },
     {
       title: "Total Connections",
@@ -32,7 +35,8 @@ export const AdminStatsCards = () => {
       subtitle: `${stats?.total_requests || 0} total requests`,
       icon: CheckCircle,
       color: "text-accent",
-      bgColor: "bg-accent/10"
+      bgColor: "bg-accent/10",
+      route: "/admin/connections"
     },
     {
       title: "Pending Requests",
@@ -40,7 +44,8 @@ export const AdminStatsCards = () => {
       subtitle: "Awaiting response",
       icon: LinkIcon,
       color: "text-primary",
-      bgColor: "bg-primary/10"
+      bgColor: "bg-primary/10",
+      route: "/admin/requests"
     },
     {
       title: "Rejected",
@@ -48,7 +53,8 @@ export const AdminStatsCards = () => {
       subtitle: "Declined requests",
       icon: XCircle,
       color: "text-muted-foreground",
-      bgColor: "bg-muted"
+      bgColor: "bg-muted",
+      route: "/admin/rejected"
     },
     {
       title: "Athlete Profiles",
@@ -56,7 +62,8 @@ export const AdminStatsCards = () => {
       subtitle: "Avg. completeness",
       icon: TrendingUp,
       color: "text-primary",
-      bgColor: "bg-primary/10"
+      bgColor: "bg-primary/10",
+      route: "/admin/athletes"
     },
     {
       title: "Employer Profiles",
@@ -64,7 +71,8 @@ export const AdminStatsCards = () => {
       subtitle: "Avg. completeness",
       icon: Briefcase,
       color: "text-accent",
-      bgColor: "bg-accent/10"
+      bgColor: "bg-accent/10",
+      route: "/admin/employers"
     }
   ];
 
@@ -73,7 +81,11 @@ export const AdminStatsCards = () => {
       {statsCards.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Card key={stat.title}>
+          <Card 
+            key={stat.title} 
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-105"
+            onClick={() => navigate(stat.route)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {stat.title}
