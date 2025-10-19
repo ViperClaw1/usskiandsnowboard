@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,9 @@ import ConnectionsList from "@/components/athlete/ConnectionsList";
 import PhotoUploader from "@/components/athlete/PhotoUploader";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ProfileCompleteness } from "@/components/dashboard/ProfileCompleteness";
+import { DirectoryCardSkeleton } from "@/components/ui/skeleton-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface AthleteDashboardProps {
   user: User;
@@ -95,18 +98,30 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
   };
 
   const loadFeaturedEmployers = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("employer_profiles")
         .select("id, company_name, logo_url, industry")
+        .order("profile_views", { ascending: false })
         .limit(3);
 
       if (error) throw error;
       setFeaturedEmployers(data || []);
     } catch (error) {
       console.error("Error loading featured employers:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const profileFields = useMemo(() => [
+    { label: "Add profile photo", completed: !!profile?.photo_url },
+    { label: "Fill in bio", completed: !!profile?.bio },
+    { label: "Add skills", completed: !!(profile?.skills && profile.skills.length > 0) },
+    { label: "Set availability", completed: !!profile?.availability },
+    { label: "Add career interests", completed: !!(profile?.career_interests && profile.career_interests.length > 0) },
+  ], [profile]);
 
   const handleSignOut = async () => {
     try {
@@ -144,6 +159,13 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
         <div className="grid gap-4 sm:gap-6">
           {!showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
+              {profile && profile.profile_completeness < 100 && (
+                <ProfileCompleteness 
+                  completeness={profile.profile_completeness} 
+                  missingFields={profileFields}
+                />
+              )}
+              
               <Card className="shadow-elegant overflow-hidden">
                 <CardContent className="p-4 sm:p-6">
                   <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
@@ -257,9 +279,14 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                       Browse Partners
                     </Button>
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center justify-center">
-                      {featuredEmployers.length > 0 ? (
+                      {loading ? (
+                        <>
+                          <DirectoryCardSkeleton />
+                          <DirectoryCardSkeleton />
+                        </>
+                      ) : featuredEmployers.length > 0 ? (
                         featuredEmployers.map((employer) => (
-                          <div key={employer.id} className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
+                          <div key={employer.id} className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto hover:scale-105 transition-transform duration-200 cursor-pointer" onClick={() => setShowEmployerDirectory(true)}>
                             <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
                               <AvatarImage src={employer.logo_url ?? undefined} />
                               <AvatarFallback>
@@ -273,9 +300,13 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                           </div>
                         ))
                       ) : (
-                        <div className="flex-1 text-center py-3 sm:py-4">
-                          <p className="text-xs sm:text-sm text-muted-foreground">No featured partners available</p>
-                        </div>
+                        <EmptyState
+                          icon={Building2}
+                          title="No Featured Partners"
+                          description="Browse the full directory to find partner organizations"
+                          actionLabel="Browse All Partners"
+                          onAction={() => setShowEmployerDirectory(true)}
+                        />
                       )}
                     </div>
                   </div>
@@ -287,7 +318,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowPendingRequests(true)}>
+                <Card className="cursor-pointer hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02] overflow-hidden" onClick={() => setShowPendingRequests(true)}>
                   <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Pending</CardTitle>
@@ -300,7 +331,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowAcceptedConnections(true)}>
+                <Card className="cursor-pointer hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02] overflow-hidden" onClick={() => setShowAcceptedConnections(true)}>
                   <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Connected</CardTitle>
@@ -313,7 +344,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden" onClick={() => setShowRejectedConnections(true)}>
+                <Card className="cursor-pointer hover:border-primary/50 hover:shadow-lg transition-all duration-200 hover:scale-[1.02] overflow-hidden" onClick={() => setShowRejectedConnections(true)}>
                   <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight">Declined</CardTitle>

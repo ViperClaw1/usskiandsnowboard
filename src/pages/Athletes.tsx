@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2 } from "lucide-react";
+import { Users } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
+import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface AthleteProfile {
   id: string;
@@ -112,19 +114,25 @@ const Athletes = () => {
         <section className="py-8 sm:py-12">
           <div className="container mx-auto px-4">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <ProfileCardSkeleton />
+                <ProfileCardSkeleton />
+                <ProfileCardSkeleton />
               </div>
             ) : athletes.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-muted-foreground">No athlete profiles available yet.</p>
-              </div>
+              <EmptyState
+                icon={Users}
+                title="No Featured Athletes Yet"
+                description="Check back soon to see our talented athletes looking for career opportunities."
+                actionLabel="Sign In to Learn More"
+                onAction={() => navigate("/auth")}
+              />
             ) : (
               <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {athletes.map((athlete) => (
                   <Card 
                     key={athlete.id} 
-                    className="shadow-elegant hover:shadow-hover transition-shadow cursor-pointer"
+                    className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
                     onClick={handleAthleteClick}
                   >
                     <CardHeader>

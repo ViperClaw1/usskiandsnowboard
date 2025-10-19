@@ -266,7 +266,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filteredRequests.map((request) => (
-          <Card key={request.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedRequest(request)}>
+          <Card key={request.id} className="cursor-pointer hover:border-primary/50 hover:shadow-lg hover:scale-[1.01] transition-all duration-200 animate-fade-in" onClick={() => setSelectedRequest(request)}>
             <CardHeader>
               <div className="flex items-center gap-4">
                 <Avatar className="h-12 w-12">
@@ -304,9 +304,9 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
               </div>
 
               {request.message && (
-                <div>
-                  <p className="text-xs font-medium mb-1">Message</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{request.message}</p>
+                <div className="border-l-2 border-primary/20 pl-3">
+                  <p className="text-xs font-medium mb-1 text-primary">Message Preview</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2 italic">"{request.message}"</p>
                 </div>
               )}
             </CardContent>

@@ -221,7 +221,7 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filteredRequests.map((request) => (
-          <Card key={request.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedRequest(request)}>
+          <Card key={request.id} className="cursor-pointer hover:border-primary/50 hover:shadow-lg hover:scale-[1.01] transition-all duration-200 animate-fade-in" onClick={() => setSelectedRequest(request)}>
             <CardHeader>
               <div className="flex items-center gap-4">
                 <Avatar className="h-12 w-12">

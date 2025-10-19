@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Loader2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
+import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface EmployerProfile {
   id: string;
@@ -106,19 +108,25 @@ const Employers = () => {
         <section className="py-8 sm:py-12">
           <div className="container mx-auto px-4">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <ProfileCardSkeleton />
+                <ProfileCardSkeleton />
+                <ProfileCardSkeleton />
               </div>
             ) : employers.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-muted-foreground">No partner profiles available yet.</p>
-              </div>
+              <EmptyState
+                icon={Building2}
+                title="No Featured Partners Yet"
+                description="Check back soon to see companies partnering with talented athletes."
+                actionLabel="Sign In to Learn More"
+                onAction={() => navigate("/auth")}
+              />
             ) : (
               <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {employers.map((employer) => (
                   <Card 
                     key={employer.id} 
-                    className="shadow-elegant hover:shadow-hover transition-shadow cursor-pointer"
+                    className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
                     onClick={handleEmployerClick}
                   >
                     <CardHeader>
