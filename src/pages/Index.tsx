@@ -15,10 +15,10 @@ const Index = () => {
         backgroundPosition: 'center',
         backgroundColor: '#1e3a5f'
       }}>
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <Link to="/">
-            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-20 sm:h-24 hover:opacity-80 transition-opacity md:hidden" />
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[100px] lg:h-[126px] hover:opacity-80 transition-opacity hidden md:block" />
+            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-18 hover:opacity-80 transition-opacity md:hidden" />
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[75px] lg:h-[95px] hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
           <nav className="hidden md:flex items-center gap-4 lg:gap-6">
             <Link to="/athletes" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
