@@ -36,22 +36,22 @@ export const ProfileCompleteness = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="relative">
-          <Progress value={completeness} className="h-3" />
-          <div className="absolute top-0 left-0 right-0 flex justify-between px-1 -mt-6">
-            <div className={cn("flex flex-col items-center", getMilestoneColor(50))}>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center px-2">
+            <div className={cn("flex items-center gap-1.5", getMilestoneColor(50))}>
               {getMilestoneIcon(50)}
-              <span className="text-xs mt-1">50%</span>
+              <span className="text-xs font-medium">50%</span>
             </div>
-            <div className={cn("flex flex-col items-center", getMilestoneColor(75))}>
+            <div className={cn("flex items-center gap-1.5", getMilestoneColor(75))}>
               {getMilestoneIcon(75)}
-              <span className="text-xs mt-1">75%</span>
+              <span className="text-xs font-medium">75%</span>
             </div>
-            <div className={cn("flex flex-col items-center", getMilestoneColor(100))}>
+            <div className={cn("flex items-center gap-1.5", getMilestoneColor(100))}>
               {getMilestoneIcon(100)}
-              <span className="text-xs mt-1">100%</span>
+              <span className="text-xs font-medium">100%</span>
             </div>
           </div>
+          <Progress value={completeness} className="h-3" />
         </div>
 
         {missingFields.length > 0 && (
