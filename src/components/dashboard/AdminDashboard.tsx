@@ -63,6 +63,21 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           {/* Stats Overview */}
           <AdminStatsCards />
 
+          {/* Time Series Charts */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <SignupsChart />
+            <ConnectionsChart />
+          </div>
+
+          {/* Distribution Charts */}
+          <DistributionCharts />
+
+          {/* Top Profiles */}
+          <TopProfilesTable />
+
+          {/* Recent Users */}
+          <UserManagementTable />
+
           {/* User Management Card */}
           <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
             <CardContent className="pt-6">
@@ -78,21 +93,6 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Time Series Charts */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <SignupsChart />
-            <ConnectionsChart />
-          </div>
-
-          {/* Distribution Charts */}
-          <DistributionCharts />
-
-          {/* Top Profiles */}
-          <TopProfilesTable />
-
-          {/* Recent Users */}
-          <UserManagementTable />
         </div>
       </main>
     </div>
