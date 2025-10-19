@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
@@ -75,20 +76,25 @@ const Athletes = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b sticky top-0 z-50" style={{ 
+        backgroundImage: `url(${mountainHeaderBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundColor: '#1e3a5f'
+      }}>
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <Link to="/">
-            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-10 sm:h-12 hover:opacity-80 transition-opacity md:hidden" />
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[50px] lg:h-[63px] hover:opacity-80 transition-opacity hidden md:block" />
+            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-18 hover:opacity-80 transition-opacity md:hidden" />
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[75px] lg:h-[95px] hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
           <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-            <Link to="/athletes" className="text-primary font-medium text-sm lg:text-base">
+            <Link to="/athletes" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               Athletes
             </Link>
-            <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
+            <Link to="/employers" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               Partners
             </Link>
-            <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
+            <Link to="/news" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               News
             </Link>
             <Link to="/auth">
