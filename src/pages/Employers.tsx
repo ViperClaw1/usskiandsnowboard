@@ -17,6 +17,7 @@ interface EmployerProfile {
   logo_url: string | null;
   about: string | null;
   opportunities_offered: string | null;
+  profile_views: number;
 }
 
 
@@ -40,8 +41,11 @@ const Employers = () => {
           industry,
           logo_url,
           about,
-          opportunities_offered
-        `);
+          opportunities_offered,
+          profile_views
+        `)
+        .order("profile_views", { ascending: false })
+        .limit(12);
 
       if (error) {
         console.error("Database error:", error);

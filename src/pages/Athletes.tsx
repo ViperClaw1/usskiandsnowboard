@@ -18,6 +18,7 @@ interface AthleteProfile {
   bio: string | null;
   skills: string[] | null;
   availability: string | null;
+  profile_views: number;
   profiles: {
     full_name: string;
   } | null;
@@ -45,9 +46,12 @@ const Athletes = () => {
           bio,
           skills,
           availability,
+          profile_views,
           profiles!inner(full_name)
         `)
-        .eq("is_public", true);
+        .eq("is_public", true)
+        .order("profile_views", { ascending: false })
+        .limit(12);
 
       if (error) {
         console.error("Database error:", error);
