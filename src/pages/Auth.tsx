@@ -46,9 +46,9 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate private code
+      // Validate invite code
       if (privateCode !== "cortina26") {
-        toast.error("Invalid private code");
+        toast.error("Invalid invite code");
         setLoading(false);
         return;
       }
@@ -280,11 +280,11 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-code">Private Code</Label>
+                    <Label htmlFor="signup-code">Invite Code</Label>
                     <Input
                       id="signup-code"
                       type="password"
-                      placeholder="Enter private code"
+                      placeholder="Enter invite code"
                       value={privateCode}
                       onChange={(e) => setPrivateCode(e.target.value)}
                       required
