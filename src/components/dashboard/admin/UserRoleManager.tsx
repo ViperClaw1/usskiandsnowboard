@@ -40,21 +40,34 @@ export const UserRoleManager = ({
 
   const grantRoleMutation = useMutation({
     mutationFn: async (role: AppRole) => {
-      // If granting athlete or employer, check for conflicting role
-      const conflictingRole = 
-        role === 'athlete' ? 'employer' :
-        role === 'employer' ? 'athlete' :
-        null;
+      const conflictingRoles: AppRole[] = [];
       
-      // First, remove conflicting role if it exists
-      if (conflictingRole && roles.includes(conflictingRole)) {
-        const { error: revokeError } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', userId)
-          .eq('role', conflictingRole);
-        
-        if (revokeError) throw revokeError;
+      // Admin is mutually exclusive with athlete and employer
+      if (role === 'admin') {
+        if (roles.includes('athlete')) conflictingRoles.push('athlete');
+        if (roles.includes('employer')) conflictingRoles.push('employer');
+      }
+      // Athlete and employer are mutually exclusive with each other AND with admin
+      else if (role === 'athlete') {
+        if (roles.includes('employer')) conflictingRoles.push('employer');
+        if (roles.includes('admin')) conflictingRoles.push('admin');
+      }
+      else if (role === 'employer') {
+        if (roles.includes('athlete')) conflictingRoles.push('athlete');
+        if (roles.includes('admin')) conflictingRoles.push('admin');
+      }
+      
+      // Remove all conflicting roles
+      if (conflictingRoles.length > 0) {
+        for (const conflictRole of conflictingRoles) {
+          const { error: revokeError } = await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', userId)
+            .eq('role', conflictRole);
+          
+          if (revokeError) throw revokeError;
+        }
       }
       
       // Then grant the new role
@@ -64,12 +77,12 @@ export const UserRoleManager = ({
       
       if (error) throw error;
       
-      return { role, conflictingRole };
+      return { role, conflictingRoles };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
-      const message = data.conflictingRole
-        ? `Switched from ${data.conflictingRole} to ${data.role} for ${userName || userEmail}`
+      const message = data.conflictingRoles.length > 0
+        ? `Switched from ${data.conflictingRoles.join(', ')} to ${data.role} for ${userName || userEmail}`
         : `${data.role} role granted to ${userName || userEmail}`;
       
       toast({
@@ -115,8 +128,9 @@ export const UserRoleManager = ({
   const handleRoleAction = (role: AppRole, action: 'grant' | 'revoke') => {
     // Check if granting a conflicting role
     const hasConflictingRole = 
-      (role === 'athlete' && roles.includes('employer')) ||
-      (role === 'employer' && roles.includes('athlete'));
+      (role === 'admin' && (roles.includes('athlete') || roles.includes('employer'))) ||
+      (role === 'athlete' && (roles.includes('employer') || roles.includes('admin'))) ||
+      (role === 'employer' && (roles.includes('athlete') || roles.includes('admin')));
     
     // Always show dialog for admin changes, self-changes, or conflicting roles
     if (role === 'admin' || isSelf || (action === 'grant' && hasConflictingRole)) {

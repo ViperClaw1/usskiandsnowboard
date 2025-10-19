@@ -34,11 +34,18 @@ export const RoleChangeDialog = ({
   const isAdminRole = role === 'admin';
   const isRevoking = action === 'revoke';
   
-  // Check for conflicting roles
-  const conflictingRole = 
-    (role === 'athlete' && currentRoles.includes('employer')) ? 'employer' :
-    (role === 'employer' && currentRoles.includes('athlete')) ? 'athlete' :
-    null;
+  // Check for conflicting roles - all roles are mutually exclusive
+  const conflictingRoles: string[] = [];
+  if (role === 'admin' && !isRevoking) {
+    if (currentRoles.includes('athlete')) conflictingRoles.push('athlete');
+    if (currentRoles.includes('employer')) conflictingRoles.push('employer');
+  } else if (role === 'athlete' && !isRevoking) {
+    if (currentRoles.includes('employer')) conflictingRoles.push('employer');
+    if (currentRoles.includes('admin')) conflictingRoles.push('admin');
+  } else if (role === 'employer' && !isRevoking) {
+    if (currentRoles.includes('athlete')) conflictingRoles.push('athlete');
+    if (currentRoles.includes('admin')) conflictingRoles.push('admin');
+  }
 
   const getTitle = () => {
     if (isSelf && isAdminRole && isRevoking) {
@@ -52,8 +59,9 @@ export const RoleChangeDialog = ({
       return "You cannot remove your own admin role to prevent account lockout. Please have another admin remove your role if needed.";
     }
 
-    if (conflictingRole && action === 'grant') {
-      return `${userName} currently has the ${conflictingRole} role. Granting ${role} access will automatically remove their ${conflictingRole} role. Users can only be either an athlete or employer, not both. Do you want to proceed?`;
+    if (conflictingRoles.length > 0 && action === 'grant') {
+      const rolesList = conflictingRoles.join(' and ');
+      return `${userName} currently has the ${rolesList} role${conflictingRoles.length > 1 ? 's' : ''}. Granting ${role} access will automatically remove their ${rolesList} role${conflictingRoles.length > 1 ? 's' : ''}. Each user can only have one role (admin, athlete, or employer). Do you want to proceed?`;
     }
 
     if (isAdminRole) {
