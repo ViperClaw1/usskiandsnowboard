@@ -2,6 +2,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 export interface Option {
@@ -112,26 +113,28 @@ export function MultiSelect({
       <div className="relative mt-2">
         {open && filteredOptions.length > 0 ? (
           <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-            <CommandList>
-              <CommandGroup className="h-full overflow-auto max-h-64">
-                {filteredOptions.map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onSelect={() => {
-                      handleSelect(option.value);
-                      inputRef.current?.focus();
-                    }}
-                    className="cursor-pointer"
-                  >
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
+            <ScrollArea className="max-h-64">
+              <CommandList>
+                <CommandGroup>
+                  {filteredOptions.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onSelect={() => {
+                        handleSelect(option.value);
+                        inputRef.current?.focus();
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {option.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </ScrollArea>
           </div>
         ) : null}
       </div>
