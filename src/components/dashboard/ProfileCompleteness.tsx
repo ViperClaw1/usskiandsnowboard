@@ -64,11 +64,11 @@ export const ProfileCompleteness = ({
                   className="flex items-center gap-2 text-sm"
                 >
                   {field.completed ? (
-                    <Check className="h-4 w-4 text-primary" />
+                    <Check className="h-4 w-4 text-primary shrink-0" />
                   ) : (
-                    <Circle className="h-4 w-4 text-muted-foreground" />
+                    <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
                   )}
-                  <span className={field.completed ? "line-through text-muted-foreground" : ""}>
+                  <span className={field.completed ? "text-muted-foreground" : ""}>
                     {field.label}
                   </span>
                 </div>
