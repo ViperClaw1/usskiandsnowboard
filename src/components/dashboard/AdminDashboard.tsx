@@ -1,5 +1,6 @@
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, Shield } from "lucide-react";
@@ -62,6 +63,22 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           {/* Stats Overview */}
           <AdminStatsCards />
 
+          {/* User Management Card */}
+          <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">User Management</h3>
+                  <p className="text-muted-foreground">Grant or revoke admin access to team members</p>
+                </div>
+                <Button onClick={() => navigate("/admin/users")} size="lg">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Manage Users
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Time Series Charts */}
           <div className="grid gap-6 lg:grid-cols-2">
             <SignupsChart />
@@ -74,7 +91,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           {/* Top Profiles */}
           <TopProfilesTable />
 
-          {/* User Management */}
+          {/* Recent Users */}
           <UserManagementTable />
         </div>
       </main>

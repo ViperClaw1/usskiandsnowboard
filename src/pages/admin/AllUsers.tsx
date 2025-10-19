@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { UserManagementTable } from "@/components/dashboard/admin/UserManagementTable";
+import { FullUserManagementTable } from "@/components/dashboard/admin/FullUserManagementTable";
 
 const AllUsers = () => {
   const navigate = useNavigate();
@@ -18,8 +18,8 @@ const AllUsers = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">All Users</h1>
-        <UserManagementTable />
+        <h1 className="text-3xl font-bold mb-6">User Management</h1>
+        <FullUserManagementTable />
       </main>
     </div>
   );
