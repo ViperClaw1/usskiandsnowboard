@@ -1,5 +1,5 @@
 import { User } from "@supabase/supabase-js";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +13,7 @@ import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
+import { ProfileCompleteness } from "@/components/dashboard/ProfileCompleteness";
 
 interface EmployerDashboardProps {
   user: User;
@@ -113,6 +114,14 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
     }
   };
 
+  const profileFields = useMemo(() => [
+    { label: "Add company logo", completed: !!profile?.logo_url },
+    { label: "Fill in company description", completed: !!profile?.description },
+    { label: "Add website URL", completed: !!profile?.website },
+    { label: "Add LinkedIn URL", completed: !!profile?.linkedin_url },
+    { label: "Specify industry", completed: !!profile?.industry },
+  ], [profile]);
+
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -157,6 +166,13 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
         <div className="grid gap-4 sm:gap-6">
           {!showDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
+              {profile && profile.profile_completeness < 100 && (
+                <ProfileCompleteness 
+                  completeness={profile.profile_completeness} 
+                  missingFields={profileFields}
+                />
+              )}
+              
               <Card className="shadow-elegant overflow-hidden">
                 <CardHeader className="p-4 sm:p-6">
                   <div className="flex items-start gap-3 sm:gap-4">
