@@ -27,27 +27,37 @@ export const ProfileCompleteness = ({
     return <Circle className="h-4 w-4" />;
   };
 
+  const milestones = [0, 50, 100];
+
   return (
     <Card className="shadow-elegant">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Portfolio Completeness - {completeness}%</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
+        <div className="relative pt-3 pb-6">
           <Progress value={completeness} className="h-3" />
-          <div className="flex justify-between items-center px-2">
-            <div className={cn("flex items-center gap-1.5", getMilestoneColor(50))}>
-              {getMilestoneIcon(50)}
-              <span className="text-xs font-medium">50%</span>
-            </div>
-            <div className={cn("flex items-center gap-1.5", getMilestoneColor(75))}>
-              {getMilestoneIcon(75)}
-              <span className="text-xs font-medium">75%</span>
-            </div>
-            <div className={cn("flex items-center gap-1.5", getMilestoneColor(100))}>
-              {getMilestoneIcon(100)}
-              <span className="text-xs font-medium">100%</span>
-            </div>
+          
+          {/* Circle markers on the bar */}
+          <div className="absolute top-0 left-0 right-0 flex justify-between">
+            {milestones.map((milestone) => (
+              <div
+                key={milestone}
+                className={cn(
+                  "flex flex-col items-center -translate-x-2 first:translate-x-0 last:translate-x-0",
+                  getMilestoneColor(milestone)
+                )}
+                style={{ 
+                  marginLeft: milestone === 0 ? '0' : milestone === 50 ? 'calc(50% - 8px)' : 'auto',
+                  marginRight: milestone === 100 ? '0' : 'auto'
+                }}
+              >
+                <div className="bg-background rounded-full p-0.5">
+                  {getMilestoneIcon(milestone)}
+                </div>
+                <span className="text-xs font-medium mt-4">{milestone}%</span>
+              </div>
+            ))}
           </div>
         </div>
 
