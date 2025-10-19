@@ -92,6 +92,9 @@ const Athletes = () => {
             <Link to="/employers" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               Partners
             </Link>
+            <a href="/schedule.pdf" target="_blank" rel="noopener noreferrer" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
+              Schedule
+            </a>
             <Link to="/news" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               News
             </Link>
