@@ -269,50 +269,7 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-elegant overflow-hidden">
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Partners</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8">
-                    <Button onClick={() => setShowEmployerDirectory(true)} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
-                      <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                      Browse Partners
-                    </Button>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center justify-center">
-                      {loading ? (
-                        <>
-                          <DirectoryCardSkeleton />
-                          <DirectoryCardSkeleton />
-                        </>
-                      ) : featuredEmployers.length > 0 ? (
-                        featuredEmployers.map((employer) => (
-                          <div key={employer.id} className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto hover:scale-105 transition-transform duration-200 cursor-pointer" onClick={() => setShowEmployerDirectory(true)}>
-                            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
-                              <AvatarImage src={employer.logo_url ?? undefined} />
-                              <AvatarFallback>
-                                <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1 sm:flex-initial">
-                              <p className="font-medium text-xs sm:text-sm truncate">{employer.company_name || "Partner"}</p>
-                              <p className="text-xs text-muted-foreground truncate">{employer.industry || "Industry not specified"}</p>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <EmptyState
-                          icon={Building2}
-                          title="No Featured Partners"
-                          description="Browse the full directory to find partner organizations"
-                        />
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="mt-4 sm:mt-6 lg:mt-8 mb-2 sm:mb-3 lg:mb-4">
+              <div className="mb-2 sm:mb-3 lg:mb-4">
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">Partner Connections</h2>
               </div>
 
@@ -369,6 +326,49 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                   </CardContent>
                 </Card>
               </div>
+
+              <Card className="shadow-elegant overflow-hidden mt-4 sm:mt-6">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Partners</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8">
+                    <Button onClick={() => setShowEmployerDirectory(true)} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
+                      <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                      Browse Partners
+                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center justify-center">
+                      {loading ? (
+                        <>
+                          <DirectoryCardSkeleton />
+                          <DirectoryCardSkeleton />
+                        </>
+                      ) : featuredEmployers.length > 0 ? (
+                        featuredEmployers.map((employer) => (
+                          <div key={employer.id} className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto hover:scale-105 transition-transform duration-200 cursor-pointer" onClick={() => setShowEmployerDirectory(true)}>
+                            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
+                              <AvatarImage src={employer.logo_url ?? undefined} />
+                              <AvatarFallback>
+                                <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1 sm:flex-initial">
+                              <p className="font-medium text-xs sm:text-sm truncate">{employer.company_name || "Partner"}</p>
+                              <p className="text-xs text-muted-foreground truncate">{employer.industry || "Industry not specified"}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <EmptyState
+                          icon={Building2}
+                          title="No Featured Partners"
+                          description="Browse the full directory to find partner organizations"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           ) : showEmployerDirectory ? (
             <div>
