@@ -22,6 +22,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [privateCode, setPrivateCode] = useState("");
   const [userType, setUserType] = useState<"athlete" | "employer">(initialType);
 
   useEffect(() => {
@@ -45,6 +46,13 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validate private code
+      if (privateCode !== "cortina26") {
+        toast.error("Invalid private code");
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -66,6 +74,7 @@ const Auth = () => {
       setEmail("");
       setPassword("");
       setFullName("");
+      setPrivateCode("");
     } catch (error: any) {
       toast.error(error.message || "Failed to create account");
     } finally {
@@ -268,6 +277,17 @@ const Auth = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-code">Private Code</Label>
+                    <Input
+                      id="signup-code"
+                      type="password"
+                      placeholder="Enter private code"
+                      value={privateCode}
+                      onChange={(e) => setPrivateCode(e.target.value)}
+                      required
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
