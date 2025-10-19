@@ -313,8 +313,8 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                 <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
+                <CardContent className="p-4 sm:p-6 pt-0 flex items-center min-h-[120px]">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8 w-full">
                     <Button onClick={handleBrowseAthletes} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
                       <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Browse Athletes
