@@ -1,10 +1,15 @@
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Shield, Users, Briefcase, Link as LinkIcon } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AdminStatsCards } from "./admin/AdminStatsCards";
+import { SignupsChart } from "./admin/SignupsChart";
+import { ConnectionsChart } from "./admin/ConnectionsChart";
+import { DistributionCharts } from "./admin/DistributionCharts";
+import { UserManagementTable } from "./admin/UserManagementTable";
+import { TopProfilesTable } from "./admin/TopProfilesTable";
 
 interface AdminDashboardProps {
   user: User;
@@ -40,86 +45,37 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6">
-          <Card className="shadow-elegant">
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <Shield className="h-8 w-8 text-destructive" />
-                </div>
-                <div>
-                  <CardTitle>Admin Control Center</CardTitle>
-                  <CardDescription>Manage the entire platform</CardDescription>
-                </div>
+        <div className="space-y-6">
+          {/* Header Card */}
+          <div className="bg-gradient-to-r from-primary to-primary-glow rounded-lg p-6 text-primary-foreground shadow-elegant">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                <Shield className="h-8 w-8" />
               </div>
-            </CardHeader>
-          </Card>
-
-          <div className="grid md:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Athletes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-foreground">0</p>
-                <p className="text-sm text-muted-foreground mt-1">Total registered</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-accent" />
-                  Partners
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-foreground">0</p>
-                <p className="text-sm text-muted-foreground mt-1">Active partners</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <LinkIcon className="h-5 w-5 text-primary" />
-                  Requests
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-accent">0</p>
-                <p className="text-sm text-muted-foreground mt-1">Pending approval</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <LinkIcon className="h-5 w-5 text-foreground" />
-                  Connections
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-foreground">0</p>
-                <p className="text-sm text-muted-foreground mt-1">Facilitated</p>
-              </CardContent>
-            </Card>
+              <div>
+                <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
+                <p className="text-primary-foreground/90">Comprehensive platform insights and metrics</p>
+              </div>
+            </div>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Connection Requests</CardTitle>
-              <CardDescription>Review and approve employer requests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No pending requests
-              </p>
-            </CardContent>
-          </Card>
+          {/* Stats Overview */}
+          <AdminStatsCards />
+
+          {/* Time Series Charts */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <SignupsChart />
+            <ConnectionsChart />
+          </div>
+
+          {/* Distribution Charts */}
+          <DistributionCharts />
+
+          {/* Top Profiles */}
+          <TopProfilesTable />
+
+          {/* User Management */}
+          <UserManagementTable />
         </div>
       </main>
     </div>

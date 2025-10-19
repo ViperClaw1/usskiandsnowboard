@@ -121,6 +121,13 @@ export type Database = {
             referencedRelation: "athlete_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "certifications_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       connection_requests: {
@@ -163,10 +170,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "connection_requests_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "connection_requests_employer_id_fkey"
             columns: ["employer_id"]
             isOneToOne: false
             referencedRelation: "employer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_requests_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "top_employer_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -202,6 +223,13 @@ export type Database = {
             columns: ["athlete_id"]
             isOneToOne: false
             referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -319,6 +347,13 @@ export type Database = {
             referencedRelation: "athlete_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "experience_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       news_articles: {
@@ -409,7 +444,73 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_analytics_summary: {
+        Row: {
+          accepted_connections: number | null
+          avg_athlete_completeness: number | null
+          avg_employer_completeness: number | null
+          pending_requests: number | null
+          rejected_requests: number | null
+          total_athletes: number | null
+          total_employers: number | null
+          total_requests: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
+      athletes_by_sport: {
+        Row: {
+          count: number | null
+          sport_discipline: string | null
+        }
+        Relationships: []
+      }
+      connections_by_day: {
+        Row: {
+          accepted: number | null
+          pending: number | null
+          rejected: number | null
+          request_date: string | null
+          total_requests: number | null
+        }
+        Relationships: []
+      }
+      employers_by_industry: {
+        Row: {
+          count: number | null
+          industry: string | null
+        }
+        Relationships: []
+      }
+      top_athlete_profiles: {
+        Row: {
+          full_name: string | null
+          id: string | null
+          profile_completeness: number | null
+          profile_views: number | null
+          sport_discipline: string | null
+        }
+        Relationships: []
+      }
+      top_employer_profiles: {
+        Row: {
+          company_name: string | null
+          id: string | null
+          industry: string | null
+          profile_completeness: number | null
+          profile_views: number | null
+        }
+        Relationships: []
+      }
+      user_signups_by_day: {
+        Row: {
+          athlete_signups: number | null
+          employer_signups: number | null
+          signup_date: string | null
+          signups: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       clear_connection_requests: {
