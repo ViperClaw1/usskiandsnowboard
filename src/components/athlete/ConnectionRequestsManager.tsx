@@ -12,9 +12,12 @@ import { toast } from "sonner";
 interface ConnectionRequest {
   id: string;
   employer_id: string;
+  athlete_id: string;
   message: string | null;
   opportunity_type: string | null;
   created_at: string;
+  initiated_by_user_id: string | null;
+  initiated_by_employer: boolean;
   employer_profiles: {
     company_name: string;
     industry: string | null;
@@ -72,6 +75,13 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
   const loadRequests = async () => {
     setLoading(true);
     try {
+      // Get current user to check who owns the athlete profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("User not authenticated");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("connection_requests")
         .select(`
@@ -99,7 +109,14 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
         return;
       }
 
-      setRequests(data || []);
+      // Determine who initiated each request by comparing initiated_by_user_id with current user
+      const requestsWithInitiator = (data || []).map(req => ({
+        ...req,
+        // If the current user initiated, they can only cancel. Otherwise they can accept/reject.
+        initiated_by_employer: req.initiated_by_user_id !== user.id
+      }));
+
+      setRequests(requestsWithInitiator);
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred");
@@ -366,23 +383,37 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
               )}
 
               <div className="flex gap-4">
-                <Button
-                  onClick={() => handleUpdateStatus(selectedRequest.id, "accepted")}
-                  disabled={processing}
-                  className="flex-1"
-                >
-                  {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                  Accept
-                </Button>
-                <Button
-                  onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
-                  disabled={processing}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
-                  Reject
-                </Button>
+                {selectedRequest.initiated_by_employer ? (
+                  <>
+                    <Button
+                      onClick={() => handleUpdateStatus(selectedRequest.id, "accepted")}
+                      disabled={processing}
+                      className="flex-1"
+                    >
+                      {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                      Accept
+                    </Button>
+                    <Button
+                      onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
+                      disabled={processing}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                      Reject
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
+                    disabled={processing}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                    Cancel Request
+                  </Button>
+                )}
               </div>
             </div>
           </DialogContent>

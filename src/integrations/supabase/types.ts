@@ -136,6 +136,7 @@ export type Database = {
           created_at: string
           employer_id: string
           id: string
+          initiated_by_user_id: string | null
           message: string | null
           opportunity_type: string | null
           status: string | null
@@ -146,6 +147,7 @@ export type Database = {
           created_at?: string
           employer_id: string
           id?: string
+          initiated_by_user_id?: string | null
           message?: string | null
           opportunity_type?: string | null
           status?: string | null
@@ -156,6 +158,7 @@ export type Database = {
           created_at?: string
           employer_id?: string
           id?: string
+          initiated_by_user_id?: string | null
           message?: string | null
           opportunity_type?: string | null
           status?: string | null

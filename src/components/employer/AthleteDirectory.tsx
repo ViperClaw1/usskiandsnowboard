@@ -220,6 +220,12 @@ const AthleteDirectory = () => {
 
     setSendingRequest(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("User not authenticated");
+        return;
+      }
+
       const { error } = await supabase
         .from("connection_requests")
         .insert({
@@ -227,7 +233,8 @@ const AthleteDirectory = () => {
           employer_id: employerProfileId,
           message: requestMessage,
           opportunity_type: opportunityType || null,
-          status: "pending"
+          status: "pending",
+          initiated_by_user_id: user.id
         });
 
       if (error) throw error;
