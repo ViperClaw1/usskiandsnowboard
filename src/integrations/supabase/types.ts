@@ -221,6 +221,7 @@ export type Database = {
           linkedin_url: string | null
           logo_url: string | null
           opportunities_offered: string | null
+          profile_completeness: number | null
           profile_views: number | null
           updated_at: string
           user_id: string
@@ -240,6 +241,7 @@ export type Database = {
           linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null
+          profile_completeness?: number | null
           profile_views?: number | null
           updated_at?: string
           user_id: string
@@ -259,6 +261,7 @@ export type Database = {
           linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null
+          profile_completeness?: number | null
           profile_views?: number | null
           updated_at?: string
           user_id?: string
