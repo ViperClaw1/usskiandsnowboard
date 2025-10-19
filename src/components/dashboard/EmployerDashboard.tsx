@@ -9,6 +9,7 @@ import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, L
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { EmployerOnboardingWizard } from "@/components/employer/EmployerOnboardingWizard";
+import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
@@ -217,13 +218,16 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
                           <DialogHeader>
-                            <DialogTitle>Company Profile</DialogTitle>
-                            <DialogDescription>Fill in your company details to access the athlete directory.</DialogDescription>
+                            <DialogTitle>{profile ? "Edit Company Profile" : "Company Profile"}</DialogTitle>
+                            <DialogDescription>
+                              {profile ? "Update your company information and opportunities" : "Fill in your company details to access the athlete directory."}
+                            </DialogDescription>
                           </DialogHeader>
-                          <EmployerOnboardingWizard
-                            user={user}
-                            onComplete={handleProfileSuccess}
-                          />
+                          {profile ? (
+                            <CompanyProfileForm userId={user.id} existingProfile={profile} onSuccess={handleProfileSuccess} />
+                          ) : (
+                            <EmployerOnboardingWizard user={user} onComplete={handleProfileSuccess} />
+                          )}
                         </DialogContent>
                       </Dialog>
                     </div>
