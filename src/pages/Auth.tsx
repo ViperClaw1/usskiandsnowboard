@@ -59,7 +59,10 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast.success("Account created successfully!");
+      toast.success("Check your email to confirm your account!", {
+        description: `We've sent a confirmation link to ${email}`,
+        duration: 6000,
+      });
       setEmail("");
       setPassword("");
       setFullName("");
