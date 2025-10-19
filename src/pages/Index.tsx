@@ -3,25 +3,31 @@ import { Button } from "@/components/ui/button";
 import { Users, Briefcase, TrendingUp } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b sticky top-0 z-50" style={{ 
+        backgroundImage: `url(${mountainHeaderBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundColor: '#1e3a5f'
+      }}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
-            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-10 sm:h-12 hover:opacity-80 transition-opacity md:hidden" />
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[50px] lg:h-[63px] hover:opacity-80 transition-opacity hidden md:block" />
+            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-20 sm:h-24 hover:opacity-80 transition-opacity md:hidden" />
+            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[100px] lg:h-[126px] hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
           <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-            <Link to="/athletes" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
+            <Link to="/athletes" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               Athletes
             </Link>
-            <Link to="/employers" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
+            <Link to="/employers" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               Partners
             </Link>
-            <Link to="/news" className="text-foreground hover:text-primary font-medium transition-colors text-sm lg:text-base">
+            <Link to="/news" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               News
             </Link>
             <Link to="/auth">
