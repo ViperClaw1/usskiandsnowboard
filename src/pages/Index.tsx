@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Users, Briefcase, TrendingUp } from "lucide-react";
-import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
-import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+import usLogo from "@/assets/us-logo.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
 
@@ -17,8 +16,7 @@ const Index = () => {
       }}>
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <Link to="/">
-            <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-18 hover:opacity-80 transition-opacity md:hidden" />
-            <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-[75px] lg:h-[95px] hover:opacity-80 transition-opacity hidden md:block" />
+            <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" />
           </Link>
           <nav className="hidden md:flex items-center gap-4 lg:gap-6">
             <Link to="/athletes" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
