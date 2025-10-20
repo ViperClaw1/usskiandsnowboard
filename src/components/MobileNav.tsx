@@ -23,8 +23,8 @@ export const MobileNav = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild className="md:hidden">
-        <Button variant="ghost" size="icon" className="relative">
-          <Menu className="h-6 w-6 transition-transform duration-200" />
+        <Button variant="outline" size="icon" className="relative border-2 bg-background shadow-md">
+          <Menu className="h-6 w-6 text-foreground" />
         </Button>
       </SheetTrigger>
       <SheetContent 
