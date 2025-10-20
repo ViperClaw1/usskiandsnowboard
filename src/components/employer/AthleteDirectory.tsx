@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw } from "lucide-react";
@@ -66,6 +67,7 @@ const AthleteDirectory = () => {
   const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfile | null>(null);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [employerProfileId, setEmployerProfileId] = useState<string | null>(null);
+  const [employerRoles, setEmployerRoles] = useState<Array<{ title: string; type: string; url: string; location: string }>>([]);
   const [requestMessage, setRequestMessage] = useState("");
   const [opportunityType, setOpportunityType] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
@@ -90,12 +92,13 @@ const AthleteDirectory = () => {
 
     const { data } = await supabase
       .from("employer_profiles")
-      .select("id")
+      .select("id, individual_roles")
       .eq("user_id", user.id)
       .single();
 
     if (data) {
       setEmployerProfileId(data.id);
+      setEmployerRoles((data.individual_roles as Array<{ title: string; type: string; url: string; location: string }>) || []);
     }
   };
 
@@ -779,13 +782,20 @@ const AthleteDirectory = () => {
             <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div>
                 <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
-                <Textarea
-                  id="opportunity-type"
-                  placeholder="e.g., Internship, Full-time, Part-time..."
-                  value={opportunityType}
-                  onChange={(e) => setOpportunityType(e.target.value)}
-                  className="mt-2"
-                />
+                <Select value={opportunityType} onValueChange={setOpportunityType}>
+                  <SelectTrigger id="opportunity-type" className="mt-2">
+                    <SelectValue placeholder="Select opportunity type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                    {employerRoles.map((role, index) => (
+                      <SelectItem key={index} value={role.title}>
+                        {role.title}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="message">Message *</Label>

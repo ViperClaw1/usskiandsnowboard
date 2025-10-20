@@ -29,6 +29,8 @@ interface EmployerProfile {
   about: string | null;
   website: string | null;
   linkedin_url: string | null;
+  job_board_url: string | null;
+  individual_roles: Array<{ title: string; type: string; url: string; location: string }> | null;
 }
 
 const EmployerDirectory = () => {
@@ -101,7 +103,7 @@ const EmployerDirectory = () => {
         return;
       }
 
-      setEmployers(data || []);
+      setEmployers((data as unknown as EmployerProfile[]) || []);
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred");
@@ -569,13 +571,20 @@ const EmployerDirectory = () => {
                   <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                     <div>
                       <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
-                      <Textarea
-                        id="opportunity-type"
-                        placeholder="e.g., Internship, Full-time, Part-time..."
-                        value={opportunityType}
-                        onChange={(e) => setOpportunityType(e.target.value)}
-                        className="mt-2"
-                      />
+                      <Select value={opportunityType} onValueChange={setOpportunityType}>
+                        <SelectTrigger id="opportunity-type" className="mt-2">
+                          <SelectValue placeholder="Select opportunity type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                          {employer.individual_roles && employer.individual_roles.map((role, index) => (
+                            <SelectItem key={index} value={role.title}>
+                              {role.title}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label htmlFor="message">Message *</Label>
