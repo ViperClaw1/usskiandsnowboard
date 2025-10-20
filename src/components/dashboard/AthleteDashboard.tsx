@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MapPin, Briefcase, Building2, Users, UserCheck, UserX, Eye, EyeOff } from "lucide-react";
+import { LogOut, User as UserIcon, MapPin, Briefcase, Building2, Users, UserCheck, UserX, Eye, EyeOff, Settings } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
 import { useNavigate } from "react-router-dom";
@@ -167,7 +167,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
           <div className="flex items-center gap-2">
             <NotificationBell userId={user.id} />
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="shrink-0">
-              <UserIcon className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
               <LogOut className="h-4 w-4" />

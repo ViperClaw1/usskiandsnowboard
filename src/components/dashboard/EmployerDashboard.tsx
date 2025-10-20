@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, Linkedin, Eye } from "lucide-react";
+import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, Linkedin, Eye, Settings } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -180,7 +180,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
           <div className="flex items-center gap-2">
             <NotificationBell userId={user.id} />
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="shrink-0">
-              <Briefcase className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
               <LogOut className="h-4 w-4" />
