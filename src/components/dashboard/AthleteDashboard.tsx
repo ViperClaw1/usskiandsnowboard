@@ -132,13 +132,15 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.warn("Sign out warning:", error);
+        console.error("Sign out error:", error);
+        toast.error("Failed to sign out");
+        return;
       }
-    } catch (e) {
-      console.warn("Sign out exception:", e);
-    } finally {
       toast.success("Signed out successfully");
-      navigate("/");
+      navigate("/auth");
+    } catch (e) {
+      console.error("Sign out exception:", e);
+      toast.error("Failed to sign out");
     }
   };
 
