@@ -68,10 +68,9 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast.success("Check your email to confirm your account!", {
-        description: `We've sent a confirmation link to ${email}`,
-        duration: 6000,
-      });
+      // Redirect to email verification page
+      navigate("/email-verification");
+      
       setEmail("");
       setPassword("");
       setFullName("");

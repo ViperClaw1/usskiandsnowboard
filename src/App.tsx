@@ -10,6 +10,7 @@ import Athletes from "./pages/Athletes";
 import Employers from "./pages/Employers";
 import News from "./pages/News";
 import NotFound from "./pages/NotFound";
+import EmailVerification from "./pages/EmailVerification";
 import AllUsers from "./pages/admin/AllUsers";
 import AllAthletes from "./pages/admin/AllAthletes";
 import AllEmployers from "./pages/admin/AllEmployers";
@@ -28,6 +29,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/email-verification" element={<EmailVerification />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/athletes" element={<Athletes />} />
           <Route path="/employers" element={<Employers />} />

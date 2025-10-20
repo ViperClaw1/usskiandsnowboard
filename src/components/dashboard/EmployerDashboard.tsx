@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, Linkedin } from "lucide-react";
+import { LogOut, Briefcase, Search, Building2, Users, UserCheck, UserX, Globe, Linkedin, Eye, EyeOff } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { EmployerOnboardingWizard } from "@/components/employer/EmployerOnboardingWizard";
@@ -32,6 +34,8 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
   const [acceptedCount, setAcceptedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [featuredAthletes, setFeaturedAthletes] = useState<any[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"public" | "connected">("public");
 
   useEffect(() => {
     loadProfile();
@@ -161,20 +165,51 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
               setShowPendingRequests(false);
               setShowAcceptedConnections(false);
               setShowRejectedConnections(false);
+              setShowPreview(false);
             }}
           >
             Partner Dashboard
           </h1>
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline ml-2">Sign Out</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell userId={user.id} />
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline ml-2">Sign Out</span>
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
         <div className="grid gap-4 sm:gap-6">
-          {!showDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
+          {showPreview ? (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <Button variant="outline" onClick={() => setShowPreview(false)}>
+                  Back to Dashboard
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant={previewMode === "public" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewMode("public")}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Public View
+                  </Button>
+                  <Button
+                    variant={previewMode === "connected" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewMode("connected")}
+                  >
+                    <EyeOff className="h-4 w-4 mr-2" />
+                    Connected View
+                  </Button>
+                </div>
+              </div>
+              <EmployerProfilePreview profile={profile} viewMode={previewMode} />
+            </>
+          ) : !showDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
               {profile && profile.profile_completeness < 100 && (
                 <ProfileCompleteness 
@@ -234,7 +269,7 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                         Complete your company profile to access the athlete directory
                       </p>
                     )}
-                    <div className="flex gap-3 sm:gap-4">
+                    <div className="flex flex-wrap gap-3 sm:gap-4">
                       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
                         <DialogTrigger asChild>
                           <Button variant={profile ? "outline" : "default"} size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
@@ -256,6 +291,12 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
                           )}
                         </DialogContent>
                       </Dialog>
+                      {profile && (
+                        <Button onClick={() => setShowPreview(true)} variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+                          Preview Profile
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

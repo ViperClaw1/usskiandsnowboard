@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MapPin, Briefcase, Building2, Users, UserCheck, UserX, Eye } from "lucide-react";
+import { LogOut, User as UserIcon, MapPin, Briefcase, Building2, Users, UserCheck, UserX, Eye, EyeOff } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
 import { useNavigate } from "react-router-dom";
 import { AthleteOnboardingWizard } from "@/components/athlete/AthleteOnboardingWizard";
 import ProfileForm from "@/components/athlete/ProfileForm";
@@ -36,6 +38,8 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
   const [acceptedCount, setAcceptedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [featuredEmployers, setFeaturedEmployers] = useState<any[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"public" | "connected">("public");
 
   useEffect(() => {
     loadProfile();
@@ -155,20 +159,51 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
               setShowPendingRequests(false);
               setShowAcceptedConnections(false);
               setShowRejectedConnections(false);
+              setShowPreview(false);
             }}
           >
             Athlete Dashboard
           </h1>
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline ml-2">Sign Out</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell userId={user.id} />
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline ml-2">Sign Out</span>
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
         <div className="grid gap-4 sm:gap-6">
-          {!showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
+          {showPreview ? (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <Button variant="outline" onClick={() => setShowPreview(false)}>
+                  Back to Dashboard
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant={previewMode === "public" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewMode("public")}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Public View
+                  </Button>
+                  <Button
+                    variant={previewMode === "connected" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewMode("connected")}
+                  >
+                    <EyeOff className="h-4 w-4 mr-2" />
+                    Connected View
+                  </Button>
+                </div>
+              </div>
+              <AthleteProfilePreview profile={profile?.profiles} profileData={profile} viewMode={previewMode} />
+            </>
+          ) : !showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
               {profile && profile.profile_completeness < 100 && (
                 <ProfileCompleteness 
@@ -254,6 +289,10 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-3">
                             <Button onClick={() => setShowProfileDialog(true)} variant="outline" size="sm" className="w-full sm:w-auto h-8 text-xs">
                               Edit Profile
+                            </Button>
+                            <Button onClick={() => setShowPreview(true)} variant="outline" size="sm" className="w-full sm:w-auto h-8 text-xs">
+                              <Eye className="h-3 w-3 mr-1" />
+                              Preview Profile
                             </Button>
                           </div>
                         </div>
