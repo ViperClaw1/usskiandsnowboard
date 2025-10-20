@@ -41,33 +41,27 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
           </div>
 
           {/* About */}
-          {profile?.about && (
-            <div>
-              <h3 className="font-semibold mb-2">About</h3>
-              <p className="text-muted-foreground">{profile.about}</p>
-            </div>
-          )}
+          <div>
+            <h3 className="font-semibold mb-2">About</h3>
+            <p className="text-muted-foreground">{profile?.about || "Not provided"}</p>
+          </div>
 
           {/* Company Details Grid */}
           <div className="grid grid-cols-2 gap-4">
-            {profile?.company_size && (
-              <div>
-                <p className="text-sm font-medium flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  Company Size
-                </p>
-                <p className="text-sm text-muted-foreground">{profile.company_size}</p>
-              </div>
-            )}
-            {profile?.hq_location && (
-              <div>
-                <p className="text-sm font-medium flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  Headquarters
-                </p>
-                <p className="text-sm text-muted-foreground">{profile.hq_location}</p>
-              </div>
-            )}
+            <div>
+              <p className="text-sm font-medium flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                Company Size
+              </p>
+              <p className="text-sm text-muted-foreground">{profile?.company_size || "Not provided"}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                Headquarters
+              </p>
+              <p className="text-sm text-muted-foreground">{profile?.hq_location || "Not provided"}</p>
+            </div>
           </div>
 
           {/* Links */}
