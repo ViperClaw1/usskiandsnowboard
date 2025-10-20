@@ -203,6 +203,7 @@ const Athletes = () => {
                 {!user && (
                   <div 
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+                    onClick={() => navigate("/")}
                   >
                     <Card 
                       className="max-w-md w-full shadow-2xl border-2"
