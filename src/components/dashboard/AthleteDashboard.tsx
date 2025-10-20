@@ -23,9 +23,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 interface AthleteDashboardProps {
   user: User;
+  isAdminView?: boolean;
 }
 
-const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
+const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) => {
   const navigate = useNavigate();
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showEmployerDirectory, setShowEmployerDirectory] = useState(false);
@@ -447,21 +448,23 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
         </div>
       </main>
 
-      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
-          <DialogHeader>
-            <DialogTitle>{profile ? "Edit Your Profile" : "Complete Your Athlete Profile"}</DialogTitle>
-            <DialogDescription>
-              {profile ? "Update your athletic background and career interests" : "Share your athletic background, skills, and career interests"}
-            </DialogDescription>
-          </DialogHeader>
-          {profile ? (
-            <ProfileForm userId={user.id} onComplete={handleProfileComplete} />
-          ) : (
-            <AthleteOnboardingWizard user={user} onComplete={handleProfileComplete} />
-          )}
-        </DialogContent>
-      </Dialog>
+      {!isAdminView && (
+        <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
+            <DialogHeader>
+              <DialogTitle>{profile ? "Edit Your Profile" : "Complete Your Athlete Profile"}</DialogTitle>
+              <DialogDescription>
+                {profile ? "Update your athletic background and career interests" : "Share your athletic background, skills, and career interests"}
+              </DialogDescription>
+            </DialogHeader>
+            {profile ? (
+              <ProfileForm userId={user.id} onComplete={handleProfileComplete} />
+            ) : (
+              <AthleteOnboardingWizard user={user} onComplete={handleProfileComplete} />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

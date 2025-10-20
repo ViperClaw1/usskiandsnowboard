@@ -129,7 +129,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 </p>
               </CardContent>
             </Card>
-            <AthleteDashboard user={user} />
+            <AthleteDashboard user={user} isAdminView={true} />
           </TabsContent>
 
           <TabsContent value="employer" className="mt-0">
@@ -140,7 +140,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
                 </p>
               </CardContent>
             </Card>
-            <EmployerDashboard user={user} />
+            <EmployerDashboard user={user} isAdminView={true} />
           </TabsContent>
         </Tabs>
       </main>

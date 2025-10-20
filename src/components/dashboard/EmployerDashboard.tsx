@@ -19,9 +19,10 @@ import { ProfileCompleteness } from "@/components/dashboard/ProfileCompleteness"
 
 interface EmployerDashboardProps {
   user: User;
+  isAdminView?: boolean;
 }
 
-const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
+const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -45,11 +46,11 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
   useEffect(() => {
     if (profile?.id) {
       loadConnectionCounts();
-    } else if (!loading && profile === null) {
-      // Automatically open profile creation dialog if no profile exists
+    } else if (!loading && profile === null && !isAdminView) {
+      // Automatically open profile creation dialog if no profile exists (not in admin view)
       setShowProfileDialog(true);
     }
-  }, [profile, loading]);
+  }, [profile, loading, isAdminView]);
 
   const loadProfile = async () => {
     try {
