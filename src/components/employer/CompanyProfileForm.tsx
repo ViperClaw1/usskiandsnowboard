@@ -382,14 +382,17 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
           name="opportunities_offered"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Opportunities Offered</FormLabel>
+              <FormLabel>Job & Opportunity Links</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describe the types of opportunities you offer (internships, full-time positions, etc.)"
-                  className="min-h-[100px]"
+                  placeholder="Share links to your job postings and career opportunities:&#10;&#10;LinkedIn: https://linkedin.com/jobs/...&#10;Careers Page: https://yourcompany.com/careers&#10;Specific Role: https://indeed.com/job/..."
+                  className="min-h-[120px]"
                   {...field}
                 />
               </FormControl>
+              <p className="text-xs text-muted-foreground mt-1">
+                Paste links to LinkedIn jobs, Indeed postings, your careers page, or specific opportunities
+              </p>
               <FormMessage />
             </FormItem>
           )}

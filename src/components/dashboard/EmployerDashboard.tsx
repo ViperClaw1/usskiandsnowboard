@@ -403,156 +403,60 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
               </Card>
 
               {profile && (
-                <>
-                  {/* Opportunity Showcase */}
-                  <Card className="shadow-elegant overflow-hidden border-2 border-primary/20">
-                    <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-primary/10">
-                      <CardTitle className="text-lg sm:text-xl lg:text-2xl flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-primary" />
-                        Your Opportunities
-                      </CardTitle>
-                      <CardDescription className="text-xs sm:text-sm">
-                        What you're offering to athletes
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 sm:p-6">
-                      {profile.opportunities_offered ? (
-                        <div className="space-y-3">
-                          <p className="text-sm text-foreground whitespace-pre-wrap">{profile.opportunities_offered}</p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setShowProfileDialog(true)}
-                            className="text-xs"
-                          >
-                            Update Opportunities
-                          </Button>
+                <Card className="shadow-elegant overflow-hidden border-2 border-primary/20">
+                  <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-primary/10">
+                    <CardTitle className="text-lg sm:text-xl lg:text-2xl flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-primary" />
+                      Your Opportunities
+                    </CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
+                      Share links to your job postings and career pages
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4 sm:p-6">
+                    {profile.opportunities_offered ? (
+                      <div className="space-y-3">
+                        <div className="prose prose-sm max-w-none">
+                          <p className="text-sm text-foreground whitespace-pre-wrap break-words">{profile.opportunities_offered}</p>
                         </div>
-                      ) : (
-                        <div className="text-center py-6 space-y-3">
-                          <p className="text-sm text-muted-foreground">
-                            Attract top talent by describing the opportunities you offer
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setShowProfileDialog(true)}
+                          className="text-xs"
+                        >
+                          Update Links
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="text-center py-4">
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Make it easy for athletes to explore your opportunities
                           </p>
-                          <ul className="text-xs text-muted-foreground space-y-1 text-left max-w-md mx-auto">
-                            <li>• Full-time or part-time positions</li>
-                            <li>• Internships and mentorship programs</li>
-                            <li>• Flexible schedules for training</li>
-                            <li>• Career development opportunities</li>
-                          </ul>
+                          <div className="text-left max-w-md mx-auto space-y-2 mb-4">
+                            <p className="text-xs font-medium text-foreground">Share links to:</p>
+                            <ul className="text-xs text-muted-foreground space-y-1.5 pl-4">
+                              <li>• LinkedIn job postings</li>
+                              <li>• Indeed or other job board listings</li>
+                              <li>• Your company careers page</li>
+                              <li>• Specific internship or training programs</li>
+                            </ul>
+                          </div>
+                        </div>
+                        <div className="flex justify-center">
                           <Button 
                             onClick={() => setShowProfileDialog(true)}
                             size="sm"
                             className="text-xs"
                           >
-                            Add Opportunities
+                            Add Job Links
                           </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Profile Engagement Insights */}
-                  <Card className="shadow-elegant overflow-hidden">
-                    <CardHeader className="p-4 sm:p-6">
-                      <CardTitle className="text-lg sm:text-xl lg:text-2xl">Profile Insights</CardTitle>
-                      <CardDescription className="text-xs sm:text-sm">
-                        How athletes are engaging with your company
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 sm:p-6 pt-0">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-2xl sm:text-3xl font-bold text-primary">{profile.profile_views || 0}</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">Total Profile Views</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-2xl sm:text-3xl font-bold text-accent">{acceptedCount + pendingCount}</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">Athletes Interested</p>
                         </div>
                       </div>
-                      {profile.profile_completeness < 100 && (
-                        <div className="mt-4 p-3 bg-accent/10 rounded-lg border border-accent/20">
-                          <p className="text-xs sm:text-sm text-foreground font-medium mb-2">
-                            💡 Boost Your Visibility
-                          </p>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Companies with complete profiles get 3x more views from athletes
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setShowProfileDialog(true)}
-                            className="text-xs w-full sm:w-auto"
-                          >
-                            Complete Profile
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* What Makes You Stand Out */}
-                  {(!profile.about || !profile.opportunities_offered || !profile.website) && (
-                    <Card className="shadow-elegant overflow-hidden border border-accent/30">
-                      <CardHeader className="p-4 sm:p-6">
-                        <CardTitle className="text-lg sm:text-xl lg:text-2xl">Stand Out to Athletes</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">
-                          Help athletes understand why they should connect with you
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
-                        {!profile.about && (
-                          <div className="p-3 bg-muted rounded-lg">
-                            <p className="text-sm font-medium mb-1">Tell your company story</p>
-                            <p className="text-xs text-muted-foreground mb-2">
-                              Athletes want to know your mission, values, and culture
-                            </p>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => setShowProfileDialog(true)}
-                              className="text-xs"
-                            >
-                              Add Company Description
-                            </Button>
-                          </div>
-                        )}
-                        {!profile.opportunities_offered && (
-                          <div className="p-3 bg-muted rounded-lg">
-                            <p className="text-sm font-medium mb-1">Describe your opportunities</p>
-                            <p className="text-xs text-muted-foreground mb-2">
-                              Be specific about roles, schedules, and how you support athlete transitions
-                            </p>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => setShowProfileDialog(true)}
-                              className="text-xs"
-                            >
-                              Add Opportunities
-                            </Button>
-                          </div>
-                        )}
-                        {!profile.website && (
-                          <div className="p-3 bg-muted rounded-lg">
-                            <p className="text-sm font-medium mb-1">Link your website</p>
-                            <p className="text-xs text-muted-foreground mb-2">
-                              Athletes research companies before connecting—make it easy
-                            </p>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => setShowProfileDialog(true)}
-                              className="text-xs"
-                            >
-                              Add Website
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
+                    )}
+                  </CardContent>
+                </Card>
               )}
             </>
           ) : showDirectory ? (
