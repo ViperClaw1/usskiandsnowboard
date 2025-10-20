@@ -122,7 +122,7 @@ const OpportunitiesForm = ({ userId, existingProfile, onSuccess }: Opportunities
               </div>
               <div className="space-y-2">
                 <Input
-                  placeholder="Link Title (e.g., Marketing Manager)"
+                  placeholder="Job Title (e.g., Marketing Manager)"
                   value={role.title}
                   onChange={(e) => {
                     const newRoles = [...roles];
