@@ -80,6 +80,10 @@ const AthleteDirectory = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [filterSport, setFilterSport] = useState<string>("");
+  const [filterAvailability, setFilterAvailability] = useState<string>("");
+  const [filterSkills, setFilterSkills] = useState<string>("");
+  const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
 
   useEffect(() => {
     loadAthletes();
@@ -255,25 +259,54 @@ const AthleteDirectory = () => {
     }
   };
 
-  // Filter athletes based on search term
+  // Filter athletes based on search term and filters
   const filteredAthletes = useMemo(() => {
-    if (!searchTerm.trim()) return athletes;
-    
-    const search = searchTerm.toLowerCase();
-    return athletes.filter(athlete => {
-      const searchableFields = [
-        athlete.profiles.full_name,
-        athlete.sport_discipline,
-        athlete.bio,
-        athlete.professional_highlights,
-        athlete.availability,
-        ...(athlete.skills || []),
-        ...(athlete.career_interests || []),
-      ].filter(Boolean).join(" ").toLowerCase();
-      
-      return searchableFields.includes(search);
-    });
-  }, [athletes, searchTerm]);
+    let result = athletes;
+
+    // Text search filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter(athlete => {
+        const searchableFields = [
+          athlete.profiles.full_name,
+          athlete.sport_discipline,
+          athlete.bio,
+          athlete.professional_highlights,
+          athlete.availability,
+          ...(athlete.skills || []),
+          ...(athlete.career_interests || []),
+        ].filter(Boolean).join(" ").toLowerCase();
+        
+        return searchableFields.includes(search);
+      });
+    }
+
+    // Sport filter
+    if (filterSport) {
+      result = result.filter(athlete => athlete.sport_discipline === filterSport);
+    }
+
+    // Availability filter
+    if (filterAvailability) {
+      result = result.filter(athlete => athlete.availability === filterAvailability);
+    }
+
+    // Skills filter
+    if (filterSkills) {
+      result = result.filter(athlete => 
+        athlete.skills?.some(skill => skill.toLowerCase().includes(filterSkills.toLowerCase()))
+      );
+    }
+
+    // Career interests filter
+    if (filterCareerInterests) {
+      result = result.filter(athlete => 
+        athlete.career_interests?.some(interest => interest.toLowerCase().includes(filterCareerInterests.toLowerCase()))
+      );
+    }
+
+    return result;
+  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
 
   // Pull to refresh functionality
   const handleRefresh = async () => {
@@ -365,8 +398,9 @@ const AthleteDirectory = () => {
         </div>
       )}
 
-      {/* Search Bar */}
-      <div className="mb-6">
+      {/* Search and Filters */}
+      <div className="mb-6 space-y-4">
+        {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -385,10 +419,69 @@ const AthleteDirectory = () => {
             </button>
           )}
         </div>
-        {searchTerm && (
-          <p className="text-sm text-muted-foreground mt-2">
-            Showing {filteredAthletes.length} of {athletes.length} athletes
-          </p>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <Select value={filterSport} onValueChange={setFilterSport}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by Sport" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Sports</SelectItem>
+              {Array.from(new Set(athletes.map(a => a.sport_discipline).filter(Boolean))).map(sport => (
+                <SelectItem key={sport} value={sport!}>{sport}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterAvailability} onValueChange={setFilterAvailability}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by Availability" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Availability</SelectItem>
+              {Array.from(new Set(athletes.map(a => a.availability).filter(Boolean))).map(avail => (
+                <SelectItem key={avail} value={avail!}>{avail}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Input
+            type="text"
+            placeholder="Filter by Skill..."
+            value={filterSkills}
+            onChange={(e) => setFilterSkills(e.target.value)}
+          />
+
+          <Input
+            type="text"
+            placeholder="Filter by Interest..."
+            value={filterCareerInterests}
+            onChange={(e) => setFilterCareerInterests(e.target.value)}
+          />
+        </div>
+
+        {/* Clear Filters Button */}
+        {(filterSport || filterAvailability || filterSkills || filterCareerInterests || searchTerm) && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {filteredAthletes.length} of {athletes.length} athletes
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setFilterSport("");
+                setFilterAvailability("");
+                setFilterSkills("");
+                setFilterCareerInterests("");
+              }}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+          </div>
         )}
       </div>
 
