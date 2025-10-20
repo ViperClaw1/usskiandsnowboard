@@ -368,7 +368,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                       {featuredAthletes.length > 0 ? (
                         featuredAthletes.map((athlete) => (
                           <div key={athlete.id} className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
-                            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 shrink-0">
+                            <Avatar className="h-15 w-15 sm:h-18 sm:w-18 lg:h-24 lg:w-24 shrink-0">
                               <AvatarImage src={athlete.photo_url ?? undefined} />
                               <AvatarFallback>AT</AvatarFallback>
                             </Avatar>
