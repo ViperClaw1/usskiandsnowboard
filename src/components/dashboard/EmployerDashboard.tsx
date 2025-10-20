@@ -185,6 +185,12 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
       </header>
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
+        <div className="mb-6 p-4 bg-card rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground text-center">
+            Welcome back! Discover athletes who bring world-class excellence to your organization.
+          </p>
+        </div>
+        
         <div className="grid gap-4 sm:gap-6">
           {showPreview ? (
             <>

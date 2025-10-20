@@ -43,11 +43,10 @@ const Index = () => {
         <section className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center bg-gradient-to-b from-background to-muted">
           <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-in">
-              Athlete Career Dashboard
+              Launch Your Next Chapter
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-              Connecting U.S. Ski & Snowboard athletes with career opportunities, 
-              empowering transitions from competition to meaningful careers.
+              Building on 130+ years of supporting Olympic dreams, we're proud to help our athletes transition from competition to fulfilling careers that honor their dedication, drive, and extraordinary skills.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
               <Link to="/auth?type=athlete" className="w-full sm:w-auto">
@@ -77,8 +76,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Athletes</h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Create a comprehensive professional profile showcasing your skills, 
-                  experience, and career interests beyond the slopes.
+                  Showcase the discipline, leadership, and drive that made you an elite athlete. Your next opportunity awaits beyond the slopes.
                 </p>
               </div>
 
@@ -88,8 +86,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Partners</h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Discover talented, driven athletes ready for career opportunities. 
-                  Search by skills, interests, and location.
+                  Connect with world-class talent. Our athletes bring unmatched dedication, resilience, and excellence to every challenge.
                 </p>
               </div>
 
@@ -99,7 +96,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">Engage</h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Our Athlete Development team helps optimize Athlete profiles, curate partners, and facilitates actionable connections
+                  Our Athlete Development team champions your transition—optimizing profiles, curating opportunities, and making meaningful connections happen.
                 </p>
               </div>
             </div>
@@ -108,9 +105,9 @@ const Index = () => {
 
         <section className="py-12 sm:py-16 lg:py-20">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-foreground">Learn more about US Ski & Snowboard</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-foreground">Join Our Legacy</h2>
             <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-              Support the U.S. Ski & Snowboard Team and take your fandom to the next level
+              For over 130 years, U.S. Ski & Snowboard has supported Olympic dreams. Join the journey and become an Insider today.
             </p>
             <a href="https://insider.usskiandsnowboard.org/s/" target="_blank" rel="noopener noreferrer">
               <Button size="lg" className="w-full sm:w-auto">Become An Insider</Button>

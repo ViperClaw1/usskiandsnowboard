@@ -232,7 +232,7 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
       {filteredRequests.length === 0 ? (
         <div className="text-center p-8">
           <p className="text-muted-foreground">
-            {requests.length === 0 ? "No pending connection requests" : "No requests match your filters"}
+            {requests.length === 0 ? "Opportunities under review—the right connection is on its way. Make sure your profile is complete and visible to showcase your excellence." : "No requests match your filters"}
           </p>
         </div>
       ) : (

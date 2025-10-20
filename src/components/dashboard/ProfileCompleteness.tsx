@@ -30,6 +30,7 @@ export const ProfileCompleteness = ({
     <Card className="shadow-elegant">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Portfolio Completeness - {completeness}%</CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">A complete profile showcases the full story of your excellence and opens more doors.</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative pt-3 pb-6">

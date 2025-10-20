@@ -276,7 +276,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
       {filteredRequests.length === 0 ? (
         <div className="text-center p-8">
           <p className="text-muted-foreground">
-            {requests.length === 0 ? "No pending connection requests" : "No requests match your filters"}
+            {requests.length === 0 ? "Your next champion awaits—explore our athlete directory to make connections" : "No requests match your filters"}
           </p>
         </div>
       ) : (

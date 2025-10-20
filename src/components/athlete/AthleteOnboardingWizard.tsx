@@ -209,8 +209,8 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       case 0:
         return (
           <OnboardingStep
-            title="Welcome to U.S. Ski & Snowboard Career Network!"
-            description="Let's set up your athlete profile in just a few minutes. We'll guide you through each step."
+            title="Welcome to Your Next Chapter!"
+            description="You've achieved excellence on snow—now let's showcase the skills and drive that will power your career beyond competition."
           >
             <div className="flex justify-center">
               <Button size="lg" onClick={nextStep} className="h-14 px-12 text-lg">

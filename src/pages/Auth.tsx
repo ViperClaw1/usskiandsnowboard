@@ -163,8 +163,8 @@ const Auth = () => {
             </CardTitle>
             <CardDescription>
               {userType === "athlete" 
-                ? "Access your career opportunities dashboard" 
-                : "Find talented athletes for your organization"}
+                ? "Access opportunities that match your Olympic-level excellence" 
+                : "Discover world-class athletes ready to bring their winning mindset to your team"}
             </CardDescription>
           </CardHeader>
           <CardContent>

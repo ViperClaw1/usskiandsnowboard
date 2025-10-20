@@ -203,8 +203,8 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
       case 0:
         return (
           <OnboardingStep
-            title="Let's set up your company profile"
-            description="Connect with top athletic talent in just a few minutes"
+            title="Partner with Champions"
+            description="Connect with elite athletes who bring Olympic-level dedication, resilience, and performance to every opportunity. Let's set up your company profile in just a few minutes."
           >
             <div className="flex justify-center">
               <Button size="lg" onClick={nextStep} className="h-14 px-12 text-lg">
