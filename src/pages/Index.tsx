@@ -46,7 +46,7 @@ const Index = () => {
         <section className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center bg-gradient-to-b from-background to-muted">
           <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-in">
-              U.S. Ski & Snowboard Athlete Careers
+              Launch Your Next Chapter
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Supporting 130+ years of Olympic excellence. Connecting athletes with careers that honor their dedication, drive, and extraordinary talent.
@@ -77,9 +77,9 @@ const Index = () => {
                 <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">Athletes</h3>
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Athletes</h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Create your profile and showcase your skills beyond the slopes.
+                  Showcase the discipline, leadership, and drive that made you an elite athlete. Your next opportunity awaits beyond the slopes.
                 </p>
               </div>
 
@@ -87,9 +87,9 @@ const Index = () => {
                 <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
                   <Briefcase className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">Partners</h3>
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Partners</h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Connect with world-class talent who bring Olympic-level dedication.
+                  Connect with world-class talent. Our athletes bring unmatched dedication, resilience, and excellence to every challenge.
                 </p>
               </div>
 
@@ -97,9 +97,9 @@ const Index = () => {
                 <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <TrendingUp className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">Connect</h3>
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">Engage</h3>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  Our team helps make meaningful career connections happen.
+                  Our Athlete Development team champions your transition—optimizing profiles, curating opportunities, and making meaningful connections happen.
                 </p>
               </div>
             </div>
@@ -108,9 +108,9 @@ const Index = () => {
 
         <section className="py-12 sm:py-16 lg:py-20">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-foreground">Join the U.S. Ski & Snowboard Family</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-foreground">Join Our Legacy</h2>
             <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-              Support our athletes and become an Insider today.
+              For over 130 years, U.S. Ski & Snowboard has supported Olympic dreams. Join the journey and become an Insider today.
             </p>
             <a href="https://insider.usskiandsnowboard.org/s/" target="_blank" rel="noopener noreferrer">
               <Button size="lg" className="w-full sm:w-auto">Become An Insider</Button>
