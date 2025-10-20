@@ -16,6 +16,7 @@ export const MobileNav = () => {
   const navItems = [
     { to: "/athletes", label: "Athletes" },
     { to: "/employers", label: "Partners" },
+    { to: "/schedule.pdf", label: "Schedule", external: true },
     { to: "/news", label: "News" },
   ];
 
@@ -32,19 +33,32 @@ export const MobileNav = () => {
       >
         <nav className="flex flex-col gap-2 mt-8">
           {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={() => setOpen(false)}
-              className={cn(
-                "text-lg font-medium transition-all duration-200 py-3 px-4 rounded-md",
-                location.pathname === item.to
-                  ? "bg-primary/10 text-primary border-l-4 border-primary"
-                  : "text-foreground hover:text-primary hover:bg-muted"
-              )}
-            >
-              {item.label}
-            </Link>
+            item.external ? (
+              <a
+                key={item.to}
+                href={item.to}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="text-lg font-medium transition-all duration-200 py-3 px-4 rounded-md text-foreground hover:text-primary hover:bg-muted"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "text-lg font-medium transition-all duration-200 py-3 px-4 rounded-md",
+                  location.pathname === item.to
+                    ? "bg-primary/10 text-primary border-l-4 border-primary"
+                    : "text-foreground hover:text-primary hover:bg-muted"
+                )}
+              >
+                {item.label}
+              </Link>
+            )
           ))}
           <Link to="/auth" onClick={() => setOpen(false)} className="mt-4">
             <Button className="w-full">Sign In</Button>
