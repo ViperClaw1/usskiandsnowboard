@@ -16,6 +16,7 @@ const roleSchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
   type: z.string().min(1, "Link type is required"),
   url: z.string().url("Please enter a valid URL"),
+  location: z.string().min(1, "Location is required"),
 });
 
 const formSchema = z.object({
@@ -45,7 +46,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(existingProfile?.logo_url || null);
   const [uploading, setUploading] = useState(false);
-  const [roles, setRoles] = useState<Array<{ title: string; type: string; url: string }>>(
+  const [roles, setRoles] = useState<Array<{ title: string; type: string; url: string; location: string }>>(
     existingProfile?.individual_roles || []
   );
 
@@ -480,6 +481,15 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
                       setRoles(newRoles);
                     }}
                   />
+                  <Input
+                    placeholder="Remote, New York, NY, etc."
+                    value={role.location}
+                    onChange={(e) => {
+                      const newRoles = [...roles];
+                      newRoles[index].location = e.target.value;
+                      setRoles(newRoles);
+                    }}
+                  />
                 </div>
               </div>
             ))}
@@ -491,7 +501,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
                 size="sm"
                 onClick={() => {
                   if (roles.length < 3) {
-                    setRoles([...roles, { title: "", type: "", url: "" }]);
+                    setRoles([...roles, { title: "", type: "", url: "", location: "" }]);
                   }
                 }}
                 className="w-full"

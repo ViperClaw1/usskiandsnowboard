@@ -346,7 +346,12 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                             {profile.individual_roles.map((role: any, index: number) => (
                               <div key={index} className="p-3 border rounded-lg hover:border-primary/50 transition-colors">
                                 <div className="flex items-start justify-between gap-2 mb-1">
-                                  <p className="text-sm font-medium">{role.title}</p>
+                                  <div>
+                                    <p className="text-sm font-medium">{role.title}</p>
+                                    {role.location && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">{role.location}</p>
+                                    )}
+                                  </div>
                                   <span className="text-xs text-muted-foreground shrink-0">{role.type}</span>
                                 </div>
                                 <a 
