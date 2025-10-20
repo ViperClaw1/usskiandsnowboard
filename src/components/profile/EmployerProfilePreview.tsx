@@ -70,6 +70,55 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
             )}
           </div>
 
+          {/* Links */}
+          <div className="border-t pt-4">
+            <h3 className="font-semibold mb-3">Key Links</h3>
+            <div className="space-y-2">
+              {profile?.website && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    Company Website
+                  </a>
+                </div>
+              )}
+              {profile?.linkedin_url && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Linkedin className="h-4 w-4 text-muted-foreground" />
+                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    LinkedIn Profile
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Contact Info */}
+          {(profile?.contact_person || profile?.contact_email) && (
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-3">Contact Information</h3>
+              <div className="space-y-2">
+                {profile?.contact_person && (
+                  <div className="text-sm">
+                    <p className="font-medium">Contact Person</p>
+                    <p className="text-muted-foreground">
+                      {profile.contact_person}
+                      {profile?.contact_title && ` - ${profile.contact_title}`}
+                    </p>
+                  </div>
+                )}
+                {profile?.contact_email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${profile.contact_email}`} className="text-primary hover:underline">
+                      {profile.contact_email}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Job Opportunities */}
           {(profile?.job_board_url || (profile?.individual_roles && profile.individual_roles.length > 0)) && (
             <div className="border-t pt-4">
@@ -118,55 +167,6 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Links - Always visible */}
-          <div className="border-t pt-4">
-            <h3 className="font-semibold mb-3">Links</h3>
-            <div className="space-y-2">
-              {profile?.website && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    Company Website
-                  </a>
-                </div>
-              )}
-              {profile?.linkedin_url && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Linkedin className="h-4 w-4 text-muted-foreground" />
-                  <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    LinkedIn Profile
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          {(profile?.contact_person || profile?.contact_email) && (
-            <div className="border-t pt-4">
-              <h3 className="font-semibold mb-3">Contact Information</h3>
-              <div className="space-y-2">
-                {profile?.contact_person && (
-                  <div className="text-sm">
-                    <p className="font-medium">Contact Person</p>
-                    <p className="text-muted-foreground">
-                      {profile.contact_person}
-                      {profile?.contact_title && ` - ${profile.contact_title}`}
-                    </p>
-                  </div>
-                )}
-                {profile?.contact_email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a href={`mailto:${profile.contact_email}`} className="text-primary hover:underline">
-                      {profile.contact_email}
-                    </a>
                   </div>
                 )}
               </div>
