@@ -8,13 +8,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
-import { useAuth } from "@/components/auth/AuthContext";
 
 export const MobileNav = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const { session } = useAuth();
 
   const navItems = [
     { to: "/athletes", label: "Athletes" },
@@ -24,14 +21,12 @@ export const MobileNav = () => {
   ];
 
   return (
-    <div className="flex items-center gap-2 md:hidden">
-      {session?.user && <NotificationBell userId={session.user.id} />}
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative">
-            <Menu className="h-6 w-6 transition-transform duration-200" />
-          </Button>
-        </SheetTrigger>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild className="md:hidden">
+        <Button variant="ghost" size="icon" className="relative">
+          <Menu className="h-6 w-6 transition-transform duration-200" />
+        </Button>
+      </SheetTrigger>
       <SheetContent 
         side="right" 
         className="w-[280px] sm:w-[320px] animate-slide-in-right"
@@ -71,6 +66,5 @@ export const MobileNav = () => {
         </nav>
       </SheetContent>
     </Sheet>
-    </div>
   );
 };
