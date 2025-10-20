@@ -146,7 +146,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select link type" />
+                      <SelectValue placeholder="Position Type" />
                     </SelectTrigger>
                     <SelectContent>
                       {linkTypes.map((type) => (
