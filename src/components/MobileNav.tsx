@@ -16,7 +16,7 @@ export const MobileNav = () => {
   const navItems = [
     { to: "/athletes", label: "Athletes" },
     { to: "/employers", label: "Partners" },
-    { to: "/schedule.pdf", label: "Schedule", external: true },
+    { to: `${import.meta.env.BASE_URL}schedule.pdf`, label: "Schedule", external: true },
     { to: "/news", label: "News" },
   ];
 
