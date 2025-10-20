@@ -39,7 +39,6 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
   const [rejectedCount, setRejectedCount] = useState(0);
   const [featuredEmployers, setFeaturedEmployers] = useState<any[]>([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewMode, setPreviewMode] = useState<"public" | "connected">("public");
 
   useEffect(() => {
     loadProfile();
@@ -185,26 +184,8 @@ const AthleteDashboard = ({ user }: AthleteDashboardProps) => {
                 <Button variant="outline" onClick={() => setShowPreview(false)}>
                   Back to Dashboard
                 </Button>
-                <div className="flex gap-2">
-                  <Button
-                    variant={previewMode === "public" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setPreviewMode("public")}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Public View
-                  </Button>
-                  <Button
-                    variant={previewMode === "connected" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setPreviewMode("connected")}
-                  >
-                    <EyeOff className="h-4 w-4 mr-2" />
-                    Connected View
-                  </Button>
-                </div>
               </div>
-              <AthleteProfilePreview profile={profile?.profiles} profileData={profile} viewMode={previewMode} />
+              <AthleteProfilePreview profile={profile?.profiles} profileData={profile} viewMode="public" />
             </>
           ) : !showEmployerDirectory && !showPendingRequests && !showAcceptedConnections && !showRejectedConnections ? (
             <>
