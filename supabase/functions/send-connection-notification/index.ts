@@ -29,6 +29,42 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Helper function to check notification preferences
+    const shouldSendEmail = async (userId: string, notificationType: string): Promise<boolean> => {
+      const { data: prefs } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!prefs) return true; // Default to sending if no preferences found
+
+      // Check if emails are completely off
+      if (prefs.digest_frequency === 'off') {
+        console.log('User has disabled all email notifications');
+        return false;
+      }
+
+      // Check if digest is enabled (not instant)
+      if (prefs.digest_frequency !== 'instant') {
+        console.log(`User prefers ${prefs.digest_frequency} digest, skipping instant email`);
+        return false;
+      }
+
+      // Check specific notification type preferences
+      if (notificationType === 'new_request' && !prefs.email_new_requests) {
+        console.log('User has disabled new request emails');
+        return false;
+      }
+
+      if (notificationType === 'request_accepted' && !prefs.email_accepted_connections) {
+        console.log('User has disabled accepted connection emails');
+        return false;
+      }
+
+      return true;
+    };
+
     // Fetch the connection request with all related data
     const { data: request, error: requestError } = await supabase
       .from("connection_requests")
@@ -66,6 +102,19 @@ const handler = async (req: Request): Promise<Response> => {
       // Determine who initiated the request and send to the recipient
       const athleteName = request.athlete_profiles.profiles.full_name || "An athlete";
       const companyName = request.employer_profiles.company_name;
+      const employerUserId = request.employer_profiles.user_id;
+      
+      // Check if employer wants to receive this email
+      if (employerUserId && !(await shouldSendEmail(employerUserId, 'new_request'))) {
+        console.log('Skipping email based on employer preferences');
+        return new Response(
+          JSON.stringify({ success: true, message: 'Email skipped due to user preferences' }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
       
       // Send email to the recipient (opposite of who initiated)
       const recipientEmail = employerEmail; // Assuming athlete initiated
@@ -128,6 +177,12 @@ const handler = async (req: Request): Promise<Response> => {
       // Send emails to both parties when a request is accepted
       const athleteName = request.athlete_profiles.profiles.full_name || "The athlete";
       const companyName = request.employer_profiles.company_name;
+      const athleteUserId = request.athlete_profiles.user_id;
+      const employerUserId = request.employer_profiles.user_id;
+
+      // Check preferences for both parties
+      const sendToAthlete = athleteUserId ? await shouldSendEmail(athleteUserId, 'request_accepted') : true;
+      const sendToEmployer = employerUserId ? await shouldSendEmail(employerUserId, 'request_accepted') : true;
       
       // Email to athlete
       const athleteHtml = `
@@ -220,7 +275,7 @@ const handler = async (req: Request): Promise<Response> => {
       `;
 
       // Send both emails
-      if (athleteEmail) {
+      if (sendToAthlete && athleteEmail) {
         await resend.emails.send({
           from: "US Ski & Snowboard <onboarding@resend.dev>",
           to: [athleteEmail],
@@ -230,7 +285,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`Acceptance email sent to athlete: ${athleteEmail}`);
       }
 
-      if (employerEmail) {
+      if (sendToEmployer && employerEmail) {
         await resend.emails.send({
           from: "US Ski & Snowboard <onboarding@resend.dev>",
           to: [employerEmail],

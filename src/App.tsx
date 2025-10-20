@@ -17,6 +17,7 @@ import AllEmployers from "./pages/admin/AllEmployers";
 import AllRequests from "./pages/admin/AllRequests";
 import AcceptedConnections from "./pages/admin/AcceptedConnections";
 import RejectedRequests from "./pages/admin/RejectedRequests";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/admin/requests" element={<AllRequests />} />
           <Route path="/admin/connections" element={<AcceptedConnections />} />
           <Route path="/admin/rejected" element={<RejectedRequests />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

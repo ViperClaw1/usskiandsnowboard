@@ -172,6 +172,9 @@ const EmployerDashboard = ({ user }: EmployerDashboardProps) => {
           </h1>
           <div className="flex items-center gap-2">
             <NotificationBell userId={user.id} />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="shrink-0">
+              <Briefcase className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline ml-2">Sign Out</span>
