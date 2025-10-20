@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { EmployerOnboardingWizard } from "@/components/employer/EmployerOnboardingWizard";
 import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
+import OpportunitiesForm from "@/components/employer/OpportunitiesForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
@@ -27,6 +28,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [showOpportunitiesDialog, setShowOpportunitiesDialog] = useState(false);
   const [showDirectory, setShowDirectory] = useState(false);
   const [showPendingRequests, setShowPendingRequests] = useState(false);
   const [showAcceptedConnections, setShowAcceptedConnections] = useState(false);
@@ -142,6 +144,11 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
 
   const handleProfileSuccess = () => {
     setShowProfileDialog(false);
+    loadProfile();
+  };
+
+  const handleOpportunitiesSuccess = () => {
+    setShowOpportunitiesDialog(false);
     loadProfile();
   };
 
@@ -272,7 +279,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                           <DialogHeader>
                             <DialogTitle>{profile ? "Edit Company Profile" : "Company Profile"}</DialogTitle>
                             <DialogDescription>
-                              {profile ? "Update your company information and opportunities" : "Fill in your company details to access the athlete directory."}
+                              {profile ? "Update your company information" : "Fill in your company details to access the athlete directory."}
                             </DialogDescription>
                           </DialogHeader>
                           {profile ? (
@@ -282,6 +289,19 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                           )}
                         </DialogContent>
                       </Dialog>
+
+                      <Dialog open={showOpportunitiesDialog} onOpenChange={setShowOpportunitiesDialog}>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
+                          <DialogHeader>
+                            <DialogTitle>Update Opportunities</DialogTitle>
+                            <DialogDescription>
+                              Add or update job postings and career page links
+                            </DialogDescription>
+                          </DialogHeader>
+                          <OpportunitiesForm userId={user.id} existingProfile={profile} onSuccess={handleOpportunitiesSuccess} />
+                        </DialogContent>
+                      </Dialog>
+
                       {profile && (
                         <Button onClick={() => setShowPreview(true)} variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
                           Preview Profile
@@ -350,7 +370,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => setShowProfileDialog(true)}
+                          onClick={() => setShowOpportunitiesDialog(true)}
                           className="text-xs w-full sm:w-auto"
                         >
                           Update Opportunities
@@ -373,7 +393,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                         </div>
                         <div className="flex justify-center">
                           <Button 
-                            onClick={() => setShowProfileDialog(true)}
+                            onClick={() => setShowOpportunitiesDialog(true)}
                             size="sm"
                             className="text-xs"
                           >
