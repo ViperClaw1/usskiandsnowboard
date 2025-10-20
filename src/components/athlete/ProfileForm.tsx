@@ -43,6 +43,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     first_name: "",
     last_name: "",
     email: "",
+    phone: "",
     sport_discipline: "",
     home_mountain: "",
     bio: "",
@@ -86,6 +87,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           first_name: profileData?.first_name || "",
           last_name: profileData?.last_name || "",
           email: athleteData.email || profileData?.email || "",
+          phone: athleteData.phone || "",
           sport_discipline: athleteData.sport_discipline || "",
           home_mountain: athleteData.home_mountain || "",
           bio: athleteData.bio || "",
@@ -105,7 +107,8 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           ...prev,
           first_name: profileData.first_name || "",
           last_name: profileData.last_name || "",
-          email: profileData.email || ""
+          email: profileData.email || "",
+          phone: ""
         }));
       }
     } catch (error: any) {
@@ -225,6 +228,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       const profileData = {
         email: formData.email,
+        phone: formData.phone,
         sport_discipline: formData.sport_discipline,
         home_mountain: formData.home_mountain || null,
         bio: formData.bio,
@@ -349,6 +353,21 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           required
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">Phone Number *</Label>
+        <Input
+          id="phone"
+          type="tel"
+          placeholder="+1 (555) 000-0000"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Used for account recovery and optional SMS notifications (private, not displayed publicly)
+        </p>
       </div>
 
       <div className="space-y-2">

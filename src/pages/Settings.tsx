@@ -14,6 +14,7 @@ interface NotificationPreferences {
   email_accepted_connections: boolean;
   email_profile_views: boolean;
   digest_frequency: 'instant' | 'daily' | 'weekly' | 'off';
+  sms_notifications_enabled: boolean;
 }
 
 export default function Settings() {
@@ -25,6 +26,7 @@ export default function Settings() {
     email_accepted_connections: true,
     email_profile_views: false,
     digest_frequency: 'instant',
+    sms_notifications_enabled: false,
   });
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export default function Settings() {
           email_accepted_connections: data.email_accepted_connections,
           email_profile_views: data.email_profile_views,
           digest_frequency: data.digest_frequency as 'instant' | 'daily' | 'weekly' | 'off',
+          sms_notifications_enabled: data.sms_notifications_enabled,
         });
       } else {
         // Create default preferences if none exist
@@ -89,6 +92,7 @@ export default function Settings() {
           email_accepted_connections: newPreferences.email_accepted_connections,
           email_profile_views: newPreferences.email_profile_views,
           digest_frequency: newPreferences.digest_frequency,
+          sms_notifications_enabled: newPreferences.sms_notifications_enabled,
         })
         .eq('user_id', user.id);
 
@@ -233,9 +237,30 @@ export default function Settings() {
             </RadioGroup>
           </div>
 
+          <div className="pt-6 border-t space-y-4">
+            <h3 className="font-medium text-sm">SMS Notifications:</h3>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="sms-enabled" className="font-medium">
+                  Enable SMS notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive text message alerts in addition to email (optional)
+                </p>
+              </div>
+              <Switch
+                id="sms-enabled"
+                checked={preferences.sms_notifications_enabled}
+                onCheckedChange={(checked) => savePreferences({ sms_notifications_enabled: checked })}
+                disabled={saving}
+              />
+            </div>
+          </div>
+
           <div className="pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              Note: In-app notifications will always be enabled regardless of email settings.
+              Note: In-app notifications will always be enabled regardless of email or SMS settings.
             </p>
           </div>
         </CardContent>

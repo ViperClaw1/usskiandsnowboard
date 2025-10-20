@@ -27,6 +27,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           is_public: boolean | null
+          phone: string | null
           photo_url: string | null
           professional_highlights: string | null
           profile_completeness: number | null
@@ -50,6 +51,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_public?: boolean | null
+          phone?: string | null
           photo_url?: string | null
           professional_highlights?: string | null
           profile_completeness?: number | null
@@ -73,6 +75,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_public?: boolean | null
+          phone?: string | null
           photo_url?: string | null
           professional_highlights?: string | null
           profile_completeness?: number | null
@@ -260,6 +263,7 @@ export type Database = {
           linkedin_url: string | null
           logo_url: string | null
           opportunities_offered: string | null
+          phone: string | null
           profile_completeness: number | null
           profile_views: number | null
           updated_at: string
@@ -282,6 +286,7 @@ export type Database = {
           linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null
+          phone?: string | null
           profile_completeness?: number | null
           profile_views?: number | null
           updated_at?: string
@@ -304,6 +309,7 @@ export type Database = {
           linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null
+          phone?: string | null
           profile_completeness?: number | null
           profile_views?: number | null
           updated_at?: string
@@ -409,6 +415,7 @@ export type Database = {
           email_new_requests: boolean
           email_profile_views: boolean
           id: string
+          sms_notifications_enabled: boolean
           updated_at: string
           user_id: string
         }
@@ -419,6 +426,7 @@ export type Database = {
           email_new_requests?: boolean
           email_profile_views?: boolean
           id?: string
+          sms_notifications_enabled?: boolean
           updated_at?: string
           user_id: string
         }
@@ -429,6 +437,7 @@ export type Database = {
           email_new_requests?: boolean
           email_profile_views?: boolean
           id?: string
+          sms_notifications_enabled?: boolean
           updated_at?: string
           user_id?: string
         }

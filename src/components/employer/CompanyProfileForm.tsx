@@ -14,6 +14,7 @@ import { Loader2, Upload, Building2 } from "lucide-react";
 
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
+  phone: z.string().min(10, "Phone number is required"),
   industry: z.string().optional(),
   company_size: z.string().optional(),
   hq_location: z.string().optional(),
@@ -77,6 +78,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     resolver: zodResolver(formSchema),
     defaultValues: {
       company_name: existingProfile?.company_name || "",
+      phone: existingProfile?.phone || "",
       industry: existingProfile?.industry || "",
       company_size: existingProfile?.company_size || "",
       hq_location: existingProfile?.hq_location || "",
@@ -249,6 +251,23 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
               <FormControl>
                 <Input placeholder="Enter company name" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number *</FormLabel>
+              <FormControl>
+                <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+              </FormControl>
+              <p className="text-xs text-muted-foreground">
+                Used for account recovery and optional SMS notifications (private, not displayed publicly)
+              </p>
               <FormMessage />
             </FormItem>
           )}
