@@ -207,7 +207,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
                 <CardContent className="p-4 sm:p-6">
                   <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
                     {/* Left Half - Welcome Section */}
-                    <div className="flex flex-col justify-center min-w-0 w-full mx-auto max-w-sm sm:max-w-md md:max-w-none">
+                    <div className="flex flex-col justify-center min-w-0 w-full mx-auto max-w-sm sm:max-w-md md:max-w-none md:order-1">
                       <div className="flex items-start gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4 lg:mb-6">
                         <Avatar className="h-12 w-12 sm:h-14 sm:w-14 lg:h-20 lg:w-20 shrink-0">
                           <AvatarImage src={profile?.photo_url} />
@@ -277,7 +277,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
                             </div>
                           )}
 
-                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-3">
+                          <div className="hidden md:flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-3">
                             <Button onClick={() => setShowProfileDialog(true)} variant="outline" size="sm" className="w-full sm:w-auto h-8 text-xs">
                               Edit Profile
                             </Button>
@@ -300,11 +300,24 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
                     </div>
 
                     {/* Right Half - Photo Uploader */}
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center md:order-2">
                       <div className="w-full max-w-sm sm:max-w-md md:max-w-none mx-auto">
                         <PhotoUploader userId={user.id} />
                       </div>
                     </div>
+
+                    {/* Mobile-only buttons below photo uploader */}
+                    {profile && (
+                      <div className="flex md:hidden flex-col sm:flex-row gap-2 sm:gap-3 md:order-3">
+                        <Button onClick={() => setShowProfileDialog(true)} variant="outline" size="sm" className="w-full sm:w-auto h-8 text-xs">
+                          Edit Profile
+                        </Button>
+                        <Button onClick={() => setShowPreview(true)} variant="outline" size="sm" className="w-full sm:w-auto h-8 text-xs">
+                          <Eye className="h-3 w-3 mr-1" />
+                          Preview Profile
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
