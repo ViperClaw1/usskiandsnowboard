@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import usLogo from "@/assets/us-logo.png";
+import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
 

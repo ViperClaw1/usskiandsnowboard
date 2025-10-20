@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Newspaper, Loader2, ExternalLink } from "lucide-react";
-import usLogo from "@/assets/us-logo.png";
+import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";

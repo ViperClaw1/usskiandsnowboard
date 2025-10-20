@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Lock } from "lucide-react";
-import usLogo from "@/assets/us-logo.png";
+import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
