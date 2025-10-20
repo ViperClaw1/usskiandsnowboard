@@ -361,10 +361,18 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
               </Card>
 
               <Card className="shadow-elegant overflow-hidden">
-                <CardHeader className="p-6">
-                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Athletes</CardTitle>
+                    {profile && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Eye className="h-4 w-4" />
+                        <span className="hidden sm:inline">{profile.profile_views || 0} views</span>
+                      </div>
+                    )}
+                  </div>
                 </CardHeader>
-                <CardContent className="p-6 pt-0 flex items-center min-h-[60px]">
+                <CardContent className="p-4 sm:p-6 pt-0 flex items-center min-h-[60px]">
                   <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8 w-full">
                     <Button onClick={handleBrowseAthletes} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
                       <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
@@ -373,26 +381,179 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center">
                       {featuredAthletes.length > 0 ? (
                         featuredAthletes.map((athlete) => (
-                          <div key={athlete.id} className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 min-w-0 w-full sm:w-auto">
-                            <Avatar className="h-15 w-15 sm:h-18 sm:w-18 lg:h-24 lg:w-24 shrink-0">
-                              <AvatarImage src={athlete.photo_url ?? undefined} />
-                              <AvatarFallback>AT</AvatarFallback>
+                          <div key={athlete.id} className="flex items-center gap-2 w-full sm:w-auto">
+                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0">
+                              <AvatarImage src={athlete.photo_url} />
+                              <AvatarFallback className="text-xs">{athlete.profiles?.full_name?.charAt(0) || '?'}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 flex-1 sm:flex-initial">
-                              <p className="font-medium text-xs sm:text-sm truncate">{athlete.profiles?.full_name || "Athlete"}</p>
-                              <p className="text-xs text-muted-foreground truncate">{athlete.sport_discipline || "Sport not specified"}</p>
+                              <p className="text-xs sm:text-sm font-medium truncate">{athlete.profiles?.full_name || 'Athlete'}</p>
+                              <p className="text-xs text-muted-foreground truncate">{athlete.sport_discipline}</p>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="flex-1 text-center py-3 sm:py-4">
-                          <p className="text-xs sm:text-sm text-muted-foreground">No featured athletes available</p>
-                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left w-full">
+                          {profile ? "Discover talented athletes" : "Complete your profile to view athletes"}
+                        </p>
                       )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {profile && (
+                <>
+                  {/* Opportunity Showcase */}
+                  <Card className="shadow-elegant overflow-hidden border-2 border-primary/20">
+                    <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-primary/10">
+                      <CardTitle className="text-lg sm:text-xl lg:text-2xl flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-primary" />
+                        Your Opportunities
+                      </CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">
+                        What you're offering to athletes
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6">
+                      {profile.opportunities_offered ? (
+                        <div className="space-y-3">
+                          <p className="text-sm text-foreground whitespace-pre-wrap">{profile.opportunities_offered}</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setShowProfileDialog(true)}
+                            className="text-xs"
+                          >
+                            Update Opportunities
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 space-y-3">
+                          <p className="text-sm text-muted-foreground">
+                            Attract top talent by describing the opportunities you offer
+                          </p>
+                          <ul className="text-xs text-muted-foreground space-y-1 text-left max-w-md mx-auto">
+                            <li>• Full-time or part-time positions</li>
+                            <li>• Internships and mentorship programs</li>
+                            <li>• Flexible schedules for training</li>
+                            <li>• Career development opportunities</li>
+                          </ul>
+                          <Button 
+                            onClick={() => setShowProfileDialog(true)}
+                            size="sm"
+                            className="text-xs"
+                          >
+                            Add Opportunities
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Profile Engagement Insights */}
+                  <Card className="shadow-elegant overflow-hidden">
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-lg sm:text-xl lg:text-2xl">Profile Insights</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">
+                        How athletes are engaging with your company
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 pt-0">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-2xl sm:text-3xl font-bold text-primary">{profile.profile_views || 0}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">Total Profile Views</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-2xl sm:text-3xl font-bold text-accent">{acceptedCount + pendingCount}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">Athletes Interested</p>
+                        </div>
+                      </div>
+                      {profile.profile_completeness < 100 && (
+                        <div className="mt-4 p-3 bg-accent/10 rounded-lg border border-accent/20">
+                          <p className="text-xs sm:text-sm text-foreground font-medium mb-2">
+                            💡 Boost Your Visibility
+                          </p>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Companies with complete profiles get 3x more views from athletes
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setShowProfileDialog(true)}
+                            className="text-xs w-full sm:w-auto"
+                          >
+                            Complete Profile
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* What Makes You Stand Out */}
+                  {(!profile.about || !profile.opportunities_offered || !profile.website) && (
+                    <Card className="shadow-elegant overflow-hidden border border-accent/30">
+                      <CardHeader className="p-4 sm:p-6">
+                        <CardTitle className="text-lg sm:text-xl lg:text-2xl">Stand Out to Athletes</CardTitle>
+                        <CardDescription className="text-xs sm:text-sm">
+                          Help athletes understand why they should connect with you
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 sm:p-6 pt-0 space-y-3">
+                        {!profile.about && (
+                          <div className="p-3 bg-muted rounded-lg">
+                            <p className="text-sm font-medium mb-1">Tell your company story</p>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Athletes want to know your mission, values, and culture
+                            </p>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setShowProfileDialog(true)}
+                              className="text-xs"
+                            >
+                              Add Company Description
+                            </Button>
+                          </div>
+                        )}
+                        {!profile.opportunities_offered && (
+                          <div className="p-3 bg-muted rounded-lg">
+                            <p className="text-sm font-medium mb-1">Describe your opportunities</p>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Be specific about roles, schedules, and how you support athlete transitions
+                            </p>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setShowProfileDialog(true)}
+                              className="text-xs"
+                            >
+                              Add Opportunities
+                            </Button>
+                          </div>
+                        )}
+                        {!profile.website && (
+                          <div className="p-3 bg-muted rounded-lg">
+                            <p className="text-sm font-medium mb-1">Link your website</p>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Athletes research companies before connecting—make it easy
+                            </p>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setShowProfileDialog(true)}
+                              className="text-xs"
+                            >
+                              Add Website
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
             </>
           ) : showDirectory ? (
             <div>
