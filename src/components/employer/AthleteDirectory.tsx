@@ -80,8 +80,8 @@ const AthleteDirectory = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [filterSport, setFilterSport] = useState<string>("");
-  const [filterAvailability, setFilterAvailability] = useState<string>("");
+  const [filterSport, setFilterSport] = useState<string>("all");
+  const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterSkills, setFilterSkills] = useState<string>("");
   const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
 
@@ -282,12 +282,12 @@ const AthleteDirectory = () => {
     }
 
     // Sport filter
-    if (filterSport) {
+    if (filterSport && filterSport !== "all") {
       result = result.filter(athlete => athlete.sport_discipline === filterSport);
     }
 
     // Availability filter
-    if (filterAvailability) {
+    if (filterAvailability && filterAvailability !== "all") {
       result = result.filter(athlete => athlete.availability === filterAvailability);
     }
 
@@ -427,7 +427,7 @@ const AthleteDirectory = () => {
               <SelectValue placeholder="Filter by Sport" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Sports</SelectItem>
+              <SelectItem value="all">All Sports</SelectItem>
               {Array.from(new Set(athletes.map(a => a.sport_discipline).filter(Boolean))).map(sport => (
                 <SelectItem key={sport} value={sport!}>{sport}</SelectItem>
               ))}
@@ -439,7 +439,7 @@ const AthleteDirectory = () => {
               <SelectValue placeholder="Filter by Availability" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Availability</SelectItem>
+              <SelectItem value="all">All Availability</SelectItem>
               {Array.from(new Set(athletes.map(a => a.availability).filter(Boolean))).map(avail => (
                 <SelectItem key={avail} value={avail!}>{avail}</SelectItem>
               ))}
