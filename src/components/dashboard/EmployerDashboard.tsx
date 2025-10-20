@@ -312,6 +312,63 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                 </CardContent>
               </Card>
 
+              {profile && (
+                <Card className="shadow-elegant overflow-hidden border-2 border-primary/20">
+                  <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-primary/10">
+                    <CardTitle className="text-lg sm:text-xl lg:text-2xl flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-primary" />
+                      Your Opportunities
+                    </CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
+                      Share links to your job postings and career pages
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4 sm:p-6">
+                    {profile.opportunities_offered ? (
+                      <div className="space-y-3">
+                        <div className="prose prose-sm max-w-none">
+                          <p className="text-sm text-foreground whitespace-pre-wrap break-words">{profile.opportunities_offered}</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setShowProfileDialog(true)}
+                          className="text-xs"
+                        >
+                          Update Links
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="text-center py-4">
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Make it easy for athletes to explore your opportunities
+                          </p>
+                          <div className="text-left max-w-md mx-auto space-y-2 mb-4">
+                            <p className="text-xs font-medium text-foreground">Share links to:</p>
+                            <ul className="text-xs text-muted-foreground space-y-1.5 pl-4">
+                              <li>• LinkedIn job postings</li>
+                              <li>• Indeed or other job board listings</li>
+                              <li>• Your company careers page</li>
+                              <li>• Specific internship or training programs</li>
+                            </ul>
+                          </div>
+                        </div>
+                        <div className="flex justify-center">
+                          <Button 
+                            onClick={() => setShowProfileDialog(true)}
+                            size="sm"
+                            className="text-xs"
+                          >
+                            Add Job Links
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               <Card className="shadow-elegant overflow-hidden">
                 <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Athlete Connections</CardTitle>
@@ -401,63 +458,6 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                   </div>
                 </CardContent>
               </Card>
-
-              {profile && (
-                <Card className="shadow-elegant overflow-hidden border-2 border-primary/20">
-                  <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-primary/10">
-                    <CardTitle className="text-lg sm:text-xl lg:text-2xl flex items-center gap-2">
-                      <Briefcase className="h-5 w-5 text-primary" />
-                      Your Opportunities
-                    </CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">
-                      Share links to your job postings and career pages
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-4 sm:p-6">
-                    {profile.opportunities_offered ? (
-                      <div className="space-y-3">
-                        <div className="prose prose-sm max-w-none">
-                          <p className="text-sm text-foreground whitespace-pre-wrap break-words">{profile.opportunities_offered}</p>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setShowProfileDialog(true)}
-                          className="text-xs"
-                        >
-                          Update Links
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="text-center py-4">
-                          <p className="text-sm text-muted-foreground mb-3">
-                            Make it easy for athletes to explore your opportunities
-                          </p>
-                          <div className="text-left max-w-md mx-auto space-y-2 mb-4">
-                            <p className="text-xs font-medium text-foreground">Share links to:</p>
-                            <ul className="text-xs text-muted-foreground space-y-1.5 pl-4">
-                              <li>• LinkedIn job postings</li>
-                              <li>• Indeed or other job board listings</li>
-                              <li>• Your company careers page</li>
-                              <li>• Specific internship or training programs</li>
-                            </ul>
-                          </div>
-                        </div>
-                        <div className="flex justify-center">
-                          <Button 
-                            onClick={() => setShowProfileDialog(true)}
-                            size="sm"
-                            className="text-xs"
-                          >
-                            Add Job Links
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
             </>
           ) : showDirectory ? (
             <div>
