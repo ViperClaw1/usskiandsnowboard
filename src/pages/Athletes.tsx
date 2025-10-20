@@ -202,21 +202,20 @@ const Athletes = () => {
                 
                 {!user && (
                   <div 
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px]"
-                    onClick={() => navigate("/")}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
                   >
                     <Card 
-                      className="max-w-md mx-4 shadow-2xl border-2"
+                      className="max-w-md w-full shadow-2xl border-2"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <CardHeader className="text-center pb-4">
                         <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                           <Lock className="h-8 w-8 text-primary" />
                         </div>
-                        <CardTitle className="text-2xl">Sign In to View Athletes</CardTitle>
+                        <CardTitle className="text-xl sm:text-2xl">Sign In to View Athletes</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center space-y-4">
-                        <p className="text-muted-foreground">
+                        <p className="text-sm sm:text-base text-muted-foreground">
                           Connect with world-class talent. Sign in as a Partner to discover athletes who bring unmatched dedication and excellence.
                         </p>
                         <div className="flex flex-col gap-3">
