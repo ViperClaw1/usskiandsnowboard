@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Athletes from "./pages/Athletes";
 import Employers from "./pages/Employers";
+import Schedule from "./pages/Schedule";
 import News from "./pages/News";
 import NotFound from "./pages/NotFound";
 import EmailVerification from "./pages/EmailVerification";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/athletes" element={<Athletes />} />
           <Route path="/employers" element={<Employers />} />
+          <Route path="/schedule" element={<Schedule />} />
           <Route path="/news" element={<News />} />
           <Route path="/admin/users" element={<AllUsers />} />
           <Route path="/admin/athletes" element={<AllAthletes />} />

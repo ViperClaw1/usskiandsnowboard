@@ -25,9 +25,12 @@ const Index = () => {
             <Link to="/employers" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               Partners
             </Link>
-            <a href={`${import.meta.env.BASE_URL}schedule.pdf`} target="_blank" rel="noopener noreferrer" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
+            <a href={`${import.meta.env.BASE_URL}schedule.pdf`} target="_blank" rel="noopener noreferrer" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base md:hidden">
               Schedule
             </a>
+            <Link to="/schedule" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base hidden md:block">
+              Schedule
+            </Link>
             <Link to="/news" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               News
             </Link>
