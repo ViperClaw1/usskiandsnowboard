@@ -1,14 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Building2, MapPin, Users, Globe, Linkedin, Mail } from "lucide-react";
+import { Building2, MapPin, Users, Globe, Linkedin, Mail, Briefcase } from "lucide-react";
 
 interface EmployerProfilePreviewProps {
   profile: any;
-  viewMode: "public" | "connected";
 }
 
-export const EmployerProfilePreview = ({ profile, viewMode }: EmployerProfilePreviewProps) => {
+export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps) => {
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -21,12 +20,7 @@ export const EmployerProfilePreview = ({ profile, viewMode }: EmployerProfilePre
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Preview Mode: {viewMode === "public" ? "Public View" : "Connected View"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-6">
           {/* Header Section */}
           <div className="flex items-start gap-4">
             <Avatar className="h-20 w-20">
@@ -76,11 +70,57 @@ export const EmployerProfilePreview = ({ profile, viewMode }: EmployerProfilePre
             )}
           </div>
 
-          {/* Opportunities */}
-          {profile?.opportunities_offered && (
-            <div>
-              <h3 className="font-semibold mb-2">Opportunities Offered</h3>
-              <p className="text-muted-foreground">{profile.opportunities_offered}</p>
+          {/* Job Opportunities */}
+          {(profile?.job_board_url || (profile?.individual_roles && profile.individual_roles.length > 0)) && (
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                Job Opportunities
+              </h3>
+              <div className="space-y-4">
+                {profile.job_board_url && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Company Job Board</p>
+                    <a 
+                      href={profile.job_board_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline break-all"
+                    >
+                      {profile.job_board_url}
+                    </a>
+                  </div>
+                )}
+                
+                {profile.individual_roles && profile.individual_roles.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Featured Roles</p>
+                    <div className="space-y-2">
+                      {profile.individual_roles.map((role: any, index: number) => (
+                        <div key={index} className="p-3 border rounded-lg hover:border-primary/50 transition-colors">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div>
+                              <p className="text-sm font-medium">{role.title}</p>
+                              {role.location && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{role.location}</p>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground shrink-0">{role.type}</span>
+                          </div>
+                          <a 
+                            href={role.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline break-all"
+                          >
+                            {role.url}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -107,8 +147,8 @@ export const EmployerProfilePreview = ({ profile, viewMode }: EmployerProfilePre
             </div>
           </div>
 
-          {/* Contact Info - Only shown in connected view */}
-          {viewMode === "connected" && (
+          {/* Contact Info */}
+          {(profile?.contact_person || profile?.contact_email) && (
             <div className="border-t pt-4">
               <h3 className="font-semibold mb-3">Contact Information</h3>
               <div className="space-y-2">
@@ -131,12 +171,6 @@ export const EmployerProfilePreview = ({ profile, viewMode }: EmployerProfilePre
                 )}
               </div>
             </div>
-          )}
-
-          {viewMode === "public" && (
-            <p className="text-xs text-muted-foreground text-center pt-4 border-t">
-              Connect with this employer to view full contact information
-            </p>
           )}
         </CardContent>
       </Card>
