@@ -46,7 +46,7 @@ const Index = () => {
               Launch Your Next Chapter
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-              Building on 130+ years of supporting Olympic dreams, we're proud to help our athletes transition from competition to fulfilling careers that honor their dedication, drive, and extraordinary skills.
+              Supporting 130+ years of Olympic excellence. Connecting athletes with careers that honor their dedication, drive, and extraordinary talent.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
               <Link to="/auth?type=athlete" className="w-full sm:w-auto">
