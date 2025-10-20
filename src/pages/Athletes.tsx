@@ -201,7 +201,7 @@ const Athletes = () => {
                 </div>
                 
                 {!user && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
                     <Card className="max-w-md mx-4 shadow-2xl border-2">
                       <CardHeader className="text-center pb-4">
                         <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
