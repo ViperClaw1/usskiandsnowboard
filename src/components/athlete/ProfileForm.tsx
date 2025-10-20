@@ -44,6 +44,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     last_name: "",
     email: "",
     sport_discipline: "",
+    home_mountain: "",
     bio: "",
     career_interests: "",
     skills: "",
@@ -86,6 +87,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           last_name: profileData?.last_name || "",
           email: athleteData.email || profileData?.email || "",
           sport_discipline: athleteData.sport_discipline || "",
+          home_mountain: athleteData.home_mountain || "",
           bio: athleteData.bio || "",
           career_interests: athleteData.career_interests?.join(", ") || "",
           skills: athleteData.skills?.join(", ") || "",
@@ -224,6 +226,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
       const profileData = {
         email: formData.email,
         sport_discipline: formData.sport_discipline,
+        home_mountain: formData.home_mountain || null,
         bio: formData.bio,
         career_interests,
         skills,
@@ -366,6 +369,16 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="home_mountain">Home Mountain</Label>
+        <Input
+          id="home_mountain"
+          placeholder="e.g., Park City, Aspen, Whistler"
+          value={formData.home_mountain}
+          onChange={(e) => setFormData({ ...formData, home_mountain: e.target.value })}
+        />
       </div>
 
       <div className="space-y-2">

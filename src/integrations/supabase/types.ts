@@ -23,6 +23,7 @@ export type Database = {
           created_at: string
           email: string | null
           geographic_preferences: string[] | null
+          home_mountain: string | null
           id: string
           instagram_url: string | null
           is_public: boolean | null
@@ -45,6 +46,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           geographic_preferences?: string[] | null
+          home_mountain?: string | null
           id?: string
           instagram_url?: string | null
           is_public?: boolean | null
@@ -67,6 +69,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           geographic_preferences?: string[] | null
+          home_mountain?: string | null
           id?: string
           instagram_url?: string | null
           is_public?: boolean | null
@@ -251,7 +254,9 @@ export type Database = {
           created_at: string
           hq_location: string | null
           id: string
+          individual_roles: Json | null
           industry: string | null
+          job_board_url: string | null
           linkedin_url: string | null
           logo_url: string | null
           opportunities_offered: string | null
@@ -271,7 +276,9 @@ export type Database = {
           created_at?: string
           hq_location?: string | null
           id?: string
+          individual_roles?: Json | null
           industry?: string | null
+          job_board_url?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null
@@ -291,7 +298,9 @@ export type Database = {
           created_at?: string
           hq_location?: string | null
           id?: string
+          individual_roles?: Json | null
           industry?: string | null
+          job_board_url?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           opportunities_offered?: string | null

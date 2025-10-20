@@ -12,6 +12,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Upload, Building2 } from "lucide-react";
 
+const roleSchema = z.object({
+  title: z.string().min(1, "Title is required").max(100),
+  type: z.string().min(1, "Link type is required"),
+  url: z.string().url("Please enter a valid URL"),
+});
+
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
   industry: z.string().optional(),
@@ -21,7 +27,8 @@ const formSchema = z.object({
   contact_title: z.string().optional(),
   contact_email: z.string().email("Invalid email address").optional().or(z.literal("")),
   about: z.string().optional(),
-  opportunities_offered: z.string().optional(),
+  job_board_url: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  individual_roles: z.array(roleSchema).max(3, "Maximum 3 roles allowed").optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   linkedin_url: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
 });
@@ -38,6 +45,9 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(existingProfile?.logo_url || null);
   const [uploading, setUploading] = useState(false);
+  const [roles, setRoles] = useState<Array<{ title: string; type: string; url: string }>>(
+    existingProfile?.individual_roles || []
+  );
 
   const industryOptions = [
     "Technology & Software",
@@ -72,6 +82,15 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     "Other"
   ];
 
+  const linkTypes = [
+    "Full-Time Position",
+    "Part-Time Position",
+    "Internship",
+    "Contract Role",
+    "Volunteer Opportunity",
+    "Training Program"
+  ];
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -83,7 +102,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       contact_title: existingProfile?.contact_title || "",
       contact_email: existingProfile?.contact_email || "",
       about: existingProfile?.about || "",
-      opportunities_offered: existingProfile?.opportunities_offered || "",
+      job_board_url: existingProfile?.job_board_url || "",
+      individual_roles: existingProfile?.individual_roles || [],
       website: existingProfile?.website || "",
       linkedin_url: existingProfile?.linkedin_url || "",
     },
@@ -163,7 +183,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         contact_title: values.contact_title || null,
         contact_email: values.contact_email || null,
         about: values.about || null,
-        opportunities_offered: values.opportunities_offered || null,
+        job_board_url: values.job_board_url || null,
+        individual_roles: roles.length > 0 ? roles : null,
         website: values.website || null,
         linkedin_url: values.linkedin_url || null,
         logo_url: logoUrl ? logoUrl.split('?')[0] : null,
@@ -377,26 +398,109 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="opportunities_offered"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Job & Opportunity Links</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Share links to your job postings and career opportunities:&#10;&#10;LinkedIn: https://linkedin.com/jobs/...&#10;Careers Page: https://yourcompany.com/careers&#10;Specific Role: https://indeed.com/job/..."
-                  className="min-h-[120px]"
-                  {...field}
-                />
-              </FormControl>
-              <p className="text-xs text-muted-foreground mt-1">
-                Paste links to LinkedIn jobs, Indeed postings, your careers page, or specific opportunities
-              </p>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <FormLabel>Job Opportunities</FormLabel>
+          </div>
+
+          <FormField
+            control={form.control}
+            name="job_board_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Company Job Board / Careers Page</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://yourcompany.com/careers" {...field} />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  Link to your main careers page or job board
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-3">
+            <FormLabel>Individual Role Listings (up to 3)</FormLabel>
+            <p className="text-xs text-muted-foreground">
+              Add specific job postings from LinkedIn, Indeed, or other platforms
+            </p>
+            
+            {roles.map((role, index) => (
+              <div key={index} className="p-4 border rounded-lg space-y-3 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">Role {index + 1}</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newRoles = roles.filter((_, i) => i !== index);
+                      setRoles(newRoles);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Link Title (e.g., Marketing Manager)"
+                    value={role.title}
+                    onChange={(e) => {
+                      const newRoles = [...roles];
+                      newRoles[index].title = e.target.value;
+                      setRoles(newRoles);
+                    }}
+                  />
+                  <Select
+                    value={role.type}
+                    onValueChange={(value) => {
+                      const newRoles = [...roles];
+                      newRoles[index].type = value;
+                      setRoles(newRoles);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select link type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {linkTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder="https://linkedin.com/jobs/..."
+                    value={role.url}
+                    onChange={(e) => {
+                      const newRoles = [...roles];
+                      newRoles[index].url = e.target.value;
+                      setRoles(newRoles);
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {roles.length < 3 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (roles.length < 3) {
+                    setRoles([...roles, { title: "", type: "", url: "" }]);
+                  }
+                }}
+                className="w-full"
+              >
+                + Add Role
+              </Button>
+            )}
+          </div>
+        </div>
 
         <FormField
           control={form.control}

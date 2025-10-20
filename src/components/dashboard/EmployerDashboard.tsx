@@ -324,18 +324,51 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6">
-                    {profile.opportunities_offered ? (
-                      <div className="space-y-3">
-                        <div className="prose prose-sm max-w-none">
-                          <p className="text-sm text-foreground whitespace-pre-wrap break-words">{profile.opportunities_offered}</p>
-                        </div>
+                    {profile.job_board_url || (profile.individual_roles && profile.individual_roles.length > 0) ? (
+                      <div className="space-y-4">
+                        {profile.job_board_url && (
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Company Job Board</p>
+                            <a 
+                              href={profile.job_board_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline break-all"
+                            >
+                              {profile.job_board_url}
+                            </a>
+                          </div>
+                        )}
+                        
+                        {profile.individual_roles && profile.individual_roles.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground">Featured Roles</p>
+                            {profile.individual_roles.map((role: any, index: number) => (
+                              <div key={index} className="p-3 border rounded-lg hover:border-primary/50 transition-colors">
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <p className="text-sm font-medium">{role.title}</p>
+                                  <span className="text-xs text-muted-foreground shrink-0">{role.type}</span>
+                                </div>
+                                <a 
+                                  href={role.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-primary hover:underline break-all"
+                                >
+                                  {role.url}
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => setShowProfileDialog(true)}
-                          className="text-xs"
+                          className="text-xs w-full sm:w-auto"
                         >
-                          Update Links
+                          Update Opportunities
                         </Button>
                       </div>
                     ) : (
@@ -345,12 +378,11 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                             Make it easy for athletes to explore your opportunities
                           </p>
                           <div className="text-left max-w-md mx-auto space-y-2 mb-4">
-                            <p className="text-xs font-medium text-foreground">Share links to:</p>
+                            <p className="text-xs font-medium text-foreground">Add:</p>
                             <ul className="text-xs text-muted-foreground space-y-1.5 pl-4">
-                              <li>• LinkedIn job postings</li>
-                              <li>• Indeed or other job board listings</li>
-                              <li>• Your company careers page</li>
-                              <li>• Specific internship or training programs</li>
+                              <li>• Your company careers page or job board</li>
+                              <li>• Up to 3 specific job postings from LinkedIn, Indeed, etc.</li>
+                              <li>• Each with a title, type, and direct link</li>
                             </ul>
                           </div>
                         </div>

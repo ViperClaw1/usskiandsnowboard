@@ -27,6 +27,7 @@ interface FormData {
   email: string;
   affiliation: string;
   sport: string;
+  homeMountain: string;
   bio: string;
   careerInterests: string[];
   skills: string[];
@@ -38,7 +39,7 @@ interface FormData {
   photoUrl: string;
 }
 
-const TOTAL_STEPS = 13;
+const TOTAL_STEPS = 14;
 
 export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -53,6 +54,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       email: user.email || "",
       affiliation: "",
       sport: "",
+      homeMountain: "",
       bio: "",
       careerInterests: [],
       skills: [],
@@ -159,6 +161,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         user_id: user.id,
         affiliation: data.affiliation,
         sport_discipline: data.sport,
+        home_mountain: data.homeMountain || null,
         bio: data.bio,
         career_interests: careerInterestsArray,
         skills: skillsArray,
@@ -404,6 +407,31 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       case 7:
         return (
+          <OnboardingStep 
+            title="What's your home mountain?" 
+            description="Where do you primarily train?"
+            optional
+          >
+            <Input
+              {...register("homeMountain")}
+              placeholder="e.g., Park City, Aspen, Whistler"
+              className="h-14 text-lg px-4 border-2"
+              autoFocus
+            />
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              canGoBack={true}
+              canGoNext={true}
+              onBack={prevStep}
+              onNext={nextStep}
+              onSkip={skipStep}
+            />
+          </OnboardingStep>
+        );
+
+      case 8:
+        return (
           <OnboardingStep
             title="Tell us about yourself"
             description="Share your story, achievements, and what makes you unique"
@@ -429,7 +457,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 8:
+      case 9:
         return (
           <OnboardingStep
             title="What career areas interest you?"
@@ -453,7 +481,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 9:
+      case 10:
         return (
           <OnboardingStep
             title="What are your top skills?"
@@ -477,7 +505,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 10:
+      case 11:
         return (
           <OnboardingStep title="When are you available?">
             <Select value={formValues.availability} onValueChange={(value) => setValue("availability", value)}>
@@ -502,7 +530,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 11:
+      case 12:
         return (
           <OnboardingStep
             title="A few more details?"
@@ -561,7 +589,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 12:
+      case 13:
         return (
           <OnboardingStep
             title="Review & Complete"
@@ -584,6 +612,12 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
                 <p className="text-sm text-muted-foreground">Sport</p>
                 <p className="text-lg font-medium">{formValues.sport}</p>
               </div>
+              {formValues.homeMountain && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Home Mountain</p>
+                  <p className="text-lg font-medium">{formValues.homeMountain}</p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Bio</p>
                 <p className="text-base">{formValues.bio}</p>
