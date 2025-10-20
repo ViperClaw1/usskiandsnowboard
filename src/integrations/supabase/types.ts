@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       athlete_profiles: {
         Row: {
+          affiliation: string | null
           availability: string | null
           bio: string | null
           career_interests: string[] | null
@@ -37,6 +38,7 @@ export type Database = {
           years_of_membership: number | null
         }
         Insert: {
+          affiliation?: string | null
           availability?: string | null
           bio?: string | null
           career_interests?: string[] | null
@@ -58,6 +60,7 @@ export type Database = {
           years_of_membership?: number | null
         }
         Update: {
+          affiliation?: string | null
           availability?: string | null
           bio?: string | null
           career_interests?: string[] | null

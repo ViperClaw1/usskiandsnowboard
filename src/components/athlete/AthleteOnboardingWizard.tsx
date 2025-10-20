@@ -25,6 +25,7 @@ interface FormData {
   firstName: string;
   lastName: string;
   email: string;
+  affiliation: string;
   sport: string;
   bio: string;
   careerInterests: string[];
@@ -37,7 +38,7 @@ interface FormData {
   photoUrl: string;
 }
 
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 13;
 
 export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -50,6 +51,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       firstName: "",
       lastName: "",
       email: user.email || "",
+      affiliation: "",
       sport: "",
       bio: "",
       careerInterests: [],
@@ -102,13 +104,14 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       case 2: return formValues.firstName.trim().length > 0;
       case 3: return formValues.lastName.trim().length > 0;
       case 4: return formValues.email.trim().length > 0 && formValues.email.includes("@");
-      case 5: return formValues.sport.trim().length > 0;
-      case 6: return formValues.bio.trim().length > 0;
-      case 7: return formValues.careerInterests.length > 0;
-      case 8: return formValues.skills.length > 0;
-      case 9: return formValues.availability.trim().length > 0;
-      case 10: return true; // Optional
-      case 11: return true; // Review
+      case 5: return formValues.affiliation.trim().length > 0;
+      case 6: return formValues.sport.trim().length > 0;
+      case 7: return formValues.bio.trim().length > 0;
+      case 8: return formValues.careerInterests.length > 0;
+      case 9: return formValues.skills.length > 0;
+      case 10: return formValues.availability.trim().length > 0;
+      case 11: return true; // Optional
+      case 12: return true; // Review
       default: return false;
     }
   }, [currentStep, formValues]);
@@ -154,6 +157,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       const athleteData = {
         user_id: user.id,
+        affiliation: data.affiliation,
         sport_discipline: data.sport,
         bio: data.bio,
         career_interests: careerInterestsArray,
@@ -350,12 +354,35 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       case 5:
         return (
+          <OnboardingStep title="What is your current affiliation with US Ski & Snowboard?">
+            <Select value={formValues.affiliation} onValueChange={(value) => setValue("affiliation", value)}>
+              <SelectTrigger className="h-14 text-lg border-2 bg-background">
+                <SelectValue placeholder="Select your affiliation" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="Current Team Member">Current Team Member</SelectItem>
+                <SelectItem value="Former Team Member">Former Team Member</SelectItem>
+              </SelectContent>
+            </Select>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              canGoBack={true}
+              canGoNext={canGoNext}
+              onBack={prevStep}
+              onNext={nextStep}
+            />
+          </OnboardingStep>
+        );
+
+      case 6:
+        return (
           <OnboardingStep title="What's your primary sport?">
             <Select value={formValues.sport} onValueChange={(value) => setValue("sport", value)}>
-              <SelectTrigger className="h-14 text-lg border-2">
+              <SelectTrigger className="h-14 text-lg border-2 bg-background">
                 <SelectValue placeholder="Select your sport" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background z-50">
                 <SelectItem value="Alpine Skiing">Alpine Skiing</SelectItem>
                 <SelectItem value="Freestyle Skiing">Freestyle Skiing</SelectItem>
                 <SelectItem value="Snowboarding">Snowboarding</SelectItem>
@@ -375,7 +402,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 6:
+      case 7:
         return (
           <OnboardingStep
             title="Tell us about yourself"
@@ -402,7 +429,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 7:
+      case 8:
         return (
           <OnboardingStep
             title="What career areas interest you?"
@@ -426,7 +453,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 8:
+      case 9:
         return (
           <OnboardingStep
             title="What are your top skills?"
@@ -450,14 +477,14 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 9:
+      case 10:
         return (
           <OnboardingStep title="When are you available?">
             <Select value={formValues.availability} onValueChange={(value) => setValue("availability", value)}>
-              <SelectTrigger className="h-14 text-lg border-2">
+              <SelectTrigger className="h-14 text-lg border-2 bg-background">
                 <SelectValue placeholder="Select your availability" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background z-50">
                 <SelectItem value="Available Now">Available Now</SelectItem>
                 <SelectItem value="Off-Season">Off-Season Only</SelectItem>
                 <SelectItem value="Post-Retirement">Post-Retirement</SelectItem>
@@ -475,7 +502,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 10:
+      case 11:
         return (
           <OnboardingStep
             title="A few more details?"
@@ -534,7 +561,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 11:
+      case 12:
         return (
           <OnboardingStep
             title="Review & Complete"
@@ -548,6 +575,10 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
                 <p className="text-lg font-medium">{formValues.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Affiliation</p>
+                <p className="text-lg font-medium">{formValues.affiliation}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Sport</p>
