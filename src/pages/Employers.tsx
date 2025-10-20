@@ -191,8 +191,14 @@ const Employers = () => {
                 </div>
                 
                 {!user && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
-                    <Card className="max-w-md mx-4 shadow-2xl border-2">
+                  <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px]"
+                    onClick={() => navigate("/")}
+                  >
+                    <Card 
+                      className="max-w-md mx-4 shadow-2xl border-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <CardHeader className="text-center pb-4">
                         <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                           <Lock className="h-8 w-8 text-primary" />
