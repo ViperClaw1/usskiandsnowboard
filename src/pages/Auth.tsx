@@ -27,6 +27,7 @@ const Auth = () => {
   const [userType, setUserType] = useState<"athlete" | "employer">(initialType);
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [showPhoneAuth, setShowPhoneAuth] = useState(false);
+  const [showPhoneSignup, setShowPhoneSignup] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showInviteCode, setShowInviteCode] = useState(false);
@@ -151,6 +152,46 @@ const Auth = () => {
         description: `We've sent a verification code to ${phone}`,
         duration: 6000,
       });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send verification code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhoneSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Validate invite code
+      if (privateCode !== "cortina26") {
+        toast.error("Invalid invite code");
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+        options: {
+          channel: 'sms',
+          data: {
+            full_name: fullName,
+            user_type: userType
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Check your phone!", {
+        description: `We've sent a verification code to ${phone}. Enter it to complete signup.`,
+        duration: 6000,
+      });
+
+      setPhone("");
+      setFullName("");
+      setPrivateCode("");
     } catch (error: any) {
       toast.error(error.message || "Failed to send verification code");
     } finally {
@@ -387,6 +428,77 @@ const Auth = () => {
               </TabsContent>
               
               <TabsContent value="signup">
+                {showPhoneSignup ? (
+                  <form onSubmit={handlePhoneSignUp} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-phone-name">Full Name</Label>
+                      <Input
+                        id="signup-phone-name"
+                        type="text"
+                        placeholder="Mikaela Shiffrin"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-phone">Phone Number</Label>
+                      <Input
+                        id="signup-phone"
+                        type="tel"
+                        placeholder="+1 (555) 000-0000"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-phone-code">Invite Code</Label>
+                      <div className="relative">
+                        <Input
+                          id="signup-phone-code"
+                          type={showInviteCode ? "text" : "password"}
+                          placeholder="Enter invite code"
+                          value={privateCode}
+                          onChange={(e) => setPrivateCode(e.target.value)}
+                          required
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowInviteCode(!showInviteCode)}
+                        >
+                          {showInviteCode ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending code...
+                        </>
+                      ) : (
+                        "Send Verification Code"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setShowPhoneSignup(false)}
+                    >
+                      Back to email signup
+                    </Button>
+                  </form>
+                ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
@@ -475,6 +587,15 @@ const Auth = () => {
                     )}
                   </Button>
 
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full"
+                    onClick={() => setShowPhoneSignup(true)}
+                  >
+                    Sign up with phone number instead
+                  </Button>
+
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
                       <Separator />
@@ -499,6 +620,7 @@ const Auth = () => {
                     Continue with Google
                   </Button>
                 </form>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
