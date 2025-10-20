@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users } from "lucide-react";
+import { Users, Lock } from "lucide-react";
 import usLogo from "@/assets/us-logo.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { User } from "@supabase/supabase-js";
 
 interface AthleteProfile {
   id: string;
@@ -31,9 +32,21 @@ const Athletes = () => {
   const navigate = useNavigate();
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Check authentication
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
     loadAthletes();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const loadAthletes = async () => {
@@ -118,7 +131,7 @@ const Athletes = () => {
           </div>
         </section>
 
-        <section className="py-8 sm:py-12">
+        <section className="py-8 sm:py-12 relative">
           <div className="container mx-auto px-4">
             {loading ? (
               <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -135,54 +148,84 @@ const Athletes = () => {
                 onAction={() => navigate("/auth")}
               />
             ) : (
-              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {athletes.map((athlete) => (
-                  <Card 
-                    key={athlete.id} 
-                    className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
-                    onClick={handleAthleteClick}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center gap-4 mb-4">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={athlete.photo_url || undefined} />
-                          <AvatarFallback>
-                            {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="text-lg">{athlete.profiles?.full_name || 'Athlete'}</CardTitle>
-                          {athlete.sport_discipline && (
-                            <Badge variant="secondary" className="mt-1">
-                              {athlete.sport_discipline}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {athlete.bio && (
-                        <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
-                      )}
-                      {athlete.skills && athlete.skills.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium mb-2">Skills</p>
-                          <div className="flex flex-wrap gap-2">
-                            {athlete.skills.slice(0, 3).map((skill, idx) => (
-                              <Badge key={idx} variant="outline">{skill}</Badge>
-                            ))}
+              <>
+                <div className={!user ? "blur-sm pointer-events-none" : ""}>
+                  <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {athletes.map((athlete) => (
+                      <Card 
+                        key={athlete.id} 
+                        className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
+                        onClick={handleAthleteClick}
+                      >
+                        <CardHeader>
+                          <div className="flex items-center gap-4 mb-4">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src={athlete.photo_url || undefined} />
+                              <AvatarFallback>
+                                {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <CardTitle className="text-lg">{athlete.profiles?.full_name || 'Athlete'}</CardTitle>
+                              {athlete.sport_discipline && (
+                                <Badge variant="secondary" className="mt-1">
+                                  {athlete.sport_discipline}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {athlete.bio && (
+                            <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
+                          )}
+                          {athlete.skills && athlete.skills.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium mb-2">Skills</p>
+                              <div className="flex flex-wrap gap-2">
+                                {athlete.skills.slice(0, 3).map((skill, idx) => (
+                                  <Badge key={idx} variant="outline">{skill}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {athlete.availability && (
+                            <p className="text-sm text-muted-foreground">
+                              <span className="font-medium">Availability:</span> {athlete.availability}
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+                
+                {!user && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+                    <Card className="max-w-md mx-4 shadow-2xl border-2">
+                      <CardHeader className="text-center pb-4">
+                        <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Lock className="h-8 w-8 text-primary" />
                         </div>
-                      )}
-                      {athlete.availability && (
-                        <p className="text-sm text-muted-foreground">
-                          <span className="font-medium">Availability:</span> {athlete.availability}
+                        <CardTitle className="text-2xl">Sign In to View Athletes</CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-center space-y-4">
+                        <p className="text-muted-foreground">
+                          Connect with world-class talent. Sign in as a Partner to discover athletes who bring unmatched dedication and excellence.
                         </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        <div className="flex flex-col gap-3">
+                          <Button size="lg" onClick={() => navigate("/auth?type=employer")} className="w-full">
+                            Sign In as Partner
+                          </Button>
+                          <Button size="lg" variant="outline" onClick={() => navigate("/auth?type=athlete")} className="w-full">
+                            Sign In as Athlete
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </section>
