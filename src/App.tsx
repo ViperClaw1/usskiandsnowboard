@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { CookieConsent } from "@/components/CookieConsent";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +12,7 @@ import Employers from "./pages/Employers";
 import Schedule from "./pages/Schedule";
 import News from "./pages/News";
 import NotFound from "./pages/NotFound";
+import Privacy from "./pages/Privacy";
 import EmailVerification from "./pages/EmailVerification";
 import AllUsers from "./pages/admin/AllUsers";
 import AllAthletes from "./pages/admin/AllAthletes";
@@ -44,8 +46,10 @@ const App = () => (
           <Route path="/admin/connections" element={<AcceptedConnections />} />
           <Route path="/admin/rejected" element={<RejectedRequests />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <CookieConsent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
