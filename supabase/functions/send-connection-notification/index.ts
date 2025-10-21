@@ -12,7 +12,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  notification_type: "new_request" | "request_accepted";
+  notification_type: "new_request" | "request_accepted" | "request_declined";
   request_id: string;
 }
 
@@ -293,6 +293,27 @@ const handler = async (req: Request): Promise<Response> => {
           html: employerHtml,
         });
         console.log(`Acceptance email sent to employer: ${employerEmail}`);
+      }
+    }
+
+    // Handle declined connections - notify admins
+    if (notification_type === "request_declined") {
+      console.log("Notifying admins about declined connection");
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/send-admin-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            notification_type: "connection_declined",
+            request_id,
+          }),
+        });
+      } catch (adminNotifyError) {
+        console.error("Error notifying admins:", adminNotifyError);
+        // Don't fail the main request if admin notification fails
       }
     }
 

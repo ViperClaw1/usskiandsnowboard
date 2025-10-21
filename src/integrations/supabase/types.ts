@@ -412,6 +412,8 @@ export type Database = {
           created_at: string
           digest_frequency: string
           email_accepted_connections: boolean
+          email_connections_declined: boolean
+          email_new_accounts: boolean
           email_new_requests: boolean
           email_profile_views: boolean
           id: string
@@ -423,6 +425,8 @@ export type Database = {
           created_at?: string
           digest_frequency?: string
           email_accepted_connections?: boolean
+          email_connections_declined?: boolean
+          email_new_accounts?: boolean
           email_new_requests?: boolean
           email_profile_views?: boolean
           id?: string
@@ -434,6 +438,8 @@ export type Database = {
           created_at?: string
           digest_frequency?: string
           email_accepted_connections?: boolean
+          email_connections_declined?: boolean
+          email_new_accounts?: boolean
           email_new_requests?: boolean
           email_profile_views?: boolean
           id?: string

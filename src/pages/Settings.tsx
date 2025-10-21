@@ -13,6 +13,8 @@ interface NotificationPreferences {
   email_new_requests: boolean;
   email_accepted_connections: boolean;
   email_profile_views: boolean;
+  email_new_accounts: boolean;
+  email_connections_declined: boolean;
   digest_frequency: 'instant' | 'daily' | 'weekly' | 'off';
   sms_notifications_enabled: boolean;
 }
@@ -21,10 +23,13 @@ export default function Settings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     email_new_requests: true,
     email_accepted_connections: true,
     email_profile_views: false,
+    email_new_accounts: false,
+    email_connections_declined: false,
     digest_frequency: 'instant',
     sms_notifications_enabled: false,
   });
@@ -37,6 +42,16 @@ export default function Settings() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Check if user is admin
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      setIsAdmin(!!roleData);
 
       const { data, error } = await supabase
         .from('notification_preferences')
@@ -51,6 +66,8 @@ export default function Settings() {
           email_new_requests: data.email_new_requests,
           email_accepted_connections: data.email_accepted_connections,
           email_profile_views: data.email_profile_views,
+          email_new_accounts: data.email_new_accounts,
+          email_connections_declined: data.email_connections_declined,
           digest_frequency: data.digest_frequency as 'instant' | 'daily' | 'weekly' | 'off',
           sms_notifications_enabled: data.sms_notifications_enabled,
         });
@@ -91,6 +108,8 @@ export default function Settings() {
           email_new_requests: newPreferences.email_new_requests,
           email_accepted_connections: newPreferences.email_accepted_connections,
           email_profile_views: newPreferences.email_profile_views,
+          email_new_accounts: newPreferences.email_new_accounts,
+          email_connections_declined: newPreferences.email_connections_declined,
           digest_frequency: newPreferences.digest_frequency,
           sms_notifications_enabled: newPreferences.sms_notifications_enabled,
         })
@@ -184,6 +203,43 @@ export default function Settings() {
               />
             </div>
           </div>
+
+          {/* Admin-only notifications */}
+          {isAdmin && (
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="font-medium text-sm text-primary">Admin notifications:</h3>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
+                  <span>New user registrations</span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    When new athletes or partners sign up
+                  </span>
+                </Label>
+                <Switch
+                  id="email_new_accounts"
+                  checked={preferences.email_new_accounts}
+                  onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email_connections_declined" className="flex flex-col gap-1 cursor-pointer">
+                  <span>Declined connections</span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    When connection requests are declined
+                  </span>
+                </Label>
+                <Switch
+                  id="email_connections_declined"
+                  checked={preferences.email_connections_declined}
+                  onCheckedChange={(checked) => savePreferences({ email_connections_declined: checked })}
+                  disabled={saving}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Digest Frequency */}
           <div className="space-y-4 pt-4 border-t">
