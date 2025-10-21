@@ -5,9 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Phone } from "lucide-react";
+import { z } from "zod";
 
 interface NotificationPreferences {
   email_new_requests: boolean;
@@ -24,6 +26,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     email_new_requests: true,
     email_accepted_connections: true,
@@ -33,6 +36,8 @@ export default function Settings() {
     digest_frequency: 'instant',
     sms_notifications_enabled: false,
   });
+
+  const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number with country code (e.g., +1234567890)");
 
   useEffect(() => {
     loadPreferences();
@@ -52,6 +57,17 @@ export default function Settings() {
         .maybeSingle();
       
       setIsAdmin(!!roleData);
+
+      // Load user phone number
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData?.phone) {
+        setPhoneNumber(profileData.phone);
+      }
 
       const { data, error } = await supabase
         .from('notification_preferences')
@@ -121,6 +137,35 @@ export default function Settings() {
     } catch (error) {
       console.error('Error saving preferences:', error);
       toast.error('Failed to save preferences');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const savePhoneNumber = async () => {
+    // Validate phone number
+    const validation = phoneSchema.safeParse(phoneNumber);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ phone: phoneNumber })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Phone number saved');
+    } catch (error) {
+      console.error('Error saving phone number:', error);
+      toast.error('Failed to save phone number');
     } finally {
       setSaving(false);
     }
@@ -274,21 +319,52 @@ export default function Settings() {
           <div className="pt-6 border-t space-y-4">
             <h3 className="font-medium text-sm">SMS Notifications:</h3>
             
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="sms-enabled" className="font-medium">
-                  Enable SMS notifications
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive text message alerts in addition to email (optional)
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+1234567890"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Button onClick={savePhoneNumber} disabled={saving || !phoneNumber}>
+                    Save
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Include country code (e.g., +1 for US)
                 </p>
               </div>
-              <Switch
-                id="sms-enabled"
-                checked={preferences.sms_notifications_enabled}
-                onCheckedChange={(checked) => savePreferences({ sms_notifications_enabled: checked })}
-                disabled={saving}
-              />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="sms-enabled" className="font-medium">
+                    Enable SMS notifications
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive text message alerts in addition to email
+                  </p>
+                </div>
+                <Switch
+                  id="sms-enabled"
+                  checked={preferences.sms_notifications_enabled}
+                  onCheckedChange={(checked) => {
+                    if (checked && !phoneNumber) {
+                      toast.error("Please add a phone number first");
+                      return;
+                    }
+                    savePreferences({ sms_notifications_enabled: checked });
+                  }}
+                  disabled={saving || !phoneNumber}
+                />
+              </div>
             </div>
           </div>
 
