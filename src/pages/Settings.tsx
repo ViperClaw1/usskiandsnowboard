@@ -188,20 +188,6 @@ export default function Settings() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="email_profile_views" className="flex flex-col gap-1 cursor-pointer">
-                <span>Profile views</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  Someone views your profile (coming soon)
-                </span>
-              </Label>
-              <Switch
-                id="email_profile_views"
-                checked={preferences.email_profile_views}
-                onCheckedChange={(checked) => savePreferences({ email_profile_views: checked })}
-                disabled={true}
-              />
-            </div>
           </div>
 
           {/* Admin-only notifications */}
