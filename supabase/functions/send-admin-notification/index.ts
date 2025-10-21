@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface AdminNotificationRequest {
-  notification_type: 'new_account' | 'connection_declined';
+  notification_type: 'new_account' | 'connection_declined' | 'new_connection_request' | 'connection_accepted';
   user_id?: string;
   request_id?: string;
 }
@@ -47,10 +47,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     const adminUserIds = adminRoles.map(r => r.user_id);
 
-    // Get admin notification preferences
-    const preferenceColumn = notification_type === 'new_account' 
-      ? 'email_new_accounts' 
-      : 'email_connections_declined';
+    // Get admin notification preferences based on notification type
+    let preferenceColumn: string;
+    switch (notification_type) {
+      case 'new_account':
+        preferenceColumn = 'email_new_accounts';
+        break;
+      case 'connection_declined':
+        preferenceColumn = 'email_connections_declined';
+        break;
+      case 'new_connection_request':
+        preferenceColumn = 'email_new_requests';
+        break;
+      case 'connection_accepted':
+        preferenceColumn = 'email_accepted_connections';
+        break;
+      default:
+        preferenceColumn = 'email_new_requests';
+    }
 
     const { data: preferences } = await supabase
       .from('notification_preferences')
@@ -110,14 +124,77 @@ const handler = async (req: Request): Promise<Response> => {
         </ul>
         <p>You can view all users in the admin dashboard.</p>
       `;
+    } else if (notification_type === 'new_connection_request' && request_id) {
+      // Get connection request details
+      const { data: request } = await supabase
+        .from('connection_requests')
+        .select(`
+          *,
+          athlete:athlete_profiles!inner(user_id, sport_discipline),
+          employer:employer_profiles!inner(user_id, company_name)
+        `)
+        .eq('id', request_id)
+        .single();
+
+      if (request) {
+        const { data: athleteProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', request.athlete.user_id)
+          .single();
+
+        emailSubject = "New Connection Request - US Ski & Snowboard";
+        emailHtml = `
+          <h2>New Connection Request</h2>
+          <p>A new connection request has been made:</p>
+          <ul>
+            <li><strong>Athlete:</strong> ${athleteProfile?.full_name || 'N/A'}</li>
+            <li><strong>Sport:</strong> ${request.athlete.sport_discipline || 'N/A'}</li>
+            <li><strong>Partner:</strong> ${request.employer.company_name || 'N/A'}</li>
+            <li><strong>Date:</strong> ${new Date(request.created_at).toLocaleDateString()}</li>
+          </ul>
+          <p>You can view all connection requests in the admin dashboard.</p>
+        `;
+      }
+    } else if (notification_type === 'connection_accepted' && request_id) {
+      // Get connection request details
+      const { data: request } = await supabase
+        .from('connection_requests')
+        .select(`
+          *,
+          athlete:athlete_profiles!inner(user_id),
+          employer:employer_profiles!inner(user_id, company_name)
+        `)
+        .eq('id', request_id)
+        .single();
+
+      if (request) {
+        const { data: athleteProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', request.athlete.user_id)
+          .single();
+
+        emailSubject = "Connection Accepted - US Ski & Snowboard";
+        emailHtml = `
+          <h2>Connection Accepted</h2>
+          <p>A connection has been established:</p>
+          <ul>
+            <li><strong>Athlete:</strong> ${athleteProfile?.full_name || 'N/A'}</li>
+            <li><strong>Partner:</strong> ${request.employer.company_name || 'N/A'}</li>
+            <li><strong>Date:</strong> ${new Date(request.updated_at).toLocaleDateString()}</li>
+          </ul>
+          <p>You can view all connections in the admin dashboard.</p>
+        `;
+      }
     } else if (notification_type === 'connection_declined' && request_id) {
       // Get connection request details
       const { data: request } = await supabase
         .from('connection_requests')
         .select(`
           *,
-          athlete:athlete_profiles(user_id),
-          employer:employer_profiles(user_id, company_name)
+          athlete:athlete_profiles!inner(user_id),
+          employer:employer_profiles!inner(user_id, company_name)
         `)
         .eq('id', request_id)
         .single();

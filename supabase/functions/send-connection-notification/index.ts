@@ -16,6 +16,27 @@ interface NotificationRequest {
   request_id: string;
 }
 
+// Helper function to notify admins
+async function notifyAdmins(notificationType: string, requestId: string) {
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-admin-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({
+        notification_type: notificationType,
+        request_id: requestId,
+      }),
+    });
+    console.log(`Notified admins about ${notificationType}`);
+  } catch (error) {
+    console.error("Error notifying admins:", error);
+    // Don't fail the main request if admin notification fails
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -173,6 +194,9 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log(`New request email sent to ${recipientEmail}`);
 
+      // Notify admins about new connection request
+      await notifyAdmins("new_connection_request", request_id);
+
     } else if (notification_type === "request_accepted") {
       // Send emails to both parties when a request is accepted
       const athleteName = request.athlete_profiles.profiles.full_name || "The athlete";
@@ -294,6 +318,9 @@ const handler = async (req: Request): Promise<Response> => {
         });
         console.log(`Acceptance email sent to employer: ${employerEmail}`);
       }
+
+      // Notify admins about accepted connection
+      await notifyAdmins("connection_accepted", request_id);
     }
 
     // Handle declined connections - notify admins
