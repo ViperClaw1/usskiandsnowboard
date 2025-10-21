@@ -156,7 +156,7 @@ export default function Settings() {
         <CardContent className="space-y-6">
           {/* Email Toggles */}
           <div className="space-y-4">
-            <h3 className="font-medium text-sm">Email me when:</h3>
+            <h3 className="font-medium text-sm">Admin Notifications:</h3>
             
             <div className="flex items-center justify-between">
               <Label htmlFor="email_new_requests" className="flex flex-col gap-1 cursor-pointer">
@@ -188,44 +188,36 @@ export default function Settings() {
               />
             </div>
 
-          </div>
-
-          {/* Admin-only notifications */}
-          {isAdmin && (
-            <div className="space-y-4 pt-4 border-t">
-              <h3 className="font-medium text-sm text-primary">Admin notifications:</h3>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
-                  <span>New user registrations</span>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    When new athletes or partners sign up
-                  </span>
-                </Label>
-                <Switch
-                  id="email_new_accounts"
-                  checked={preferences.email_new_accounts}
-                  onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
-                  disabled={saving}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="email_connections_declined" className="flex flex-col gap-1 cursor-pointer">
-                  <span>Declined connections</span>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    When connection requests are declined
-                  </span>
-                </Label>
-                <Switch
-                  id="email_connections_declined"
-                  checked={preferences.email_connections_declined}
-                  onCheckedChange={(checked) => savePreferences({ email_connections_declined: checked })}
-                  disabled={saving}
-                />
-              </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
+                <span>New user registrations</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  When new athletes or partners sign up
+                </span>
+              </Label>
+              <Switch
+                id="email_new_accounts"
+                checked={preferences.email_new_accounts}
+                onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
+                disabled={saving}
+              />
             </div>
-          )}
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="email_connections_declined" className="flex flex-col gap-1 cursor-pointer">
+                <span>Declined connections</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  When connection requests are declined
+                </span>
+              </Label>
+              <Switch
+                id="email_connections_declined"
+                checked={preferences.email_connections_declined}
+                onCheckedChange={(checked) => savePreferences({ email_connections_declined: checked })}
+                disabled={saving}
+              />
+            </div>
+          </div>
 
           {/* Digest Frequency */}
           <div className="space-y-4 pt-4 border-t">
