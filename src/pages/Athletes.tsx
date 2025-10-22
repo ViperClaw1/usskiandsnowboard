@@ -158,8 +158,8 @@ const Athletes = () => {
                         onClick={handleAthleteClick}
                       >
                         <CardHeader>
-                          <div className="flex items-center gap-4 mb-4">
-                            <Avatar className="h-16 w-16">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Avatar className="h-12 w-12">
                               <AvatarImage src={athlete.photo_url || undefined} />
                               <AvatarFallback>
                                 {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
