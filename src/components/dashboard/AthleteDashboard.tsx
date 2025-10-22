@@ -387,7 +387,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
                   <CardTitle className="text-lg sm:text-xl lg:text-2xl">Browse Partners</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-start gap-4 sm:gap-6 lg:gap-8">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
                     <Button onClick={() => setShowEmployerDirectory(true)} size="sm" className="w-full sm:w-auto text-xs sm:text-sm shrink-0">
                       <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Browse Partners

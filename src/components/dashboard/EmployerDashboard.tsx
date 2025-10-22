@@ -474,7 +474,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                       <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Browse Athletes
                     </Button>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-start sm:items-center justify-start">
                       {featuredAthletes.length > 0 ? (
                         featuredAthletes.map((athlete) => (
                           <div key={athlete.id} className="flex items-center gap-2 w-full sm:w-auto">
