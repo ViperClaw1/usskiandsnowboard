@@ -132,9 +132,9 @@ const Athletes = () => {
         </section>
 
         <section className="py-8 sm:py-12 relative">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 max-w-7xl">
             {loading ? (
-              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <ProfileCardSkeleton />
                 <ProfileCardSkeleton />
                 <ProfileCardSkeleton />
@@ -150,7 +150,7 @@ const Athletes = () => {
             ) : (
               <>
                 <div className={!user ? "blur-sm pointer-events-none" : ""}>
-                  <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {athletes.map((athlete) => (
                       <Card 
                         key={athlete.id} 
