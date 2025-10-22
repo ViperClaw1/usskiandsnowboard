@@ -137,6 +137,16 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
 
       if (error) throw error;
 
+      const eventType = status === 'accepted' ? 'request_accepted' : 'request_declined';
+      if (data?.id) {
+        await supabase.functions.invoke('send-connection-notification', {
+          body: {
+            notification_type: eventType,
+            request_id: data.id,
+          }
+        });
+      }
+
       if (status === "accepted" && selectedRequest) {
         // Get user email
         const { data: { user } } = await supabase.auth.getUser();

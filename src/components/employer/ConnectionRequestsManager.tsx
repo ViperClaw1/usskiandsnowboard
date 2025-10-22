@@ -161,6 +161,15 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
 
       if (error) throw error;
 
+      if (data?.id) {
+        await supabase.functions.invoke('send-connection-notification', {
+          body: {
+            notification_type: 'request_accepted',
+            request_id: data.id,
+          }
+        });
+      }
+
       // Get user email
       const { data: { user } } = await supabase.auth.getUser();
       const userEmail = user?.email || "your email";
@@ -193,6 +202,15 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
         .single();
 
       if (error) throw error;
+
+      if (data?.id) {
+        await supabase.functions.invoke('send-connection-notification', {
+          body: {
+            notification_type: 'request_declined',
+            request_id: data.id,
+          }
+        });
+      }
 
       toast.success("Request rejected");
       setSelectedRequest(null);

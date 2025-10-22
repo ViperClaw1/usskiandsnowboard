@@ -233,7 +233,7 @@ const AthleteDirectory = () => {
         return;
       }
 
-      const { error } = await supabase
+      const { data: insertedRequest, error } = await supabase
         .from("connection_requests")
         .insert({
           athlete_id: selectedAthlete.id,
@@ -242,9 +242,20 @@ const AthleteDirectory = () => {
           opportunity_type: opportunityType || null,
           status: "pending",
           initiated_by_user_id: user.id
-        });
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      if (insertedRequest?.id) {
+        await supabase.functions.invoke('send-connection-notification', {
+          body: {
+            notification_type: 'new_request',
+            request_id: insertedRequest.id,
+          }
+        });
+      }
 
       toast.success("Connection request sent!");
       setRequestMessage("");
