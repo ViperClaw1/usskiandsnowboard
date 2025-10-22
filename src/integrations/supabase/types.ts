@@ -89,7 +89,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "athlete_profiles_user_id_fkey"
+            foreignKeyName: "athlete_profiles_profile_fkey"
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
@@ -318,7 +318,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "employer_profiles_user_id_fkey"
+            foreignKeyName: "employer_profiles_profile_fkey"
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
@@ -534,15 +534,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
