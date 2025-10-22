@@ -392,7 +392,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
                       <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Browse Partners
                     </Button>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-center justify-center">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 w-full sm:flex-1 items-start sm:items-center justify-start">
                       {loading ? (
                         <>
                           <DirectoryCardSkeleton />
@@ -400,7 +400,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
                         </>
                       ) : featuredEmployers.length > 0 ? (
                         featuredEmployers.map((employer) => (
-                          <div key={employer.id} className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto hover:scale-105 transition-transform duration-200 cursor-pointer" onClick={() => setShowEmployerDirectory(true)}>
+                          <div key={employer.id} className="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto hover:scale-105 transition-transform duration-200 cursor-pointer" onClick={() => setShowEmployerDirectory(true)}>
                             <Avatar className="h-24 w-24 shrink-0">
                               <AvatarImage src={employer.logo_url ?? undefined} />
                               <AvatarFallback>
