@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Shield, Settings, Users, Building2, BarChart3 } from "lucide-react";
+import { LogOut, Shield, Settings, Users, Building2, BarChart3, Bell } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useNavigate } from "react-router-dom";
 import { AdminStatsCards } from "./admin/AdminStatsCards";
@@ -41,6 +41,29 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
     }
   };
 
+  const testNotification = async () => {
+    try {
+      toast.loading("Sending test notification...");
+      
+      const { error } = await supabase.functions.invoke('send-admin-notification', {
+        body: {
+          notification_type: 'new_account',
+          user_id: user.id
+        }
+      });
+
+      if (error) {
+        console.error("Test notification error:", error);
+        toast.error("Failed to send test notification: " + error.message);
+      } else {
+        toast.success("Test notification sent! Check admin email.");
+      }
+    } catch (err: any) {
+      console.error("Test notification error:", err);
+      toast.error("Failed to send test notification");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -48,6 +71,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
           <div className="flex items-center gap-2">
             <NotificationBell userId={user.id} />
+            <Button variant="outline" size="sm" onClick={testNotification}>
+              <Bell className="h-4 w-4 mr-2" />
+              Test Email
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="h-4 w-4" />
             </Button>
