@@ -832,24 +832,14 @@ const AthleteDirectory = () => {
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div>
                 <Button
                   onClick={() => {
                     setShowRequestDialog(true);
                   }}
-                  className="flex-1"
+                  className="w-full"
                 >
                   Request Connection
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShareProfile(selectedAthlete);
-                  }}
-                  variant="outline"
-                  size="icon"
-                >
-                  <Share2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
