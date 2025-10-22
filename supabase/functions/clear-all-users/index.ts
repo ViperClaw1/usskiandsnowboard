@@ -12,7 +12,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Starting to clear all users...');
+    const { preserveEmails = [] } = await req.json().catch(() => ({ preserveEmails: [] }));
+    console.log('Starting to clear users, preserving:', preserveEmails);
 
     // Create admin client with service role key
     const supabaseAdmin = createClient(
@@ -34,11 +35,17 @@ Deno.serve(async (req) => {
       throw listError;
     }
 
-    console.log(`Found ${users.length} users to delete`);
+    console.log(`Found ${users.length} total users`);
+
+    // Filter users to delete (exclude preserved emails)
+    const usersToDelete = users.filter(user => !preserveEmails.includes(user.email));
+    const preservedUsers = users.filter(user => preserveEmails.includes(user.email));
+
+    console.log(`Will delete ${usersToDelete.length} users, preserving ${preservedUsers.length} users`);
 
     // Delete each user
     let deletedCount = 0;
-    for (const user of users) {
+    for (const user of usersToDelete) {
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
       if (deleteError) {
         console.error(`Error deleting user ${user.email}:`, deleteError);
@@ -48,13 +55,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Successfully deleted ${deletedCount} users`);
+    console.log(`Successfully deleted ${deletedCount} users, preserved ${preservedUsers.length} users`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Deleted ${deletedCount} users`,
-        deletedCount 
+        message: `Deleted ${deletedCount} users, preserved ${preservedUsers.length} users`,
+        deletedCount,
+        preservedCount: preservedUsers.length,
+        preservedEmails: preservedUsers.map(u => u.email)
       }),
       {
         status: 200,
