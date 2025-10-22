@@ -144,7 +144,7 @@ const Employers = () => {
             ) : (
               <>
                 <div className={!user ? "blur-sm pointer-events-none" : ""}>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
                     {employers.map((employer) => (
                       <Card 
                         key={employer.id} 

@@ -150,7 +150,7 @@ const Athletes = () => {
             ) : (
               <>
                 <div className={!user ? "blur-sm pointer-events-none" : ""}>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
                     {athletes.map((athlete) => (
                       <Card 
                         key={athlete.id} 
