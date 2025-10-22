@@ -401,7 +401,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
                       ) : featuredEmployers.length > 0 ? (
                         featuredEmployers.map((employer) => (
                           <div key={employer.id} className="flex items-center justify-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto hover:scale-105 transition-transform duration-200 cursor-pointer" onClick={() => setShowEmployerDirectory(true)}>
-                            <Avatar className="h-15 w-15 sm:h-18 sm:w-18 lg:h-24 lg:w-24 shrink-0">
+                            <Avatar className="h-24 w-24 shrink-0">
                               <AvatarImage src={employer.logo_url ?? undefined} />
                               <AvatarFallback>
                                 <Briefcase className="h-7 w-7 sm:h-9 sm:w-9 text-accent" />
