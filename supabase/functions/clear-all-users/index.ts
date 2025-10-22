@@ -12,9 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { preserveEmails = [] } = await req.json().catch(() => ({ preserveEmails: [] }));
-    console.log('Starting to clear users, preserving:', preserveEmails);
-
     // Create admin client with service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -26,6 +23,72 @@ Deno.serve(async (req) => {
         }
       }
     );
+
+    // Verify the requesting user is an admin
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized - No authorization header' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized - Invalid token' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
+    // Check if user has admin role
+    const { data: roles, error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+
+    if (roleError || !roles) {
+      return new Response(JSON.stringify({ error: 'Forbidden - Admin access required' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+
+    // Validate input
+    const body = await req.json().catch(() => ({ preserveEmails: [] }));
+    const { preserveEmails = [] } = body;
+
+    // Validate preserveEmails is an array and contains valid email formats
+    if (!Array.isArray(preserveEmails)) {
+      return new Response(JSON.stringify({ error: 'preserveEmails must be an array' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    if (preserveEmails.length > 100) {
+      return new Response(JSON.stringify({ error: 'Cannot preserve more than 100 emails' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of preserveEmails) {
+      if (typeof email !== 'string' || !emailRegex.test(email)) {
+        return new Response(JSON.stringify({ error: `Invalid email format: ${email}` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+    }
+
+    console.log('Starting to clear users, preserving:', preserveEmails);
 
     // Get all users
     const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();

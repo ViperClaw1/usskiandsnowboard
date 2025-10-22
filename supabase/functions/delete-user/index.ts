@@ -58,6 +58,15 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      return new Response(JSON.stringify({ error: 'Invalid user ID format' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
     // Prevent admin from deleting themselves
     if (userId === user.id) {
       return new Response(JSON.stringify({ error: 'Cannot delete your own account' }), {
