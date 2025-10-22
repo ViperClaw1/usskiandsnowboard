@@ -90,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending email to: ${profile.email}`);
 
     // Send email with temporary password
-    const emailResponse = await resend.emails.send({
+    const { data: emailData, error: emailError } = await resend.emails.send({
       from: "US Ski & Snowboard <onboarding@resend.dev>",
       to: [profile.email],
       subject: "Your Temporary Password",
@@ -115,7 +115,12 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent:", emailResponse);
+    if (emailError) {
+      console.error("Resend error:", emailError);
+      throw new Error(emailError.message || "Failed to send email");
+    }
+
+    console.log("Email sent successfully", emailData);
 
     return new Response(
       JSON.stringify({ 
