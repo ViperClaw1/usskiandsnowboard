@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -68,6 +68,28 @@ export const FullUserManagementTable = () => {
           roles: userRoles.length > 0 ? userRoles : [],
         };
       });
+    },
+  });
+
+  const sendTempPasswordMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await supabase.functions.invoke('send-temp-password', {
+        body: { userId },
+      });
+
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Temporary password sent successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to send password: ${error.message}`);
     },
   });
 
@@ -190,15 +212,26 @@ export const FullUserManagementTable = () => {
                     {format(new Date(user.created_at), 'MMM dd, yyyy')}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteUser(user.id, user.email, user.full_name || '')}
-                      disabled={currentUser?.id === user.id}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => sendTempPasswordMutation.mutate(user.id)}
+                        disabled={sendTempPasswordMutation.isPending}
+                        title="Send temporary password"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteUser(user.id, user.email, user.full_name || '')}
+                        disabled={currentUser?.id === user.id}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
