@@ -139,84 +139,86 @@ const Athletes = () => {
                 <ProfileCardSkeleton />
                 <ProfileCardSkeleton />
               </div>
-            ) : athletes.length === 0 ? (
-              <EmptyState
-                icon={Users}
-                title="No Featured Athletes Yet"
-                description="Check back soon to see our talented athletes looking for career opportunities."
-                actionLabel="Sign In to Learn More"
-                onAction={() => navigate("/auth")}
-              />
             ) : (
               <>
                 <div className={!user ? "blur-sm pointer-events-none" : ""}>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                    {athletes.map((athlete) => (
-                      <Card 
-                        key={athlete.id} 
-                        className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
-                        onClick={handleAthleteClick}
-                      >
-                        <CardHeader>
-                          <div className="flex items-center gap-4 mb-4">
-                            <Avatar className="h-24 w-24">
-                              <AvatarImage src={athlete.photo_url || undefined} />
-                              <AvatarFallback>
-                                {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <CardTitle className="text-lg">{athlete.profiles?.full_name || 'Athlete'}</CardTitle>
-                              {athlete.sport_discipline && (
-                                <Badge variant="secondary" className="mt-1">
-                                  {athlete.sport_discipline}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          {athlete.bio && (
-                            <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
-                          )}
-                          {athlete.skills && athlete.skills.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium mb-2">Skills</p>
-                              <div className="flex flex-wrap gap-2">
-                                {athlete.skills.slice(0, 3).map((skill, idx) => (
-                                  <Badge key={idx} variant="outline">{skill}</Badge>
-                                ))}
+                  {athletes.length === 0 ? (
+                    <EmptyState
+                      icon={Users}
+                      title="No Featured Athletes Yet"
+                      description="Check back soon to see our talented athletes looking for career opportunities."
+                      actionLabel="Sign In to Learn More"
+                      onAction={() => navigate("/auth")}
+                    />
+                  ) : (
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
+                      {athletes.map((athlete) => (
+                        <Card 
+                          key={athlete.id} 
+                          className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
+                          onClick={handleAthleteClick}
+                        >
+                          <CardHeader>
+                            <div className="flex items-center gap-4 mb-4">
+                              <Avatar className="h-24 w-24">
+                                <AvatarImage src={athlete.photo_url || undefined} />
+                                <AvatarFallback>
+                                  {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <CardTitle className="text-lg">{athlete.profiles?.full_name || 'Athlete'}</CardTitle>
+                                {athlete.sport_discipline && (
+                                  <Badge variant="secondary" className="mt-1">
+                                    {athlete.sport_discipline}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
-                          )}
-                          {athlete.availability && (
-                            <p className="text-sm text-muted-foreground">
-                              <span className="font-medium">Availability:</span> {athlete.availability}
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {athlete.bio && (
+                              <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
+                            )}
+                            {athlete.skills && athlete.skills.length > 0 && (
+                              <div>
+                                <p className="text-sm font-medium mb-2">Skills</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {athlete.skills.slice(0, 3).map((skill, idx) => (
+                                    <Badge key={idx} variant="outline">{skill}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {athlete.availability && (
+                              <p className="text-sm text-muted-foreground">
+                                <span className="font-medium">Availability:</span> {athlete.availability}
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 {!user && (
                   <div 
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px]"
                     onClick={() => navigate("/")}
                   >
                     <Card 
-                      className="max-w-md w-full shadow-2xl border-2"
+                      className="max-w-md mx-4 shadow-2xl border-2"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <CardHeader className="text-center pb-4">
                         <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                           <Lock className="h-8 w-8 text-primary" />
                         </div>
-                        <CardTitle className="text-xl sm:text-2xl">Sign In to View Athletes</CardTitle>
+                        <CardTitle className="text-2xl">Sign In to View Athletes</CardTitle>
                       </CardHeader>
                       <CardContent className="text-center space-y-4">
-                        <p className="text-sm sm:text-base text-muted-foreground">
+                        <p className="text-muted-foreground">
                           Connect with world-class talent. Sign in as a Partner to discover athletes who bring unmatched dedication and excellence.
                         </p>
                         <div className="flex flex-col gap-3">
