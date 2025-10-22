@@ -33,17 +33,18 @@ interface FormData {
   skills: string[];
   availability: string;
   instagram: string;
-  highlights: string;
   yearsOfMembership: string;
   sponsors: string;
   photoUrl: string;
+  galleryPhotos: string[];
 }
 
-const TOTAL_STEPS = 14;
+const TOTAL_STEPS = 15;
 
 export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string>("");
+  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, watch, setValue, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -60,10 +61,10 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       skills: [],
       availability: "",
       instagram: "",
-      highlights: "",
       yearsOfMembership: "",
       sponsors: "",
       photoUrl: "",
+      galleryPhotos: [],
     },
   });
 
@@ -78,6 +79,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         setValue(key as keyof FormData, parsed.formData[key]);
       });
       if (parsed.photoUrl) setPhotoUrl(parsed.photoUrl);
+      if (parsed.galleryPhotos) setGalleryPhotos(parsed.galleryPhotos);
       if (parsed.currentStep) setCurrentStep(parsed.currentStep);
     }
   }, [user.id, setValue]);
@@ -91,13 +93,14 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           currentStep,
           formData: formValues,
           photoUrl,
+          galleryPhotos,
           lastSaved: Date.now(),
         })
       );
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formValues, currentStep, photoUrl, user.id]);
+  }, [formValues, currentStep, photoUrl, galleryPhotos, user.id]);
 
   const canGoNext = useMemo(() => {
     switch (currentStep) {
@@ -168,10 +171,11 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         skills: skillsArray,
         availability: data.availability,
         instagram_url: data.instagram || null,
-        professional_highlights: data.highlights || null,
         years_of_membership: data.yearsOfMembership ? parseInt(data.yearsOfMembership) : null,
         sponsors: sponsorsArray.length > 0 ? sponsorsArray : null,
         photo_url: photoUrl || null,
+        hero_image_url: galleryPhotos.length > 0 ? galleryPhotos[0] : null,
+        gallery_images: galleryPhotos.length > 1 ? galleryPhotos.slice(1) : null,
         email: data.email,
         is_public: true,
       };
@@ -534,6 +538,98 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       case 12:
         return (
           <OnboardingStep
+            title="Add photos to your profile"
+            description="Upload 5+ photos to showcase yourself (first becomes your hero image)"
+            optional
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {galleryPhotos.map((url, index) => (
+                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2">
+                    <img src={url} alt={`Gallery ${index + 1}`} className="w-full h-full object-cover" />
+                    {index === 0 && (
+                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 text-xs rounded">
+                        Hero Image
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setGalleryPhotos(galleryPhotos.filter((_, i) => i !== index))}
+                      className="absolute top-2 right-2 bg-destructive text-destructive-foreground p-1 rounded-full hover:bg-destructive/90"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <Label
+                htmlFor="gallery-upload"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 h-14 px-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-lg w-full"
+              >
+                <Upload className="h-5 w-5" />
+                {galleryPhotos.length === 0 ? "Upload Photos" : `Add More Photos (${galleryPhotos.length} uploaded)`}
+              </Label>
+              <Input
+                id="gallery-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length === 0) return;
+
+                  try {
+                    const uploadPromises = files.map(async (file) => {
+                      const fileExt = file.name.split(".").pop();
+                      const fileName = `${user.id}-gallery-${Date.now()}-${Math.random()}.${fileExt}`;
+                      const filePath = `${user.id}/gallery/${fileName}`;
+
+                      const { error: uploadError } = await supabase.storage
+                        .from("athlete-photos")
+                        .upload(filePath, file, { upsert: true });
+
+                      if (uploadError) throw uploadError;
+
+                      const { data } = supabase.storage
+                        .from("athlete-photos")
+                        .getPublicUrl(filePath);
+
+                      return data.publicUrl;
+                    });
+
+                    const newUrls = await Promise.all(uploadPromises);
+                    setGalleryPhotos([...galleryPhotos, ...newUrls]);
+                    toast({ title: `${newUrls.length} photo(s) uploaded successfully!` });
+                  } catch (error: any) {
+                    toast({
+                      title: "Error uploading photos",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                className="hidden"
+              />
+              {galleryPhotos.length > 0 && (
+                <p className="text-sm text-muted-foreground text-center">
+                  {galleryPhotos.length} photo{galleryPhotos.length !== 1 ? 's' : ''} uploaded. First photo is your hero image.
+                </p>
+              )}
+            </div>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              canGoBack={true}
+              canGoNext={true}
+              onBack={prevStep}
+              onNext={nextStep}
+              onSkip={skipStep}
+            />
+          </OnboardingStep>
+        );
+
+      case 13:
+        return (
+          <OnboardingStep
             title="A few more details?"
             description="These are optional but help complete your profile"
             optional
@@ -546,15 +642,6 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
                   {...register("instagram")}
                   placeholder="https://instagram.com/yourusername"
                   className="h-12 text-base mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="highlights" className="text-base">Professional Highlights</Label>
-                <Textarea
-                  id="highlights"
-                  {...register("highlights")}
-                  placeholder="Olympic medals, championships, records..."
-                  className="min-h-24 text-base mt-1"
                 />
               </div>
               <div>
@@ -590,7 +677,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 13:
+      case 14:
         return (
           <OnboardingStep
             title="Review & Complete"

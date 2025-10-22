@@ -22,7 +22,9 @@ export type Database = {
           career_interests: string[] | null
           created_at: string
           email: string | null
+          gallery_images: string[] | null
           geographic_preferences: string[] | null
+          hero_image_url: string | null
           home_mountain: string | null
           id: string
           instagram_url: string | null
@@ -46,7 +48,9 @@ export type Database = {
           career_interests?: string[] | null
           created_at?: string
           email?: string | null
+          gallery_images?: string[] | null
           geographic_preferences?: string[] | null
+          hero_image_url?: string | null
           home_mountain?: string | null
           id?: string
           instagram_url?: string | null
@@ -70,7 +74,9 @@ export type Database = {
           career_interests?: string[] | null
           created_at?: string
           email?: string | null
+          gallery_images?: string[] | null
           geographic_preferences?: string[] | null
+          hero_image_url?: string | null
           home_mountain?: string | null
           id?: string
           instagram_url?: string | null
