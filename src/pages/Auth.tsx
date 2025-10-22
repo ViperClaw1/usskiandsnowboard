@@ -382,6 +382,17 @@ const Auth = () => {
                       )}
                     </Button>
 
+                    <div className="flex justify-between items-center">
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="px-0"
+                        asChild
+                      >
+                        <Link to="/forgot-password">Forgot password?</Link>
+                      </Button>
+                    </div>
+
                     <Button
                       type="button"
                       variant="link"

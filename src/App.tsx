@@ -14,6 +14,8 @@ import News from "./pages/News";
 import NotFound from "./pages/NotFound";
 import Privacy from "./pages/Privacy";
 import EmailVerification from "./pages/EmailVerification";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AllUsers from "./pages/admin/AllUsers";
 import AllAthletes from "./pages/admin/AllAthletes";
 import AllEmployers from "./pages/admin/AllEmployers";
@@ -34,6 +36,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/email-verification" element={<EmailVerification />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/athletes" element={<Athletes />} />
           <Route path="/employers" element={<Employers />} />
