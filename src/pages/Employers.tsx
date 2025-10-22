@@ -157,7 +157,7 @@ const Employers = () => {
                               <img 
                                 src={employer.logo_url} 
                                 alt={`${employer.company_name} logo`}
-                                className="h-12 w-12 object-contain rounded"
+                                className="h-24 w-24 object-contain rounded"
                               />
                             ) : (
                               <Building2 className="h-8 w-8 text-primary" />

@@ -159,7 +159,7 @@ const Athletes = () => {
                       >
                         <CardHeader>
                           <div className="flex items-center gap-4 mb-4">
-                            <Avatar className="h-16 w-16">
+                            <Avatar className="h-24 w-24">
                               <AvatarImage src={athlete.photo_url || undefined} />
                               <AvatarFallback>
                                 {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
