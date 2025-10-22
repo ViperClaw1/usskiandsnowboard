@@ -108,12 +108,13 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       case 4: return formValues.email.trim().length > 0 && formValues.email.includes("@");
       case 5: return formValues.affiliation.trim().length > 0;
       case 6: return formValues.sport.trim().length > 0;
-      case 7: return formValues.bio.trim().length > 0;
-      case 8: return formValues.careerInterests.length > 0;
-      case 9: return formValues.skills.length > 0;
-      case 10: return formValues.availability.trim().length > 0;
-      case 11: return true; // Optional
-      case 12: return true; // Review
+      case 7: return true; // Home mountain (optional)
+      case 8: return formValues.bio.trim().length > 0;
+      case 9: return formValues.careerInterests.length > 0;
+      case 10: return formValues.skills.length > 0;
+      case 11: return formValues.availability.trim().length > 0;
+      case 12: return true; // Optional
+      case 13: return true; // Review
       default: return false;
     }
   }, [currentStep, formValues]);
