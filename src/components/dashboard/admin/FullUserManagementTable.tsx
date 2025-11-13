@@ -7,9 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
-import { Search, Trash2, KeyRound } from "lucide-react";
+import { Search, Trash2, KeyRound, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { AddUserDialog } from "./AddUserDialog";
+import { InviteCodeDialog } from "./InviteCodeDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +34,8 @@ export const FullUserManagementTable = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [inviteCodeUser, setInviteCodeUser] = useState<{ name: string; email: string } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -71,27 +75,9 @@ export const FullUserManagementTable = () => {
     },
   });
 
-  const sendTempPasswordMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const response = await supabase.functions.invoke('send-temp-password', {
-        body: { userId },
-      });
-
-      if (response.error) throw response.error;
-      if (response.data?.error) throw new Error(response.data.error);
-      
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Temporary password sent successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to send password: ${error.message}`);
-    },
-  });
+  const handleShowInviteCode = (userName: string, userEmail: string) => {
+    setInviteCodeUser({ name: userName, email: userEmail });
+  };
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -143,8 +129,16 @@ export const FullUserManagementTable = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User Management</CardTitle>
-        <CardDescription>Manage user roles and access permissions</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>User Management</CardTitle>
+            <CardDescription>Manage user roles and access permissions</CardDescription>
+          </div>
+          <Button onClick={() => setAddUserOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        </div>
         
         <div className="flex gap-4 mt-4">
           <div className="relative flex-1">
@@ -216,9 +210,8 @@ export const FullUserManagementTable = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => sendTempPasswordMutation.mutate(user.id)}
-                        disabled={sendTempPasswordMutation.isPending}
-                        title="Send temporary password"
+                        onClick={() => handleShowInviteCode(user.full_name || '', user.email)}
+                        title="Show invite code"
                       >
                         <KeyRound className="h-4 w-4" />
                       </Button>
@@ -266,6 +259,15 @@ export const FullUserManagementTable = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      <AddUserDialog open={addUserOpen} onOpenChange={setAddUserOpen} />
+      
+      <InviteCodeDialog 
+        open={!!inviteCodeUser} 
+        onOpenChange={() => setInviteCodeUser(null)}
+        userName={inviteCodeUser?.name || ''}
+        userEmail={inviteCodeUser?.email || ''}
+      />
     </Card>
   );
 };
