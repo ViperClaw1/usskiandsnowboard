@@ -208,6 +208,27 @@ const Auth = () => {
     }
   };
 
+  const handleResetTestAccounts = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-test-accounts', {
+        body: {}
+      });
+      
+      if (error) throw error;
+      
+      toast.success(`Test accounts reset! Use password: ${data.tempPassword}`, {
+        duration: 10000
+      });
+      
+      console.log('Reset results:', data);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reset accounts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
       <div className="w-full max-w-md">
         <div className="mb-8">
@@ -445,6 +466,18 @@ const Auth = () => {
                     </svg>
                     Continue with Google
                   </Button>
+                  
+                  {process.env.NODE_ENV === 'development' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={handleResetTestAccounts}
+                      disabled={loading}
+                    >
+                      Reset Test Account Passwords
+                    </Button>
+                  )}
                 </form>
               )
             )}

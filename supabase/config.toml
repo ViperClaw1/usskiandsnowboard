@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-temp-password]
 verify_jwt = false
+
+[functions.reset-test-accounts]
+verify_jwt = false
