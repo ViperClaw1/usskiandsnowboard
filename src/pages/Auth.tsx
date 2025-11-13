@@ -219,6 +219,17 @@ const Auth = () => {
         
         <Card className="shadow-elegant">
           <CardHeader className="space-y-4">
+            <div>
+              <CardTitle>
+                {isSignUp ? "Create Account" : (userType === "athlete" ? "Athlete Portal" : "Partner Portal")}
+              </CardTitle>
+              <CardDescription>
+                {isSignUp 
+                  ? (userType === "athlete" ? "Join to access opportunities that match your Olympic-level excellence" : "Join to discover world-class athletes ready to bring their winning mindset to your team")
+                  : (userType === "athlete" ? "Access opportunities that match your Olympic-level excellence" : "Discover world-class athletes ready to bring their winning mindset to your team")
+                }
+              </CardDescription>
+            </div>
             <div className="flex gap-2 p-1 bg-muted rounded-lg">
               <Button
                 type="button"
@@ -236,17 +247,6 @@ const Auth = () => {
               >
                 Partner
               </Button>
-            </div>
-            <div>
-              <CardTitle>
-                {isSignUp ? "Create Account" : (userType === "athlete" ? "Athlete Portal" : "Partner Portal")}
-              </CardTitle>
-              <CardDescription>
-                {isSignUp 
-                  ? (userType === "athlete" ? "Join to access opportunities that match your Olympic-level excellence" : "Join to discover world-class athletes ready to bring their winning mindset to your team")
-                  : (userType === "athlete" ? "Access opportunities that match your Olympic-level excellence" : "Discover world-class athletes ready to bring their winning mindset to your team")
-                }
-              </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
