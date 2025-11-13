@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -29,6 +29,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showInviteCode, setShowInviteCode] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   useEffect(() => {
     const {
       data: {
@@ -238,23 +239,20 @@ const Auth = () => {
             </div>
             <div>
               <CardTitle>
-                {userType === "athlete" ? "Athlete Portal" : "Partner Portal"}
+                {isSignUp ? "Create Account" : (userType === "athlete" ? "Athlete Portal" : "Partner Portal")}
               </CardTitle>
               <CardDescription>
-                {userType === "athlete" ? "Access opportunities that match your Olympic-level excellence" : "Discover world-class athletes ready to bring their winning mindset to your team"}
+                {isSignUp 
+                  ? (userType === "athlete" ? "Join to access opportunities that match your Olympic-level excellence" : "Join to discover world-class athletes ready to bring their winning mindset to your team")
+                  : (userType === "athlete" ? "Access opportunities that match your Olympic-level excellence" : "Discover world-class athletes ready to bring their winning mindset to your team")
+                }
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
-
-            <Tabs defaultValue="signin">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="signin">
-                {showPhoneAuth ? <form onSubmit={handlePhoneSignIn} className="space-y-4">
+            {!isSignUp ? (
+              showPhoneAuth ? (
+                <form onSubmit={handlePhoneSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
                       <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" value={phone} onChange={e => setPhone(e.target.value)} required />
@@ -268,7 +266,9 @@ const Auth = () => {
                     <Button type="button" variant="ghost" className="w-full" onClick={() => setShowPhoneAuth(false)}>
                       Back to email login
                     </Button>
-                  </form> : showMagicLink ? <form onSubmit={handleMagicLinkSignIn} className="space-y-4">
+                  </form>
+              ) : showMagicLink ? (
+                <form onSubmit={handleMagicLinkSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="magic-email">Email</Label>
                       <Input id="magic-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
@@ -282,7 +282,9 @@ const Auth = () => {
                     <Button type="button" variant="ghost" className="w-full" onClick={() => setShowMagicLink(false)}>
                       Back to password login
                     </Button>
-                  </form> : <form onSubmit={handleSignIn} className="space-y-4">
+                  </form>
+              ) : (
+                <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signin-email">Email</Label>
                       <Input id="signin-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
@@ -303,9 +305,17 @@ const Auth = () => {
                         </> : "Sign In"}
                     </Button>
 
-                    <div className="flex justify-between items-center">
-                      <Button type="button" variant="link" className="px-0" asChild>
+                    <div className="flex justify-between items-center text-sm">
+                      <Button type="button" variant="link" className="px-0 h-auto" asChild>
                         <Link to="/forgot-password">Forgot password?</Link>
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="link" 
+                        className="px-0 h-auto" 
+                        onClick={() => setIsSignUp(true)}
+                      >
+                        Create an account
                       </Button>
                     </div>
 
@@ -335,11 +345,11 @@ const Auth = () => {
                       </svg>
                       Continue with Google
                     </Button>
-                  </form>}
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                {showPhoneSignup ? <form onSubmit={handlePhoneSignUp} className="space-y-4">
+                  </form>
+              )
+            ) : (
+              showPhoneSignup ? (
+                <form onSubmit={handlePhoneSignUp} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signup-phone-name">Full Name</Label>
                       <Input id="signup-phone-name" type="text" placeholder="Mikaela Shiffrin" value={fullName} onChange={e => setFullName(e.target.value)} required />
@@ -366,7 +376,9 @@ const Auth = () => {
                     <Button type="button" variant="ghost" className="w-full" onClick={() => setShowPhoneSignup(false)}>
                       Back to email signup
                     </Button>
-                  </form> : <form onSubmit={handleSignUp} className="space-y-4">
+                  </form>
+              ) : (
+                <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
                     <Input id="signup-name" type="text" placeholder="Mikaela Shiffrin" value={fullName} onChange={e => setFullName(e.target.value)} required />
@@ -400,6 +412,17 @@ const Auth = () => {
                       </> : "Create Account"}
                   </Button>
 
+                  <div className="flex justify-center">
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      className="px-0 h-auto text-sm" 
+                      onClick={() => setIsSignUp(false)}
+                    >
+                      Already have an account? Sign in
+                    </Button>
+                  </div>
+
                   <Button type="button" variant="link" className="w-full" onClick={() => setShowPhoneSignup(true)}>
                     Sign up with phone number instead
                   </Button>
@@ -422,9 +445,9 @@ const Auth = () => {
                     </svg>
                     Continue with Google
                   </Button>
-                </form>}
-              </TabsContent>
-            </Tabs>
+                </form>
+              )
+            )}
           </CardContent>
         </Card>
       </div>
