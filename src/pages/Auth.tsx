@@ -16,7 +16,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get("type");
-  const initialType = (typeParam === "athlete" || typeParam === "employer") ? typeParam : "athlete";
+  const initialType = (typeParam === "athlete" || typeParam === "employer") ? typeParam : null;
   
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -24,7 +24,7 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
   const [privateCode, setPrivateCode] = useState("");
-  const [userType, setUserType] = useState<"athlete" | "employer">(initialType);
+  const [userType, setUserType] = useState<"athlete" | "employer" | null>(initialType);
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [showPhoneAuth, setShowPhoneAuth] = useState(false);
   const [showPhoneSignup, setShowPhoneSignup] = useState(false);
@@ -217,6 +217,55 @@ const Auth = () => {
     }
   };
 
+  // Show user type selection screen if no type is selected
+  if (!userType) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <Link to="/">
+              <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 hover:opacity-80 transition-opacity md:hidden" />
+              <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 hover:opacity-80 transition-opacity hidden md:block" />
+            </Link>
+          </div>
+          
+          <Card className="shadow-elegant">
+            <CardHeader>
+              <CardTitle>Welcome</CardTitle>
+              <CardDescription>
+                Select your portal to get started
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUserType("athlete")}
+                className="w-full h-auto py-6 flex-col gap-2"
+              >
+                <span className="text-lg font-semibold">Athlete Portal</span>
+                <span className="text-sm text-muted-foreground font-normal">
+                  Access opportunities that match your Olympic-level excellence
+                </span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUserType("employer")}
+                className="w-full h-auto py-6 flex-col gap-2"
+              >
+                <span className="text-lg font-semibold">Partner Portal</span>
+                <span className="text-sm text-muted-foreground font-normal">
+                  Discover world-class athletes ready to bring their winning mindset to your team
+                </span>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
       <div className="w-full max-w-md">
@@ -239,29 +288,6 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!typeParam && (
-              <div className="mb-6">
-                <Label className="mb-3 block">I am a:</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={userType === "athlete" ? "default" : "outline"}
-                    onClick={() => setUserType("athlete")}
-                    className="w-full"
-                  >
-                    Athlete
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={userType === "employer" ? "default" : "outline"}
-                    onClick={() => setUserType("employer")}
-                    className="w-full"
-                  >
-                    Partner
-                  </Button>
-                </div>
-              </div>
-            )}
 
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2 mb-6">
