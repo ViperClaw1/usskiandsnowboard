@@ -23,14 +23,15 @@ Deno.serve(async (req) => {
       }
     );
 
-    // Reset passwords for the three test accounts
+    // Reset passwords for all test accounts
     const accounts = [
       { email: 'bryan@cardinallands.com', userId: 'd9d26433-499c-4141-a39c-c8eb4c7c0f47', role: 'admin' },
       { email: 'bd@guidepostcap.com', userId: 'fcea9d6d-f832-4e82-8671-ba22a19474b5', role: 'employer' },
-      { email: 'bryanhdunn@gmail.com', userId: '5eda3177-edb7-498f-918b-eae2bff2d520', role: 'athlete' }
+      { email: 'bryanhdunn@gmail.com', userId: '5eda3177-edb7-498f-918b-eae2bff2d520', role: 'athlete' },
+      { email: 'joshuacherner@gmail.com', userId: '28ec8285-c1f1-48b3-91c0-5f712209e632', role: 'admin' }
     ];
 
-    const tempPassword = 'TempPass123!';
+    const tempPassword = 'Sandcastle116';
     const results = [];
 
     for (const account of accounts) {
