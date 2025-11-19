@@ -130,12 +130,9 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Sign out error:", error);
-        toast.error("Failed to sign out");
-        return;
-      }
+      await supabase.auth.signOut({ scope: 'local' });
+      localStorage.clear();
+      sessionStorage.clear();
       toast.success("Signed out successfully");
       navigate("/auth");
     } catch (e) {
