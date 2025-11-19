@@ -613,10 +613,7 @@ export type Database = {
       }
     }
     Functions: {
-      clear_connection_requests: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      clear_connection_requests: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
