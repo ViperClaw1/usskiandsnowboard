@@ -40,6 +40,11 @@ export const UserRoleManager = ({
 
   const grantRoleMutation = useMutation({
     mutationFn: async (role: AppRole) => {
+      // Prevent admins from modifying their own admin role
+      if (isSelf && role !== 'admin' && roles.includes('admin')) {
+        throw new Error("You cannot remove your own admin role. Please have another admin make this change.");
+      }
+      
       const conflictingRoles: AppRole[] = [];
       
       // Admin is mutually exclusive with athlete and employer
@@ -101,6 +106,11 @@ export const UserRoleManager = ({
 
   const revokeRoleMutation = useMutation({
     mutationFn: async (role: AppRole) => {
+      // Prevent admins from revoking their own admin role
+      if (isSelf && role === 'admin') {
+        throw new Error("You cannot remove your own admin role. Please have another admin make this change.");
+      }
+      
       const { error } = await supabase
         .from('user_roles')
         .delete()
