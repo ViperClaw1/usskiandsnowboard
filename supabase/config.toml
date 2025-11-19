@@ -1,7 +1,1 @@
 project_id = "fihcubajfjjbcjqiqqrv"
-
-[functions.create-admin-account]
-verify_jwt = false
-
-[functions.update-user-password]
-verify_jwt = false
