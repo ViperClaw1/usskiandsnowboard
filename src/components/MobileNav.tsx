@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, LogOut, User } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -8,20 +8,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/components/auth/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export const MobileNav = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
-    setOpen(false);
-  };
 
   const navItems = [
     { to: "/athletes", label: "Athletes" },
@@ -57,24 +47,9 @@ export const MobileNav = () => {
               {item.label}
             </Link>
           ))}
-          {user ? (
-            <>
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="mt-4">
-                <Button className="w-full" variant="secondary">
-                  <User className="mr-2 h-4 w-4" />
-                  Account
-                </Button>
-              </Link>
-              <Button className="w-full" variant="outline" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
-            </>
-          ) : (
-            <Link to="/auth" onClick={() => setOpen(false)} className="mt-4">
-              <Button className="w-full">Sign In</Button>
-            </Link>
-          )}
+          <Link to="/auth" onClick={() => setOpen(false)} className="mt-4">
+            <Button className="w-full">Sign In</Button>
+          </Link>
         </nav>
       </SheetContent>
     </Sheet>

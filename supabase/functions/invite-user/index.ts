@@ -268,7 +268,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          userId: userId,
+          user: newUser.user,
           emailError: 'User created but email failed to send'
         }),
         {
@@ -281,7 +281,7 @@ serve(async (req) => {
     console.log('Invitation email sent successfully');
 
     return new Response(
-      JSON.stringify({ success: true, userId: userId }),
+      JSON.stringify({ success: true, user: newUser.user }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
