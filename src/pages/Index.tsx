@@ -1,11 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Users, Briefcase, TrendingUp } from "lucide-react";
+import { Users, Briefcase, TrendingUp, LogOut, User } from "lucide-react";
 import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
+import { useAuth } from "@/components/auth/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Index = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Logged out successfully");
+  };
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b sticky top-0 z-50" style={{ 
@@ -34,9 +44,24 @@ const Index = () => {
             <Link to="/news" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
               News
             </Link>
-            <Link to="/auth">
-              <Button size="sm" className="lg:h-10">Sign In</Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/dashboard">
+                  <Button size="sm" variant="secondary" className="lg:h-10">
+                    <User className="mr-2 h-4 w-4" />
+                    Account
+                  </Button>
+                </Link>
+                <Button size="sm" variant="outline" className="lg:h-10 border-white text-white hover:bg-white/10" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button size="sm" className="lg:h-10">Sign In</Button>
+              </Link>
+            )}
           </nav>
           <MobileNav />
         </div>
