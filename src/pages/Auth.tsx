@@ -242,7 +242,7 @@ const Auth = () => {
           <CardHeader className="space-y-4">
             <div>
               <CardTitle>
-                {isSignUp ? "Create Account" : (userType === "athlete" ? "Athlete Portal" : "Partner Portal")}
+                {userType === "athlete" ? "Athlete Portal" : "Partner Portal"}
               </CardTitle>
               <CardDescription>
                 {isSignUp 
@@ -251,23 +251,27 @@ const Auth = () => {
                 }
               </CardDescription>
             </div>
-            <div className="flex gap-2 p-1 bg-muted rounded-lg">
-              <Button
-                type="button"
-                variant={userType === "athlete" ? "default" : "ghost"}
-                onClick={() => setUserType("athlete")}
-                className="flex-1 transition-all"
-              >
-                Athlete
-              </Button>
-              <Button
-                type="button"
-                variant={userType === "employer" ? "default" : "ghost"}
-                onClick={() => setUserType("employer")}
-                className="flex-1 transition-all"
-              >
-                Partner
-              </Button>
+            
+            <div className="space-y-2">
+              <Label>I am a:</Label>
+              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                <Button
+                  type="button"
+                  variant={userType === "athlete" ? "default" : "ghost"}
+                  onClick={() => setUserType("athlete")}
+                  className="flex-1 transition-all"
+                >
+                  Athlete
+                </Button>
+                <Button
+                  type="button"
+                  variant={userType === "employer" ? "default" : "ghost"}
+                  onClick={() => setUserType("employer")}
+                  className="flex-1 transition-all"
+                >
+                  Partner
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
