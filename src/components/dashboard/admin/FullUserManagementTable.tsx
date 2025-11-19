@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -27,11 +27,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 export const FullUserManagementTable = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    role: "athlete" as "athlete" | "employer" | "admin",
+  });
   const queryClient = useQueryClient();
 
   const { data: currentUser } = useQuery({
@@ -73,6 +89,36 @@ export const FullUserManagementTable = () => {
 
   // Removed temp password functionality - using single invite code instead
 
+  const inviteUserMutation = useMutation({
+    mutationFn: async (userData: typeof inviteForm) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await supabase.functions.invoke('invite-user', {
+        body: userData,
+      });
+
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("User invited successfully! They will receive an email to set their password.");
+      queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      setIsInviteDialogOpen(false);
+      setInviteForm({
+        email: "",
+        firstName: "",
+        lastName: "",
+        role: "athlete",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to invite user: ${error.message}`);
+    },
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -105,6 +151,14 @@ export const FullUserManagementTable = () => {
     if (userToDelete) {
       deleteUserMutation.mutate(userToDelete.id);
     }
+  };
+
+  const handleInviteUser = () => {
+    if (!inviteForm.email || !inviteForm.role) {
+      toast.error("Email and role are required");
+      return;
+    }
+    inviteUserMutation.mutate(inviteForm);
   };
 
   const filteredUsers = users?.filter(user => {
@@ -237,6 +291,73 @@ export const FullUserManagementTable = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite New User</DialogTitle>
+            <DialogDescription>
+              Send an invitation email to a new user. They'll receive a link to set their password.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="user@example.com"
+                value={inviteForm.email}
+                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                placeholder="John"
+                value={inviteForm.firstName}
+                onChange={(e) => setInviteForm({ ...inviteForm, firstName: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                placeholder="Doe"
+                value={inviteForm.lastName}
+                onChange={(e) => setInviteForm({ ...inviteForm, lastName: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="role">Role *</Label>
+              <Select 
+                value={inviteForm.role} 
+                onValueChange={(value: "athlete" | "employer" | "admin") => 
+                  setInviteForm({ ...inviteForm, role: value })
+                }
+              >
+                <SelectTrigger id="role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="athlete">Athlete</SelectItem>
+                  <SelectItem value="employer">Employer</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleInviteUser} disabled={inviteUserMutation.isPending}>
+              {inviteUserMutation.isPending ? "Sending..." : "Send Invitation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
