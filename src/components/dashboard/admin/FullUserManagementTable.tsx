@@ -177,8 +177,16 @@ export const FullUserManagementTable = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User Management</CardTitle>
-        <CardDescription>Manage user roles and access permissions</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>User Management</CardTitle>
+            <CardDescription>Manage user roles and access permissions</CardDescription>
+          </div>
+          <Button onClick={() => setIsInviteDialogOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invite User
+          </Button>
+        </div>
         
         <div className="flex gap-4 mt-4">
           <div className="relative flex-1">
