@@ -59,59 +59,125 @@ serve(async (req) => {
 
     console.log('Creating user:', email, 'with role:', role);
 
-    // Generate a random temporary password
-    const tempPassword = crypto.randomUUID().slice(0, 16);
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users.find(u => u.email === email);
 
-    // Create the user
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: false,
-      user_metadata: {
-        first_name: firstName || '',
-        last_name: lastName || '',
-        full_name: `${firstName || ''} ${lastName || ''}`.trim(),
+    let userId: string;
+
+    if (existingUser) {
+      console.log('User already exists, resending invitation:', existingUser.id);
+      userId = existingUser.id;
+
+      // Update user metadata if provided
+      if (firstName || lastName) {
+        await supabaseAdmin.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            first_name: firstName || existingUser.user_metadata?.first_name || '',
+            last_name: lastName || existingUser.user_metadata?.last_name || '',
+            full_name: `${firstName || existingUser.user_metadata?.first_name || ''} ${lastName || existingUser.user_metadata?.last_name || ''}`.trim(),
+          }
+        });
       }
-    });
 
-    if (createError) {
-      console.error('Error creating user:', createError);
-      throw createError;
-    }
+      // Update profile if exists
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
 
-    console.log('User created successfully:', newUser.user.id);
+      if (existingProfile) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({
+            first_name: firstName || null,
+            last_name: lastName || null,
+            full_name: `${firstName || ''} ${lastName || ''}`.trim() || null,
+          })
+          .eq('id', userId);
+      } else {
+        // Create profile if it doesn't exist
+        await supabaseAdmin
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: email,
+            first_name: firstName || null,
+            last_name: lastName || null,
+            full_name: `${firstName || ''} ${lastName || ''}`.trim() || null,
+          });
+      }
 
-    // Create profile
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: newUser.user.id,
-        email: email,
-        first_name: firstName || null,
-        last_name: lastName || null,
-        full_name: `${firstName || ''} ${lastName || ''}`.trim() || null,
+      // Check if role exists, if not create it
+      const { data: existingRole } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', role)
+        .single();
+
+      if (!existingRole) {
+        await supabaseAdmin
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role: role,
+          });
+      }
+    } else {
+      // Create new user
+      const tempPassword = crypto.randomUUID().slice(0, 16);
+
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: false,
+        user_metadata: {
+          first_name: firstName || '',
+          last_name: lastName || '',
+          full_name: `${firstName || ''} ${lastName || ''}`.trim(),
+        }
       });
 
-    if (profileError) {
-      console.error('Error creating profile:', profileError);
-      // Delete the user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-      throw profileError;
-    }
+      if (createError) {
+        console.error('Error creating user:', createError);
+        throw createError;
+      }
 
-    // Assign role
-    const { error: roleAssignError } = await supabaseAdmin
-      .from('user_roles')
-      .insert({
-        user_id: newUser.user.id,
-        role: role,
-      });
+      console.log('User created successfully:', newUser.user.id);
+      userId = newUser.user.id;
 
-    if (roleAssignError) {
-      console.error('Error assigning role:', roleAssignError);
-      // Clean up
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-      throw roleAssignError;
+      // Create profile
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: email,
+          first_name: firstName || null,
+          last_name: lastName || null,
+          full_name: `${firstName || ''} ${lastName || ''}`.trim() || null,
+        });
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        throw profileError;
+      }
+
+      // Assign role
+      const { error: roleAssignError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: role,
+        });
+
+      if (roleAssignError) {
+        console.error('Error assigning role:', roleAssignError);
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        throw roleAssignError;
+      }
     }
 
     // Generate password reset link
