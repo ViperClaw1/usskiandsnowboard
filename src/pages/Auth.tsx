@@ -55,8 +55,12 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Validate invite code
-      if (privateCode !== "cortina26") {
+      // Validate invite code via backend
+      const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-invite-code', {
+        body: { inviteCode: privateCode }
+      });
+
+      if (validationError || !validationData?.valid) {
         toast.error("Invalid invite code");
         setLoading(false);
         return;
