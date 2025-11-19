@@ -48,8 +48,8 @@ const Auth = () => {
 
     try {
       // Validate invite code client-side
-      const validInviteCode = import.meta.env.VITE_VALID_INVITE_CODE || 'cortina26';
-      if (inviteCode.trim() !== validInviteCode) {
+      const validInviteCode = 'GOBIG25';
+      if (inviteCode.trim().toLowerCase() !== validInviteCode.toLowerCase()) {
         toast.error("Invalid invite code");
         setLoading(false);
         return;
