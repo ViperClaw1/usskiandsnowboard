@@ -130,7 +130,7 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                 Welcome back, {profile?.profiles?.full_name?.split(" ")[0] || "Athlete"}
               </h1>
               {profile?.sport_discipline && (
