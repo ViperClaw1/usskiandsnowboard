@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CookieConsent } from "@/components/CookieConsent";
+import { AuthProvider } from "@/components/auth/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -29,32 +30,34 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/email-verification" element={<EmailVerification />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/athletes" element={<Athletes />} />
-          <Route path="/employers" element={<Employers />} />
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/admin/users" element={<AllUsers />} />
-          <Route path="/admin/athletes" element={<AllAthletes />} />
-          <Route path="/admin/employers" element={<AllEmployers />} />
-          <Route path="/admin/requests" element={<AllRequests />} />
-          <Route path="/admin/connections" element={<AcceptedConnections />} />
-          <Route path="/admin/rejected" element={<RejectedRequests />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <CookieConsent />
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/email-verification" element={<EmailVerification />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/athletes" element={<Athletes />} />
+            <Route path="/employers" element={<Employers />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/admin/users" element={<AllUsers />} />
+            <Route path="/admin/athletes" element={<AllAthletes />} />
+            <Route path="/admin/employers" element={<AllEmployers />} />
+            <Route path="/admin/requests" element={<AllRequests />} />
+            <Route path="/admin/connections" element={<AcceptedConnections />} />
+            <Route path="/admin/rejected" element={<RejectedRequests />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <CookieConsent />
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
