@@ -17,6 +17,7 @@ import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
 import { ProfileCompleteness } from "@/components/dashboard/ProfileCompleteness";
+import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 
 interface EmployerDashboardProps {
   user: User;
@@ -162,32 +163,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <header className="border-b bg-card w-full">
-        <div className="w-full px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
-          <h1 
-            className="text-base sm:text-xl lg:text-2xl font-bold text-foreground truncate cursor-pointer hover:text-primary transition-colors" 
-            onClick={() => {
-              setShowDirectory(false);
-              setShowPendingRequests(false);
-              setShowAcceptedConnections(false);
-              setShowRejectedConnections(false);
-              setShowPreview(false);
-            }}
-          >
-            Partner Dashboard
-          </h1>
-          <div className="flex items-center gap-2">
-            <NotificationBell userId={user.id} />
-            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="shrink-0">
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="shrink-0">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Sign Out</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AuthenticatedNav />
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
         <div className="mb-6 p-4 bg-card rounded-lg border border-border">

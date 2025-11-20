@@ -16,6 +16,7 @@ import { UserManagementTable } from "./admin/UserManagementTable";
 import { TopProfilesTable } from "./admin/TopProfilesTable";
 import AthleteDashboard from "./AthleteDashboard";
 import EmployerDashboard from "./EmployerDashboard";
+import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 
 interface AdminDashboardProps {
   user: User;
@@ -63,25 +64,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-          <div className="flex items-center gap-2">
-            <NotificationBell userId={user.id} />
-            <Button variant="outline" size="sm" onClick={testNotification}>
-              <Bell className="h-4 w-4 mr-2" />
-              Test Email
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AuthenticatedNav />
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
