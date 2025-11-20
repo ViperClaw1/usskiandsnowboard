@@ -11,12 +11,14 @@ export const AuthenticatedNav = () => {
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) {
+    // Ignore session_not_found errors since user is already logged out
+    if (error && error.message !== "Session from session_id claim in JWT does not exist") {
       toast.error("Failed to sign out");
     } else {
       toast.success("Signed out successfully");
-      navigate("/");
     }
+    // Always navigate to home regardless of error
+    navigate("/");
   };
 
   return (
