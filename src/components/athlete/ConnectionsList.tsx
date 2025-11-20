@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { Input } from "@/components/ui/input";
 import { Loader2, Building2, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 interface Connection {
   id: string;
   employer_profiles: {
+    id: string;
     company_name: string;
     industry: string | null;
     about: string | null;
@@ -23,6 +25,9 @@ interface Connection {
     linkedin_url: string | null;
     company_size: string | null;
     hq_location: string | null;
+    job_board_url: string | null;
+    individual_roles: any;
+    phone: string | null;
   };
   created_at: string;
 }
@@ -76,6 +81,7 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
           id,
           created_at,
           employer_profiles (
+            id,
             company_name,
             industry,
             about,
@@ -87,7 +93,10 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
             website,
             linkedin_url,
             company_size,
-            hq_location
+            hq_location,
+            job_board_url,
+            individual_roles,
+            phone
           )
         `)
         .eq("athlete_id", athleteProfileId)
@@ -231,8 +240,8 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
                     <Badge variant="outline" className="text-xs">{connection.employer_profiles.hq_location}</Badge>
                   )}
                 </div>
-                <Badge variant={status === "accepted" ? "default" : "secondary"}>
-                  {status === "accepted" ? "Connected" : "Declined"}
+                <Badge variant={status === "accepted" ? "default" : "destructive"}>
+                  {status === "accepted" ? "Connected Accepted" : "Declined"}
                 </Badge>
               </div>
             </CardContent>
@@ -243,105 +252,8 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
 
       {selectedConnection && (
         <Dialog open={!!selectedConnection} onOpenChange={() => setSelectedConnection(null)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{selectedConnection.employer_profiles.company_name}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="flex-shrink-0" style={{ width: '64px', height: '64px' }}>
-                  {selectedConnection.employer_profiles.logo_url ? (
-                    <img 
-                      src={selectedConnection.employer_profiles.logo_url} 
-                      alt={selectedConnection.employer_profiles.company_name} 
-                      className="w-full h-full object-contain rounded"
-                      style={{ width: '64px', height: '64px' }}
-                    />
-                  ) : (
-                    <Avatar className="h-16 w-16">
-                      <AvatarFallback>
-                        <Building2 className="h-8 w-8 text-muted-foreground" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold">{selectedConnection.employer_profiles.company_name}</h3>
-                  {selectedConnection.employer_profiles.industry && (
-                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.industry}</p>
-                  )}
-                </div>
-              </div>
-
-              {selectedConnection.employer_profiles.about && (
-                <div>
-                  <h4 className="font-medium mb-2">About</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.about}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                {selectedConnection.employer_profiles.company_size && (
-                  <div>
-                    <h4 className="font-medium mb-2">Company Size</h4>
-                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.company_size}</p>
-                  </div>
-                )}
-                {selectedConnection.employer_profiles.hq_location && (
-                  <div>
-                    <h4 className="font-medium mb-2">HQ Location</h4>
-                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.hq_location}</p>
-                  </div>
-                )}
-              </div>
-
-              {selectedConnection.employer_profiles.opportunities_offered && (
-                <div>
-                  <h4 className="font-medium mb-2">Opportunities Offered</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.opportunities_offered}</p>
-                </div>
-              )}
-
-              {(selectedConnection.employer_profiles.contact_person || 
-                selectedConnection.employer_profiles.contact_title || 
-                selectedConnection.employer_profiles.contact_email) && (
-                <div>
-                  <h4 className="font-medium mb-2">Contact Information</h4>
-                  {selectedConnection.employer_profiles.contact_person && (
-                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.contact_person}</p>
-                  )}
-                  {selectedConnection.employer_profiles.contact_title && (
-                    <p className="text-sm text-muted-foreground">{selectedConnection.employer_profiles.contact_title}</p>
-                  )}
-                  {selectedConnection.employer_profiles.contact_email && (
-                    <a 
-                      href={`mailto:${selectedConnection.employer_profiles.contact_email}`}
-                      className="text-sm text-primary hover:underline block"
-                    >
-                      {selectedConnection.employer_profiles.contact_email}
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {selectedConnection.employer_profiles.website && (
-                <div>
-                  <h4 className="font-medium mb-2">Website</h4>
-                  <a href={selectedConnection.employer_profiles.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-                    {selectedConnection.employer_profiles.website}
-                  </a>
-                </div>
-              )}
-
-              {selectedConnection.employer_profiles.linkedin_url && (
-                <div>
-                  <h4 className="font-medium mb-2">LinkedIn</h4>
-                  <a href={selectedConnection.employer_profiles.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-                    {selectedConnection.employer_profiles.linkedin_url}
-                  </a>
-                </div>
-              )}
-            </div>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <EmployerProfilePreview profile={selectedConnection.employer_profiles} />
           </DialogContent>
         </Dialog>
       )}

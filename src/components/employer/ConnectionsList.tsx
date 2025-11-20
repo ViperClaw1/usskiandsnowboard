@@ -341,9 +341,12 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   )}
                 </div>
 
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground/70 text-center">
-                    {status === 'accepted' ? 'Connection Date' : 'Declined Date'}: {format(new Date(connection.updated_at), "MMM d, yyyy")}
+                <div className="pt-2 border-t flex items-center justify-between">
+                  <Badge variant={status === "accepted" ? "default" : "destructive"}>
+                    {status === "accepted" ? "Connected Accepted" : "Declined"}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground/70">
+                    {format(new Date(connection.updated_at), "MMM d, yyyy")}
                   </p>
                 </div>
               </div>
