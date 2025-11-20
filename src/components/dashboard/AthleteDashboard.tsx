@@ -358,7 +358,7 @@ const AthleteDashboard = ({
               </Card>
             </> : showEmployerDirectory ? <div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold">    Partner Directory</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">        Partners Directory</h2>
                 <Button variant="outline" onClick={() => setShowEmployerDirectory(false)} className="w-full sm:w-auto">
                   Back to Dashboard
                 </Button>
