@@ -287,7 +287,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                 </CardContent>
               </Card>
 
-              {profile && (
+              {(profile || isAdminView) && (
                 <Card className="shadow-elegant overflow-hidden border-2 border-primary/20">
                   <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-primary/10">
                     <CardTitle className="text-lg sm:text-xl lg:text-2xl flex items-center gap-2">
@@ -299,7 +299,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6">
-                    {profile.job_board_url || (profile.individual_roles && profile.individual_roles.length > 0) ? (
+                    {profile && (profile.job_board_url || (profile.individual_roles && profile.individual_roles.length > 0)) ? (
                       <div className="space-y-4">
                         {profile.job_board_url && (
                           <div className="p-3 bg-muted/50 rounded-lg">
@@ -350,6 +350,10 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                         >
                           Update Opportunities
                         </Button>
+                      </div>
+                    ) : isAdminView ? (
+                      <div className="text-center py-6">
+                        <p className="text-sm text-muted-foreground">This is where partners can add their job postings and career page links</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
