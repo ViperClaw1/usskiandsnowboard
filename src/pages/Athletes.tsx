@@ -10,6 +10,7 @@ import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { User } from "@supabase/supabase-js";
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+import AthleteDirectory from "@/components/employer/AthleteDirectory";
 
 interface AthleteProfile {
   id: string;
@@ -84,6 +85,20 @@ const Athletes = () => {
     navigate("/auth?type=employer");
   };
 
+  // If user is authenticated, show the full directory
+  if (user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AuthenticatedNav />
+        <main className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-6">Athlete Directory</h1>
+          <AthleteDirectory />
+        </main>
+      </div>
+    );
+  }
+
+  // If not authenticated, show featured profiles with sign-in prompt
   return (
     <div className="min-h-screen bg-background">
       <AuthenticatedNav />
@@ -124,45 +139,58 @@ const Athletes = () => {
                       {athletes.map((athlete) => (
                         <Card 
                           key={athlete.id} 
-                          className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
+                          className="w-full cursor-pointer hover:shadow-lg transition-shadow"
                           onClick={handleAthleteClick}
                         >
-                          <CardHeader>
-                            <div className="flex items-center gap-4 mb-4">
-                              <Avatar className="h-24 w-24">
-                                <AvatarImage src={athlete.photo_url || undefined} />
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-12 w-12">
+                                <AvatarImage src={athlete.photo_url || ""} />
                                 <AvatarFallback>
-                                  {athlete.profiles?.full_name?.split(' ').map(n => n[0]).join('') || 'A'}
+                                  {athlete.profiles?.full_name 
+                                    ? athlete.profiles.full_name.split(' ').map(n => n[0]).join('').toUpperCase()
+                                    : 'AT'}
                                 </AvatarFallback>
                               </Avatar>
-                              <div>
-                                <CardTitle className="text-lg">{athlete.profiles?.full_name || 'Athlete'}</CardTitle>
+                              <div className="flex-1 min-w-0">
+                                <CardTitle className="text-lg truncate">
+                                  {athlete.profiles?.full_name || "Athlete"}
+                                </CardTitle>
                                 {athlete.sport_discipline && (
-                                  <Badge variant="secondary" className="mt-1">
+                                  <p className="text-sm text-muted-foreground truncate">
                                     {athlete.sport_discipline}
-                                  </Badge>
+                                  </p>
                                 )}
                               </div>
                             </div>
                           </CardHeader>
                           <CardContent className="space-y-3">
                             {athlete.bio && (
-                              <p className="text-sm text-muted-foreground line-clamp-3">{athlete.bio}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {athlete.bio}
+                              </p>
                             )}
                             {athlete.skills && athlete.skills.length > 0 && (
-                              <div>
-                                <p className="text-sm font-medium mb-2">Skills</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {athlete.skills.slice(0, 3).map((skill, idx) => (
-                                    <Badge key={idx} variant="outline">{skill}</Badge>
-                                  ))}
-                                </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {athlete.skills.slice(0, 3).map((skill, index) => (
+                                  <Badge key={index} variant="secondary" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                                {athlete.skills.length > 3 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{athlete.skills.length - 3} more
+                                  </Badge>
+                                )}
                               </div>
                             )}
                             {athlete.availability && (
-                              <p className="text-sm text-muted-foreground">
-                                <span className="font-medium">Availability:</span> {athlete.availability}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium">Availability:</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {athlete.availability}
+                                </Badge>
+                              </div>
                             )}
                           </CardContent>
                         </Card>
@@ -170,34 +198,23 @@ const Athletes = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {!user && (
-                  <div 
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px]"
-                    onClick={() => navigate("/")}
-                  >
-                    <Card 
-                      className="max-w-md mx-4 shadow-2xl border-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <CardHeader className="text-center pb-4">
-                        <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Lock className="h-8 w-8 text-primary" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/10 backdrop-blur-[1px]">
+                    <Card className="max-w-md mx-4">
+                      <CardContent className="pt-6 text-center space-y-4">
+                        <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <div>
+                          <h3 className="text-lg font-semibold mb-2">
+                            Sign In to View Athletes
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Create an account or sign in to connect with talented athletes
+                          </p>
                         </div>
-                        <CardTitle className="text-2xl">Sign In to View Athletes</CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-center space-y-4">
-                        <p className="text-muted-foreground">
-                          Connect with world-class talent. Sign in as a Partner to discover athletes who bring unmatched dedication and excellence.
-                        </p>
-                        <div className="flex flex-col gap-3">
-                          <Button size="lg" onClick={() => navigate("/auth?type=employer")} className="w-full">
-                            Sign In as Partner
-                          </Button>
-                          <Button size="lg" variant="outline" onClick={() => navigate("/auth?type=athlete")} className="w-full">
-                            Sign In as Athlete
-                          </Button>
-                        </div>
+                        <Button onClick={() => navigate("/auth")}>
+                          Sign In
+                        </Button>
                       </CardContent>
                     </Card>
                   </div>
@@ -207,12 +224,6 @@ const Athletes = () => {
           </div>
         </section>
       </main>
-
-      <footer className="border-t bg-card py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p className="text-xs">&copy; 2025 U.S. Ski & Snowboard. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };
