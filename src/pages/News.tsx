@@ -7,8 +7,11 @@ import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { MobileNav } from "@/components/MobileNav";
+import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+import { useAuth } from "@/components/auth/AuthContext";
 
 const News = () => {
+  const { user } = useAuth();
   const { data: articles, isLoading } = useQuery({
     queryKey: ['news-articles'],
     queryFn: async () => {
@@ -22,38 +25,43 @@ const News = () => {
       return data;
     },
   });
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b sticky top-0 z-50" style={{ 
-        backgroundImage: `url(${mountainHeaderBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundColor: '#1e3a5f'
-      }}>
-        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-          <Link to="/">
-            <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" />
-          </Link>
-          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-            <Link to="/athletes" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
-              Athletes
+      {user ? (
+        <AuthenticatedNav />
+      ) : (
+        <header className="border-b sticky top-0 z-50" style={{ 
+          backgroundImage: `url(${mountainHeaderBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: '#1e3a5f'
+        }}>
+          <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+            <Link to="/">
+              <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" />
             </Link>
-            <Link to="/employers" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
-              Partners
-            </Link>
-            <a href="/schedule.pdf" target="_blank" rel="noopener noreferrer" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
-              Schedule
-            </a>
-            <Link to="/news" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
-              News
-            </Link>
-            <Link to="/auth">
-              <Button size="sm" className="lg:h-10">Sign In</Button>
-            </Link>
-          </nav>
-          <MobileNav />
-        </div>
-      </header>
+            <nav className="hidden md:flex items-center gap-4 lg:gap-6">
+              <Link to="/athletes" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
+                Athletes
+              </Link>
+              <Link to="/employers" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
+                Partners
+              </Link>
+              <Link to="/schedule" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
+                Schedule
+              </Link>
+              <Link to="/news" className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base">
+                News
+              </Link>
+              <Link to="/auth">
+                <Button size="sm" className="lg:h-10">Sign In</Button>
+              </Link>
+            </nav>
+            <MobileNav />
+          </div>
+        </header>
+      )}
 
       <main>
         <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
