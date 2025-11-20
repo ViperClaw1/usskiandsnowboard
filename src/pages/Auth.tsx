@@ -126,16 +126,18 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-2xl border-border/50">
         <CardHeader className="space-y-4 pb-8">
           <div className="flex justify-center mb-2">
-            <img 
-              src={usSkiLogo} 
-              alt="U.S. Ski & Snowboard" 
-              className="h-16 object-contain hidden sm:block"
-            />
-            <img 
-              src={usSkiMobileLogo} 
-              alt="U.S. Ski & Snowboard" 
-              className="h-12 object-contain sm:hidden"
-            />
+            <Link to="/" className="hover:opacity-80 transition-opacity">
+              <img 
+                src={usSkiLogo} 
+                alt="U.S. Ski & Snowboard" 
+                className="h-16 object-contain hidden sm:block"
+              />
+              <img 
+                src={usSkiMobileLogo} 
+                alt="U.S. Ski & Snowboard" 
+                className="h-12 object-contain sm:hidden"
+              />
+            </Link>
           </div>
           <div className="space-y-2 text-center">
             <CardTitle className="text-2xl font-bold text-foreground">
