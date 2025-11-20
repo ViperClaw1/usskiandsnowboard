@@ -135,7 +135,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
                 Welcome back, {profile?.company_name || "Partner"}
               </h1>
               {profile?.industry && (
