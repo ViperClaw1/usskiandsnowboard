@@ -139,7 +139,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                 Welcome back, {profile?.company_name || "Partner"}
               </h1>
               {profile?.industry && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-sm">
                   {profile.industry}
                 </Badge>
               )}
