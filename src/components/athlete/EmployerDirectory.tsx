@@ -167,9 +167,6 @@ const EmployerDirectory = () => {
       
       // Add to existing requests
       setExistingRequests(prev => new Set([...prev, employerId]));
-      
-      // Navigate back to dashboard
-      navigate("/dashboard");
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
