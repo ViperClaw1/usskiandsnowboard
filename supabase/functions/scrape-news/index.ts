@@ -21,60 +21,103 @@ Deno.serve(async (req) => {
   try {
     console.log('Starting news scraping...');
 
-    // Fetch the US Ski & Snowboard news page
-    const response = await fetch('https://www.usskiandsnowboard.org/news');
+    // Fetch with proper headers to appear like a real browser
+    const response = await fetch('https://www.usskiandsnowboard.org/news', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Cache-Control': 'max-age=0',
+      },
+    });
+    
     const html = await response.text();
-    
     console.log('Fetched news page, HTML length:', html.length);
-    console.log('First 1000 chars:', html.substring(0, 1000));
-    
+
+    // Check if we got Cloudflare challenge
+    if (html.includes('Just a moment...') || html.includes('challenge')) {
+      console.warn('Cloudflare challenge detected - website uses bot protection');
+      
+      // Return error with helpful message
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Website has bot protection enabled. Please use a service like Firecrawl or manually add articles.',
+          articlesProcessed: 0 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      );
+    }
+
     const articles: NewsArticle[] = [];
     const seenUrls = new Set<string>();
     
-    // Try to find any links to /news/ pages
-    const newsLinkPattern = /href="(\/news\/[^"]+)"/g;
-    const newsLinks: string[] = [];
+    // Pattern to match article links with titles
+    const titlePattern = /<span class="field-content"><a href="(\/news\/[^"]+)"[^>]*>([^<]+)<\/a>/g;
+    
     let match;
+    const articleData: Array<{url: string, title: string}> = [];
     
-    while ((match = newsLinkPattern.exec(html)) !== null) {
-      newsLinks.push(match[1]);
-    }
-    
-    console.log(`Found ${newsLinks.length} news links`);
-    if (newsLinks.length > 0) {
-      console.log('Sample links:', newsLinks.slice(0, 5));
-    }
-    
-    // Pattern to find titles - trying more flexible pattern
-    const titlePatterns = [
-      /<a href="(\/news\/[^"]+)"[^>]*>([^<]+)<\/a>/g,
-      /href="(\/news\/[^"]+)"[^>]*>([^<]{10,})<\/a>/g,
-    ];
-    
-    for (const pattern of titlePatterns) {
-      pattern.lastIndex = 0; // Reset regex
-      while ((match = pattern.exec(html)) !== null) {
-        const url = 'https://www.usskiandsnowboard.org' + match[1];
-        const title = match[2].trim()
-          .replace(/&amp;/g, '&')
-          .replace(/&quot;/g, '"')
-          .replace(/&#039;/g, "'")
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>');
-        
-        if (!seenUrls.has(url) && title.length >= 10 && !title.includes('<')) {
-          seenUrls.add(url);
-          articles.push({
-            title,
-            url,
-            date: new Date().toISOString().split('T')[0],
-            excerpt: title,
-          });
-          console.log(`Found article: ${title.substring(0, 50)}...`);
-        }
-      }
+    while ((match = titlePattern.exec(html)) !== null) {
+      const href = match[1];
+      const title = match[2].trim()
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#039;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>');
       
-      if (articles.length > 0) break;
+      if (title.length >= 10) {
+        const url = href.startsWith('http') ? href : `https://www.usskiandsnowboard.org${href}`;
+        articleData.push({ url, title });
+      }
+    }
+    
+    console.log(`Found ${articleData.length} article titles`);
+    
+    // Find dates using time elements
+    const datePattern = /<time datetime="([^"]+)">/g;
+    const dates: string[] = [];
+    
+    while ((match = datePattern.exec(html)) !== null) {
+      const datetime = match[1];
+      const parsedDate = new Date(datetime);
+      if (!isNaN(parsedDate.getTime())) {
+        dates.push(parsedDate.toISOString().split('T')[0]);
+      }
+    }
+    
+    console.log(`Found ${dates.length} dates`);
+    
+    // Match titles with dates (assuming they appear in order)
+    for (let i = 0; i < articleData.length; i++) {
+      const { url, title } = articleData[i];
+      
+      // Skip duplicates
+      if (seenUrls.has(url)) continue;
+      
+      // Get corresponding date or use current date
+      const date = dates[i] || new Date().toISOString().split('T')[0];
+      
+      seenUrls.add(url);
+      articles.push({
+        title,
+        url,
+        date,
+        excerpt: title,
+      });
+      
+      console.log(`Parsed article: ${title} (${date})`);
     }
 
     console.log(`Total articles parsed: ${articles.length}`);
@@ -84,12 +127,8 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'No articles found to scrape',
-          articlesProcessed: 0,
-          debug: {
-            htmlLength: html.length,
-            newsLinksFound: newsLinks.length
-          }
+          error: 'No articles found to scrape. The website structure may have changed.',
+          articlesProcessed: 0 
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
