@@ -882,7 +882,7 @@ const AthleteDirectory = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
                     <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                    {employerRoles.map((role, index) => (
+                    {employerRoles.filter(role => role.title && role.title.trim()).map((role, index) => (
                       <SelectItem key={index} value={role.title}>
                         {role.title}
                       </SelectItem>

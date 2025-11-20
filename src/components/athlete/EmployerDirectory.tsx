@@ -585,7 +585,7 @@ const EmployerDirectory = () => {
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50">
                           <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                          {employer.individual_roles && employer.individual_roles.map((role, index) => (
+                          {employer.individual_roles && employer.individual_roles.filter(role => role.title && role.title.trim()).map((role, index) => (
                             <SelectItem key={index} value={role.title}>
                               {role.title}
                             </SelectItem>
