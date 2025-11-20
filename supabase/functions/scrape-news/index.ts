@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.10';
-import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.43/deno-dom-wasm.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,152 +25,56 @@ Deno.serve(async (req) => {
     const response = await fetch('https://www.usskiandsnowboard.org/news');
     const html = await response.text();
     
-    console.log('Fetched news page, parsing articles...');
-
-    // Parse HTML using DOMParser
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    if (!doc) {
-      throw new Error('Failed to parse HTML');
-    }
-
+    console.log('Fetched news page, HTML length:', html.length);
+    console.log('First 1000 chars:', html.substring(0, 1000));
+    
     const articles: NewsArticle[] = [];
     const seenUrls = new Set<string>();
     
-    // Find all article elements - try multiple selectors for robustness
-    const articleSelectors = [
-      'article',
-      '.news-item',
-      '.article-card',
-      '[class*="news"]',
-      'a[href*="/news/"]'
+    // Try to find any links to /news/ pages
+    const newsLinkPattern = /href="(\/news\/[^"]+)"/g;
+    const newsLinks: string[] = [];
+    let match;
+    
+    while ((match = newsLinkPattern.exec(html)) !== null) {
+      newsLinks.push(match[1]);
+    }
+    
+    console.log(`Found ${newsLinks.length} news links`);
+    if (newsLinks.length > 0) {
+      console.log('Sample links:', newsLinks.slice(0, 5));
+    }
+    
+    // Pattern to find titles - trying more flexible pattern
+    const titlePatterns = [
+      /<a href="(\/news\/[^"]+)"[^>]*>([^<]+)<\/a>/g,
+      /href="(\/news\/[^"]+)"[^>]*>([^<]{10,})<\/a>/g,
     ];
-
-    let articleElements: any[] = [];
-    for (const selector of articleSelectors) {
-      const elements = doc.querySelectorAll(selector);
-      if (elements && elements.length > 0) {
-        articleElements = Array.from(elements);
-        console.log(`Found ${articleElements.length} elements using selector: ${selector}`);
-        break;
-      }
-    }
-
-    // Parse each article element
-    for (const element of articleElements) {
-      try {
-        // Extract URL
-        let url = '';
-        const linkEl = element.querySelector('a[href*="/news/"]') || (element.tagName === 'A' ? element : null);
-        if (linkEl) {
-          const href = linkEl.getAttribute('href');
-          url = href?.startsWith('http') ? href : `https://www.usskiandsnowboard.org${href}`;
-        }
-
-        // Skip if no URL or duplicate
-        if (!url || seenUrls.has(url)) continue;
-
-        // Extract title
-        const titleEl = element.querySelector('h1, h2, h3, h4, [class*="title"]') || linkEl;
-        const title = titleEl?.textContent?.trim() || '';
-
-        // Skip if title is too short or invalid
-        if (!title || title.length < 10 || title === 'Read More') continue;
-
-        // Extract excerpt
-        const excerptEl = element.querySelector('p, [class*="excerpt"], [class*="description"]');
-        let excerpt = excerptEl?.textContent?.trim() || '';
+    
+    for (const pattern of titlePatterns) {
+      pattern.lastIndex = 0; // Reset regex
+      while ((match = pattern.exec(html)) !== null) {
+        const url = 'https://www.usskiandsnowboard.org' + match[1];
+        const title = match[2].trim()
+          .replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&#039;/g, "'")
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
         
-        // Clean up excerpt
-        excerpt = excerpt
-          .replace(/\s+/g, ' ')
-          .replace(/Read More/gi, '')
-          .trim()
-          .substring(0, 500);
-
-        // Extract date from URL or use current date
-        const urlDateMatch = url.match(/\/news\/(\d{4})-(\d{2})-(\d{2})-/);
-        const urlMonthMatch = url.match(/\/news\/(\d{4})-(\d{2})-/);
-        let date = '';
-        
-        if (urlDateMatch) {
-          date = `${urlDateMatch[1]}-${urlDateMatch[2]}-${urlDateMatch[3]}`;
-        } else if (urlMonthMatch) {
-          date = `${urlMonthMatch[1]}-${urlMonthMatch[2]}`;
-        } else {
-          // Try to find date in article text
-          const dateEl = element.querySelector('[class*="date"], time');
-          if (dateEl) {
-            const dateText = dateEl.textContent?.trim() || '';
-            const parsedDate = new Date(dateText);
-            if (!isNaN(parsedDate.getTime())) {
-              date = parsedDate.toISOString().split('T')[0];
-            }
-          }
-          // Fallback to current year
-          if (!date) {
-            date = new Date().getFullYear().toString();
-          }
-        }
-
-        seenUrls.add(url);
-        articles.push({
-          title,
-          url,
-          date,
-          excerpt: excerpt || title,
-        });
-
-        console.log(`Parsed article: ${title}`);
-      } catch (err) {
-        console.error('Error parsing article element:', err);
-        continue;
-      }
-    }
-
-    // Fallback: regex-based extraction if DOM parsing didn't find enough articles
-    if (articles.length < 5) {
-      console.log('Using fallback regex parsing method...');
-      
-      // Look for news URLs in the HTML
-      const urlPattern = /https:\/\/www\.usskiandsnowboard\.org\/news\/[a-z0-9-]+/gi;
-      const urls = [...new Set(html.match(urlPattern) || [])];
-      
-      for (const url of urls.slice(0, 20)) {
-        if (seenUrls.has(url)) continue;
-        
-        try {
-          // Extract title from URL slug
-          const slug = url.split('/news/')[1];
-          const title = slug
-            .replace(/-/g, ' ')
-            .replace(/\b\w/g, l => l.toUpperCase())
-            .trim();
-          
-          if (!title || title.length < 10) continue;
-          
-          // Extract date from URL
-          const dateMatch = url.match(/\/(\d{4})-(\d{2})-(\d{2})/);
-          const monthMatch = url.match(/\/(\d{4})-(\d{2})/);
-          const date = dateMatch 
-            ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`
-            : monthMatch
-            ? `${monthMatch[1]}-${monthMatch[2]}`
-            : new Date().getFullYear().toString();
-          
+        if (!seenUrls.has(url) && title.length >= 10 && !title.includes('<')) {
           seenUrls.add(url);
           articles.push({
             title,
             url,
-            date,
+            date: new Date().toISOString().split('T')[0],
             excerpt: title,
           });
-          
-          console.log(`Parsed article (fallback): ${title}`);
-        } catch (err) {
-          console.error('Error in fallback parsing:', err);
-          continue;
+          console.log(`Found article: ${title.substring(0, 50)}...`);
         }
       }
+      
+      if (articles.length > 0) break;
     }
 
     console.log(`Total articles parsed: ${articles.length}`);
@@ -182,7 +85,11 @@ Deno.serve(async (req) => {
         JSON.stringify({ 
           success: false, 
           error: 'No articles found to scrape',
-          articlesProcessed: 0 
+          articlesProcessed: 0,
+          debug: {
+            htmlLength: html.length,
+            newsLinksFound: newsLinks.length
+          }
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
