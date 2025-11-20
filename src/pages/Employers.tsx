@@ -9,6 +9,7 @@ import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { User } from "@supabase/supabase-js";
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 
 interface EmployerProfile {
   id: string;
@@ -78,6 +79,20 @@ const Employers = () => {
     navigate("/auth?type=athlete");
   };
 
+  // If user is authenticated, show the full directory
+  if (user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AuthenticatedNav />
+        <main className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-6">Partner Directory</h1>
+          <EmployerDirectory />
+        </main>
+      </div>
+    );
+  }
+
+  // If not authenticated, show featured profiles with sign-in prompt
   return (
     <div className="min-h-screen bg-background">
       <AuthenticatedNav />
@@ -117,40 +132,58 @@ const Employers = () => {
                     {employers.map((employer) => (
                       <Card 
                         key={employer.id} 
-                        className="shadow-elegant hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer hover:border-primary/50 animate-fade-in"
+                        className="w-full cursor-pointer hover:shadow-lg transition-shadow"
                         onClick={handleEmployerClick}
                       >
-                        <CardHeader>
-                          <div className="flex items-center gap-3 mb-2">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-3">
                             {employer.logo_url ? (
-                              <img 
-                                src={employer.logo_url} 
-                                alt={`${employer.company_name} logo`}
-                                className="h-24 w-24 object-contain rounded"
-                              />
+                              <div className="flex-shrink-0" style={{ width: '48px', height: '48px' }}>
+                                <img 
+                                  src={employer.logo_url} 
+                                  alt={employer.company_name} 
+                                  className="w-full h-full object-contain rounded"
+                                  style={{ width: '48px', height: '48px' }}
+                                />
+                              </div>
                             ) : (
-                              <Building2 className="h-8 w-8 text-primary" />
+                              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                <Building2 className="h-6 w-6 text-muted-foreground" />
+                              </div>
                             )}
-                            <div>
-                              <CardTitle className="text-lg">{employer.company_name}</CardTitle>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg truncate">
+                                {employer.company_name}
+                              </CardTitle>
                               {employer.industry && (
-                                <Badge variant="secondary" className="mt-1">
+                                <p className="text-sm text-muted-foreground truncate">
                                   {employer.industry}
-                                </Badge>
+                                </p>
                               )}
                             </div>
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           {employer.about && (
-                            <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {employer.about}
+                            </p>
                           )}
                           {employer.opportunities_offered && (
                             <div>
-                              <p className="text-sm font-medium mb-1">Opportunities</p>
-                              <p className="text-sm text-muted-foreground line-clamp-2">
-                                {employer.opportunities_offered}
-                              </p>
+                              <span className="text-xs font-medium">Opportunities:</span>
+                              <div className="flex flex-wrap gap-1.5 mt-1">
+                                {employer.opportunities_offered.split(',').slice(0, 2).map((opp, index) => (
+                                  <Badge key={index} variant="secondary" className="text-xs">
+                                    {opp.trim()}
+                                  </Badge>
+                                ))}
+                                {employer.opportunities_offered.split(',').length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{employer.opportunities_offered.split(',').length - 2} more
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -158,34 +191,23 @@ const Employers = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 {!user && (
-                  <div 
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px]"
-                    onClick={() => navigate("/")}
-                  >
-                    <Card 
-                      className="max-w-md mx-4 shadow-2xl border-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <CardHeader className="text-center pb-4">
-                        <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Lock className="h-8 w-8 text-primary" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/10 backdrop-blur-[1px]">
+                    <Card className="max-w-md mx-4">
+                      <CardContent className="pt-6 text-center space-y-4">
+                        <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <div>
+                          <h3 className="text-lg font-semibold mb-2">
+                            Sign In to View Partners
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Create an account or sign in to connect with partner organizations
+                          </p>
                         </div>
-                        <CardTitle className="text-2xl">Sign In to View Partners</CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-center space-y-4">
-                        <p className="text-muted-foreground">
-                          Discover opportunities with our partner organizations. Sign in as an Athlete to explore career connections.
-                        </p>
-                        <div className="flex flex-col gap-3">
-                          <Button size="lg" onClick={() => navigate("/auth?type=athlete")} className="w-full">
-                            Sign In as Athlete
-                          </Button>
-                          <Button size="lg" variant="outline" onClick={() => navigate("/auth?type=employer")} className="w-full">
-                            Sign In as Partner
-                          </Button>
-                        </div>
+                        <Button onClick={() => navigate("/auth")}>
+                          Sign In
+                        </Button>
                       </CardContent>
                     </Card>
                   </div>
@@ -195,12 +217,6 @@ const Employers = () => {
           </div>
         </section>
       </main>
-
-      <footer className="border-t bg-card py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p className="text-xs">&copy; 2025 U.S. Ski & Snowboard. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };
