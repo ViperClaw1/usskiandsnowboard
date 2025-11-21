@@ -43,6 +43,8 @@ const EmployerDirectory = () => {
   const [sendingRequest, setSendingRequest] = useState(false);
   const [openDialogId, setOpenDialogId] = useState<string | null>(null);
   const [existingRequests, setExistingRequests] = useState<Set<string>>(new Set());
+  const [selectedEmployer, setSelectedEmployer] = useState<EmployerProfile | null>(null);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -490,7 +492,7 @@ const EmployerDirectory = () => {
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredEmployers.map((employer) => (
-          <Card key={employer.id} className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50">
+          <Card key={employer.id} className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50" onClick={() => setSelectedEmployer(employer)}>
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-24 w-24">
@@ -560,73 +562,223 @@ const EmployerDirectory = () => {
                 </div>
               )}
               
-              <Dialog open={openDialogId === employer.id} onOpenChange={(open) => setOpenDialogId(open ? employer.id : null)}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="w-full" 
-                    disabled={existingRequests.has(employer.id)}
-                  >
-                    {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-h-[90vh] flex flex-col">
-                  <DialogHeader>
-                    <DialogTitle>Request Connection</DialogTitle>
-                    <DialogDescription>
-                      Send a connection request to {employer.company_name}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 overflow-y-auto flex-1 pr-2">
-                    <div>
-                      <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
-                      <Select value={opportunityType} onValueChange={setOpportunityType}>
-                        <SelectTrigger id="opportunity-type" className="mt-2">
-                          <SelectValue placeholder="Select opportunity type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                          {employer.individual_roles && employer.individual_roles.filter(role => role.title && role.title.trim()).map((role, index) => (
-                            <SelectItem key={index} value={role.title}>
-                              {role.title}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="message">Message *</Label>
-                      <Textarea
-                        id="message"
-                        placeholder="Introduce yourself and explain why you'd like to connect..."
-                        value={requestMessage}
-                        onChange={(e) => setRequestMessage(e.target.value)}
-                        className="mt-2 min-h-[100px]"
-                      />
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t">
-                    <Button
-                      onClick={() => handleSendRequest(employer.id)}
-                      disabled={sendingRequest || !requestMessage.trim()}
-                      className="w-full"
-                    >
-                      {sendingRequest ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        "Send Request"
-                      )}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Button 
+                className="w-full" 
+                disabled={existingRequests.has(employer.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedEmployer(employer);
+                  setShowRequestDialog(true);
+                }}
+              >
+                {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
+              </Button>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Partner Details Dialog */}
+      {selectedEmployer && !showRequestDialog && (
+        <Dialog open={!!selectedEmployer} onOpenChange={(open) => !open && setSelectedEmployer(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedEmployer.company_name}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  {selectedEmployer.logo_url ? (
+                    <img
+                      src={selectedEmployer.logo_url}
+                      alt={`${selectedEmployer.company_name} logo`}
+                      className="h-full w-full object-contain p-2"
+                    />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-12 w-12 text-primary" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{selectedEmployer.company_name}</h3>
+                  {selectedEmployer.industry && (
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.industry}</p>
+                  )}
+                </div>
+              </div>
+
+              {selectedEmployer.about && (
+                <div>
+                  <h4 className="font-medium mb-2">About</h4>
+                  <p className="text-sm text-muted-foreground">{selectedEmployer.about}</p>
+                </div>
+              )}
+
+              {selectedEmployer.opportunities_offered && (
+                <div>
+                  <h4 className="font-medium mb-2">Opportunities Offered</h4>
+                  <p className="text-sm text-muted-foreground">{selectedEmployer.opportunities_offered}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                {selectedEmployer.company_size && (
+                  <div>
+                    <p className="text-sm font-medium">Company Size</p>
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.company_size}</p>
+                  </div>
+                )}
+                {selectedEmployer.hq_location && (
+                  <div>
+                    <p className="text-sm font-medium">Location</p>
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.hq_location}</p>
+                  </div>
+                )}
+              </div>
+
+              {selectedEmployer.contact_person && (
+                <div>
+                  <h4 className="font-medium mb-2">Contact Person</h4>
+                  <p className="text-sm">{selectedEmployer.contact_person}</p>
+                  {selectedEmployer.contact_title && (
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.contact_title}</p>
+                  )}
+                  {selectedEmployer.contact_email && (
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.contact_email}</p>
+                  )}
+                </div>
+              )}
+
+              {selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Open Positions</h4>
+                  <div className="space-y-2">
+                    {selectedEmployer.individual_roles.map((role, index) => (
+                      <div key={index} className="border-l-2 border-primary/20 pl-3">
+                        <p className="font-medium text-sm">{role.title}</p>
+                        {role.type && <p className="text-xs text-muted-foreground">{role.type}</p>}
+                        {role.location && <p className="text-xs text-muted-foreground">{role.location}</p>}
+                        {role.url && (
+                          <a
+                            href={role.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline"
+                          >
+                            View Details
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                {selectedEmployer.website && (
+                  <Button variant="outline" asChild className="flex-1">
+                    <a href={selectedEmployer.website} target="_blank" rel="noopener noreferrer">
+                      <LinkIcon className="mr-2 h-4 w-4" />
+                      Website
+                    </a>
+                  </Button>
+                )}
+                {selectedEmployer.linkedin_url && (
+                  <Button variant="outline" asChild className="flex-1">
+                    <a href={selectedEmployer.linkedin_url} target="_blank" rel="noopener noreferrer">
+                      LinkedIn
+                    </a>
+                  </Button>
+                )}
+                {selectedEmployer.job_board_url && (
+                  <Button variant="outline" asChild className="flex-1">
+                    <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
+                      Job Board
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              <Button
+                onClick={() => {
+                  setShowRequestDialog(true);
+                }}
+                className="w-full"
+                disabled={existingRequests.has(selectedEmployer.id)}
+              >
+                {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Request Dialog */}
+      {selectedEmployer && showRequestDialog && (
+        <Dialog open={showRequestDialog} onOpenChange={(open) => {
+          setShowRequestDialog(open);
+          if (!open) {
+            setRequestMessage("");
+            setOpportunityType("");
+          }
+        }}>
+          <DialogContent className="max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Request Connection</DialogTitle>
+              <DialogDescription>
+                Send a connection request to {selectedEmployer.company_name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+              <div>
+                <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
+                <Select value={opportunityType} onValueChange={setOpportunityType}>
+                  <SelectTrigger id="opportunity-type" className="mt-2">
+                    <SelectValue placeholder="Select opportunity type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                    {selectedEmployer.individual_roles && selectedEmployer.individual_roles.filter(role => role.title && role.title.trim()).map((role, index) => (
+                      <SelectItem key={index} value={role.title}>
+                        {role.title}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="message">Message *</Label>
+                <Textarea
+                  id="message"
+                  placeholder="Introduce yourself and explain why you'd like to connect..."
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  className="mt-2 min-h-[100px]"
+                />
+              </div>
+            </div>
+            <div className="pt-4 border-t">
+              <Button
+                onClick={() => handleSendRequest(selectedEmployer.id)}
+                disabled={sendingRequest || !requestMessage.trim()}
+                className="w-full"
+              >
+                {sendingRequest ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Request"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
