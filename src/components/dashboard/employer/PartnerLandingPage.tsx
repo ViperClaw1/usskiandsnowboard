@@ -21,6 +21,18 @@ import {
   PlusCircle,
 } from "lucide-react";
 
+interface Connection {
+  id: string;
+  athlete_id: string;
+  athlete_profiles: {
+    photo_url: string | null;
+    sport_discipline: string | null;
+    profiles: {
+      full_name: string;
+    } | null;
+  };
+}
+
 interface EmployerProfile {
   id: string;
   company_name: string;
@@ -61,6 +73,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
     rejected: 0,
   });
   const [featuredAthletes, setFeaturedAthletes] = useState<AthleteProfile[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -113,6 +126,15 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
             rejected: connections.filter((c) => c.status === "rejected").length,
           });
         }
+
+        // Load accepted connections
+        const { data: acceptedConnections } = await supabase
+          .from("connection_requests")
+          .select("id, athlete_id, athlete_profiles(photo_url, sport_discipline, profiles(full_name))")
+          .eq("employer_id", profileData.id)
+          .eq("status", "accepted");
+
+        if (acceptedConnections) setConnections(acceptedConnections);
       }
 
       // Load featured athletes
@@ -316,6 +338,58 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
             </CardContent>
           </Card>
         </div>
+
+        {/* My Connections Section */}
+        {connections.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>My Connections</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("connections")}>
+                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {connections.slice(0, 4).map((connection) => (
+                  <Card
+                    key={connection.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onNavigate("connections")}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={connection.athlete_profiles.photo_url || ""} />
+                          <AvatarFallback>
+                            {connection.athlete_profiles.profiles?.full_name
+                              ? connection.athlete_profiles.profiles.full_name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "AT"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {connection.athlete_profiles.profiles?.full_name || "Athlete"}
+                          </p>
+                          {connection.athlete_profiles.sport_discipline && (
+                            <Badge variant="secondary" className="mt-2 text-xs">
+                              {connection.athlete_profiles.sport_discipline}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Featured Athletes Section */}
         <Card>

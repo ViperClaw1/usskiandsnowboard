@@ -25,6 +25,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 
+interface Connection {
+  id: string;
+  employer_id: string;
+  employer_profiles: {
+    company_name: string;
+    logo_url: string | null;
+    industry: string | null;
+  };
+}
+
 interface AthleteProfile {
   id: string;
   photo_url: string | null;
@@ -63,6 +73,7 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
     rejected: 0,
   });
   const [featuredPartners, setFeaturedPartners] = useState<EmployerProfile[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -115,6 +126,15 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
             rejected: connections.filter((c) => c.status === "rejected").length,
           });
         }
+
+        // Load accepted connections
+        const { data: acceptedConnections } = await supabase
+          .from("connection_requests")
+          .select("id, employer_id, employer_profiles(company_name, logo_url, industry)")
+          .eq("athlete_id", profileData.id)
+          .eq("status", "accepted");
+
+        if (acceptedConnections) setConnections(acceptedConnections);
       }
 
       // Load featured partners
@@ -351,6 +371,50 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
             </CardContent>
           </Card>
         </div>
+
+        {/* My Connections Section */}
+        {connections.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>My Connections</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("connections")}>
+                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {connections.slice(0, 4).map((connection) => (
+                  <Card
+                    key={connection.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onNavigate("connections")}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={connection.employer_profiles.logo_url || ""} />
+                          <AvatarFallback>
+                            {connection.employer_profiles.company_name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-sm">{connection.employer_profiles.company_name}</p>
+                          {connection.employer_profiles.industry && (
+                            <Badge variant="secondary" className="mt-2 text-xs">
+                              {connection.employer_profiles.industry}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Featured Partners Section */}
         <Card>
