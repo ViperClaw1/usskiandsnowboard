@@ -1,10 +1,9 @@
 import { User } from "@supabase/supabase-js";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { EmployerOnboardingWizard } from "@/components/employer/EmployerOnboardingWizard";
 import CompanyProfileForm from "@/components/employer/CompanyProfileForm";
 import OpportunitiesForm from "@/components/employer/OpportunitiesForm";
@@ -20,7 +19,6 @@ interface EmployerDashboardProps {
 }
 
 const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps) => {
-  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<string>("home");
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +29,9 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
     loadProfile();
   }, [user.id]);
 
-  const loadProfile = async () => {
+  const loadProfile = async (retryCount = 0) => {
+    const MAX_RETRIES = 3;
+    
     try {
       const { data, error } = await supabase
         .from("employer_profiles")
@@ -42,9 +42,15 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
       if (error) throw error;
       setProfile(data);
     } catch (error: any) {
-      console.error("Error loading profile:", error);
+      if (retryCount < MAX_RETRIES) {
+        setTimeout(() => loadProfile(retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        toast.error("Failed to load profile. Please refresh the page.");
+      }
     } finally {
-      setLoading(false);
+      if (retryCount === 0) {
+        setLoading(false);
+      }
     }
   };
 
