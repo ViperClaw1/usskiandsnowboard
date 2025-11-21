@@ -292,10 +292,26 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
+                  onClick={() => onNavigate("profile")}
+                >
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  Update Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
                   onClick={() => onNavigate("portfolio")}
                 >
                   <Video className="mr-2 h-4 w-4" />
                   Manage Content
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => onNavigate("connections")}
+                >
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  View Connections
                 </Button>
                 <Dialog>
                   <DialogTrigger asChild>
@@ -331,22 +347,6 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                     </Tabs>
                   </DialogContent>
                 </Dialog>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("profile")}
-                >
-                  <UserCircle className="mr-2 h-4 w-4" />
-                  Update My Profile
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("connections")}
-                >
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  View My Connections
-                </Button>
               </div>
             </CardContent>
           </Card>
