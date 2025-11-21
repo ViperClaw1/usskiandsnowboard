@@ -28,21 +28,40 @@ const Employers = () => {
   const [employers, setEmployers] = useState<EmployerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     // Check authentication
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
+      if (user) {
+        loadUserRole(user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserRole(session.user.id);
+      }
     });
 
     loadEmployers();
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const loadUserRole = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+    
+    if (data) {
+      setUserRole(data.role);
+    }
+  };
 
   const loadEmployers = async () => {
     try {
@@ -81,11 +100,19 @@ const Employers = () => {
 
   // If user is authenticated, show the full directory
   if (user) {
+    const isEmployer = userRole === 'employer';
     return (
       <div className="min-h-screen bg-background">
         <AuthenticatedNav />
         <main className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-6">Partner Directory</h1>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold">Partner Directory</h1>
+            {isEmployer && (
+              <p className="text-muted-foreground mt-2">
+                View the profiles of your fellow U.S. Ski & Snowboard supporters
+              </p>
+            )}
+          </div>
           <EmployerDirectory />
         </main>
       </div>
