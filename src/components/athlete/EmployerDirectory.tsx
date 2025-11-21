@@ -691,15 +691,6 @@ const EmployerDirectory = () => {
                 {(selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0) || selectedEmployer.job_board_url ? (
                   <div className="space-y-4">
                     <h4 className="font-medium mb-4">Featured Positions</h4>
-                    
-                    {selectedEmployer.job_board_url && (
-                      <Button variant="outline" asChild className="w-full mb-4">
-                        <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
-                          <LinkIcon className="mr-2 h-4 w-4" />
-                          View All Positions on Job Board
-                        </a>
-                      </Button>
-                    )}
 
                     {selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0 && (
                       <>
@@ -733,6 +724,15 @@ const EmployerDirectory = () => {
                           </Card>
                         ))}
                       </>
+                    )}
+                    
+                    {selectedEmployer.job_board_url && (
+                      <Button variant="outline" asChild className="w-full">
+                        <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
+                          <LinkIcon className="mr-2 h-4 w-4" />
+                          View All Positions on Job Board
+                        </a>
+                      </Button>
                     )}
 
                     <Button
