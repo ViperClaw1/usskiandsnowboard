@@ -6,6 +6,7 @@ import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import heroImage from "@/assets/hero-background.jpg";
+import newsSectionBg from "@/assets/news-section-bg.jpg";
 
 const Home = () => {
   const { data: articles, isLoading } = useQuery({
@@ -92,15 +93,22 @@ const Home = () => {
         </section>
 
         {/* Featured News Section */}
-        <section className="py-12 sm:py-16 lg:py-20 bg-background">
-          <div className="container mx-auto px-4">
+        <section 
+          className="py-12 sm:py-16 lg:py-20 relative"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url(${newsSectionBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="container mx-auto px-4 relative z-10">
             <div className="flex items-center justify-between mb-8 sm:mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-                <Newspaper className="h-8 w-8 text-primary" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+                <Newspaper className="h-8 w-8 text-white" />
                 Featured News
               </h2>
               <Link to="/news">
-                <Button variant="outline">
+                <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
                   View All
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -114,14 +122,14 @@ const Home = () => {
             ) : articles && articles.length > 0 ? (
               <div className="grid md:grid-cols-3 gap-6">
                 {articles.map((article) => (
-                  <Card key={article.id} className="shadow-elegant hover:shadow-lg transition-shadow">
+                  <Card key={article.id} className="shadow-elegant hover:shadow-lg transition-shadow bg-white/95 backdrop-blur">
                     <CardHeader>
                       <CardTitle className="text-lg">
                         <a 
                           href={article.url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="hover:text-primary transition-colors flex items-start gap-2"
+                          className="hover:text-primary transition-colors flex items-start gap-2 text-foreground"
                         >
                           <span className="flex-1">{article.title}</span>
                           <ExternalLink className="h-4 w-4 flex-shrink-0 mt-1" />
@@ -140,7 +148,7 @@ const Home = () => {
                 ))}
               </div>
             ) : (
-              <Card className="shadow-elegant">
+              <Card className="shadow-elegant bg-white/95 backdrop-blur">
                 <CardContent className="py-8 text-center">
                   <p className="text-muted-foreground">
                     No news articles available at the moment.
