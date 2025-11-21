@@ -295,7 +295,7 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                   onClick={() => onNavigate("portfolio")}
                 >
                   <Video className="mr-2 h-4 w-4" />
-                  Manage Portfolio
+                  Manage Content
                 </Button>
                 <Dialog>
                   <DialogTrigger asChild>
