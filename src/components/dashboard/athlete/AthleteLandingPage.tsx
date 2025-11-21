@@ -330,7 +330,7 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                     <Tabs defaultValue="profile" className="w-full">
                       <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="profile">Profile</TabsTrigger>
-                        <TabsTrigger value="achievements">Professional Achievements</TabsTrigger>
+                        <TabsTrigger value="achievements">Athlete Content</TabsTrigger>
                       </TabsList>
                       <TabsContent value="profile" className="mt-4">
                         {profile && (
