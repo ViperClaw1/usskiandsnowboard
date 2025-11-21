@@ -1,10 +1,27 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Users, Briefcase, TrendingUp, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Briefcase, TrendingUp, ArrowRight, Newspaper, Loader2, ExternalLink } from "lucide-react";
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import heroImage from "@/assets/hero-background.jpg";
 
 const Home = () => {
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ['featured-news'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <AuthenticatedNav />
@@ -71,6 +88,66 @@ const Home = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Featured News Section */}
+        <section className="py-12 sm:py-16 lg:py-20 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
+                <Newspaper className="h-8 w-8 text-primary" />
+                Featured News
+              </h2>
+              <Link to="/news">
+                <Button variant="outline">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+            
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : articles && articles.length > 0 ? (
+              <div className="grid md:grid-cols-3 gap-6">
+                {articles.map((article) => (
+                  <Card key={article.id} className="shadow-elegant hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="text-lg">
+                        <a 
+                          href={article.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:text-primary transition-colors flex items-start gap-2"
+                        >
+                          <span className="flex-1">{article.title}</span>
+                          <ExternalLink className="h-4 w-4 flex-shrink-0 mt-1" />
+                        </a>
+                      </CardTitle>
+                      {article.date && (
+                        <p className="text-sm text-muted-foreground">{article.date}</p>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {article.excerpt}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="shadow-elegant">
+                <CardContent className="py-8 text-center">
+                  <p className="text-muted-foreground">
+                    No news articles available at the moment.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </section>
 
