@@ -641,10 +641,10 @@ const EmployerDirectory = () => {
                   </div>
                 )}
 
-                {selectedEmployer.opportunities_offered && (
+                {selectedEmployer.connection_to_ussa && (
                   <div>
-                    <h4 className="font-medium mb-2">Opportunities Offered</h4>
-                    <p className="text-sm text-muted-foreground">{selectedEmployer.opportunities_offered}</p>
+                    <h4 className="font-medium mb-2">What's our connection to US Ski & Snowboard</h4>
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.connection_to_ussa}</p>
                   </div>
                 )}
 
