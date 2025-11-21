@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     `;
 
     const { error } = await resend.emails.send({
-      from: 'U.S. Ski & Snowboard <onboarding@resend.dev>',
+      from: 'U.S. Ski & Snowboard <notifications@athleteconnect.org>',
       to: [user.email],
       subject: 'Confirm your email address',
       html,

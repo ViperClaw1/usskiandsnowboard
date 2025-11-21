@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email with temporary password
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "US Ski & Snowboard <onboarding@resend.dev>",
+      from: "US Ski & Snowboard <notifications@athleteconnect.org>",
       to: [profile.email],
       subject: "Your Temporary Password",
       html: `
