@@ -14,6 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
+      athlete_achievements: {
+        Row: {
+          achievement_date: string
+          athlete_id: string
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          result: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          achievement_date: string
+          athlete_id: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          result?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          achievement_date?: string
+          athlete_id?: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          result?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_achievements_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_achievements_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      athlete_awards: {
+        Row: {
+          athlete_id: string
+          award_date: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          issuer: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          award_date: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          issuer: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          award_date?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          issuer?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_awards_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_awards_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      athlete_documents: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          description: string | null
+          document_type: string
+          document_url: string
+          file_size_bytes: number | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          description?: string | null
+          document_type: string
+          document_url: string
+          file_size_bytes?: number | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          description?: string | null
+          document_type?: string
+          document_url?: string
+          file_size_bytes?: number | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_documents_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_documents_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       athlete_profiles: {
         Row: {
           affiliation: string | null
@@ -99,6 +255,60 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      athlete_videos: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_type: string
+          video_url: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_type: string
+          video_url: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_type?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_videos_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_videos_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
             referencedColumns: ["id"]
           },
         ]

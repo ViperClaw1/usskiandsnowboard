@@ -11,6 +11,7 @@ import ConnectionRequestsManager from "@/components/athlete/ConnectionRequestsMa
 import ConnectionsList from "@/components/athlete/ConnectionsList";
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 import { AthleteLandingPage } from "@/components/dashboard/athlete/AthleteLandingPage";
+import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 
 interface AthleteDashboardProps {
   user: User;
@@ -88,6 +89,15 @@ const AthleteDashboard = ({
               </Button>
             </div>
             <EmployerDirectory />
+          </div>
+        ) : currentView === "portfolio" ? (
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
+                Back to Home
+              </Button>
+            </div>
+            {profile?.id && <AthletePortfolio athleteId={profile.id} />}
           </div>
         ) : currentView === "connections" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
