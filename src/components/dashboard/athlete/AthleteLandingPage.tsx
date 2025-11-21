@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   UserCircle,
   Users,
@@ -60,7 +61,28 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
 
   useEffect(() => {
     loadDashboardData();
-  }, [user.id]);
+
+    // Set up real-time subscription for connection updates
+    const channel = supabase
+      .channel('athlete-connections')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_requests',
+          filter: profile?.id ? `athlete_id=eq.${profile.id}` : undefined,
+        },
+        () => {
+          loadDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.id, profile?.id]);
 
   const loadDashboardData = async () => {
     try {
@@ -98,18 +120,14 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
 
       if (partners) setFeaturedPartners(partners);
     } catch (error) {
-      console.error("Error loading dashboard data:", error);
+      // Error handled silently - will retry on next mount
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   const completeness = profile?.profile_completeness || 0;

@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
-import { Loader2 } from "lucide-react";
 import RoleSelection from "@/components/dashboard/RoleSelection";
 import AthleteDashboard from "@/components/dashboard/AthleteDashboard";
 import EmployerDashboard from "@/components/dashboard/EmployerDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Dashboard = () => {
       setUser(session?.user ?? null);
       
       if (!session?.user && event === "SIGNED_OUT") {
-        navigate("/auth");
+        navigate("/");
       }
     });
 
@@ -30,7 +31,7 @@ const Dashboard = () => {
       setUser(session?.user ?? null);
       
       if (!session?.user) {
-        navigate("/auth");
+        navigate("/");
       } else {
         loadUserRole(session.user.id);
       }
@@ -39,16 +40,15 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const loadUserRole = async (userId: string) => {
+  const loadUserRole = async (userId: string, retryCount = 0) => {
+    const MAX_RETRIES = 3;
+    
     try {
-      console.log("Loading role for user:", userId);
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .order("role", { ascending: false }); // This will put 'employer' first, then 'athlete', then 'admin'
-
-      console.log("Role query result:", { data, error });
+        .order("role", { ascending: false });
 
       if (error) throw error;
       
@@ -59,21 +59,22 @@ const Dashboard = () => {
         userRole = adminRole ? adminRole.role : data[0].role;
       }
       
-      console.log("Setting role to:", userRole);
       setRole(userRole);
     } catch (error) {
-      console.error("Error loading role:", error);
+      if (retryCount < MAX_RETRIES) {
+        setTimeout(() => loadUserRole(userId, retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        console.error("Error loading role after retries:", error);
+      }
     } finally {
-      setLoading(false);
+      if (retryCount === 0) {
+        setLoading(false);
+      }
     }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (!user || !session) {
@@ -84,16 +85,24 @@ const Dashboard = () => {
     return <RoleSelection userId={user.id} onRoleSet={(newRole) => setRole(newRole)} />;
   }
 
-  switch (role) {
-    case "athlete":
-      return <AthleteDashboard user={user} />;
-    case "employer":
-      return <EmployerDashboard user={user} />;
-    case "admin":
-      return <AdminDashboard user={user} />;
-    default:
-      return <RoleSelection userId={user.id} onRoleSet={(newRole) => setRole(newRole)} />;
-  }
+  const renderDashboard = () => {
+    switch (role) {
+      case "athlete":
+        return <AthleteDashboard user={user} />;
+      case "employer":
+        return <EmployerDashboard user={user} />;
+      case "admin":
+        return <AdminDashboard user={user} />;
+      default:
+        return <RoleSelection userId={user.id} onRoleSet={(newRole) => setRole(newRole)} />;
+    }
+  };
+
+  return (
+    <ErrorBoundary>
+      {renderDashboard()}
+    </ErrorBoundary>
+  );
 };
 
 export default Dashboard;

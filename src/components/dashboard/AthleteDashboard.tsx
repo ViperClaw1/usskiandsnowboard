@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { AthleteOnboardingWizard } from "@/components/athlete/AthleteOnboardingWizard";
 import ProfileForm from "@/components/athlete/ProfileForm";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
@@ -22,7 +21,6 @@ const AthleteDashboard = ({
   user,
   isAdminView = false
 }: AthleteDashboardProps) => {
-  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -32,7 +30,9 @@ const AthleteDashboard = ({
     loadProfile();
   }, [user.id]);
 
-  const loadProfile = async () => {
+  const loadProfile = async (retryCount = 0) => {
+    const MAX_RETRIES = 3;
+    
     try {
       const { data, error } = await supabase
         .from("athlete_profiles")
@@ -46,9 +46,15 @@ const AthleteDashboard = ({
       if (error) throw error;
       setProfile(data);
     } catch (error: any) {
-      console.error("Error loading profile:", error);
+      if (retryCount < MAX_RETRIES) {
+        setTimeout(() => loadProfile(retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        toast.error("Failed to load profile. Please refresh the page.");
+      }
     } finally {
-      setLoading(false);
+      if (retryCount === 0) {
+        setLoading(false);
+      }
     }
   };
 
