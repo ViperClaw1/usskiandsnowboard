@@ -136,22 +136,36 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <Card className="mb-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
               <CardContent className="pt-4">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
-                  <strong>QA Mode:</strong> Viewing as Athlete - This is how the athlete dashboard appears to athletes
+                  <strong>QA Mode:</strong> Viewing blank athlete profile - This is how the athlete dashboard appears to new athletes
                 </p>
               </CardContent>
             </Card>
-            <AthleteDashboard user={user} isAdminView={true} />
+            <AthleteDashboard 
+              user={{
+                ...user,
+                id: 'blank-athlete-preview',
+                email: 'preview@athlete.com'
+              } as User} 
+              isAdminView={true} 
+            />
           </TabsContent>
 
           <TabsContent value="employer" className="mt-0">
             <Card className="mb-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
               <CardContent className="pt-4">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>QA Mode:</strong> Viewing as Partner - This is how the partner dashboard appears to partners
+                  <strong>QA Mode:</strong> Viewing blank partner profile - This is how the partner dashboard appears to new partners
                 </p>
               </CardContent>
             </Card>
-            <EmployerDashboard user={user} isAdminView={true} />
+            <EmployerDashboard 
+              user={{
+                ...user,
+                id: 'blank-employer-preview',
+                email: 'preview@partner.com'
+              } as User} 
+              isAdminView={true} 
+            />
           </TabsContent>
         </Tabs>
       </main>
