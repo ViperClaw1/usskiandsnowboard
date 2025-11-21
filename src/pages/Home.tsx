@@ -92,6 +92,45 @@ const Home = () => {
           </div>
         </section>
 
+        {/* View Athletes & Partners Section */}
+        <section className="py-12 sm:py-16 lg:py-20 bg-background">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-foreground">
+              Discover Talent & Opportunities
+            </h2>
+            
+            <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+              <div className="bg-card p-8 rounded-lg shadow-elegant text-center border border-border hover:shadow-lg transition-shadow">
+                <Users className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-3 text-foreground">Browse Athletes</h3>
+                <p className="text-muted-foreground mb-6">
+                  Explore profiles of talented athletes ready for their next career move.
+                </p>
+                <Link to="/athletes">
+                  <Button className="w-full">
+                    View Athletes
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="bg-card p-8 rounded-lg shadow-elegant text-center border border-border hover:shadow-lg transition-shadow">
+                <Briefcase className="h-12 w-12 text-accent mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-3 text-foreground">Browse Partners</h3>
+                <p className="text-muted-foreground mb-6">
+                  Discover organizations offering exciting career opportunities.
+                </p>
+                <Link to="/employers">
+                  <Button variant="secondary" className="w-full">
+                    View Partners
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Featured News Section */}
         <section 
           className="py-12 sm:py-16 lg:py-20 relative"
@@ -159,44 +198,6 @@ const Home = () => {
           </div>
         </section>
 
-        {/* View Athletes & Partners Section */}
-        <section className="py-12 sm:py-16 lg:py-20 bg-background">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-foreground">
-              Discover Talent & Opportunities
-            </h2>
-            
-            <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-              <div className="bg-card p-8 rounded-lg shadow-elegant text-center border border-border hover:shadow-lg transition-shadow">
-                <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Browse Athletes</h3>
-                <p className="text-muted-foreground mb-6">
-                  Explore profiles of talented athletes ready for their next career move.
-                </p>
-                <Link to="/athletes">
-                  <Button className="w-full">
-                    View Athletes
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="bg-card p-8 rounded-lg shadow-elegant text-center border border-border hover:shadow-lg transition-shadow">
-                <Briefcase className="h-12 w-12 text-accent mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Browse Partners</h3>
-                <p className="text-muted-foreground mb-6">
-                  Discover organizations offering exciting career opportunities.
-                </p>
-                <Link to="/employers">
-                  <Button variant="secondary" className="w-full">
-                    View Partners
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Join Section */}
         <section className="py-12 sm:py-16 lg:py-20 bg-muted">
