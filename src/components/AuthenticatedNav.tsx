@@ -22,7 +22,7 @@ export const AuthenticatedNav = () => {
   };
 
   return (
-    <header className="border-b sticky top-0 z-50" style={{ 
+    <header className="sticky top-0 z-50" style={{ 
       backgroundImage: `url(${mountainHeaderBg})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
