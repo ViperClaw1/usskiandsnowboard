@@ -79,8 +79,8 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
   useEffect(() => {
     loadDashboardData();
 
-    // Set up real-time subscription for connection updates
-    const channel = supabase
+    // Set up real-time subscriptions
+    const connectionsChannel = supabase
       .channel('employer-connections')
       .on(
         'postgres_changes',
@@ -96,8 +96,25 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
       )
       .subscribe();
 
+    const profileChannel = supabase
+      .channel('employer-profile-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'employer_profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          loadDashboardData();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(connectionsChannel);
+      supabase.removeChannel(profileChannel);
     };
   }, [user.id, profile?.id]);
 
