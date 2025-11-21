@@ -4,8 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CookieConsent } from "@/components/CookieConsent";
-import { AuthProvider } from "@/components/auth/AuthContext";
+import { AuthProvider, useAuth } from "@/components/auth/AuthContext";
 import Index from "./pages/Index";
+import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Athletes from "./pages/Athletes";
@@ -27,6 +28,38 @@ import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
+const AppRoutes = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={user ? <Home /> : <Index />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/email-verification" element={<EmailVerification />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/athletes" element={<Athletes />} />
+      <Route path="/employers" element={<Employers />} />
+      <Route path="/schedule" element={<Schedule />} />
+      <Route path="/news" element={<News />} />
+      <Route path="/admin/users" element={<AllUsers />} />
+      <Route path="/admin/athletes" element={<AllAthletes />} />
+      <Route path="/admin/employers" element={<AllEmployers />} />
+      <Route path="/admin/requests" element={<AllRequests />} />
+      <Route path="/admin/connections" element={<AcceptedConnections />} />
+      <Route path="/admin/rejected" element={<RejectedRequests />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -34,27 +67,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/email-verification" element={<EmailVerification />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/athletes" element={<Athletes />} />
-            <Route path="/employers" element={<Employers />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/admin/users" element={<AllUsers />} />
-            <Route path="/admin/athletes" element={<AllAthletes />} />
-            <Route path="/admin/employers" element={<AllEmployers />} />
-            <Route path="/admin/requests" element={<AllRequests />} />
-            <Route path="/admin/connections" element={<AcceptedConnections />} />
-            <Route path="/admin/rejected" element={<RejectedRequests />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRoutes />
           <CookieConsent />
         </BrowserRouter>
       </AuthProvider>
