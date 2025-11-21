@@ -50,7 +50,7 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
             <CardContent className="space-y-6 pt-6">
               {/* About */}
               <div>
-                <h3 className="font-semibold mb-2">About</h3>
+                <h3 className="font-semibold mb-2">About our company</h3>
                 <p className="text-muted-foreground">{profile?.about || "Not provided"}</p>
               </div>
 

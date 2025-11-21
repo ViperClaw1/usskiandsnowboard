@@ -636,7 +636,7 @@ const EmployerDirectory = () => {
 
                 {selectedEmployer.about && (
                   <div>
-                    <h4 className="font-medium mb-2">About</h4>
+                    <h4 className="font-medium mb-2">About our company</h4>
                     <p className="text-sm text-muted-foreground">{selectedEmployer.about}</p>
                   </div>
                 )}
