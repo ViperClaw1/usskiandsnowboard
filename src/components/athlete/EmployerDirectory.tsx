@@ -543,22 +543,8 @@ const EmployerDirectory = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {employer.connection_to_ussa && (
-                <div>
-                  <p className="text-xs font-semibold text-foreground mb-1">Connection to US Ski & Snowboard</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{employer.connection_to_ussa}</p>
-                </div>
-              )}
-
               {employer.about && (
                 <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
-              )}
-
-              {employer.opportunities_offered && (
-                <div>
-                  <p className="text-xs font-semibold text-foreground mb-1">Opportunities</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{employer.opportunities_offered}</p>
-                </div>
               )}
 
               <div className="flex flex-wrap gap-2">
