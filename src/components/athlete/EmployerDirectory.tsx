@@ -59,7 +59,30 @@ const EmployerDirectory = () => {
   useEffect(() => {
     loadEmployers();
     loadAthleteProfile();
-  }, []);
+
+    // Set up real-time subscription for connection requests
+    const channel = supabase
+      .channel('athlete_connection_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_requests',
+        },
+        () => {
+          // Reload existing requests when any change happens
+          if (athleteProfileId) {
+            loadExistingRequests(athleteProfileId);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [athleteProfileId]);
 
   const loadAthleteProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -81,8 +104,9 @@ const EmployerDirectory = () => {
     try {
       const { data, error } = await supabase
         .from("connection_requests")
-        .select("employer_id")
-        .eq("athlete_id", athleteId);
+        .select("employer_id, status")
+        .eq("athlete_id", athleteId)
+        .in("status", ["pending", "accepted"]); // Only count active requests
 
       if (error) throw error;
 
