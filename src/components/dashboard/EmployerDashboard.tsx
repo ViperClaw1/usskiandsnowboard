@@ -132,7 +132,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
                 </DialogDescription>
               </DialogHeader>
               {profile ? (
-                <CompanyProfileForm userId={user.id} onSuccess={handleProfileComplete} />
+                <CompanyProfileForm userId={user.id} existingProfile={profile} onSuccess={handleProfileComplete} />
               ) : (
                 <EmployerOnboardingWizard user={user} onComplete={handleProfileComplete} />
               )}
