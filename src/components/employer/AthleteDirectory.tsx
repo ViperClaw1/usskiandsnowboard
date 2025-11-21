@@ -86,11 +86,35 @@ const AthleteDirectory = () => {
   const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterSkills, setFilterSkills] = useState<string>("");
   const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
+  const [existingRequests, setExistingRequests] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadAthletes();
     loadEmployerProfile();
-  }, []);
+
+    // Set up real-time subscription for connection requests
+    const channel = supabase
+      .channel('employer_connection_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_requests',
+        },
+        () => {
+          // Reload existing requests when any change happens
+          if (employerProfileId) {
+            loadExistingRequests(employerProfileId);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [employerProfileId]);
 
   const loadEmployerProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -105,6 +129,24 @@ const AthleteDirectory = () => {
     if (data) {
       setEmployerProfileId(data.id);
       setEmployerRoles((data.individual_roles as Array<{ title: string; type: string; url: string; location: string }>) || []);
+      loadExistingRequests(data.id);
+    }
+  };
+
+  const loadExistingRequests = async (employerId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("connection_requests")
+        .select("athlete_id, status")
+        .eq("employer_id", employerId)
+        .in("status", ["pending", "accepted"]); // Only count active requests
+
+      if (error) throw error;
+
+      const requestedAthleteIds = new Set(data?.map(r => r.athlete_id) || []);
+      setExistingRequests(requestedAthleteIds);
+    } catch (error) {
+      console.error("Error loading existing requests:", error);
     }
   };
 
@@ -222,6 +264,11 @@ const AthleteDirectory = () => {
       return;
     }
 
+    if (existingRequests.has(selectedAthlete.id)) {
+      toast.error("You have already sent a request to this athlete");
+      return;
+    }
+
     if (!requestMessage.trim()) {
       toast.error("Please include a message with your request");
       return;
@@ -263,7 +310,10 @@ const AthleteDirectory = () => {
       setRequestMessage("");
       setOpportunityType("");
       setShowRequestDialog(false);
-      setSelectedAthlete(null); // Close the athlete card dialog
+      setSelectedAthlete(null);
+      
+      // Add to existing requests
+      setExistingRequests(prev => new Set([...prev, selectedAthlete.id]));
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
@@ -806,8 +856,9 @@ const AthleteDirectory = () => {
                     setShowRequestDialog(true);
                   }}
                   className="w-full"
+                  disabled={existingRequests.has(selectedAthlete.id)}
                 >
-                  Request Connection
+                  {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
                 </Button>
               </div>
             </TabsContent>
