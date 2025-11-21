@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 
 interface AthleteProfile {
   id: string;
@@ -609,11 +611,18 @@ const AthleteDirectory = () => {
 
       {selectedAthlete && (
         <Dialog open={!!selectedAthlete && !showRequestDialog} onOpenChange={(open) => !open && setSelectedAthlete(null)}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-6">
+            
+            <Tabs defaultValue="profile" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="portfolio">Professional Achievements</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="profile" className="space-y-6 mt-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
@@ -853,7 +862,12 @@ const AthleteDirectory = () => {
                   Request Connection
                 </Button>
               </div>
-            </div>
+            </TabsContent>
+
+            <TabsContent value="portfolio" className="mt-6">
+              <AthletePortfolioView athleteId={selectedAthlete.id} />
+            </TabsContent>
+          </Tabs>
           </DialogContent>
         </Dialog>
       )}
