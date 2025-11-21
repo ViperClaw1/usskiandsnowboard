@@ -467,6 +467,7 @@ export type Database = {
           about: string | null
           company_name: string
           company_size: string | null
+          connection_to_ussa: string | null
           contact_email: string | null
           contact_person: string | null
           contact_title: string | null
@@ -490,6 +491,7 @@ export type Database = {
           about?: string | null
           company_name: string
           company_size?: string | null
+          connection_to_ussa?: string | null
           contact_email?: string | null
           contact_person?: string | null
           contact_title?: string | null
@@ -513,6 +515,7 @@ export type Database = {
           about?: string | null
           company_name?: string
           company_size?: string | null
+          connection_to_ussa?: string | null
           contact_email?: string | null
           contact_person?: string | null
           contact_title?: string | null

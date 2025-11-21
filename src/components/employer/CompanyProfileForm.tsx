@@ -21,6 +21,7 @@ const formSchema = z.object({
   contact_person: z.string().optional(),
   contact_title: z.string().optional(),
   contact_email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  connection_to_ussa: z.string().optional(),
   about: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   linkedin_url: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
@@ -85,6 +86,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       contact_person: existingProfile?.contact_person || "",
       contact_title: existingProfile?.contact_title || "",
       contact_email: existingProfile?.contact_email || "",
+      connection_to_ussa: existingProfile?.connection_to_ussa || "",
       about: existingProfile?.about || "",
       website: existingProfile?.website || "",
       linkedin_url: existingProfile?.linkedin_url || "",
@@ -166,6 +168,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         contact_person: values.contact_person || null,
         contact_title: values.contact_title || null,
         contact_email: values.contact_email || null,
+        connection_to_ussa: values.connection_to_ussa || null,
         about: values.about || null,
         website: values.website || null,
         linkedin_url: values.linkedin_url || null,
@@ -373,6 +376,25 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
               <FormLabel>Contact Email</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="contact@company.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+
+        <FormField
+          control={form.control}
+          name="connection_to_ussa"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>What's your connection to US Ski & Snowboard?</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Describe your relationship with US Ski & Snowboard..."
+                  className="min-h-[100px]"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

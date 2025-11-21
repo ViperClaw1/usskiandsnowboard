@@ -18,6 +18,7 @@ interface EmployerProfile {
   industry: string | null;
   logo_url: string | null;
   about: string | null;
+  connection_to_ussa: string | null;
   opportunities_offered: string | null;
   profile_views: number;
 }
@@ -74,6 +75,7 @@ const Employers = () => {
           industry,
           logo_url,
           about,
+          connection_to_ussa,
           opportunities_offered,
           profile_views
         `)
@@ -197,6 +199,14 @@ const Employers = () => {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
+                          {employer.connection_to_ussa && (
+                            <div>
+                              <span className="text-xs font-medium">Connection to US Ski & Snowboard:</span>
+                              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                {employer.connection_to_ussa}
+                              </p>
+                            </div>
+                          )}
                           {employer.about && (
                             <p className="text-sm text-muted-foreground line-clamp-2">
                               {employer.about}
