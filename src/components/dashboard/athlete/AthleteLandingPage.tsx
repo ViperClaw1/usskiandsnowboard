@@ -18,7 +18,12 @@ import {
   Clock,
   XCircle,
   Video,
+  EyeIcon,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
+import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 
 interface AthleteProfile {
   id: string;
@@ -292,6 +297,40 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                   <Video className="mr-2 h-4 w-4" />
                   Manage Portfolio
                 </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                    >
+                      <EyeIcon className="mr-2 h-4 w-4" />
+                      Preview Profile
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Profile Preview - How Partners See You</DialogTitle>
+                    </DialogHeader>
+                    <Tabs defaultValue="profile" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="profile">Profile</TabsTrigger>
+                        <TabsTrigger value="achievements">Professional Achievements</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="profile" className="mt-4">
+                        {profile && (
+                          <AthleteProfilePreview
+                            profile={{ full_name: profile.profiles?.full_name }}
+                            profileData={profile}
+                            viewMode="public"
+                          />
+                        )}
+                      </TabsContent>
+                      <TabsContent value="achievements" className="mt-4">
+                        {profile && <AthletePortfolioView athleteId={profile.id} />}
+                      </TabsContent>
+                    </Tabs>
+                  </DialogContent>
+                </Dialog>
                 <Button
                   variant="outline"
                   className="w-full justify-start"
