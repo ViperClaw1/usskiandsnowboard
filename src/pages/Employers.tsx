@@ -101,6 +101,7 @@ const Employers = () => {
   // If user is authenticated, show the full directory
   if (user) {
     const isEmployer = userRole === 'employer';
+    const isAthlete = userRole === 'athlete';
     return (
       <div className="min-h-screen bg-background">
         <AuthenticatedNav />
@@ -110,6 +111,11 @@ const Employers = () => {
             {isEmployer && (
               <p className="text-muted-foreground mt-2">
                 View the profiles of your fellow U.S. Ski & Snowboard supporters
+              </p>
+            )}
+            {isAthlete && (
+              <p className="text-muted-foreground mt-2">
+                View U.S. Ski & Snowboard partners seeking to hire athletes
               </p>
             )}
           </div>
