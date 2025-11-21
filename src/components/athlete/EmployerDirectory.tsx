@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -586,131 +587,163 @@ const EmployerDirectory = () => {
               <DialogTitle>{selectedEmployer.company_name}</DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  {selectedEmployer.logo_url ? (
-                    <img
-                      src={selectedEmployer.logo_url}
-                      alt={`${selectedEmployer.company_name} logo`}
-                      className="h-full w-full object-contain p-2"
-                    />
-                  ) : (
-                    <AvatarFallback>
-                      <Building2 className="h-12 w-12 text-primary" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold">{selectedEmployer.company_name}</h3>
-                  {selectedEmployer.industry && (
-                    <p className="text-sm text-muted-foreground">{selectedEmployer.industry}</p>
-                  )}
-                </div>
-              </div>
+            <Tabs defaultValue="profile" className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="positions">Open Positions</TabsTrigger>
+              </TabsList>
 
-              {selectedEmployer.about && (
-                <div>
-                  <h4 className="font-medium mb-2">About</h4>
-                  <p className="text-sm text-muted-foreground">{selectedEmployer.about}</p>
-                </div>
-              )}
-
-              {selectedEmployer.opportunities_offered && (
-                <div>
-                  <h4 className="font-medium mb-2">Opportunities Offered</h4>
-                  <p className="text-sm text-muted-foreground">{selectedEmployer.opportunities_offered}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                {selectedEmployer.company_size && (
+              <TabsContent value="profile" className="space-y-6 mt-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    {selectedEmployer.logo_url ? (
+                      <img
+                        src={selectedEmployer.logo_url}
+                        alt={`${selectedEmployer.company_name} logo`}
+                        className="h-full w-full object-contain p-2"
+                      />
+                    ) : (
+                      <AvatarFallback>
+                        <Building2 className="h-12 w-12 text-primary" />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
                   <div>
-                    <p className="text-sm font-medium">Company Size</p>
-                    <p className="text-sm text-muted-foreground">{selectedEmployer.company_size}</p>
+                    <h3 className="font-semibold">{selectedEmployer.company_name}</h3>
+                    {selectedEmployer.industry && (
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.industry}</p>
+                    )}
+                  </div>
+                </div>
+
+                {selectedEmployer.about && (
+                  <div>
+                    <h4 className="font-medium mb-2">About</h4>
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.about}</p>
                   </div>
                 )}
-                {selectedEmployer.hq_location && (
+
+                {selectedEmployer.opportunities_offered && (
                   <div>
-                    <p className="text-sm font-medium">Location</p>
-                    <p className="text-sm text-muted-foreground">{selectedEmployer.hq_location}</p>
+                    <h4 className="font-medium mb-2">Opportunities Offered</h4>
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.opportunities_offered}</p>
                   </div>
                 )}
-              </div>
 
-              {selectedEmployer.contact_person && (
-                <div>
-                  <h4 className="font-medium mb-2">Contact Person</h4>
-                  <p className="text-sm">{selectedEmployer.contact_person}</p>
-                  {selectedEmployer.contact_title && (
-                    <p className="text-sm text-muted-foreground">{selectedEmployer.contact_title}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedEmployer.company_size && (
+                    <div>
+                      <p className="text-sm font-medium">Company Size</p>
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.company_size}</p>
+                    </div>
                   )}
-                  {selectedEmployer.contact_email && (
-                    <p className="text-sm text-muted-foreground">{selectedEmployer.contact_email}</p>
+                  {selectedEmployer.hq_location && (
+                    <div>
+                      <p className="text-sm font-medium">Location</p>
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.hq_location}</p>
+                    </div>
                   )}
                 </div>
-              )}
 
-              {selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2">Open Positions</h4>
-                  <div className="space-y-2">
+                {selectedEmployer.contact_person && (
+                  <div>
+                    <h4 className="font-medium mb-2">Contact Person</h4>
+                    <p className="text-sm">{selectedEmployer.contact_person}</p>
+                    {selectedEmployer.contact_title && (
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.contact_title}</p>
+                    )}
+                    {selectedEmployer.contact_email && (
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.contact_email}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  {selectedEmployer.website && (
+                    <Button variant="outline" asChild className="flex-1">
+                      <a href={selectedEmployer.website} target="_blank" rel="noopener noreferrer">
+                        <LinkIcon className="mr-2 h-4 w-4" />
+                        Website
+                      </a>
+                    </Button>
+                  )}
+                  {selectedEmployer.linkedin_url && (
+                    <Button variant="outline" asChild className="flex-1">
+                      <a href={selectedEmployer.linkedin_url} target="_blank" rel="noopener noreferrer">
+                        LinkedIn
+                      </a>
+                    </Button>
+                  )}
+                  {selectedEmployer.job_board_url && (
+                    <Button variant="outline" asChild className="flex-1">
+                      <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
+                        Job Board
+                      </a>
+                    </Button>
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => {
+                    setShowRequestDialog(true);
+                  }}
+                  className="w-full"
+                  disabled={existingRequests.has(selectedEmployer.id)}
+                >
+                  {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="positions" className="mt-6">
+                {selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0 ? (
+                  <div className="space-y-4">
+                    <h4 className="font-medium mb-4">Open Positions</h4>
                     {selectedEmployer.individual_roles.map((role, index) => (
-                      <div key={index} className="border-l-2 border-primary/20 pl-3">
-                        <p className="font-medium text-sm">{role.title}</p>
-                        {role.type && <p className="text-xs text-muted-foreground">{role.type}</p>}
-                        {role.location && <p className="text-xs text-muted-foreground">{role.location}</p>}
-                        {role.url && (
-                          <a
-                            href={role.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline"
-                          >
-                            View Details
-                          </a>
-                        )}
-                      </div>
+                      <Card key={index}>
+                        <CardContent className="pt-6">
+                          <div className="space-y-2">
+                            <h5 className="font-semibold">{role.title}</h5>
+                            <div className="flex flex-wrap gap-2">
+                              {role.type && (
+                                <Badge variant="secondary" className="text-xs">{role.type}</Badge>
+                              )}
+                              {role.location && (
+                                <Badge variant="outline" className="text-xs">{role.location}</Badge>
+                              )}
+                            </div>
+                            {role.url && (
+                              <Button variant="outline" size="sm" asChild className="mt-2">
+                                <a
+                                  href={role.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <LinkIcon className="mr-2 h-3 w-3" />
+                                  View Details
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
+                    <Button
+                      onClick={() => {
+                        setShowRequestDialog(true);
+                      }}
+                      className="w-full mt-4"
+                      disabled={existingRequests.has(selectedEmployer.id)}
+                    >
+                      {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
+                    </Button>
                   </div>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                {selectedEmployer.website && (
-                  <Button variant="outline" asChild className="flex-1">
-                    <a href={selectedEmployer.website} target="_blank" rel="noopener noreferrer">
-                      <LinkIcon className="mr-2 h-4 w-4" />
-                      Website
-                    </a>
-                  </Button>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No open positions available at this time.</p>
+                  </div>
                 )}
-                {selectedEmployer.linkedin_url && (
-                  <Button variant="outline" asChild className="flex-1">
-                    <a href={selectedEmployer.linkedin_url} target="_blank" rel="noopener noreferrer">
-                      LinkedIn
-                    </a>
-                  </Button>
-                )}
-                {selectedEmployer.job_board_url && (
-                  <Button variant="outline" asChild className="flex-1">
-                    <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
-                      Job Board
-                    </a>
-                  </Button>
-                )}
-              </div>
-
-              <Button
-                onClick={() => {
-                  setShowRequestDialog(true);
-                }}
-                className="w-full"
-                disabled={existingRequests.has(selectedEmployer.id)}
-              >
-                {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
-              </Button>
-            </div>
+              </TabsContent>
+            </Tabs>
           </DialogContent>
         </Dialog>
       )}
