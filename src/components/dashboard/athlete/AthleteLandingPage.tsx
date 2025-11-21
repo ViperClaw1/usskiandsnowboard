@@ -450,11 +450,6 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                           </Badge>
                         )}
                       </div>
-                      {partner.opportunities_offered && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {partner.opportunities_offered}
-                        </p>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
