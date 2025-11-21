@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Building2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
@@ -199,35 +198,10 @@ const Employers = () => {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          {employer.connection_to_ussa && (
-                            <div>
-                              <span className="text-xs font-medium">Connection to US Ski & Snowboard:</span>
-                              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                                {employer.connection_to_ussa}
-                              </p>
-                            </div>
-                          )}
                           {employer.about && (
                             <p className="text-sm text-muted-foreground line-clamp-2">
                               {employer.about}
                             </p>
-                          )}
-                          {employer.opportunities_offered && (
-                            <div>
-                              <span className="text-xs font-medium">Opportunities:</span>
-                              <div className="flex flex-wrap gap-1.5 mt-1">
-                                {employer.opportunities_offered.split(',').slice(0, 2).map((opp, index) => (
-                                  <Badge key={index} variant="secondary" className="text-xs">
-                                    {opp.trim()}
-                                  </Badge>
-                                ))}
-                                {employer.opportunities_offered.split(',').length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{employer.opportunities_offered.split(',').length - 2} more
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
                           )}
                         </CardContent>
                       </Card>
