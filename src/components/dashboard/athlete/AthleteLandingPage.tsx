@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  Video,
 } from "lucide-react";
 
 interface AthleteProfile {
@@ -282,6 +283,14 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                 >
                   <Users className="mr-2 h-4 w-4" />
                   Browse Partner Directory
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => onNavigate("portfolio")}
+                >
+                  <Video className="mr-2 h-4 w-4" />
+                  Manage Portfolio
                 </Button>
                 <Button
                   variant="outline"
