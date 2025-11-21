@@ -590,7 +590,7 @@ const EmployerDirectory = () => {
             <Tabs defaultValue="profile" className="mt-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="positions">Open Positions</TabsTrigger>
+                <TabsTrigger value="positions">Featured Positions</TabsTrigger>
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6 mt-6">
@@ -674,13 +674,6 @@ const EmployerDirectory = () => {
                       </a>
                     </Button>
                   )}
-                  {selectedEmployer.job_board_url && (
-                    <Button variant="outline" asChild className="flex-1">
-                      <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
-                        Job Board
-                      </a>
-                    </Button>
-                  )}
                 </div>
 
                 <Button
@@ -695,38 +688,53 @@ const EmployerDirectory = () => {
               </TabsContent>
 
               <TabsContent value="positions" className="mt-6">
-                {selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0 ? (
+                {(selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0) || selectedEmployer.job_board_url ? (
                   <div className="space-y-4">
-                    <h4 className="font-medium mb-4">Open Positions</h4>
-                    {selectedEmployer.individual_roles.map((role, index) => (
-                      <Card key={index}>
-                        <CardContent className="pt-6">
-                          <div className="space-y-2">
-                            <h5 className="font-semibold">{role.title}</h5>
-                            <div className="flex flex-wrap gap-2">
-                              {role.type && (
-                                <Badge variant="secondary" className="text-xs">{role.type}</Badge>
-                              )}
-                              {role.location && (
-                                <Badge variant="outline" className="text-xs">{role.location}</Badge>
-                              )}
-                            </div>
-                            {role.url && (
-                              <Button variant="outline" size="sm" asChild className="mt-2">
-                                <a
-                                  href={role.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <LinkIcon className="mr-2 h-3 w-3" />
-                                  View Details
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                    <h4 className="font-medium mb-4">Featured Positions</h4>
+                    
+                    {selectedEmployer.job_board_url && (
+                      <Button variant="outline" asChild className="w-full mb-4">
+                        <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
+                          <LinkIcon className="mr-2 h-4 w-4" />
+                          View All Positions on Job Board
+                        </a>
+                      </Button>
+                    )}
+
+                    {selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0 && (
+                      <>
+                        {selectedEmployer.individual_roles.map((role, index) => (
+                          <Card key={index}>
+                            <CardContent className="pt-6">
+                              <div className="space-y-2">
+                                <h5 className="font-semibold">{role.title}</h5>
+                                <div className="flex flex-wrap gap-2">
+                                  {role.type && (
+                                    <Badge variant="secondary" className="text-xs">{role.type}</Badge>
+                                  )}
+                                  {role.location && (
+                                    <Badge variant="outline" className="text-xs">{role.location}</Badge>
+                                  )}
+                                </div>
+                                {role.url && (
+                                  <Button variant="outline" size="sm" asChild className="mt-2">
+                                    <a
+                                      href={role.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <LinkIcon className="mr-2 h-3 w-3" />
+                                      View Details
+                                    </a>
+                                  </Button>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </>
+                    )}
+
                     <Button
                       onClick={() => {
                         setShowRequestDialog(true);
@@ -739,7 +747,7 @@ const EmployerDirectory = () => {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground">No open positions available at this time.</p>
+                    <p className="text-muted-foreground">No featured positions available at this time.</p>
                   </div>
                 )}
               </TabsContent>
