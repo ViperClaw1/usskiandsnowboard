@@ -385,13 +385,13 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
 
         <FormField
           control={form.control}
-          name="connection_to_ussa"
+          name="about"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>What's your connection to US Ski & Snowboard?</FormLabel>
+              <FormLabel>About</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describe your relationship with US Ski & Snowboard..."
+                  placeholder="Tell athletes about your company and culture..."
                   className="min-h-[100px]"
                   {...field}
                 />
@@ -403,13 +403,13 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
 
         <FormField
           control={form.control}
-          name="about"
+          name="connection_to_ussa"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>About</FormLabel>
+              <FormLabel>What's your connection to US Ski & Snowboard?</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Tell athletes about your company and culture..."
+                  placeholder="Describe your relationship with US Ski & Snowboard..."
                   className="min-h-[100px]"
                   {...field}
                 />
