@@ -46,7 +46,7 @@ export const AuthenticatedNav = () => {
             News
           </Link>
           <Link to="/dashboard">
-            <Button size="sm" className="lg:h-10">Dashboard</Button>
+            <Button size="sm" className="lg:h-10 bg-red-600 hover:bg-red-700">Dashboard</Button>
           </Link>
           <Button size="sm" variant="outline" className="lg:h-10" onClick={handleSignOut}>
             Sign Out
