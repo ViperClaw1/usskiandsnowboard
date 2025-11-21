@@ -321,27 +321,104 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Notify admins about accepted connection
       await notifyAdmins("connection_accepted", request_id);
-    }
-
-    // Handle declined connections - notify admins
-    if (notification_type === "request_declined") {
-      console.log("Notifying admins about declined connection");
-      try {
-        await fetch(`${supabaseUrl}/functions/v1/send-admin-notification`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${supabaseServiceKey}`,
-          },
-          body: JSON.stringify({
-            notification_type: "connection_declined",
-            request_id,
-          }),
-        });
-      } catch (adminNotifyError) {
-        console.error("Error notifying admins:", adminNotifyError);
-        // Don't fail the main request if admin notification fails
+    } else if (notification_type === "request_declined") {
+      // Send notification to the person who initiated the request
+      const athleteName = request.athlete_profiles.profiles.full_name || "The athlete";
+      const companyName = request.employer_profiles.company_name;
+      const initiatorUserId = request.initiated_by_user_id;
+      
+      // Determine who initiated and who to notify
+      let recipientEmail: string | null = null;
+      let recipientName: string = "";
+      let otherPartyName: string = "";
+      
+      if (initiatorUserId === request.athlete_profiles.user_id) {
+        // Athlete initiated, notify athlete
+        recipientEmail = athleteEmail;
+        recipientName = athleteName;
+        otherPartyName = companyName;
+        
+        // Check if athlete wants this email
+        if (!(await shouldSendEmail(initiatorUserId, 'request_declined'))) {
+          console.log('Skipping declined email based on user preferences');
+          return new Response(
+            JSON.stringify({ success: true, message: 'Email skipped due to user preferences' }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
+      } else if (initiatorUserId === request.employer_profiles.user_id) {
+        // Employer initiated, notify employer
+        recipientEmail = employerEmail;
+        recipientName = companyName;
+        otherPartyName = athleteName;
+        
+        // Check if employer wants this email
+        if (!(await shouldSendEmail(initiatorUserId, 'request_declined'))) {
+          console.log('Skipping declined email based on user preferences');
+          return new Response(
+            JSON.stringify({ success: true, message: 'Email skipped due to user preferences' }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
       }
+      
+      if (recipientEmail) {
+        const declinedHtml = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+                .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
+                .info-box { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+                .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>Connection Request Update</h1>
+                </div>
+                <div class="content">
+                  <p>Hello ${recipientName},</p>
+                  <p>Unfortunately, <strong>${otherPartyName}</strong> has declined your connection request at this time.</p>
+                  
+                  <div class="info-box">
+                    <p>Don't be discouraged! There are many other opportunities on the platform.</p>
+                    <p>Keep building your profile and exploring connections that align with your goals.</p>
+                  </div>
+                  
+                  <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/dashboard" class="button">Continue Exploring</a>
+                </div>
+                <div class="footer">
+                  <p>This is an automated notification from US Ski & Snowboard Career Platform</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `;
+        
+        await resend.emails.send({
+          from: "US Ski & Snowboard <onboarding@resend.dev>",
+          to: [recipientEmail],
+          subject: `Connection Request Update`,
+          html: declinedHtml,
+        });
+        
+        console.log(`Declined notification sent to ${recipientEmail}`);
+      }
+      
+      // Notify admins about declined connection
+      await notifyAdmins("connection_declined", request_id);
     }
 
     return new Response(
