@@ -48,6 +48,14 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
         <TabsContent value="profile" className="mt-4">
           <Card>
             <CardContent className="space-y-6 pt-6">
+              {/* Connection to USSA */}
+              {profile?.connection_to_ussa && (
+                <div>
+                  <h3 className="font-semibold mb-2">Connection to US Ski & Snowboard</h3>
+                  <p className="text-muted-foreground">{profile.connection_to_ussa}</p>
+                </div>
+              )}
+
               {/* About */}
               <div>
                 <h3 className="font-semibold mb-2">About</h3>
