@@ -3,7 +3,9 @@ import { VideoManager } from "./VideoManager";
 import { DocumentManager } from "./DocumentManager";
 import { AchievementsManager } from "./AchievementsManager";
 import { AwardsManager } from "./AwardsManager";
-import { Video, FileText, Trophy, Award } from "lucide-react";
+import PhotoUploader from "./PhotoUploader";
+import { Video, FileText, Trophy, Award, Camera } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AthletePortfolioProps {
   athleteId: string;
@@ -13,14 +15,18 @@ export function AthletePortfolio({ athleteId }: AthletePortfolioProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Media & Portfolio</h2>
+        <h2 className="text-2xl font-bold">Athlete Content</h2>
         <p className="text-muted-foreground">
-          Showcase your competition footage, credentials, achievements, and awards
+          Showcase your lifestyle photos, competition footage, credentials, achievements, and awards
         </p>
       </div>
 
-      <Tabs defaultValue="videos" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="photos" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="photos" className="flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            <span className="hidden sm:inline">Photos</span>
+          </TabsTrigger>
           <TabsTrigger value="videos" className="flex items-center gap-2">
             <Video className="h-4 w-4" />
             <span className="hidden sm:inline">Videos</span>
@@ -38,6 +44,17 @@ export function AthletePortfolio({ athleteId }: AthletePortfolioProps) {
             <span className="hidden sm:inline">Awards</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="photos" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lifestyle Photos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhotoUploader userId={athleteId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="videos" className="mt-6">
           <VideoManager athleteId={athleteId} />
