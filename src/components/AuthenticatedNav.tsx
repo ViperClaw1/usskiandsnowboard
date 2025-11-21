@@ -29,7 +29,7 @@ export const AuthenticatedNav = () => {
       backgroundColor: '#1e3a5f'
     }}>
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-        <Link to="/">
+        <Link to="/" className="cursor-pointer">
           <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" />
         </Link>
         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
