@@ -32,21 +32,40 @@ const Athletes = () => {
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     // Check authentication
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
+      if (user) {
+        loadUserRole(user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserRole(session.user.id);
+      }
     });
 
     loadAthletes();
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const loadUserRole = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+    
+    if (data) {
+      setUserRole(data.role);
+    }
+  };
 
   const loadAthletes = async () => {
     try {
@@ -87,11 +106,19 @@ const Athletes = () => {
 
   // If user is authenticated, show the full directory
   if (user) {
+    const isAthlete = userRole === 'athlete';
     return (
       <div className="min-h-screen bg-background">
         <AuthenticatedNav />
         <main className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-6">Athlete Directory</h1>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold">Athlete Directory</h1>
+            {isAthlete && (
+              <p className="text-muted-foreground mt-2">
+                View the profiles of your teammates
+              </p>
+            )}
+          </div>
           <AthleteDirectory />
         </main>
       </div>
