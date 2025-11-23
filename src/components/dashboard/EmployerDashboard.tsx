@@ -12,6 +12,7 @@ import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsM
 import ConnectionsList from "@/components/employer/ConnectionsList";
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
+import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 
 interface EmployerDashboardProps {
   user: User;
@@ -92,6 +93,16 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
               </Button>
             </div>
             <AthleteDirectory />
+          </div>
+        ) : currentView === "preview" ? (
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold">Profile Preview</h2>
+              <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
+                Back to Home
+              </Button>
+            </div>
+            {profile && <EmployerProfilePreview profile={profile} />}
           </div>
         ) : currentView === "connections" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
