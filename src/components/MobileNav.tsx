@@ -24,15 +24,19 @@ export const MobileNav = () => {
   ];
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    // Ignore session_not_found errors since user is already logged out
-    if (error && error.message !== "Session from session_id claim in JWT does not exist" && error.status !== 403) {
-      toast.error("Failed to sign out");
-    } else {
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+      localStorage.clear();
+      sessionStorage.clear();
+      toast.success("Signed out successfully");
+    } catch (e) {
+      console.error("Sign out exception:", e);
+      // Still clear storage and navigate even on error
+      localStorage.clear();
+      sessionStorage.clear();
       toast.success("Signed out successfully");
     }
     setOpen(false);
-    // Always navigate to home regardless of error
     navigate("/");
   };
 
