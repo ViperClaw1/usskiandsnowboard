@@ -41,8 +41,20 @@ interface AthleteProfile {
   sport_discipline: string | null;
   profile_completeness: number;
   profile_views: number;
+  bio: string | null;
+  availability: string | null;
+  years_of_membership: number | null;
+  skills: string[] | null;
+  career_interests: string[] | null;
+  geographic_preferences: string[] | null;
+  professional_highlights: string | null;
+  sponsors: string[] | null;
+  email: string | null;
+  instagram_url: string | null;
   profiles: {
     full_name: string;
+    email: string | null;
+    phone: string | null;
   } | null;
 }
 
@@ -103,10 +115,10 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
 
   const loadDashboardData = async () => {
     try {
-      // Load athlete profile
+      // Load athlete profile with all fields
       const { data: profileData } = await supabase
         .from("athlete_profiles")
-        .select("id, photo_url, sport_discipline, profile_completeness, profile_views, profiles(full_name)")
+        .select("*, profiles(full_name, email, phone, first_name, last_name)")
         .eq("user_id", user.id)
         .single();
 
