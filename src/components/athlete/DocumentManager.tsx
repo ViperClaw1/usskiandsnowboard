@@ -128,8 +128,8 @@ export function DocumentManager({ athleteId }: DocumentManagerProps) {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
       return;
     }
 
@@ -196,7 +196,7 @@ export function DocumentManager({ athleteId }: DocumentManagerProps) {
           </div>
 
           <div>
-            <Label htmlFor="doc-file">Document File (Max 10MB)</Label>
+            <Label htmlFor="doc-file">Document File (Max 5MB)</Label>
             <div className="mt-2">
               <Input
                 id="doc-file"
