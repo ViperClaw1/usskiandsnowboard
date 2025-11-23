@@ -77,7 +77,13 @@ Deno.serve(async (req) => {
 
     console.log('Attempting to delete user:', userId)
 
-    // Delete the user from auth
+    // Note: Database triggers will automatically:
+    // 1. Set initiated_by_user_id to NULL in connection_requests (ON DELETE SET NULL)
+    // 2. Delete athlete_profiles and employer_profiles (CASCADE from profiles)
+    // 3. Delete all connection_requests via triggers when profiles are deleted
+    // 4. Delete all related data (videos, documents, achievements, etc.) via CASCADE
+
+    // Delete the user from auth - this cascades through the entire system
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
     if (deleteError) {
@@ -90,7 +96,7 @@ Deno.serve(async (req) => {
 
     console.log('User successfully deleted:', userId)
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, message: 'User and all associated data deleted successfully' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
