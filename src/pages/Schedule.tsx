@@ -70,12 +70,12 @@ const Schedule = () => {
         </section>
 
         <section className="flex-1 py-6 sm:py-8">
-          <div className="container mx-auto px-4 h-full">
-            <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant" style={{ height: 'calc(100vh - 320px)', minHeight: '600px' }}>
-              <iframe
-                src={`${import.meta.env.BASE_URL}schedule.pdf`}
-                className="w-full h-full"
-                title="2025-26 Season Schedule"
+          <div className="container mx-auto px-4">
+            <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant">
+              <img
+                src={`${import.meta.env.BASE_URL}schedule-image.jpg`}
+                alt="2025-26 Season Schedule"
+                className="w-full h-auto"
               />
             </div>
           </div>
