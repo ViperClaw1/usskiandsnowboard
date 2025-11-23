@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
-import { Search, Trash2, UserPlus } from "lucide-react";
+import { Search, Trash2, UserPlus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -74,16 +74,26 @@ export const FullUserManagementTable = () => {
       
       if (rolesError) throw rolesError;
 
-      return profiles.map(profile => {
+      // Fetch auth users to get email confirmation status
+      const { data: { users: authUsers } = { users: [] }, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) {
+        console.error('Error fetching auth users:', authError);
+      }
+
+      return profiles?.map(profile => {
         const userRoles = allRoles
           .filter(r => r.user_id === profile.id)
           .map(r => r.role);
         
+        const authUser = authUsers?.find((u: any) => u.id === profile.id);
+        
         return {
           ...profile,
           roles: userRoles.length > 0 ? userRoles : [],
+          emailConfirmed: authUser?.email_confirmed_at != null,
         };
-      });
+      }) || [];
     },
   });
 
@@ -116,6 +126,23 @@ export const FullUserManagementTable = () => {
     },
     onError: (error: Error) => {
       toast.error(`Failed to invite user: ${error.message}`);
+    },
+  });
+
+  const resendConfirmationMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Confirmation email sent successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to resend confirmation: ${error.message}`);
     },
   });
 
@@ -255,6 +282,17 @@ export const FullUserManagementTable = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
+                      {!user.emailConfirmed && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => resendConfirmationMutation.mutate(user.email)}
+                          disabled={resendConfirmationMutation.isPending}
+                          title="Resend confirmation email"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
