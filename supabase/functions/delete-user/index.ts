@@ -75,23 +75,29 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Delete the user
+    console.log('Attempting to delete user:', userId)
+
+    // Delete the user from auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
     if (deleteError) {
-      return new Response(JSON.stringify({ error: deleteError.message }), {
+      console.error('Error deleting user from auth:', deleteError)
+      return new Response(JSON.stringify({ error: `Auth deletion failed: ${deleteError.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       })
     }
+
+    console.log('User successfully deleted:', userId)
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error) {
+    console.error('Unexpected error in delete-user function:', error)
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: `Unexpected error: ${errorMessage}` }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })
