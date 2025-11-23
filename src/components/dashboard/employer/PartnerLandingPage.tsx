@@ -351,6 +351,14 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   View My Connections
                 </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => onNavigate("preview")}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Preview My Profile
+                </Button>
               </div>
             </CardContent>
           </Card>
