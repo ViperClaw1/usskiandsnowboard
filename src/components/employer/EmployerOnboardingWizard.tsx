@@ -31,9 +31,10 @@ interface FormData {
   website: string;
   linkedin: string;
   logoUrl: string;
+  connectionToUssa: string;
 }
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 11;
 
 export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -56,6 +57,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
       website: "",
       linkedin: "",
       logoUrl: "",
+      connectionToUssa: "",
     },
   });
 
@@ -100,9 +102,10 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
       case 4: return formValues.companySize.trim().length > 0;
       case 5: return formValues.hqLocation.trim().length > 0;
       case 6: return formValues.about.trim().length > 0;
-      case 7: return formValues.opportunities.trim().length > 0;
-      case 8: return formValues.contactPerson.trim().length > 0 && formValues.contactEmail.trim().length > 0;
-      case 9: return true; // Review
+      case 7: return formValues.connectionToUssa.trim().length > 0;
+      case 8: return formValues.opportunities.trim().length > 0;
+      case 9: return formValues.contactPerson.trim().length > 0 && formValues.contactEmail.trim().length > 0;
+      case 10: return true; // Review
       default: return false;
     }
   }, [currentStep, formValues]);
@@ -168,6 +171,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           company_size: data.companySize,
           hq_location: data.hqLocation,
           about: data.about,
+          connection_to_ussa: data.connectionToUssa,
           opportunities_offered: data.opportunities,
           contact_person: data.contactPerson,
           contact_title: data.contactTitle,
@@ -286,15 +290,36 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
               <SelectTrigger className="h-14 text-lg border-2">
                 <SelectValue placeholder="Select your industry" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Sports & Recreation">Sports & Recreation</SelectItem>
-                <SelectItem value="Technology">Technology</SelectItem>
-                <SelectItem value="Marketing & Advertising">Marketing & Advertising</SelectItem>
-                <SelectItem value="Retail">Retail</SelectItem>
-                <SelectItem value="Healthcare">Healthcare</SelectItem>
-                <SelectItem value="Finance">Finance</SelectItem>
-                <SelectItem value="Education">Education</SelectItem>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="Technology & Software">Technology & Software</SelectItem>
+                <SelectItem value="Finance & Banking">Finance & Banking</SelectItem>
+                <SelectItem value="Healthcare & Medical">Healthcare & Medical</SelectItem>
+                <SelectItem value="Retail & E-commerce">Retail & E-commerce</SelectItem>
+                <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                <SelectItem value="Construction & Real Estate">Construction & Real Estate</SelectItem>
+                <SelectItem value="Education & Training">Education & Training</SelectItem>
+                <SelectItem value="Hospitality & Tourism">Hospitality & Tourism</SelectItem>
+                <SelectItem value="Transportation & Logistics">Transportation & Logistics</SelectItem>
                 <SelectItem value="Media & Entertainment">Media & Entertainment</SelectItem>
+                <SelectItem value="Consulting & Professional Services">Consulting & Professional Services</SelectItem>
+                <SelectItem value="Energy & Utilities">Energy & Utilities</SelectItem>
+                <SelectItem value="Telecommunications">Telecommunications</SelectItem>
+                <SelectItem value="Automotive">Automotive</SelectItem>
+                <SelectItem value="Aerospace & Defense">Aerospace & Defense</SelectItem>
+                <SelectItem value="Agriculture & Farming">Agriculture & Farming</SelectItem>
+                <SelectItem value="Biotechnology & Pharmaceuticals">Biotechnology & Pharmaceuticals</SelectItem>
+                <SelectItem value="Consumer Goods">Consumer Goods</SelectItem>
+                <SelectItem value="Fashion & Apparel">Fashion & Apparel</SelectItem>
+                <SelectItem value="Food & Beverage">Food & Beverage</SelectItem>
+                <SelectItem value="Insurance">Insurance</SelectItem>
+                <SelectItem value="Legal Services">Legal Services</SelectItem>
+                <SelectItem value="Marketing & Advertising">Marketing & Advertising</SelectItem>
+                <SelectItem value="Mining & Metals">Mining & Metals</SelectItem>
+                <SelectItem value="Non-Profit & Social Services">Non-Profit & Social Services</SelectItem>
+                <SelectItem value="Publishing">Publishing</SelectItem>
+                <SelectItem value="Sports & Recreation">Sports & Recreation</SelectItem>
+                <SelectItem value="Government & Public Sector">Government & Public Sector</SelectItem>
+                <SelectItem value="Environmental Services">Environmental Services</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
@@ -382,6 +407,29 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
       case 7:
         return (
           <OnboardingStep
+            title="What's your connection to US Ski & Snowboard?"
+            description="Describe your relationship with the US Ski & Snowboard community"
+          >
+            <Textarea
+              {...register("connectionToUssa", { required: true })}
+              placeholder="We've been a proud sponsor for..."
+              className="min-h-32 text-lg px-4 py-3 border-2 resize-none"
+              autoFocus
+            />
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              canGoBack={true}
+              canGoNext={canGoNext}
+              onBack={prevStep}
+              onNext={nextStep}
+            />
+          </OnboardingStep>
+        );
+
+      case 8:
+        return (
+          <OnboardingStep
             title="What opportunities do you offer?"
             description="Describe the roles, internships, or partnerships available"
           >
@@ -402,7 +450,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 8:
+      case 9:
         return (
           <OnboardingStep
             title="Who should athletes contact?"
@@ -468,7 +516,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 9:
+      case 10:
         return (
           <OnboardingStep
             title="Review & Complete"
@@ -494,6 +542,10 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
               <div>
                 <p className="text-sm text-muted-foreground">About</p>
                 <p className="text-base">{formValues.about}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Connection to US Ski & Snowboard</p>
+                <p className="text-base">{formValues.connectionToUssa}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Opportunities</p>
