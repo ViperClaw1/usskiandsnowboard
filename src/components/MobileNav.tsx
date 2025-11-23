@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,10 +8,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const MobileNav = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { to: "/athletes", label: "Athletes" },
@@ -19,6 +22,19 @@ export const MobileNav = () => {
     { to: "/schedule", label: "Schedule" },
     { to: "/news", label: "News" },
   ];
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    // Ignore session_not_found errors since user is already logged out
+    if (error && error.message !== "Session from session_id claim in JWT does not exist") {
+      toast.error("Failed to sign out");
+    } else {
+      toast.success("Signed out successfully");
+    }
+    setOpen(false);
+    // Always navigate to home regardless of error
+    navigate("/");
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -47,9 +63,12 @@ export const MobileNav = () => {
               {item.label}
             </Link>
           ))}
-          <Link to="/auth" onClick={() => setOpen(false)} className="mt-4">
-            <Button className="w-full">Sign In</Button>
+          <Link to="/dashboard" onClick={() => setOpen(false)} className="mt-4">
+            <Button className="w-full">Dashboard</Button>
           </Link>
+          <Button variant="outline" className="w-full" onClick={handleSignOut}>
+            Sign Out
+          </Button>
         </nav>
       </SheetContent>
     </Sheet>
