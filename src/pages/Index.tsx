@@ -9,7 +9,7 @@ import { MobileNav } from "@/components/MobileNav";
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b sticky top-0 z-50" style={{ 
+      <header className="sticky top-0 z-50" style={{ 
         backgroundImage: `url(${mountainHeaderBg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
