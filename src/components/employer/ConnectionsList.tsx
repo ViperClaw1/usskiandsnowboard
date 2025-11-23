@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 
 interface Connection {
   id: string;
@@ -364,66 +366,73 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                 {selectedConnection.athlete_profiles.profiles?.full_name || "Athlete Profile"}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
-                  <AvatarFallback>AT</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold">
-                    {selectedConnection.athlete_profiles.profiles?.full_name || "Athlete"}
-                  </h3>
-                  {selectedConnection.athlete_profiles.sport_discipline && (
-                    <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.sport_discipline}</p>
-                  )}
-                </div>
-              </div>
 
-              <div>
-                <h4 className="font-medium mb-2">Bio</h4>
-                <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.bio || "No bio provided"}</p>
-              </div>
+            <Tabs defaultValue="profile" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="content">Athlete Content</TabsTrigger>
+              </TabsList>
 
-              <div>
-                <h4 className="font-medium mb-2">Professional Highlights</h4>
-                <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.professional_highlights || "Not provided"}</p>
-              </div>
+              <TabsContent value="profile" className="space-y-6 mt-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
+                    <AvatarFallback>AT</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold">
+                      {selectedConnection.athlete_profiles.profiles?.full_name || "Athlete"}
+                    </h3>
+                    {selectedConnection.athlete_profiles.sport_discipline && (
+                      <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.sport_discipline}</p>
+                    )}
+                  </div>
+                </div>
 
-              {selectedConnection.athlete_profiles.years_of_membership ? (
                 <div>
-                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
-                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.years_of_membership} years</p>
+                  <h4 className="font-medium mb-2">Bio</h4>
+                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.bio || "No bio provided"}</p>
                 </div>
-              ) : (
-                <div>
-                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
-                  <p className="text-sm text-muted-foreground">Not specified</p>
-                </div>
-              )}
 
-              {selectedConnection.athlete_profiles.instagram_url ? (
                 <div>
-                  <h4 className="font-medium mb-2">Instagram</h4>
-                  <a 
-                    href={selectedConnection.athlete_profiles.instagram_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    View Profile
-                  </a>
+                  <h4 className="font-medium mb-2">Professional Highlights</h4>
+                  <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.professional_highlights || "Not provided"}</p>
                 </div>
-              ) : (
-                <div>
-                  <h4 className="font-medium mb-2">Instagram</h4>
-                  <p className="text-sm text-muted-foreground">Not provided</p>
-                </div>
-              )}
 
-              <div>
-                <h4 className="font-medium mb-2">Skills</h4>
-                {selectedConnection.athlete_profiles.skills && selectedConnection.athlete_profiles.skills.length > 0 ? (
+                {selectedConnection.athlete_profiles.years_of_membership ? (
+                  <div>
+                    <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                    <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.years_of_membership} years</p>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                    <p className="text-sm text-muted-foreground">Not specified</p>
+                  </div>
+                )}
+
+                {selectedConnection.athlete_profiles.instagram_url ? (
+                  <div>
+                    <h4 className="font-medium mb-2">Instagram</h4>
+                    <a 
+                      href={selectedConnection.athlete_profiles.instagram_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      View Profile
+                    </a>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="font-medium mb-2">Instagram</h4>
+                    <p className="text-sm text-muted-foreground">Not provided</p>
+                  </div>
+                )}
+
+                <div>
+                  <h4 className="font-medium mb-2">Skills</h4>
+                  {selectedConnection.athlete_profiles.skills && selectedConnection.athlete_profiles.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedConnection.athlete_profiles.skills.map((skill, index) => (
                       <Badge key={index} variant="secondary">{skill}</Badge>
@@ -509,7 +518,12 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   )}
                 </div>
               )}
-            </div>
+            </TabsContent>
+
+            <TabsContent value="content" className="mt-4">
+              <AthletePortfolioView athleteId={selectedConnection.athlete_profiles.user_id} />
+            </TabsContent>
+          </Tabs>
           </DialogContent>
         </Dialog>
       )}
