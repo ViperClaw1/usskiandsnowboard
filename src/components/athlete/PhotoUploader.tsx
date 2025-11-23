@@ -13,16 +13,32 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPhotos();
-  }, [userId]);
+    getAuthUser();
+  }, []);
+
+  useEffect(() => {
+    if (authUserId) {
+      loadPhotos();
+    }
+  }, [authUserId]);
+
+  const getAuthUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setAuthUserId(user.id);
+    }
+  };
 
   const loadPhotos = async () => {
+    if (!authUserId) return;
+    
     try {
       const { data, error } = await supabase.storage
         .from("athlete-photos")
-        .list(`${userId}/lifestyle`, {
+        .list(`${authUserId}/lifestyle`, {
           limit: 100,
           sortBy: { column: "created_at", order: "desc" },
         });
@@ -33,7 +49,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
         const photoUrls = data.map((file) => {
           const { data: urlData } = supabase.storage
             .from("athlete-photos")
-            .getPublicUrl(`${userId}/lifestyle/${file.name}`);
+            .getPublicUrl(`${authUserId}/lifestyle/${file.name}`);
           return urlData.publicUrl;
         });
         setPhotos(photoUrls);
@@ -47,7 +63,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !authUserId) return;
 
     // Validate files before upload
     const maxSize = 5 * 1024 * 1024; // 5MB
@@ -67,7 +83,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
       const uploadPromises = Array.from(files).map(async (file) => {
         const fileExt = file.name.split(".").pop();
         const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `${userId}/lifestyle/${fileName}`;
+        const filePath = `${authUserId}/lifestyle/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from("athlete-photos")
@@ -94,9 +110,11 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
   };
 
   const handleDeletePhoto = async (photoUrl: string) => {
+    if (!authUserId) return;
+    
     try {
       const fileName = photoUrl.split("/").pop();
-      const filePath = `${userId}/lifestyle/${fileName}`;
+      const filePath = `${authUserId}/lifestyle/${fileName}`;
 
       const { error } = await supabase.storage
         .from("athlete-photos")
