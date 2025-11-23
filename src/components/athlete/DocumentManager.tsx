@@ -26,6 +26,7 @@ interface DocumentManagerProps {
 
 export function DocumentManager({ athleteId }: DocumentManagerProps) {
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newDocument, setNewDocument] = useState({
     title: "",
     description: "",
@@ -83,6 +84,9 @@ export function DocumentManager({ athleteId }: DocumentManagerProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["athlete-documents", athleteId] });
       setNewDocument({ title: "", description: "", document_type: "resume" });
+      setSelectedFile(null);
+      const fileInput = document.getElementById("doc-file") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
       toast.success("Document uploaded successfully");
       setUploading(false);
     },
@@ -123,18 +127,28 @@ export function DocumentManager({ athleteId }: DocumentManagerProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!newDocument.title) {
-      toast.error("Please enter a title first");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      e.target.value = "";
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+    setSelectedFile(file);
+  };
+
+  const handleUpload = () => {
+    if (!newDocument.title) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (!selectedFile) {
+      toast.error("Please select a file");
       return;
     }
 
     setUploading(true);
-    uploadMutation.mutate(file);
+    uploadMutation.mutate(selectedFile);
   };
 
   const formatFileSize = (bytes: number | null) => {
@@ -209,14 +223,27 @@ export function DocumentManager({ athleteId }: DocumentManagerProps) {
             <p className="text-sm text-muted-foreground mt-1">
               Accepted formats: PDF, Word, JPEG, PNG
             </p>
+            {selectedFile && (
+              <p className="text-sm text-foreground mt-1">
+                Selected: {selectedFile.name}
+              </p>
+            )}
           </div>
 
-          {uploading && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Uploading document...
-            </div>
-          )}
+          <Button
+            onClick={handleUpload}
+            disabled={uploading || !selectedFile || !newDocument.title}
+            className="w-full"
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Uploading...
+              </>
+            ) : (
+              "Upload Document"
+            )}
+          </Button>
         </CardContent>
       </Card>
 
