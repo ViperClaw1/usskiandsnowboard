@@ -5,7 +5,7 @@ import { Users, Briefcase, TrendingUp, ArrowRight, Newspaper, Loader2, ExternalL
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import heroImage from "@/assets/hero-background.jpg";
+import heroImage from "@/assets/hero-skiing.jpg";
 import newsSectionBg from "@/assets/news-section-bg.jpg";
 
 const Home = () => {
