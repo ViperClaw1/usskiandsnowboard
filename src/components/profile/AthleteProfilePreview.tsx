@@ -46,116 +46,114 @@ export const AthleteProfilePreview = ({ profile, profileData, viewMode }: Athlet
           </div>
 
           {/* Bio */}
-          <div>
-            <h3 className="font-semibold mb-2">About</h3>
-            <p className="text-muted-foreground">{profileData?.bio || "No bio added yet"}</p>
-          </div>
+          {profileData?.bio && (
+            <div>
+              <h3 className="font-semibold mb-2">About</h3>
+              <p className="text-muted-foreground">{profileData.bio}</p>
+            </div>
+          )}
 
           {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium">Availability</p>
-              <p className="text-sm text-muted-foreground">{profileData?.availability || "Not specified"}</p>
+          {(profileData?.availability || profileData?.years_of_membership) && (
+            <div className="grid grid-cols-2 gap-4">
+              {profileData?.availability && (
+                <div>
+                  <p className="text-sm font-medium">Availability</p>
+                  <p className="text-sm text-muted-foreground">{profileData.availability}</p>
+                </div>
+              )}
+              {profileData?.years_of_membership && (
+                <div>
+                  <p className="text-sm font-medium">Years of Membership</p>
+                  <p className="text-sm text-muted-foreground">{profileData.years_of_membership}</p>
+                </div>
+              )}
             </div>
-            <div>
-              <p className="text-sm font-medium">Years of Membership</p>
-              <p className="text-sm text-muted-foreground">{profileData?.years_of_membership || "Not specified"}</p>
-            </div>
-          </div>
+          )}
 
           {/* Skills */}
-          <div>
-            <h3 className="font-semibold mb-2">Skills</h3>
-            {profileData?.skills && profileData.skills.length > 0 ? (
+          {profileData?.skills && profileData.skills.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Skills</h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.skills.map((skill: string) => (
                   <Badge key={skill} variant="secondary">{skill}</Badge>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No skills added yet</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Career Interests */}
-          <div>
-            <h3 className="font-semibold mb-2">Career Interests</h3>
-            {profileData?.career_interests && profileData.career_interests.length > 0 ? (
+          {profileData?.career_interests && profileData.career_interests.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Career Interests</h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.career_interests.map((interest: string) => (
                   <Badge key={interest} variant="outline">{interest}</Badge>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No career interests added yet</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Geographic Preferences */}
-          <div>
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Geographic Preferences
-            </h3>
-            {profileData?.geographic_preferences && profileData.geographic_preferences.length > 0 ? (
+          {profileData?.geographic_preferences && profileData.geographic_preferences.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Geographic Preferences
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.geographic_preferences.map((location: string) => (
                   <Badge key={location} variant="outline">{location}</Badge>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No geographic preferences specified</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Professional Highlights */}
-          <div>
-            <h3 className="font-semibold mb-2">Professional Highlights</h3>
-            <p className="text-sm text-muted-foreground">
-              {profileData?.professional_highlights || "No highlights added yet"}
-            </p>
-          </div>
+          {profileData?.professional_highlights && (
+            <div>
+              <h3 className="font-semibold mb-2">Professional Highlights</h3>
+              <p className="text-sm text-muted-foreground">{profileData.professional_highlights}</p>
+            </div>
+          )}
 
           {/* Sponsors */}
-          <div>
-            <h3 className="font-semibold mb-2">Sponsors</h3>
-            {profileData?.sponsors && profileData.sponsors.length > 0 ? (
+          {profileData?.sponsors && profileData.sponsors.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Sponsors</h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.sponsors.map((sponsor: string) => (
                   <Badge key={sponsor} variant="secondary">{sponsor}</Badge>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No sponsors listed</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Contact Info */}
-          <div className="border-t pt-4">
-            <h3 className="font-semibold mb-3">Contact Information</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                {profileData?.email ? (
-                  <a href={`mailto:${profileData.email}`} className="text-primary hover:underline">
-                    {profileData.email}
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">No email provided</span>
+          {(profileData?.email || profileData?.instagram_url) && (
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-3">Contact Information</h3>
+              <div className="space-y-2">
+                {profileData?.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${profileData.email}`} className="text-primary hover:underline">
+                      {profileData.email}
+                    </a>
+                  </div>
                 )}
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Instagram className="h-4 w-4 text-muted-foreground" />
-                {profileData?.instagram_url ? (
-                  <a href={profileData.instagram_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    Instagram Profile
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">No Instagram profile</span>
+                {profileData?.instagram_url && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Instagram className="h-4 w-4 text-muted-foreground" />
+                    <a href={profileData.instagram_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      Instagram Profile
+                    </a>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
