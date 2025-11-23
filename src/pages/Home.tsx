@@ -7,36 +7,39 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import heroImage from "@/assets/hero-skiing.jpg";
 import newsSectionBg from "@/assets/news-section-bg.jpg";
+
 const Home = () => {
-  const {
-    data: articles,
-    isLoading
-  } = useQuery({
+  const { data: articles, isLoading } = useQuery({
     queryKey: ['featured-news'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('news_articles').select('*').order('created_at', {
-        ascending: false
-      }).limit(3);
+      const { data, error } = await supabase
+        .from('news_articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
       if (error) throw error;
       return data;
-    }
+    },
   });
-  return <div className="min-h-screen bg-background">
+
+  return (
+    <div className="min-h-screen bg-background">
       <AuthenticatedNav />
 
       <main>
         {/* Hero Section */}
-        <section className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center" style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}>
+        <section 
+          className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
           <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 animate-fade-in lg:text-6xl text-center">
-              Connect With Olympians                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-fade-in">
+              Launch Your Next Chapter
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Connecting US Ski & Snowboard athletes with careers that honor their dedication, drive, and extraordinary talent.
@@ -129,11 +132,14 @@ const Home = () => {
         </section>
 
         {/* Featured News Section */}
-        <section className="py-12 sm:py-16 lg:py-20 relative" style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url(${newsSectionBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}>
+        <section 
+          className="py-12 sm:py-16 lg:py-20 relative"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url(${newsSectionBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex items-center justify-between mb-8 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
@@ -148,32 +154,47 @@ const Home = () => {
               </Link>
             </div>
             
-            {isLoading ? <div className="flex justify-center items-center py-12">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div> : articles && articles.length > 0 ? <div className="grid md:grid-cols-3 gap-6">
-                {articles.map(article => <Card key={article.id} className="shadow-elegant hover:shadow-lg transition-shadow bg-white/95 backdrop-blur">
+              </div>
+            ) : articles && articles.length > 0 ? (
+              <div className="grid md:grid-cols-3 gap-6">
+                {articles.map((article) => (
+                  <Card key={article.id} className="shadow-elegant hover:shadow-lg transition-shadow bg-white/95 backdrop-blur">
                     <CardHeader>
                       <CardTitle className="text-lg">
-                        <a href={article.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-start gap-2 text-foreground">
+                        <a 
+                          href={article.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:text-primary transition-colors flex items-start gap-2 text-foreground"
+                        >
                           <span className="flex-1">{article.title}</span>
                           <ExternalLink className="h-4 w-4 flex-shrink-0 mt-1" />
                         </a>
                       </CardTitle>
-                      {article.date && <p className="text-sm text-muted-foreground">{article.date}</p>}
+                      {article.date && (
+                        <p className="text-sm text-muted-foreground">{article.date}</p>
+                      )}
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground line-clamp-3">
                         {article.excerpt}
                       </p>
                     </CardContent>
-                  </Card>)}
-              </div> : <Card className="shadow-elegant bg-white/95 backdrop-blur">
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="shadow-elegant bg-white/95 backdrop-blur">
                 <CardContent className="py-8 text-center">
                   <p className="text-muted-foreground">
                     No news articles available at the moment.
                   </p>
                 </CardContent>
-              </Card>}
+              </Card>
+            )}
           </div>
         </section>
 
@@ -197,6 +218,8 @@ const Home = () => {
           <p className="text-xs">&copy; 2025 U.S. Ski & Snowboard. All rights reserved.</p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Home;
