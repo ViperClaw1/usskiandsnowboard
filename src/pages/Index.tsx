@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Briefcase, TrendingUp } from "lucide-react";
 import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
+import heroMainImage from "@/assets/hero-main.jpg";
 import { MobileNav } from "@/components/MobileNav";
 
 const Index = () => {
@@ -43,12 +44,19 @@ const Index = () => {
       </header>
 
       <main>
-        <section className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center bg-gradient-to-b from-background to-muted">
+        <section 
+          className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroMainImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
           <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-in">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-fade-in">
               Launch Your Next Chapter
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Connecting US Ski & Snowboard athletes with careers that honor their dedication, drive, and extraordinary talent.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
