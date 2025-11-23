@@ -49,6 +49,19 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    // Validate files before upload
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload only image files");
+        return;
+      }
+      if (file.size > maxSize) {
+        toast.error(`${file.name} exceeds 5MB limit`);
+        return;
+      }
+    }
+
     setUploading(true);
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
@@ -149,7 +162,7 @@ const PhotoUploader = ({ userId }: PhotoUploaderProps) => {
             <>
               <Upload className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-muted-foreground mb-2 sm:mb-4" />
               <p className="text-xs sm:text-sm italic text-muted-foreground/60 text-center px-3 sm:px-4">
-                Upload 5+ of your favorite lifestyle or competition photos
+                Upload 5+ of your favorite lifestyle or competition photos (Max 5MB each)
               </p>
             </>
           )}
