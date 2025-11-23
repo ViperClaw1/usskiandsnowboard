@@ -73,7 +73,7 @@ const Schedule = () => {
           <div className="container mx-auto px-4">
             <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant">
               <img
-                src={`${import.meta.env.BASE_URL}schedule-image.png`}
+                src={`${import.meta.env.BASE_URL}schedule-image.jpg`}
                 alt="2025-26 Season Schedule"
                 className="w-full h-auto"
               />
