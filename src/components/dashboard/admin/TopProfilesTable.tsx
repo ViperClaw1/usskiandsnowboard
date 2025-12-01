@@ -4,36 +4,36 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
 export const TopProfilesTable = () => {
-  const { data: topAthletes, isLoading: athletesLoading } = useQuery({
+  const {
+    data: topAthletes,
+    isLoading: athletesLoading
+  } = useQuery({
     queryKey: ['top-athletes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('top_athlete_profiles')
-        .select('*')
-        .limit(5);
-      
+      const {
+        data,
+        error
+      } = await supabase.from('top_athlete_profiles').select('*').limit(5);
       if (error) throw error;
       return data;
-    },
+    }
   });
-
-  const { data: topEmployers, isLoading: employersLoading } = useQuery({
+  const {
+    data: topEmployers,
+    isLoading: employersLoading
+  } = useQuery({
     queryKey: ['top-employers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('top_employer_profiles')
-        .select('*')
-        .limit(5);
-      
+      const {
+        data,
+        error
+      } = await supabase.from('top_employer_profiles').select('*').limit(5);
       if (error) throw error;
       return data;
-    },
+    }
   });
-
-  return (
-    <div className="grid gap-6 md:grid-cols-2">
+  return <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -52,17 +52,13 @@ export const TopProfilesTable = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {athletesLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
+              {athletesLoading ? Array.from({
+              length: 5
+            }).map((_, i) => <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : topAthletes && topAthletes.length > 0 ? (
-                topAthletes.map((athlete) => (
-                  <TableRow key={athlete.id}>
+                  </TableRow>) : topAthletes && topAthletes.length > 0 ? topAthletes.map(athlete => <TableRow key={athlete.id}>
                     <TableCell className="font-medium">{athlete.full_name}</TableCell>
                     <TableCell className="text-muted-foreground">{athlete.sport_discipline}</TableCell>
                     <TableCell className="text-right">
@@ -71,15 +67,11 @@ export const TopProfilesTable = () => {
                         {athlete.profile_views}
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
+                  </TableRow>) : <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground">
                     No data available
                   </TableCell>
-                </TableRow>
-              )}
+                </TableRow>}
             </TableBody>
           </Table>
         </CardContent>
@@ -87,8 +79,7 @@ export const TopProfilesTable = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-accent" />
+          <CardTitle className="flex items-center gap-2">Top Partners Profiles<TrendingUp className="h-5 w-5 text-accent" />
             Top Employer Profiles
           </CardTitle>
           <CardDescription>Most viewed partner companies</CardDescription>
@@ -103,17 +94,13 @@ export const TopProfilesTable = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {employersLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
+              {employersLoading ? Array.from({
+              length: 5
+            }).map((_, i) => <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : topEmployers && topEmployers.length > 0 ? (
-                topEmployers.map((employer) => (
-                  <TableRow key={employer.id}>
+                  </TableRow>) : topEmployers && topEmployers.length > 0 ? topEmployers.map(employer => <TableRow key={employer.id}>
                     <TableCell className="font-medium">{employer.company_name}</TableCell>
                     <TableCell className="text-muted-foreground">{employer.industry}</TableCell>
                     <TableCell className="text-right">
@@ -122,19 +109,14 @@ export const TopProfilesTable = () => {
                         {employer.profile_views}
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
+                  </TableRow>) : <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground">
                     No data available
                   </TableCell>
-                </TableRow>
-              )}
+                </TableRow>}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
