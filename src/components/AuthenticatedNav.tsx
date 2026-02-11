@@ -5,6 +5,7 @@ import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
 import { toast } from "sonner";
+import { Settings } from "lucide-react";
 
 export const AuthenticatedNav = () => {
   const navigate = useNavigate();
@@ -51,6 +52,11 @@ export const AuthenticatedNav = () => {
           </Link>
           <Link to="/dashboard">
             <Button size="sm" className="lg:h-10 bg-red-600 hover:bg-red-700">Dashboard</Button>
+          </Link>
+          <Link to="/settings">
+            <Button size="icon" variant="ghost" className="text-white hover:text-white/80 hover:bg-white/10">
+              <Settings className="h-5 w-5" />
+            </Button>
           </Link>
           <Button size="sm" variant="outline" className="lg:h-10" onClick={handleSignOut}>
             Sign Out

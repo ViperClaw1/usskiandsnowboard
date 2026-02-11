@@ -70,6 +70,9 @@ export const MobileNav = () => {
           <Link to="/dashboard" onClick={() => setOpen(false)} className="mt-4">
             <Button className="w-full">Dashboard</Button>
           </Link>
+          <Link to="/settings" onClick={() => setOpen(false)}>
+            <Button variant="secondary" className="w-full">Settings</Button>
+          </Link>
           <Button variant="outline" className="w-full" onClick={handleSignOut}>
             Sign Out
           </Button>
