@@ -54,11 +54,20 @@ const Auth = () => {
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [formError, setFormError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const markTouched = (field: string) =>
+    setTouched((prev) => ({ ...prev, [field]: true }));
 
   // Clear form error when user types or switches mode
   useEffect(() => {
     setFormError("");
   }, [email, password, confirmPassword, fullName, inviteCode, isSignUp]);
+
+  // Reset touched state when switching modes
+  useEffect(() => {
+    setTouched({});
+  }, [isSignUp]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -91,8 +100,33 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const allPasswordRulesPass = passwordRules.every((rule) => rule.test(password));
   const passwordsMatch = password === confirmPassword;
+
+  // Field-level validation
+  const fieldErrors = {
+    fullName: isSignUp && touched.fullName && !fullName.trim() ? "Full name is required." : "",
+    email: touched.email && !email.trim() ? "Email is required." : touched.email && !isValidEmail(email) ? "Please enter a valid email address." : "",
+    password: touched.password && !password ? "Password is required." : "",
+    confirmPassword: isSignUp && touched.confirmPassword && !confirmPassword ? "Please confirm your password." : isSignUp && touched.confirmPassword && !passwordsMatch ? "Passwords do not match." : "",
+    inviteCode: isSignUp && touched.inviteCode && !inviteCode.trim() ? "Invite code is required." : "",
+  };
+
+  // Signup: all fields filled + valid
+  const isSignUpFormValid =
+    fullName.trim() !== "" &&
+    email.trim() !== "" &&
+    isValidEmail(email) &&
+    allPasswordRulesPass &&
+    passwordsMatch &&
+    confirmPassword !== "" &&
+    inviteCode.trim() !== "";
+
+  // Sign-in: email + password filled
+  const isSignInFormValid = email.trim() !== "" && password !== "";
+
+  const isSubmitDisabled = loading || (isSignUp ? !isSignUpFormValid : !isSignInFormValid);
 
   const handleResendVerification = async () => {
     try {
@@ -198,7 +232,7 @@ const Auth = () => {
     }
   };
 
-  const isSignUpDisabled = loading || (isSignUp && (!allPasswordRulesPass || !passwordsMatch));
+  // isSubmitDisabled is computed above with full field validation
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
@@ -311,17 +345,19 @@ const Auth = () => {
             </div>
           )}
 
-          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4" noValidate>
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={loading} />
+                <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} onBlur={() => markTouched("fullName")} disabled={loading} />
+                {fieldErrors.fullName && <p className="text-sm text-destructive">{fieldErrors.fullName}</p>}
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+              <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => markTouched("email")} disabled={loading} />
+              {fieldErrors.email && <p className="text-sm text-destructive">{fieldErrors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -333,7 +369,7 @@ const Auth = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
+                  onBlur={() => markTouched("password")}
                   disabled={loading}
                   className="pr-10"
                 />
@@ -348,6 +384,7 @@ const Auth = () => {
                   {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                 </Button>
               </div>
+              {fieldErrors.password && <p className="text-sm text-destructive">{fieldErrors.password}</p>}
 
               {/* Password policy checklist — signup only */}
               {isSignUp && password.length > 0 && (
@@ -376,22 +413,21 @@ const Auth = () => {
                 <Input
                   id="confirmPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
+                  placeholder="Re-enter your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
+                  onBlur={() => markTouched("confirmPassword")}
                   disabled={loading}
                 />
-                {confirmPassword.length > 0 && !passwordsMatch && (
-                  <p className="text-sm text-destructive">Passwords do not match.</p>
-                )}
+                {fieldErrors.confirmPassword && <p className="text-sm text-destructive">{fieldErrors.confirmPassword}</p>}
               </div>
             )}
 
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="inviteCode">Invite Code</Label>
-                <Input id="inviteCode" type="text" placeholder="Enter your invite code" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} required disabled={loading} />
+                <Input id="inviteCode" type="text" placeholder="Enter your invite code" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} onBlur={() => markTouched("inviteCode")} disabled={loading} />
+                {fieldErrors.inviteCode && <p className="text-sm text-destructive">{fieldErrors.inviteCode}</p>}
               </div>
             )}
 
@@ -403,7 +439,7 @@ const Auth = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isSignUpDisabled}>
+            <Button type="submit" className="w-full" disabled={isSubmitDisabled}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
