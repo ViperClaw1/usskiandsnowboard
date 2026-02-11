@@ -1,79 +1,69 @@
 
 
-# Google and Apple SSO Integration
+# Restore Hardened Authentication Features
 
-## Overview
+## What Happened
 
-Add Google and Apple social login buttons to the Auth page using Lovable Cloud's managed OAuth. No API keys or manual configuration needed -- everything is handled automatically.
+During the SSO integration, Auth.tsx was replaced with an older version of the file. The Google/Apple SSO buttons were added correctly, but all prior form validation and error handling enhancements were lost in the process.
 
-## Implementation Steps
+## What Needs to Be Restored
 
-### Step 1: Configure Social Auth Providers
+All changes will be made to a single file: **`src/pages/Auth.tsx`**. The SSO buttons and OAuth handler will remain untouched.
 
-Use the `configure-social-auth` tool to set up both Google and Apple providers. This automatically generates the `src/integrations/lovable/` module with the `lovable.auth.signInWithOAuth()` function. No manual file editing for this module.
+### 1. State and Imports
 
-### Step 2: Update Auth.tsx -- Login View Only
+- Add `formError` state (string) for inline error alerts
+- Add `confirmPassword` state (string) for signup
+- Add `resendCooldown` state (number) for the 60-second timer
+- Import the `Alert`, `AlertDescription` components
+- Import `CheckCircle2`, `XCircle`, `AlertCircle` icons from lucide-react
 
-SSO buttons will appear on the **sign-in form only** (not signup, since signup requires an invite code and role selection).
+### 2. Password Policy (Signup Only)
 
-**UI Layout (sign-in mode):**
+- Define password rules: minimum 8 characters, at least one digit, at least one special character
+- Show a live checklist below the password field during signup, with green check or red X for each rule
+- Disable the "Create Account" button until all rules pass
 
-```text
-+----------------------------------+
-|         [Logo]                   |
-|       Welcome Back               |
-|  Sign in to access your dashboard|
-|                                  |
-|  [G  Continue with Google   ]    |
-|  [   Continue with Apple    ]    |
-|                                  |
-|  ──────── or ────────            |
-|                                  |
-|  Email: [_______________]        |
-|  Password: [____________]        |
-|              Forgot password?    |
-|  [ Sign In ]                     |
-|                                  |
-|  Don't have an account? Create   |
-+----------------------------------+
-```
+### 3. Confirm Password Field (Signup Only)
 
-**Changes to `src/pages/Auth.tsx`:**
-- Import `lovable` from `@/integrations/lovable/index`
-- Add `oauthLoading` state (tracks which provider is loading)
-- Add `handleGoogleLogin` and `handleAppleLogin` functions
-- Add branded SSO buttons above the form (login view only)
-- Add "or" divider between SSO buttons and email/password form
-- Show error alerts for OAuth failures
+- Add a "Confirm Password" input below the password field
+- Validate that passwords match before allowing submission
+- Show an inline error if they don't match on submit
 
-**Google button**: White background, dark text, Google "G" icon
-**Apple button**: Black background, white text, Apple icon
+### 4. Inline Error Alerts
 
-### Step 3: Post-Login Flow for OAuth Users
+- Replace `toast.error()` calls with `setFormError()` for form-level errors
+- Display errors using an `Alert` component with `variant="destructive"` at the top of the form
+- Clear the error when the user starts typing or switches between sign-in/sign-up
 
-When a first-time OAuth user signs in:
-1. The `handle_new_user` database trigger creates their profile
-2. No `user_type` metadata exists, so no role is assigned
-3. Dashboard loads and shows `RoleSelection` (already implemented)
-4. User picks Athlete or Partner, then proceeds to the onboarding wizard
+### 5. Human-Readable Error Mapping
 
-This is the same flow as email signup, minus the invite code, email verification, and password steps.
+- Add a `mapAuthError(message)` helper that converts technical backend error strings into friendly messages:
+  - "Invalid login credentials" -> "Incorrect email or password. Please try again."
+  - "Email not confirmed" -> handled specially (see below)
+  - "User already registered" -> "An account with this email already exists."
+  - Default fallback for unknown errors
 
-### Step 4: Account Linking
+### 6. Duplicate Email Detection (Signup)
 
-Handled automatically by Lovable Cloud. If a user signs in with Google/Apple using the same email as an existing email/password account, the accounts are linked server-side. No custom code needed.
+- Destructure `data` from `signUp()` response
+- Check `data.user?.identities?.length === 0` -- if true, set form error: "An account with this email already exists. Try signing in instead."
 
-## Files Changed
+### 7. Unverified Email Detection (Sign-in)
 
-| File | What Changes |
-|------|-------------|
-| `src/pages/Auth.tsx` | Add SSO buttons, OAuth handlers, divider, `oauthLoading` state |
-| `src/integrations/lovable/*` | Auto-generated by configure-social-auth tool (not manually edited) |
+- On sign-in error, detect "Email not confirmed" message
+- Show an inline alert with a "Resend verification email" button
+- Clicking resend calls `supabase.auth.resend()` with type `"signup"`
+
+### 8. Resend Cooldown Timer
+
+- After clicking "Resend", start a 60-second countdown
+- Disable the resend button during cooldown, showing remaining seconds
+- Use `setInterval` in a `useEffect` cleanup
 
 ## What Stays the Same
 
-- Signup flow (invite code, role selection, email verification) -- untouched
-- Email/password login -- untouched
-- Dashboard, RoleSelection, onboarding wizards -- no changes
-- AuthContext, routing, all other pages -- no changes
-
+- Google and Apple SSO buttons, layout, and `handleOAuthLogin` -- no changes
+- The "or" divider between SSO and email form -- no changes
+- Signup flow (invite code, role selector) -- no changes
+- All other files -- no changes
