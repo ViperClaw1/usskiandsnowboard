@@ -7,27 +7,73 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+
+const mapAuthError = (message: string): string => {
+  const lower = message.toLowerCase();
+  if (lower.includes("invalid login credentials")) {
+    return "Incorrect email or password. Please try again.";
+  }
+  if (lower.includes("user already registered")) {
+    return "An account with this email already exists.";
+  }
+  if (lower.includes("email not confirmed")) {
+    return "EMAIL_NOT_CONFIRMED";
+  }
+  if (lower.includes("signup requires a valid password")) {
+    return "Please enter a valid password.";
+  }
+  return message;
+};
+
+const passwordRules = [
+  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { label: "At least one number", test: (p: string) => /\d/.test(p) },
+  { label: "At least one special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p) },
+];
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get("type");
   const initialType = typeParam === "athlete" || typeParam === "employer" ? typeParam : null;
-  
+
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [userType, setUserType] = useState<"athlete" | "employer">(initialType || "athlete");
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
+  const [formError, setFormError] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Clear form error when user types or switches mode
+  useEffect(() => {
+    setFormError("");
+  }, [email, password, confirmPassword, fullName, inviteCode, isSignUp]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -45,20 +91,43 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const allPasswordRulesPass = passwordRules.every((rule) => rule.test(password));
+  const passwordsMatch = password === confirmPassword;
+
+  const handleResendVerification = async () => {
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email });
+      if (error) throw error;
+      toast.success("Verification email sent! Check your inbox.");
+      setResendCooldown(60);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend verification email.");
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormError("");
 
+    if (!allPasswordRulesPass) {
+      setFormError("Please meet all password requirements.");
+      return;
+    }
+    if (!passwordsMatch) {
+      setFormError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Validate invite code client-side
       const validInviteCode = 'GOBIG25';
       if (inviteCode.trim().toLowerCase() !== validInviteCode.toLowerCase()) {
-        toast.error("Invalid invite code");
+        setFormError("Invalid invite code.");
         setLoading(false);
         return;
       }
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -72,16 +141,24 @@ const Auth = () => {
 
       if (error) throw error;
 
+      // Detect duplicate email (Supabase returns a user with empty identities)
+      if (data.user?.identities?.length === 0) {
+        setFormError("An account with this email already exists. Try signing in instead.");
+        setLoading(false);
+        return;
+      }
+
       toast.success("Account created! Please check your email to verify your account.");
       navigate("/email-verification");
-      
-      // Reset form
+
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
       setFullName("");
       setInviteCode("");
     } catch (error: any) {
-      toast.error(error.message || "Failed to create account");
+      const mapped = mapAuthError(error.message || "Failed to create account");
+      setFormError(mapped);
     } finally {
       setLoading(false);
     }
@@ -89,22 +166,25 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("Signed in successfully!");
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+      const mapped = mapAuthError(error.message || "Failed to sign in");
+      if (mapped === "EMAIL_NOT_CONFIRMED") {
+        setFormError("EMAIL_NOT_CONFIRMED");
+      } else {
+        setFormError(mapped);
+      }
     } finally {
       setLoading(false);
     }
   };
+
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     setOauthLoading(provider);
     try {
@@ -118,6 +198,7 @@ const Auth = () => {
     }
   };
 
+  const isSignUpDisabled = loading || (isSignUp && (!allPasswordRulesPass || !passwordsMatch));
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
@@ -125,16 +206,8 @@ const Auth = () => {
         <CardHeader className="space-y-4 pb-8">
           <div className="flex justify-center mb-2">
             <Link to="/" className="hover:opacity-80 transition-opacity">
-              <img 
-                src={usSkiLogo} 
-                alt="U.S. Ski & Snowboard" 
-                className="h-16 object-contain hidden sm:block"
-              />
-              <img 
-                src={usSkiMobileLogo} 
-                alt="U.S. Ski & Snowboard" 
-                className="h-12 object-contain sm:hidden"
-              />
+              <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 object-contain hidden sm:block" />
+              <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 object-contain sm:hidden" />
             </Link>
           </div>
           <div className="space-y-2 text-center">
@@ -142,15 +215,42 @@ const Auth = () => {
               {isSignUp ? "Create Account" : "Welcome Back"}
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              {isSignUp 
-                ? "Join the U.S. Ski & Snowboard community" 
-                : "Sign in to access your dashboard"
-              }
+              {isSignUp ? "Join the U.S. Ski & Snowboard community" : "Sign in to access your dashboard"}
             </CardDescription>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {/* Inline error alert */}
+          {formError && formError !== "EMAIL_NOT_CONFIRMED" && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Unverified email alert */}
+          {formError === "EMAIL_NOT_CONFIRMED" && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="space-y-2">
+                <p>Your email address has not been verified. Please check your inbox.</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={resendCooldown > 0}
+                >
+                  {resendCooldown > 0
+                    ? `Resend in ${resendCooldown}s`
+                    : "Resend verification email"}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* SSO buttons — sign-in only */}
           {!isSignUp && (
             <div className="space-y-3">
               <Button
@@ -199,22 +299,13 @@ const Auth = () => {
             </div>
           )}
 
+          {/* Role selector — signup only */}
           {isSignUp && (
             <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant={userType === "athlete" ? "default" : "outline"}
-                onClick={() => setUserType("athlete")}
-                className="w-full"
-              >
+              <Button type="button" variant={userType === "athlete" ? "default" : "outline"} onClick={() => setUserType("athlete")} className="w-full">
                 Athlete
               </Button>
-              <Button
-                type="button"
-                variant={userType === "employer" ? "default" : "outline"}
-                onClick={() => setUserType("employer")}
-                className="w-full"
-              >
+              <Button type="button" variant={userType === "employer" ? "default" : "outline"} onClick={() => setUserType("employer")} className="w-full">
                 Partner
               </Button>
             </div>
@@ -224,29 +315,13 @@ const Auth = () => {
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  disabled={loading}
-                />
+                <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={loading} />
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
+              <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
             </div>
 
             <div className="space-y-2">
@@ -270,46 +345,65 @@ const Auth = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={loading}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                 </Button>
               </div>
+
+              {/* Password policy checklist — signup only */}
+              {isSignUp && password.length > 0 && (
+                <ul className="space-y-1 mt-2">
+                  {passwordRules.map((rule) => {
+                    const passes = rule.test(password);
+                    return (
+                      <li key={rule.label} className="flex items-center gap-2 text-sm">
+                        {passes ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        )}
+                        <span className={passes ? "text-green-600" : "text-muted-foreground"}>{rule.label}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
+
+            {/* Confirm password — signup only */}
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                {confirmPassword.length > 0 && !passwordsMatch && (
+                  <p className="text-sm text-destructive">Passwords do not match.</p>
+                )}
+              </div>
+            )}
 
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="inviteCode">Invite Code</Label>
-                <Input
-                  id="inviteCode"
-                  type="text"
-                  placeholder="Enter your invite code"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                  required
-                  disabled={loading}
-                />
+                <Input id="inviteCode" type="text" placeholder="Enter your invite code" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} required disabled={loading} />
               </div>
             )}
 
             {!isSignUp && (
               <div className="flex justify-end">
-                <Link 
-                  to="/forgot-password" 
-                  className="text-sm text-primary hover:underline"
-                >
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                   Forgot password?
                 </Link>
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full" disabled={isSignUpDisabled}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -325,24 +419,14 @@ const Auth = () => {
             {isSignUp ? (
               <p className="text-muted-foreground">
                 Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(false)}
-                  className="text-primary hover:underline font-medium"
-                  disabled={loading}
-                >
+                <button type="button" onClick={() => setIsSignUp(false)} className="text-primary hover:underline font-medium" disabled={loading}>
                   Sign in
                 </button>
               </p>
             ) : (
               <p className="text-muted-foreground">
                 Don't have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(true)}
-                  className="text-primary hover:underline font-medium"
-                  disabled={loading}
-                >
+                <button type="button" onClick={() => setIsSignUp(true)} className="text-primary hover:underline font-medium" disabled={loading}>
                   Create account
                 </button>
               </p>
