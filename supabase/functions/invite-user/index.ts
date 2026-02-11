@@ -148,16 +148,16 @@ serve(async (req) => {
       console.log('User created successfully:', newUser.user.id);
       userId = newUser.user.id;
 
-      // Create profile
+      // Create or update profile (handle_new_user trigger may have already created it)
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
-        .insert({
+        .upsert({
           id: userId,
           email: email,
           first_name: firstName || null,
           last_name: lastName || null,
           full_name: `${firstName || ''} ${lastName || ''}`.trim() || null,
-        });
+        }, { onConflict: 'id' });
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
