@@ -1,69 +1,43 @@
 
 
-# Restore Hardened Authentication Features
+# Add Settings Page Navigation
 
-## What Happened
+## Current Problem
 
-During the SSO integration, Auth.tsx was replaced with an older version of the file. The Google/Apple SSO buttons were added correctly, but all prior form validation and error handling enhancements were lost in the process.
+The `/settings` route exists in the router and the page works, but there is no link or button pointing to it from any navigation component. Users have no way to discover or reach it.
 
-## What Needs to Be Restored
+## Proposed Solution
 
-All changes will be made to a single file: **`src/pages/Auth.tsx`**. The SSO buttons and OAuth handler will remain untouched.
+Add a Settings link in three places so both Athletes and Partners (and Admins) can access it:
 
-### 1. State and Imports
+### 1. Authenticated Top Nav (Desktop)
 
-- Add `formError` state (string) for inline error alerts
-- Add `confirmPassword` state (string) for signup
-- Add `resendCooldown` state (number) for the 60-second timer
-- Import the `Alert`, `AlertDescription` components
-- Import `CheckCircle2`, `XCircle`, `AlertCircle` icons from lucide-react
+**File:** `src/components/AuthenticatedNav.tsx`
 
-### 2. Password Policy (Signup Only)
+- Add a gear icon button (using `Settings` icon from lucide-react) next to the "Sign Out" button
+- Clicking it navigates to `/settings`
+- Small icon-only button to keep the nav clean
 
-- Define password rules: minimum 8 characters, at least one digit, at least one special character
-- Show a live checklist below the password field during signup, with green check or red X for each rule
-- Disable the "Create Account" button until all rules pass
+### 2. Mobile Nav (Slide-out Menu)
 
-### 3. Confirm Password Field (Signup Only)
+**File:** `src/components/MobileNav.tsx`
 
-- Add a "Confirm Password" input below the password field
-- Validate that passwords match before allowing submission
-- Show an inline error if they don't match on submit
+- Add a "Settings" link in the nav items list, placed between the "Dashboard" button and the "Sign Out" button
+- Uses the same styling as other nav links
 
-### 4. Inline Error Alerts
+### 3. No Dashboard Landing Page Changes Needed
 
-- Replace `toast.error()` calls with `setFormError()` for form-level errors
-- Display errors using an `Alert` component with `variant="destructive"` at the top of the form
-- Clear the error when the user starts typing or switches between sign-in/sign-up
+The Settings page is an account-level concern (notification preferences, phone number), not a dashboard view. Placing it in the persistent nav bar ensures it's accessible from every authenticated page, which is the right pattern.
 
-### 5. Human-Readable Error Mapping
+## Files Changed
 
-- Add a `mapAuthError(message)` helper that converts technical backend error strings into friendly messages:
-  - "Invalid login credentials" -> "Incorrect email or password. Please try again."
-  - "Email not confirmed" -> handled specially (see below)
-  - "User already registered" -> "An account with this email already exists."
-  - Default fallback for unknown errors
-
-### 6. Duplicate Email Detection (Signup)
-
-- Destructure `data` from `signUp()` response
-- Check `data.user?.identities?.length === 0` -- if true, set form error: "An account with this email already exists. Try signing in instead."
-
-### 7. Unverified Email Detection (Sign-in)
-
-- On sign-in error, detect "Email not confirmed" message
-- Show an inline alert with a "Resend verification email" button
-- Clicking resend calls `supabase.auth.resend()` with type `"signup"`
-
-### 8. Resend Cooldown Timer
-
-- After clicking "Resend", start a 60-second countdown
-- Disable the resend button during cooldown, showing remaining seconds
-- Use `setInterval` in a `useEffect` cleanup
+| File | Change |
+|------|--------|
+| `src/components/AuthenticatedNav.tsx` | Add a Settings icon button linking to `/settings` next to Sign Out |
+| `src/components/MobileNav.tsx` | Add a "Settings" text link before the Sign Out button |
 
 ## What Stays the Same
 
-- Google and Apple SSO buttons, layout, and `handleOAuthLogin` -- no changes
-- The "or" divider between SSO and email form -- no changes
-- Signup flow (invite code, role selector) -- no changes
-- All other files -- no changes
+- Settings page itself -- no changes
+- Dashboard components -- no changes
+- Routing in App.tsx -- already configured
