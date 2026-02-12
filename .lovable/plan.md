@@ -1,43 +1,72 @@
 
 
-# Add Settings Page Navigation
+# Phone Number Input: Validation, Mask, and Inline Alerts
 
-## Current Problem
+## Overview
 
-The `/settings` route exists in the router and the page works, but there is no link or button pointing to it from any navigation component. Users have no way to discover or reach it.
+Enhance the Phone Number input on the Settings page with a US phone mask format `+1 (XXX) XXX-XX-XX`, inline validation errors (matching the Auth.tsx pattern), and a disabled Save button until the input is valid.
 
-## Proposed Solution
+## Changes
 
-Add a Settings link in three places so both Athletes and Partners (and Admins) can access it:
+All changes in a single file: **`src/pages/Settings.tsx`**
 
-### 1. Authenticated Top Nav (Desktop)
+### 1. Phone Input Mask
 
-**File:** `src/components/AuthenticatedNav.tsx`
+- Replace freeform text input with a masked formatter
+- As the user types digits, auto-format to `+1 (XXX) XXX-XX-XX`
+- Strip non-digit characters internally; store raw digits
+- Add a helper `formatPhone(value)` that takes raw digits and returns the masked string
+- Add a helper `unformatPhone(value)` that strips formatting to raw digits
+- Placeholder updated to `+1 (___) ___-__-__`
 
-- Add a gear icon button (using `Settings` icon from lucide-react) next to the "Sign Out" button
-- Clicking it navigates to `/settings`
-- Small icon-only button to keep the nav clean
+### 2. Validation
 
-### 2. Mobile Nav (Slide-out Menu)
+- A phone number is valid when it has exactly 11 digits (country code + 10 digits)
+- Add a `phoneError` state string to track the current validation message
+- Add a `phoneTouched` boolean state to track if the field has been blurred
+- On blur: if empty, show "Phone number is required"; if not 11 digits, show "Please enter a valid US phone number"
+- On change: clear error if user is actively typing and the field becomes valid
 
-**File:** `src/components/MobileNav.tsx`
+### 3. Inline Error Display
 
-- Add a "Settings" link in the nav items list, placed between the "Dashboard" button and the "Sign Out" button
-- Uses the same styling as other nav links
+- Show a red `<p>` tag below the input (same style as Auth.tsx: `text-sm text-destructive`)
+- Only show after the field has been touched (blurred at least once)
 
-### 3. No Dashboard Landing Page Changes Needed
+### 4. Save Button State
 
-The Settings page is an account-level concern (notification preferences, phone number), not a dashboard view. Placing it in the persistent nav bar ensures it's accessible from every authenticated page, which is the right pattern.
+- Disable the Save button unless the phone number has exactly 11 raw digits
+- Keep the existing `saving` disable condition
 
-## Files Changed
+### 5. Database Storage
 
-| File | Change |
-|------|--------|
-| `src/components/AuthenticatedNav.tsx` | Add a Settings icon button linking to `/settings` next to Sign Out |
-| `src/components/MobileNav.tsx` | Add a "Settings" text link before the Sign Out button |
+- Before saving to the database, convert the formatted value back to E.164 format (e.g., `+12345678901`)
+- When loading from database, parse and apply the mask to display
+
+## Technical Details
+
+```
+State additions:
+  - phoneTouched: boolean (default false)
+  - phoneError: string (default "")
+
+formatPhone(digits: string) -> "+1 (XXX) XXX-XX-XX" 
+  - Takes raw digit string, returns masked display
+  
+unformatPhone(display: string) -> "12345678901"
+  - Strips all non-digits
+
+Validation logic:
+  - Empty -> "Phone number is required"
+  - Length != 11 -> "Please enter a valid US phone number"
+  - Valid -> "" (no error)
+
+Save button disabled when:
+  - saving === true
+  - OR raw digits length !== 11
+```
 
 ## What Stays the Same
 
-- Settings page itself -- no changes
-- Dashboard components -- no changes
-- Routing in App.tsx -- already configured
+- All notification toggle switches and radio buttons -- no changes
+- SMS enable/disable switch logic -- no changes
+- The rest of the Settings page layout -- no changes
