@@ -10,10 +10,19 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 
+const validateEmail = (value: string): string => {
+  if (!value.trim()) return "Email is required";
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(value)) return "Please enter a valid email address";
+  return "";
+};
+
 const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,11 +89,24 @@ const ForgotPassword = () => {
                     type="email"
                     placeholder="your@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailTouched) {
+                        setEmailError(validateEmail(e.target.value));
+                      }
+                    }}
+                    onBlur={() => {
+                      setEmailTouched(true);
+                      setEmailError(validateEmail(email));
+                    }}
+                    className={emailTouched && emailError ? 'border-destructive' : ''}
                     required
                   />
+                  {emailTouched && emailError && (
+                    <p className="text-sm text-destructive">{emailError}</p>
+                  )}
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading || emailTouched && !!emailError || !email.trim()}>
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
