@@ -53,7 +53,7 @@ export default function Settings() {
     email_new_accounts: false,
     email_connections_declined: false,
     digest_frequency: 'instant',
-    sms_notifications_enabled: false,
+    sms_notifications_enabled: false
   });
 
   useEffect(() => {
@@ -66,32 +66,32 @@ export default function Settings() {
       if (!user) return;
 
       // Check if user is admin
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-      
+      const { data: roleData } = await supabase.
+      from('user_roles').
+      select('role').
+      eq('user_id', user.id).
+      eq('role', 'admin').
+      maybeSingle();
+
       setIsAdmin(!!roleData);
 
       // Load user phone number
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('phone')
-        .eq('id', user.id)
-        .single();
-      
+      const { data: profileData } = await supabase.
+      from('profiles').
+      select('phone').
+      eq('id', user.id).
+      single();
+
       if (profileData?.phone) {
         const digits = unformatPhone(profileData.phone);
         setPhoneNumber(formatPhone(digits));
       }
 
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const { data, error } = await supabase.
+      from('notification_preferences').
+      select('*').
+      eq('user_id', user.id).
+      maybeSingle();
 
       if (error) throw error;
 
@@ -103,7 +103,7 @@ export default function Settings() {
           email_new_accounts: data.email_new_accounts,
           email_connections_declined: data.email_connections_declined,
           digest_frequency: data.digest_frequency as 'instant' | 'daily' | 'weekly' | 'off',
-          sms_notifications_enabled: data.sms_notifications_enabled,
+          sms_notifications_enabled: data.sms_notifications_enabled
         });
       } else {
         // Create default preferences if none exist
@@ -118,9 +118,9 @@ export default function Settings() {
   };
 
   const createDefaultPreferences = async (userId: string) => {
-    const { error } = await supabase
-      .from('notification_preferences')
-      .insert({ user_id: userId });
+    const { error } = await supabase.
+    from('notification_preferences').
+    insert({ user_id: userId });
 
     if (error) {
       console.error('Error creating default preferences:', error);
@@ -136,18 +136,18 @@ export default function Settings() {
       const newPreferences = { ...preferences, ...updates };
       setPreferences(newPreferences);
 
-      const { error } = await supabase
-        .from('notification_preferences')
-        .update({
-          email_new_requests: newPreferences.email_new_requests,
-          email_accepted_connections: newPreferences.email_accepted_connections,
-          email_profile_views: newPreferences.email_profile_views,
-          email_new_accounts: newPreferences.email_new_accounts,
-          email_connections_declined: newPreferences.email_connections_declined,
-          digest_frequency: newPreferences.digest_frequency,
-          sms_notifications_enabled: newPreferences.sms_notifications_enabled,
-        })
-        .eq('user_id', user.id);
+      const { error } = await supabase.
+      from('notification_preferences').
+      update({
+        email_new_requests: newPreferences.email_new_requests,
+        email_accepted_connections: newPreferences.email_accepted_connections,
+        email_profile_views: newPreferences.email_profile_views,
+        email_new_accounts: newPreferences.email_new_accounts,
+        email_connections_declined: newPreferences.email_connections_declined,
+        digest_frequency: newPreferences.digest_frequency,
+        sms_notifications_enabled: newPreferences.sms_notifications_enabled
+      }).
+      eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -186,10 +186,10 @@ export default function Settings() {
       if (!user) return;
 
       const e164 = `+${rawDigits}`;
-      const { error } = await supabase
-        .from('profiles')
-        .update({ phone: e164 })
-        .eq('id', user.id);
+      const { error } = await supabase.
+      from('profiles').
+      update({ phone: e164 }).
+      eq('id', user.id);
 
       if (error) throw error;
 
@@ -206,8 +206,8 @@ export default function Settings() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -232,7 +232,7 @@ export default function Settings() {
         <CardContent className="space-y-6">
           {/* Email Toggles */}
           <div className="space-y-4">
-            <h3 className="font-medium text-sm">Admin Notifications:</h3>
+            <h3 className="font-medium text-sm">Notifications:</h3>
             
             <div className="flex items-center justify-between">
               <Label htmlFor="email_new_requests" className="flex flex-col gap-1 cursor-pointer">
@@ -245,8 +245,8 @@ export default function Settings() {
                 id="email_new_requests"
                 checked={preferences.email_new_requests}
                 onCheckedChange={(checked) => savePreferences({ email_new_requests: checked })}
-                disabled={saving}
-              />
+                disabled={saving} />
+
             </div>
 
             <div className="flex items-center justify-between">
@@ -260,8 +260,8 @@ export default function Settings() {
                 id="email_accepted_connections"
                 checked={preferences.email_accepted_connections}
                 onCheckedChange={(checked) => savePreferences({ email_accepted_connections: checked })}
-                disabled={saving}
-              />
+                disabled={saving} />
+
             </div>
 
             <div className="flex items-center justify-between">
@@ -275,8 +275,8 @@ export default function Settings() {
                 id="email_new_accounts"
                 checked={preferences.email_new_accounts}
                 onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
-                disabled={saving}
-              />
+                disabled={saving} />
+
             </div>
 
             <div className="flex items-center justify-between">
@@ -290,8 +290,8 @@ export default function Settings() {
                 id="email_connections_declined"
                 checked={preferences.email_connections_declined}
                 onCheckedChange={(checked) => savePreferences({ email_connections_declined: checked })}
-                disabled={saving}
-              />
+                disabled={saving} />
+
             </div>
           </div>
 
@@ -303,8 +303,8 @@ export default function Settings() {
               value={preferences.digest_frequency}
               onValueChange={(value) => savePreferences({ digest_frequency: value as 'instant' | 'daily' | 'weekly' | 'off' })}
               disabled={saving}
-              className="space-y-3"
-            >
+              className="space-y-3">
+
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="instant" id="instant" />
                 <Label htmlFor="instant" className="flex flex-col gap-1 cursor-pointer font-normal">
@@ -363,16 +363,16 @@ export default function Settings() {
                       value={phoneNumber}
                       onChange={handlePhoneChange}
                       onBlur={handlePhoneBlur}
-                      className={`pl-10 ${phoneTouched && phoneError ? 'border-destructive' : ''}`}
-                    />
+                      className={`pl-10 ${phoneTouched && phoneError ? 'border-destructive' : ''}`} />
+
                   </div>
                   <Button onClick={savePhoneNumber} disabled={saving || !isPhoneValid}>
                     Save
                   </Button>
                 </div>
-                {phoneTouched && phoneError && (
-                  <p className="text-sm text-destructive">{phoneError}</p>
-                )}
+                {phoneTouched && phoneError &&
+                <p className="text-sm text-destructive">{phoneError}</p>
+                }
               </div>
 
               <div className="flex items-center justify-between">
@@ -394,8 +394,8 @@ export default function Settings() {
                     }
                     savePreferences({ sms_notifications_enabled: checked });
                   }}
-                  disabled={saving || !phoneNumber}
-                />
+                  disabled={saving || !phoneNumber} />
+
               </div>
             </div>
           </div>
@@ -407,6 +407,6 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }
