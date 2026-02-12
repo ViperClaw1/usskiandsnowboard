@@ -71,7 +71,7 @@ export const AuthenticatedNav = () => {
             </Button>
           </Link>
           <Link
-            to="/news"
+            to="/settings"
             className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
           >
             Settings
