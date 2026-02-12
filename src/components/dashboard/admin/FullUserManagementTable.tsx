@@ -131,12 +131,12 @@ export const FullUserManagementTable = () => {
 
   const resendConfirmationMutation = useMutation({
     mutationFn: async (email: string) => {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
+      const response = await supabase.functions.invoke('resend-confirmation', {
+        body: { email },
       });
 
-      if (error) throw error;
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
     },
     onSuccess: () => {
       toast.success("Confirmation email sent successfully");
