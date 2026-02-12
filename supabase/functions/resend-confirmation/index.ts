@@ -59,11 +59,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate confirmation link
-    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    // Generate confirmation link - try signup first, fall back to magiclink for existing users
+    let linkData, linkError;
+    ({ data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
       type: 'signup',
       email,
-    });
+    }));
+
+    if (linkError && linkError.message?.includes('already been registered')) {
+      // User exists but unconfirmed - use magiclink type instead
+      ({ data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+        type: 'magiclink',
+        email,
+      }));
+    }
 
     if (linkError) {
       console.error('generateLink error:', linkError);
