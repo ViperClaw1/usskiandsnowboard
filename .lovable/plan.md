@@ -1,72 +1,36 @@
 
 
-# Phone Number Input: Validation, Mask, and Inline Alerts
+# Fix: "Failed to load profile" Toast Errors on Admin Dashboard
 
-## Overview
+## Root Cause
 
-Enhance the Phone Number input on the Settings page with a US phone mask format `+1 (XXX) XXX-XX-XX`, inline validation errors (matching the Auth.tsx pattern), and a disabled Save button until the input is valid.
+The Admin Dashboard renders three tabs: Analytics, Athlete View, and Partner View. The Athlete/Partner View tabs pass **fake non-UUID user IDs** (`blank-athlete-preview`, `blank-employer-preview`) to `AthleteDashboard` and `EmployerDashboard`.
 
-## Changes
+The problem is that Radix `TabsContent` mounts all tab panels by default. So even when viewing the Analytics tab, both dashboard components mount and call `loadProfile()` with these invalid IDs. The database rejects them (invalid UUID syntax), retries 3 times, then shows `toast.error("Failed to load profile. Please refresh the page.")`.
 
-All changes in a single file: **`src/pages/Settings.tsx`**
+## Solution
 
-### 1. Phone Input Mask
+**Skip the profile load when in admin preview mode.** Both `AthleteDashboard` and `EmployerDashboard` already accept an `isAdminView` prop. We just need to use it:
 
-- Replace freeform text input with a masked formatter
-- As the user types digits, auto-format to `+1 (XXX) XXX-XX-XX`
-- Strip non-digit characters internally; store raw digits
-- Add a helper `formatPhone(value)` that takes raw digits and returns the masked string
-- Add a helper `unformatPhone(value)` that strips formatting to raw digits
-- Placeholder updated to `+1 (___) ___-__-__`
+### File: `src/components/dashboard/AthleteDashboard.tsx`
 
-### 2. Validation
+- In the `loadProfile` function (called inside `useEffect`), check `isAdminView` first
+- If `isAdminView` is true, skip the Supabase query entirely, set `profile` to `null`, set `loading` to `false`, and return
+- This prevents the invalid UUID query and eliminates the error toast
 
-- A phone number is valid when it has exactly 11 digits (country code + 10 digits)
-- Add a `phoneError` state string to track the current validation message
-- Add a `phoneTouched` boolean state to track if the field has been blurred
-- On blur: if empty, show "Phone number is required"; if not 11 digits, show "Please enter a valid US phone number"
-- On change: clear error if user is actively typing and the field becomes valid
+### File: `src/components/dashboard/EmployerDashboard.tsx`
 
-### 3. Inline Error Display
+- Same change: if `isAdminView` is true, skip the profile load, set `loading` to `false`, and return early
 
-- Show a red `<p>` tag below the input (same style as Auth.tsx: `text-sm text-destructive`)
-- Only show after the field has been touched (blurred at least once)
+## What This Fixes
 
-### 4. Save Button State
-
-- Disable the Save button unless the phone number has exactly 11 raw digits
-- Keep the existing `saving` disable condition
-
-### 5. Database Storage
-
-- Before saving to the database, convert the formatted value back to E.164 format (e.g., `+12345678901`)
-- When loading from database, parse and apply the mask to display
-
-## Technical Details
-
-```
-State additions:
-  - phoneTouched: boolean (default false)
-  - phoneError: string (default "")
-
-formatPhone(digits: string) -> "+1 (XXX) XXX-XX-XX" 
-  - Takes raw digit string, returns masked display
-  
-unformatPhone(display: string) -> "12345678901"
-  - Strips all non-digits
-
-Validation logic:
-  - Empty -> "Phone number is required"
-  - Length != 11 -> "Please enter a valid US phone number"
-  - Valid -> "" (no error)
-
-Save button disabled when:
-  - saving === true
-  - OR raw digits length !== 11
-```
+- Removes the 3x "Failed to load profile" toast errors that appear after login for admin users
+- Eliminates the 400 error network requests with invalid UUIDs
+- The QA preview tabs still work correctly (they show the blank/new-user experience as intended)
 
 ## What Stays the Same
 
-- All notification toggle switches and radio buttons -- no changes
-- SMS enable/disable switch logic -- no changes
-- The rest of the Settings page layout -- no changes
+- Admin Dashboard layout and tab structure -- no changes
+- Athlete/Partner dashboards for actual athletes/partners -- no changes
+- Profile loading for real users -- no changes
+
