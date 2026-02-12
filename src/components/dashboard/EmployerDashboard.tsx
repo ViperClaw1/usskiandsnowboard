@@ -31,6 +31,10 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
   }, [user.id]);
 
   const loadProfile = async (retryCount = 0) => {
+    if (isAdminView) {
+      setLoading(false);
+      return;
+    }
     const MAX_RETRIES = 3;
     
     try {
