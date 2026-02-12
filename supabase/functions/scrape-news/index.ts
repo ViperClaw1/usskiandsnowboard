@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
   try {
     console.log('Starting news scraping via Firecrawl...');
 
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY_1') || Deno.env.get('FIRECRAWL_API_KEY');
     if (!firecrawlKey) {
       return new Response(
         JSON.stringify({ success: false, error: 'FIRECRAWL_API_KEY not configured' }),
