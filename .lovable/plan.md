@@ -1,36 +1,52 @@
 
 
-# Fix: "Failed to load profile" Toast Errors on Admin Dashboard
+# Fix: Resend Confirmation Email for Admin Users
 
-## Root Cause
+## Problem
 
-The Admin Dashboard renders three tabs: Analytics, Athlete View, and Partner View. The Athlete/Partner View tabs pass **fake non-UUID user IDs** (`blank-athlete-preview`, `blank-employer-preview`) to `AthleteDashboard` and `EmployerDashboard`.
-
-The problem is that Radix `TabsContent` mounts all tab panels by default. So even when viewing the Analytics tab, both dashboard components mount and call `loadProfile()` with these invalid IDs. The database rejects them (invalid UUID syntax), retries 3 times, then shows `toast.error("Failed to load profile. Please refresh the page.")`.
+The current `resendConfirmationMutation` calls `supabase.auth.resend({ type: 'signup', email })` from the browser using the public (anon) key. This API is designed for users to resend their **own** confirmation — it silently succeeds but sends nothing when an admin tries to use it for another user's email.
 
 ## Solution
 
-**Skip the profile load when in admin preview mode.** Both `AthleteDashboard` and `EmployerDashboard` already accept an `isAdminView` prop. We just need to use it:
+Create a backend function that uses the service-role key to generate a confirmation link and send the email via Resend.
 
-### File: `src/components/dashboard/AthleteDashboard.tsx`
+### 1. New backend function: `supabase/functions/resend-confirmation/index.ts`
 
-- In the `loadProfile` function (called inside `useEffect`), check `isAdminView` first
-- If `isAdminView` is true, skip the Supabase query entirely, set `profile` to `null`, set `loading` to `false`, and return
-- This prevents the invalid UUID query and eliminates the error toast
+- Accept `{ email }` in the request body
+- Verify the caller is an admin (check `user_roles` table)
+- Use `supabase.auth.admin.generateLink({ type: 'signup', email })` to get a confirmation URL
+- Send the confirmation email using Resend (same HTML template as `send-confirmation-email`)
+- Return success/error response
 
-### File: `src/components/dashboard/EmployerDashboard.tsx`
+### 2. Update `src/components/dashboard/admin/FullUserManagementTable.tsx`
 
-- Same change: if `isAdminView` is true, skip the profile load, set `loading` to `false`, and return early
+- Change `resendConfirmationMutation` to call the new backend function via `supabase.functions.invoke('resend-confirmation', { body: { email } })` instead of `supabase.auth.resend()`
+- Handle error responses from the function
 
-## What This Fixes
+## Technical Details
 
-- Removes the 3x "Failed to load profile" toast errors that appear after login for admin users
-- Eliminates the 400 error network requests with invalid UUIDs
-- The QA preview tabs still work correctly (they show the blank/new-user experience as intended)
+**Backend function outline:**
+```
+1. Authenticate caller via Authorization header
+2. Check caller has admin role in user_roles table
+3. Call auth.admin.generateLink({ type: 'signup', email })
+4. Extract the confirmation URL from the response
+5. Send email via Resend with the same branded template
+6. Return { success: true }
+```
+
+**Frontend change** (single mutation update):
+```
+// Before
+supabase.auth.resend({ type: 'signup', email })
+
+// After
+supabase.functions.invoke('resend-confirmation', { body: { email } })
+```
 
 ## What Stays the Same
 
-- Admin Dashboard layout and tab structure -- no changes
-- Athlete/Partner dashboards for actual athletes/partners -- no changes
-- Profile loading for real users -- no changes
-
+- The email template styling and branding (reused from send-confirmation-email)
+- The mail icon button in the user table
+- The success/error toast messages
+- All other admin user management functionality
