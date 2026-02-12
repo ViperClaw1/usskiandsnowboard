@@ -70,10 +70,11 @@ export const AuthenticatedNav = () => {
               Dashboard
             </Button>
           </Link>
-          <Link to="/settings">
-            <Button size="sm" className="lg:h-10 bg-red-600 hover:bg-red-700">
-              Settings
-            </Button>
+          <Link
+            to="/news"
+            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
+          >
+            Settings
           </Link>
           {/* <Link to="/settings">
             <Button size="icon" variant="ghost" className="text-white hover:text-white/80 hover:bg-white/10">
