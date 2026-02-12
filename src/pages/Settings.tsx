@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Phone } from "lucide-react";
-import { z } from "zod";
 
 interface NotificationPreferences {
   email_new_requests: boolean;
@@ -21,12 +20,32 @@ interface NotificationPreferences {
   sms_notifications_enabled: boolean;
 }
 
+const formatPhone = (digits: string): string => {
+  const d = digits.replace(/\D/g, '').slice(0, 11);
+  if (d.length === 0) return '';
+  if (d.length <= 1) return `+${d}`;
+  if (d.length <= 4) return `+${d[0]} (${d.slice(1)}`;
+  if (d.length <= 7) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4)}`;
+  if (d.length <= 9) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+  return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9)}`;
+};
+
+const unformatPhone = (value: string): string => value.replace(/\D/g, '');
+
+const validatePhone = (digits: string): string => {
+  if (digits.length === 0) return 'Phone number is required';
+  if (digits.length !== 11) return 'Please enter a valid US phone number';
+  return '';
+};
+
 export default function Settings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     email_new_requests: true,
     email_accepted_connections: true,
@@ -36,8 +55,6 @@ export default function Settings() {
     digest_frequency: 'instant',
     sms_notifications_enabled: false,
   });
-
-  const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number with country code (e.g., +1234567890)");
 
   useEffect(() => {
     loadPreferences();
@@ -66,7 +83,8 @@ export default function Settings() {
         .single();
       
       if (profileData?.phone) {
-        setPhoneNumber(profileData.phone);
+        const digits = unformatPhone(profileData.phone);
+        setPhoneNumber(formatPhone(digits));
       }
 
       const { data, error } = await supabase
@@ -142,22 +160,35 @@ export default function Settings() {
     }
   };
 
-  const savePhoneNumber = async () => {
-    // Validate phone number
-    const validation = phoneSchema.safeParse(phoneNumber);
-    if (!validation.success) {
-      toast.error(validation.error.errors[0].message);
-      return;
+  const rawDigits = unformatPhone(phoneNumber);
+  const isPhoneValid = rawDigits.length === 11;
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = unformatPhone(e.target.value);
+    const formatted = formatPhone(digits);
+    setPhoneNumber(formatted);
+    if (phoneTouched) {
+      setPhoneError(validatePhone(digits));
     }
+  };
+
+  const handlePhoneBlur = () => {
+    setPhoneTouched(true);
+    setPhoneError(validatePhone(rawDigits));
+  };
+
+  const savePhoneNumber = async () => {
+    if (!isPhoneValid) return;
 
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const e164 = `+${rawDigits}`;
       const { error } = await supabase
         .from('profiles')
-        .update({ phone: phoneNumber })
+        .update({ phone: e164 })
         .eq('id', user.id);
 
       if (error) throw error;
@@ -328,19 +359,20 @@ export default function Settings() {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+1234567890"
+                      placeholder="+1 (___) ___-__-__"
                       value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="pl-10"
+                      onChange={handlePhoneChange}
+                      onBlur={handlePhoneBlur}
+                      className={`pl-10 ${phoneTouched && phoneError ? 'border-destructive' : ''}`}
                     />
                   </div>
-                  <Button onClick={savePhoneNumber} disabled={saving || !phoneNumber}>
+                  <Button onClick={savePhoneNumber} disabled={saving || !isPhoneValid}>
                     Save
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Include country code (e.g., +1 for US)
-                </p>
+                {phoneTouched && phoneError && (
+                  <p className="text-sm text-destructive">{phoneError}</p>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
