@@ -1,52 +1,56 @@
 
 
-# Fix: Resend Confirmation Email for Admin Users
+# Rewrite `scrape-news` to Use Firecrawl
 
-## Problem
+## Why This Change
 
-The current `resendConfirmationMutation` calls `supabase.auth.resend({ type: 'signup', email })` from the browser using the public (anon) key. This API is designed for users to resend their **own** confirmation — it silently succeeds but sends nothing when an admin tries to use it for another user's email.
+The current edge function tries to fetch `usskiandsnowboard.org/news` directly and parse raw HTML with regex. This fails when Cloudflare bot protection is active (the function already warns about this). Firecrawl handles JavaScript rendering and bot protection, giving us clean markdown content reliably.
 
-## Solution
+## What Changes
 
-Create a backend function that uses the service-role key to generate a confirmation link and send the email via Resend.
+### 1. Rewrite `supabase/functions/scrape-news/index.ts`
 
-### 1. New backend function: `supabase/functions/resend-confirmation/index.ts`
+Replace the direct `fetch()` + regex parsing with a Firecrawl scrape call:
 
-- Accept `{ email }` in the request body
-- Verify the caller is an admin (check `user_roles` table)
-- Use `supabase.auth.admin.generateLink({ type: 'signup', email })` to get a confirmation URL
-- Send the confirmation email using Resend (same HTML template as `send-confirmation-email`)
-- Return success/error response
+- Call `https://api.firecrawl.dev/v1/scrape` with the URL `https://www.usskiandsnowboard.org/news`
+- Use `formats: ['markdown', 'links']` to get clean text content and all page links
+- Parse the returned markdown to extract article titles, dates, and excerpts
+- Upsert results into `news_articles` table (same as today)
 
-### 2. Update `src/components/dashboard/admin/FullUserManagementTable.tsx`
+### 2. What We Keep and Why
 
-- Change `resendConfirmationMutation` to call the new backend function via `supabase.functions.invoke('resend-confirmation', { body: { email } })` instead of `supabase.auth.resend()`
-- Handle error responses from the function
+| Element | Keep? | Reason |
+|---------|-------|--------|
+| CORS headers + OPTIONS handler | Yes | The function is called from the browser (News page, Home page). Without CORS, the browser blocks the response. |
+| `verify_jwt = false` in config.toml | Yes | Already configured; allows the function to be invoked without auth (public news). |
+| Regex pattern matching | Partially | We still need patterns to extract structured article data (title, URL, date) from the markdown/links Firecrawl returns. The patterns will be simpler since markdown is cleaner than raw HTML. |
+| Duplicate URL check (`seenUrls` Set) | Yes | Prevents inserting duplicate articles. |
+| Upsert with `onConflict: 'url'` | Yes | Ensures re-runs update existing articles instead of failing on duplicates. |
+| Cloudflare challenge check | No | Firecrawl handles this for us -- that is the whole point of switching. |
+| Fake browser User-Agent headers | No | Firecrawl handles rendering/headers internally. |
 
-## Technical Details
+### 3. Implementation Outline
 
-**Backend function outline:**
 ```
-1. Authenticate caller via Authorization header
-2. Check caller has admin role in user_roles table
-3. Call auth.admin.generateLink({ type: 'signup', email })
-4. Extract the confirmation URL from the response
-5. Send email via Resend with the same branded template
-6. Return { success: true }
+1. Receive request, handle CORS preflight
+2. Call Firecrawl scrape API with FIRECRAWL_API_KEY
+3. Get markdown content and links array from response
+4. Filter links to only /news/* article URLs
+5. Extract titles and dates from markdown using line-based parsing
+   (markdown typically has "## Title" headings and date strings)
+6. Build article objects: { title, url, date, excerpt }
+7. Deduplicate by URL
+8. Upsert into news_articles table
+9. Return success response with count
 ```
 
-**Frontend change** (single mutation update):
-```
-// Before
-supabase.auth.resend({ type: 'signup', email })
+### 4. Keeping Articles Updated
 
-// After
-supabase.functions.invoke('resend-confirmation', { body: { email } })
-```
+The upsert with `onConflict: 'url', ignoreDuplicates: false` already handles updates -- if an article URL already exists, its title/date/excerpt will be refreshed. New articles get inserted. No articles are deleted, preserving history.
 
-## What Stays the Same
+### 5. No New Secrets or Tables Needed
 
-- The email template styling and branding (reused from send-confirmation-email)
-- The mail icon button in the user table
-- The success/error toast messages
-- All other admin user management functionality
+- `FIRECRAWL_API_KEY` is already configured
+- `news_articles` table schema stays the same
+- `supabase/config.toml` already has `[functions.scrape-news]` with `verify_jwt = false`
+
