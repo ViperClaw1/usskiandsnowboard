@@ -8,7 +8,7 @@ const corsHeaders = {
 interface NewsArticle {
   title: string;
   url: string;
-  date: string;
+  date: string | null;
   excerpt: string;
 }
 
@@ -60,21 +60,16 @@ Deno.serve(async (req) => {
     // Filter links to news article URLs
     const newsLinks = links
       .filter((link: string) => /usskiandsnowboard\.org\/news\//.test(link))
-      .map((link: string) => link.split('?')[0].split('#')[0]) // clean query/hash
-      .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i); // unique
+      .map((link: string) => link.split('?')[0].split('#')[0])
+      .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
 
     console.log('Filtered news article links:', newsLinks.length);
 
     // Parse markdown for article blocks
-    // Typical markdown structure from Firecrawl:
-    //   [Title text](url)
-    //   date string
-    //   excerpt text
     const articles: NewsArticle[] = [];
     const seenUrls = new Set<string>();
 
     // Strategy 1: Extract from markdown link patterns
-    // Matches: [Article Title](/news/some-slug) or [Article Title](https://...usskiandsnowboard.org/news/...)
     const linkPattern = /\[([^\]]{10,})\]\(((?:https?:\/\/(?:www\.)?usskiandsnowboard\.org)?\/news\/[^)]+)\)/g;
     let match;
 
@@ -92,13 +87,28 @@ Deno.serve(async (req) => {
       seenUrls.add(url);
 
       // Look for a date near this match in the markdown
-      const afterMatch = markdown.substring(match.index + match[0].length, match.index + match[0].length + 300);
-      const dateMatch = afterMatch.match(/(\w+ \d{1,2},?\s*\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/);
-      let date = new Date().toISOString().split('T')[0];
-      if (dateMatch) {
-        const parsed = new Date(dateMatch[1]);
+      const afterMatch = markdown.substring(match.index + match[0].length, match.index + match[0].length + 500);
+      
+      // Try multiple date formats: "Month DD, YYYY", "YYYY-MM-DD", "MM/DD/YYYY", "Last Updated: ..."
+      let date: string | null = null;
+      
+      // Look for "Last Updated" or "Updated" pattern first (this is what the source site uses)
+      const updatedMatch = afterMatch.match(/(?:Last\s+)?Updated[:\s]+(\w+ \d{1,2},?\s*\d{4})/i);
+      if (updatedMatch) {
+        const parsed = new Date(updatedMatch[1]);
         if (!isNaN(parsed.getTime())) {
           date = parsed.toISOString().split('T')[0];
+        }
+      }
+      
+      // Fall back to general date patterns
+      if (!date) {
+        const dateMatch = afterMatch.match(/(\w+ \d{1,2},?\s*\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/);
+        if (dateMatch) {
+          const parsed = new Date(dateMatch[1]);
+          if (!isNaN(parsed.getTime())) {
+            date = parsed.toISOString().split('T')[0];
+          }
         }
       }
 
@@ -106,14 +116,14 @@ Deno.serve(async (req) => {
       const lines = afterMatch.split('\n').map(l => l.trim()).filter(l => l.length > 0);
       let excerpt = title;
       for (const line of lines) {
-        if (line.length > 20 && !dateMatch?.input?.startsWith(line) && !/^\d/.test(line) && !line.startsWith('[') && !line.startsWith('#')) {
+        if (line.length > 20 && !/^\d/.test(line) && !line.startsWith('[') && !line.startsWith('#') && !/^(Last\s+)?Updated/i.test(line)) {
           excerpt = line.substring(0, 200);
           break;
         }
       }
 
       articles.push({ title, url, date, excerpt });
-      console.log(`Parsed article: ${title} (${date})`);
+      console.log(`Parsed article: ${title} (date: ${date})`);
     }
 
     // Strategy 2: If markdown parsing found few articles, use the filtered links
@@ -122,7 +132,6 @@ Deno.serve(async (req) => {
         if (seenUrls.has(link)) continue;
         seenUrls.add(link);
 
-        // Extract title from URL slug
         const slug = link.split('/news/')[1] || '';
         const title = slug
           .replace(/[-_]/g, ' ')
@@ -134,7 +143,7 @@ Deno.serve(async (req) => {
         articles.push({
           title,
           url: link,
-          date: new Date().toISOString().split('T')[0],
+          date: null,
           excerpt: title,
         });
       }
