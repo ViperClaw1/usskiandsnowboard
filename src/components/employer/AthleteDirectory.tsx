@@ -297,13 +297,19 @@ const AthleteDirectory = () => {
 
       if (error) throw error;
 
+      // Send notification separately - don't let notification failures block success
       if (insertedRequest?.id) {
-        await supabase.functions.invoke('send-connection-notification', {
-          body: {
-            notification_type: 'new_request',
-            request_id: insertedRequest.id,
-          }
-        });
+        try {
+          await supabase.functions.invoke('send-connection-notification', {
+            body: {
+              notification_type: 'new_request',
+              request_id: insertedRequest.id,
+            }
+          });
+        } catch (notificationError) {
+          console.error("Error sending notification:", notificationError);
+          // Non-fatal: request was saved, just notification failed
+        }
       }
 
       toast.success("Connection request sent!");
