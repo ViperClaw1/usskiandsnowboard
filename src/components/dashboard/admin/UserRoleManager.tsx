@@ -94,6 +94,11 @@ export const UserRoleManager = ({
         title: "Role updated",
         description: message,
       });
+
+      // Fire-and-forget email notification
+      supabase.functions.invoke('send-role-notification', {
+        body: { user_email: userEmail, user_name: userName, new_role: data.role, action: 'grant' }
+      });
     },
     onError: (error: any) => {
       toast({
@@ -124,6 +129,11 @@ export const UserRoleManager = ({
       toast({
         title: "Role revoked",
         description: `${role} role revoked from ${userName || userEmail}`,
+      });
+
+      // Fire-and-forget email notification
+      supabase.functions.invoke('send-role-notification', {
+        body: { user_email: userEmail, user_name: userName, new_role: role, action: 'revoke' }
       });
     },
     onError: (error: any) => {
