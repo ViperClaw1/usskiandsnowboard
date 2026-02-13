@@ -319,8 +319,8 @@ export default function Settings() {
                 <RadioGroupItem value="daily" id="daily" />
                 <Label htmlFor="daily" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Daily summary</span>
-                  <span className="text-sm text-muted-foreground">
-                    Receive a daily summary at 9:00 AM (coming soon)
+                   <span className="text-sm text-muted-foreground">
+                    Receive a daily summary at 9:00 AM UTC
                   </span>
                 </Label>
               </div>
@@ -329,8 +329,8 @@ export default function Settings() {
                 <RadioGroupItem value="weekly" id="weekly" />
                 <Label htmlFor="weekly" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Weekly summary</span>
-                  <span className="text-sm text-muted-foreground">
-                    Receive a weekly summary on Monday at 9:00 AM (coming soon)
+                   <span className="text-sm text-muted-foreground">
+                    Receive a weekly summary on Monday at 9:00 AM UTC
                   </span>
                 </Label>
               </div>
