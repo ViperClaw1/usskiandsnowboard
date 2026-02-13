@@ -1,12 +1,13 @@
-import { Resend } from 'https://esm.sh/resend@4.0.0';
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -14,19 +15,19 @@ Deno.serve(async (req) => {
     const { user_email, user_name, new_role, action } = await req.json();
 
     if (!user_email || !new_role || !action) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const resend = new Resend(Deno.env.get('RESEND_API_KEY')!);
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY_1")!);
     const displayName = user_name || user_email;
-    const isGrant = action === 'grant';
+    const isGrant = action === "grant";
 
     const subject = isGrant
-      ? 'Your role has been updated - US Ski & Snowboard'
-      : 'Role update notification - US Ski & Snowboard';
+      ? "Your role has been updated - US Ski & Snowboard"
+      : "Role update notification - US Ski & Snowboard";
 
     const actionText = isGrant
       ? `You have been granted the <strong>${new_role}</strong> role.`
@@ -69,29 +70,29 @@ Deno.serve(async (req) => {
     `;
 
     const { error: emailError } = await resend.emails.send({
-      from: 'U.S. Ski & Snowboard <notifications@athleteconnect.org>',
+      from: "U.S. Ski & Snowboard <notifications@athleteconnect.org>",
       to: [user_email],
       subject,
       html,
     });
 
     if (emailError) {
-      console.error('Resend error:', emailError);
-      return new Response(JSON.stringify({ error: 'Failed to send email' }), {
+      console.error("Resend error:", emailError);
+      return new Response(JSON.stringify({ error: "Failed to send email" }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
