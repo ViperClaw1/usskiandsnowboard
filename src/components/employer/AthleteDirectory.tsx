@@ -666,7 +666,11 @@ const AthleteDirectory = () => {
       </div>
 
       {selectedAthlete && (
-        <Dialog open={!!selectedAthlete && !showRequestDialog} onOpenChange={(open) => !open && setSelectedAthlete(null)}>
+        <Dialog open={!!selectedAthlete && !showRequestDialog} onOpenChange={(open) => {
+          if (!open && !showRequestDialog) {
+            setSelectedAthlete(null);
+          }
+        }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
