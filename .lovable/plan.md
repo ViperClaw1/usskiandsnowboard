@@ -1,97 +1,138 @@
 
 
-# Admin Summary Email Notifications (Daily/Weekly)
+# SMS Notifications Using Twilio for Connection Request Events
 
 ## Overview
 
-Create a new edge function `send-admin-summary` that sends a comprehensive HTML email digest to admins who have opted into "daily" or "weekly" summaries via their `/settings` digest_frequency preference. The email mirrors the Analytics Dashboard layout with stats cards, chart data tables, top profiles, and recent users -- all rendered as styled HTML tables matching the existing email template style.
+Implement SMS notifications via Twilio for connection request events (new request, accepted, declined) alongside existing email notifications. Users can enable SMS in their Settings page and will receive text alerts when they have opted in.
 
-A cron job triggers the function daily. The function checks each admin's `digest_frequency` preference and only sends when appropriate (daily subscribers get it every day; weekly subscribers get it on Mondays only).
+## Key Implementation Points
 
-## What Changes
+### 1. **Twilio Integration Setup**
 
-### 1. New Edge Function: `supabase/functions/send-admin-summary/index.ts`
+**Secrets Required** (to be added):
+- `TWILIO_ACCOUNT_SID`: Twilio account identifier
+- `TWILIO_AUTH_TOKEN`: Twilio authentication token
+- `TWILIO_PHONE_NUMBER`: Twilio phone number for sending SMS
 
-A single self-contained function that:
+**Provider Requirements**:
+- A2P 10DLC Registration with Twilio for US compliance and reliable delivery
+- Brand and campaign verification required for US numbers
+- SMS character limit: 160 characters (or 2-3 segments for longer messages)
 
-1. Queries all admin users whose `digest_frequency` is `daily` or `weekly`
-2. Skips weekly subscribers if today is not Monday
-3. Fetches all dashboard data using the service role key:
-   - `admin_analytics_summary` (stats cards)
-   - `user_signups_by_day` (signups chart data)
-   - `connections_by_day` (connections chart data)
-   - `athletes_by_sport` (distribution)
-   - `employers_by_industry` (distribution)
-   - `top_athlete_profiles` (top 5)
-   - `top_employer_profiles` (top 5)
-   - `profiles` + `user_roles` (recent 10 users)
-4. Renders a styled HTML email with the same visual structure as the dashboard screenshots:
-   - **Header**: gradient banner "Analytics Summary"
-   - **Stats Grid**: 6 metric cards (Total Users, Total Connections, Pending Requests, Rejected, Athlete Profiles %, Employer Profiles %)
-   - **Charts Section**: Since email can't render interactive charts, these become styled HTML tables showing the raw data (signups by day, connections by day, athletes by sport counts, employers by industry counts)
-   - **Top Profiles Tables**: Two side-by-side tables for top athletes and top employers
-   - **Recent Users Table**: Name, Email, Role, Joined date
-5. Uses the same email template styling as `send-role-notification` (gradient header, card layout, footer)
-6. Sends via Resend with `RESEND_API_KEY_1`
+### 2. **Update Edge Function: `send-connection-notification/index.ts`**
 
-### 2. Update `supabase/config.toml`
+Add a helper function to send SMS via Twilio alongside existing email logic:
 
-Add:
-```toml
-[functions.send-admin-summary]
-verify_jwt = false
+**New Logic Flow**:
+- After fetching user notification preferences, also fetch their phone number from `profiles.phone`
+- Check `sms_notifications_enabled` flag in `notification_preferences`
+- If SMS enabled AND phone number exists AND SMS check passes → call Twilio API
+- SMS message content (concise, <160 chars):
+  - **new_request**: "New connection request from {athleteName} on US Ski & Snowboard. Log in to your dashboard to review."
+  - **request_accepted**: "Great news! {companyName} accepted your connection request. Check your dashboard to connect."
+  - **request_declined**: "{companyName} declined your connection request. Keep exploring other opportunities!"
+
+**Implementation Details**:
+- Create a `shouldSendSMS` helper function (similar to `shouldSendEmail`) that checks preferences
+- Extract phone numbers from both `athlete_profiles.phone` and `employer_profiles` contact phone (if available)
+- Use E.164 format for phone numbers (already stored in database)
+- Fire-and-forget SMS calls: send SMS asynchronously without blocking main response
+- Gracefully handle Twilio failures (log and continue, don't fail main notification)
+
+### 3. **Twilio API Integration Pattern**
+
+Use Twilio REST API for SMS:
+```
+POST https://api.twilio.com/2010-04-01/Accounts/{ACCOUNT_SID}/Messages
+Body: {
+  From: TWILIO_PHONE_NUMBER,
+  To: recipient_phone,
+  Body: "SMS text"
+}
+Auth: Basic auth with ACCOUNT_SID:AUTH_TOKEN
 ```
 
-### 3. Set Up Daily Cron Job
+### 4. **No Database Schema Changes Required**
 
-Use `pg_cron` + `pg_net` to call the function every day at 9:00 AM UTC:
+- `profiles.phone` already stores user phone numbers in E.164 format
+- `notification_preferences.sms_notifications_enabled` already exists (boolean flag)
+- No new tables or columns needed
 
-```sql
-SELECT cron.schedule(
-  'send-admin-summary-daily',
-  '0 9 * * *',
-  $$ SELECT net.http_post(
-    url := 'https://fihcubajfjjbcjqiqqrv.supabase.co/functions/v1/send-admin-summary',
-    headers := '{"Content-Type":"application/json","Authorization":"Bearer <anon_key>"}'::jsonb,
-    body := '{}'::jsonb
-  ) AS request_id; $$
-);
+### 5. **UI Integration (Settings Page)**
+
+The `/settings` page already has:
+- Phone number input with validation (US format +1 XXX-XXX-XXXX)
+- SMS toggle that requires phone number to be set first
+- Save functionality for phone number
+
+**No changes needed** to Settings page – SMS infrastructure already present.
+
+### 6. **Implementation Sequence**
+
+**Step 1**: Request Twilio secrets from user (Account SID, Auth Token, Phone Number)
+
+**Step 2**: Update `send-connection-notification/index.ts`:
+- Add Twilio secrets at top
+- Create `shouldSendSMS()` helper function
+- Create `sendTwilioSMS()` async function that calls Twilio API
+- Integrate SMS calls into each notification type (new_request, request_accepted, request_declined)
+- Handle both athlete and employer phone numbers appropriately
+- Add comprehensive logging for SMS delivery
+
+**Step 3**: Test end-to-end:
+- Go to Settings, enable SMS, add phone number
+- Send a connection request and verify SMS is received
+- Accept/decline request and verify SMS is received
+
+## Technical Considerations
+
+**Phone Number Handling**:
+- Phone numbers stored as E.164 (+1XXXXXXXXXX format)
+- Use directly from database – no reformatting needed for Twilio
+
+**Error Handling**:
+- Twilio API failures should not block email notifications
+- Log SMS failures for debugging
+- Return success even if SMS fails (non-critical channel)
+
+**Character Limits**:
+- Keep SMS messages under 160 characters for single-segment delivery
+- Segment count affects pricing and delivery speed
+
+**Recipient Logic**:
+- **new_request**: Send SMS to recipient (employer receiving athlete request)
+- **request_accepted**: Send SMS to both parties
+- **request_declined**: Send SMS to initiator only
+
+## Edge Function Code Structure
+
+```typescript
+// New imports
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
+
+// New helper functions
+async function shouldSendSMS(userId, userPhone) { ... }
+async function sendTwilioSMS(toPhone, message) { ... }
+
+// Integration in main handler
+if (notification_type === "new_request") {
+  // Existing email logic...
+  
+  // New SMS logic
+  if (employerUserId && employerPhone && await shouldSendSMS(employerUserId, employerPhone)) {
+    await sendTwilioSMS(employerPhone, smsMessage);
+  }
+}
 ```
 
-### 4. Update Settings Page Labels
+## No UI Changes Required
 
-Remove "(coming soon)" text from the Daily and Weekly summary radio options since the feature will now be functional.
-
-## Technical Details
-
-### Email HTML Structure
-
-The email uses the same inline-CSS table-based layout as the existing `send-role-notification`:
-- Outer wrapper: `max-width: 600px`, white card with shadow, rounded corners
-- Header: gradient blue banner
-- Stats section: 2x3 grid using nested tables, each cell showing metric name + value + subtitle
-- Data tables: striped rows with the same font/color scheme
-- Charts become summary tables: e.g., "User Signups (Last 7 Days)" with Date | Athletes | Employers columns
-- Footer: gray bar with org name
-
-### Daily vs Weekly Logic
-
-```
-const today = new Date();
-const isMonday = today.getUTCDay() === 1;
-
-// For each admin:
-// - digest_frequency === 'daily' -> always send
-// - digest_frequency === 'weekly' -> only send if isMonday
-```
-
-### No Database Schema Changes
-
-The `notification_preferences.digest_frequency` column already supports `'daily'` and `'weekly'` values. No migration needed.
-
-### Data Limits
-
-- Signups/connections chart data: last 7 days for daily, last 7 days for weekly
-- Top profiles: limit 5
-- Recent users: limit 10
+Settings page already fully supports SMS:
+- Phone number collection ✓
+- Phone validation ✓
+- SMS toggle ✓
+- Error handling ✓
 
