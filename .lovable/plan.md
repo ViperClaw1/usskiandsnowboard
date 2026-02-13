@@ -1,56 +1,65 @@
 
 
-# Rewrite `scrape-news` to Use Firecrawl
+# Make Role Dropdown Actionable + Email Notification
 
-## Why This Change
+## Overview
 
-The current edge function tries to fetch `usskiandsnowboard.org/news` directly and parse raw HTML with regex. This fails when Cloudflare bot protection is active (the function already warns about this). Firecrawl handles JavaScript rendering and bot protection, giving us clean markdown content reliably.
+The role grant dropdown in the User Management table already has working logic in `UserRoleManager.tsx` (mutations to insert/delete from `user_roles`, toast alerts, confirmation dialogs). The screenshot confirms the dropdown renders correctly. The main addition needed is **sending an email notification** when a role is changed.
 
-## What Changes
+## Changes
 
-### 1. Rewrite `supabase/functions/scrape-news/index.ts`
+### 1. Create new edge function: `supabase/functions/send-role-notification/index.ts`
 
-Replace the direct `fetch()` + regex parsing with a Firecrawl scrape call:
+A new backend function that sends an email via Resend when an admin changes a user's role.
 
-- Call `https://api.firecrawl.dev/v1/scrape` with the URL `https://www.usskiandsnowboard.org/news`
-- Use `formats: ['markdown', 'links']` to get clean text content and all page links
-- Parse the returned markdown to extract article titles, dates, and excerpts
-- Upsert results into `news_articles` table (same as today)
+- Accepts: `{ user_email, user_name, new_role, action }` (action = "grant" or "revoke")
+- Uses Resend with the same sender pattern as other functions (`onboarding@resend.dev`)
+- Styled HTML email informing the user their role was updated
+- CORS headers for browser calls
+- Returns success/error JSON
 
-### 2. What We Keep and Why
+### 2. Update `supabase/config.toml`
 
-| Element | Keep? | Reason |
-|---------|-------|--------|
-| CORS headers + OPTIONS handler | Yes | The function is called from the browser (News page, Home page). Without CORS, the browser blocks the response. |
-| `verify_jwt = false` in config.toml | Yes | Already configured; allows the function to be invoked without auth (public news). |
-| Regex pattern matching | Partially | We still need patterns to extract structured article data (title, URL, date) from the markdown/links Firecrawl returns. The patterns will be simpler since markdown is cleaner than raw HTML. |
-| Duplicate URL check (`seenUrls` Set) | Yes | Prevents inserting duplicate articles. |
-| Upsert with `onConflict: 'url'` | Yes | Ensures re-runs update existing articles instead of failing on duplicates. |
-| Cloudflare challenge check | No | Firecrawl handles this for us -- that is the whole point of switching. |
-| Fake browser User-Agent headers | No | Firecrawl handles rendering/headers internally. |
+Add `[functions.send-role-notification]` with `verify_jwt = false` (called from authenticated admin context, but the function itself doesn't need JWT verification since it's invoked server-side via the Supabase client).
 
-### 3. Implementation Outline
+### 3. Update `src/components/dashboard/admin/UserRoleManager.tsx`
+
+- In the `onSuccess` callbacks of both `grantRoleMutation` and `revokeRoleMutation`, invoke the new `send-role-notification` edge function
+- Pass the user's email, name, the role, and the action (grant/revoke)
+- Fire-and-forget: don't block the toast on email success (show toast immediately, send email in background)
+
+## Technical Details
+
+### Edge Function Structure
 
 ```
-1. Receive request, handle CORS preflight
-2. Call Firecrawl scrape API with FIRECRAWL_API_KEY
-3. Get markdown content and links array from response
-4. Filter links to only /news/* article URLs
-5. Extract titles and dates from markdown using line-based parsing
-   (markdown typically has "## Title" headings and date strings)
-6. Build article objects: { title, url, date, excerpt }
-7. Deduplicate by URL
-8. Upsert into news_articles table
-9. Return success response with count
+send-role-notification/index.ts
+- CORS preflight handler
+- Accepts POST with { user_email, user_name, new_role, action }
+- Sends styled HTML email via Resend
+- Returns { success: true }
 ```
 
-### 4. Keeping Articles Updated
+### Email Content
 
-The upsert with `onConflict: 'url', ignoreDuplicates: false` already handles updates -- if an article URL already exists, its title/date/excerpt will be refreshed. New articles get inserted. No articles are deleted, preserving history.
+- **Subject (grant):** "Your role has been updated - US Ski & Snowboard"
+- **Subject (revoke):** "Role update notification - US Ski & Snowboard"
+- **Body:** Informs the user which role was granted/revoked, with a link to the dashboard
 
-### 5. No New Secrets or Tables Needed
+### UserRoleManager Changes
 
-- `FIRECRAWL_API_KEY` is already configured
-- `news_articles` table schema stays the same
-- `supabase/config.toml` already has `[functions.scrape-news]` with `verify_jwt = false`
+Add an async call after each successful mutation:
+
+```typescript
+// In onSuccess of grantRoleMutation:
+supabase.functions.invoke('send-role-notification', {
+  body: { user_email: userEmail, user_name: userName, new_role: role, action: 'grant' }
+});
+```
+
+Same pattern for revokeRoleMutation with `action: 'revoke'`.
+
+## No Database Changes Required
+
+The `user_roles` table and mutations already work correctly. Only the email notification is new.
 
