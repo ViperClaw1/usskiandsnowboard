@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from "sonner";
-import { Loader2, Upload, X, Instagram } from "lucide-react";
+import { Loader2, Upload, X, Instagram, Phone } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { SKILLS_OPTIONS, CAREER_INTERESTS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
 
@@ -34,11 +34,31 @@ const AVAILABILITY = [
   "Flexible"
 ];
 
+const formatPhone = (digits: string): string => {
+  const d = digits.replace(/\D/g, '').slice(0, 11);
+  if (d.length === 0) return '';
+  if (d.length <= 1) return `+${d}`;
+  if (d.length <= 4) return `+${d[0]} (${d.slice(1)}`;
+  if (d.length <= 7) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4)}`;
+  if (d.length <= 9) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+  return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9)}`;
+};
+
+const unformatPhone = (value: string): string => value.replace(/\D/g, '');
+
+const validatePhone = (digits: string): string => {
+  if (digits.length === 0) return 'Phone number is required';
+  if (digits.length !== 11) return 'Please enter a valid US phone number';
+  return '';
+};
+
 const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -87,7 +107,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           first_name: profileData?.first_name || "",
           last_name: profileData?.last_name || "",
           email: athleteData.email || profileData?.email || "",
-          phone: athleteData.phone || "",
+          phone: athleteData.phone ? formatPhone(unformatPhone(athleteData.phone)) : "",
           sport_discipline: athleteData.sport_discipline || "",
           home_mountain: athleteData.home_mountain || "",
           bio: athleteData.bio || "",
@@ -228,7 +248,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       const profileData = {
         email: formData.email,
-        phone: formData.phone,
+        phone: unformatPhone(formData.phone).length === 11 ? `+${unformatPhone(formData.phone)}` : formData.phone,
         sport_discipline: formData.sport_discipline,
         home_mountain: formData.home_mountain || null,
         bio: formData.bio,
@@ -357,14 +377,32 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       <div className="space-y-2">
         <Label htmlFor="phone">Phone Number *</Label>
-        <Input
-          id="phone"
-          type="tel"
-          placeholder="+1 (555) 000-0000"
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          required
-        />
+        <div className="relative">
+          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="+1 (___) ___-__-__"
+            value={formData.phone}
+            onChange={(e) => {
+              const digits = unformatPhone(e.target.value);
+              const formatted = formatPhone(digits);
+              setFormData({ ...formData, phone: formatted });
+              if (phoneTouched) {
+                setPhoneError(validatePhone(digits));
+              }
+            }}
+            onBlur={() => {
+              setPhoneTouched(true);
+              setPhoneError(validatePhone(unformatPhone(formData.phone)));
+            }}
+            className={`pl-10 ${phoneTouched && phoneError ? 'border-destructive' : ''}`}
+            required
+          />
+        </div>
+        {phoneTouched && phoneError && (
+          <p className="text-sm text-destructive">{phoneError}</p>
+        )}
         <p className="text-xs text-muted-foreground">
           Used for account recovery and optional SMS notifications (private, not displayed publicly)
         </p>
