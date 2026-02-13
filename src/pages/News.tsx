@@ -18,7 +18,7 @@ const News = () => {
       const { data, error } = await supabase
         .from('news_articles')
         .select('*')
-        .order('updated_at', { ascending: false })
+        .order('date', { ascending: false, nullsFirst: false })
         .limit(20);
       
       if (error) throw error;
@@ -99,7 +99,9 @@ const News = () => {
                           </a>
                         </CardTitle>
                         {article.date && (
-                          <p className="text-sm text-muted-foreground mt-2">{article.date}</p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {new Date(article.date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                          </p>
                         )}
                       </CardHeader>
                       <CardContent>
