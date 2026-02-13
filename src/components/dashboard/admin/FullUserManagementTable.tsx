@@ -18,35 +18,35 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTitle } from
+"@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue } from
+"@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTitle } from
+"@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
 export const FullUserManagementTable = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [userToDelete, setUserToDelete] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [userToDelete, setUserToDelete] = useState<{id: string;email: string;name: string;} | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     email: "",
     firstName: "",
     lastName: "",
-    role: "athlete" as "athlete" | "employer" | "admin",
+    role: "athlete" as "athlete" | "employer" | "admin"
   });
   const queryClient = useQueryClient();
 
@@ -55,46 +55,46 @@ export const FullUserManagementTable = () => {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       return user;
-    },
+    }
   });
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['all-users'],
     queryFn: async () => {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+      const { data: profiles, error: profilesError } = await supabase.
+      from('profiles').
+      select('*').
+      order('created_at', { ascending: false });
+
       if (profilesError) throw profilesError;
 
-      const { data: allRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
-      
+      const { data: allRoles, error: rolesError } = await supabase.
+      from('user_roles').
+      select('*');
+
       if (rolesError) throw rolesError;
 
       // Fetch auth users to get email confirmation status
       const { data: { users: authUsers } = { users: [] }, error: authError } = await supabase.auth.admin.listUsers();
-      
+
       if (authError) {
         console.error('Error fetching auth users:', authError);
       }
 
-      return profiles?.map(profile => {
-        const userRoles = allRoles
-          .filter(r => r.user_id === profile.id)
-          .map(r => r.role);
-        
+      return profiles?.map((profile) => {
+        const userRoles = allRoles.
+        filter((r) => r.user_id === profile.id).
+        map((r) => r.role);
+
         const authUser = authUsers?.find((u: any) => u.id === profile.id);
-        
+
         return {
           ...profile,
           roles: userRoles.length > 0 ? userRoles : [],
-          emailConfirmed: authUser?.email_confirmed_at != null,
+          emailConfirmed: authUser?.email_confirmed_at != null
         };
       }) || [];
-    },
+    }
   });
 
   // Removed temp password functionality - using single invite code instead
@@ -105,12 +105,12 @@ export const FullUserManagementTable = () => {
       if (!session) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('invite-user', {
-        body: userData,
+        body: userData
       });
 
       if (response.error) throw response.error;
       if (response.data?.error) throw new Error(response.data.error);
-      
+
       return response.data;
     },
     onSuccess: () => {
@@ -121,18 +121,18 @@ export const FullUserManagementTable = () => {
         email: "",
         firstName: "",
         lastName: "",
-        role: "athlete",
+        role: "athlete"
       });
     },
     onError: (error: Error) => {
       toast.error(`Failed to invite user: ${error.message}`);
-    },
+    }
   });
 
   const resendConfirmationMutation = useMutation({
     mutationFn: async (email: string) => {
       const response = await supabase.functions.invoke('resend-confirmation', {
-        body: { email },
+        body: { email }
       });
 
       if (response.error) throw response.error;
@@ -143,7 +143,7 @@ export const FullUserManagementTable = () => {
     },
     onError: (error: Error) => {
       toast.error(`Failed to resend confirmation: ${error.message}`);
-    },
+    }
   });
 
   const deleteUserMutation = useMutation({
@@ -152,12 +152,12 @@ export const FullUserManagementTable = () => {
       if (!session) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('delete-user', {
-        body: { userId },
+        body: { userId }
       });
 
       if (response.error) throw response.error;
       if (response.data?.error) throw new Error(response.data.error);
-      
+
       return response.data;
     },
     onSuccess: () => {
@@ -167,7 +167,7 @@ export const FullUserManagementTable = () => {
     },
     onError: (error: Error) => {
       toast.error(`Failed to delete user: ${error.message}`);
-    },
+    }
   });
 
   const handleDeleteUser = (userId: string, userEmail: string, userName: string) => {
@@ -188,23 +188,23 @@ export const FullUserManagementTable = () => {
     inviteUserMutation.mutate(inviteForm);
   };
 
-  const filteredUsers = users?.filter(user => {
-    const matchesSearch = 
-      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesRole = 
-      roleFilter === "all" ||
-      (user.roles as string[]).includes(roleFilter) ||
-      (roleFilter === "none" && user.roles.length === 0);
-    
+  const filteredUsers = users?.filter((user) => {
+    const matchesSearch =
+    user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesRole =
+    roleFilter === "all" ||
+    (user.roles as string[]).includes(roleFilter) ||
+    roleFilter === "none" && user.roles.length === 0;
+
     return matchesSearch && matchesRole;
   });
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between my-[5px] gap-0">
           <div>
             <CardTitle>User Management</CardTitle>
             <CardDescription>Manage user roles and access permissions</CardDescription>
@@ -222,8 +222,8 @@ export const FullUserManagementTable = () => {
               placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+              className="pl-9" />
+
           </div>
           
           <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -252,67 +252,67 @@ export const FullUserManagementTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i}>
+            {isLoading ?
+            Array.from({ length: 10 }).map((_, i) =>
+            <TableRow key={i}>
                   <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                 </TableRow>
-              ))
-            ) : filteredUsers && filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+            ) :
+            filteredUsers && filteredUsers.length > 0 ?
+            filteredUsers.map((user) =>
+            <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    {currentUser && (
-                      <UserRoleManager
-                        userId={user.id}
-                        currentUserId={currentUser.id}
-                        userEmail={user.email}
-                        userName={user.full_name || ''}
-                        roles={user.roles as ("admin" | "athlete" | "employer")[]}
-                      />
-                    )}
+                    {currentUser &&
+                <UserRoleManager
+                  userId={user.id}
+                  currentUserId={currentUser.id}
+                  userEmail={user.email}
+                  userName={user.full_name || ''}
+                  roles={user.roles as ("admin" | "athlete" | "employer")[]} />
+
+                }
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {format(new Date(user.created_at), 'MMM dd, yyyy')}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      {!user.emailConfirmed && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => resendConfirmationMutation.mutate(user.email)}
-                          disabled={resendConfirmationMutation.isPending}
-                          title="Resend confirmation email"
-                        >
+                      {!user.emailConfirmed &&
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => resendConfirmationMutation.mutate(user.email)}
+                    disabled={resendConfirmationMutation.isPending}
+                    title="Resend confirmation email">
+
                           <Mail className="h-4 w-4" />
                         </Button>
-                      )}
+                  }
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteUser(user.id, user.email, user.full_name || '')}
-                        disabled={currentUser?.id === user.id}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteUser(user.id, user.email, user.full_name || '')}
+                    disabled={currentUser?.id === user.id}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10">
+
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
+            ) :
+
+            <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground">
                   No users found
                 </TableCell>
               </TableRow>
-            )}
+            }
           </TableBody>
         </Table>
       </CardContent>
@@ -328,10 +328,10 @@ export const FullUserManagementTable = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -354,8 +354,8 @@ export const FullUserManagementTable = () => {
                 type="email"
                 placeholder="user@example.com"
                 value={inviteForm.email}
-                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-              />
+                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} />
+
             </div>
             <div className="grid gap-2">
               <Label htmlFor="firstName">First Name</Label>
@@ -363,8 +363,8 @@ export const FullUserManagementTable = () => {
                 id="firstName"
                 placeholder="John"
                 value={inviteForm.firstName}
-                onChange={(e) => setInviteForm({ ...inviteForm, firstName: e.target.value })}
-              />
+                onChange={(e) => setInviteForm({ ...inviteForm, firstName: e.target.value })} />
+
             </div>
             <div className="grid gap-2">
               <Label htmlFor="lastName">Last Name</Label>
@@ -372,17 +372,17 @@ export const FullUserManagementTable = () => {
                 id="lastName"
                 placeholder="Doe"
                 value={inviteForm.lastName}
-                onChange={(e) => setInviteForm({ ...inviteForm, lastName: e.target.value })}
-              />
+                onChange={(e) => setInviteForm({ ...inviteForm, lastName: e.target.value })} />
+
             </div>
             <div className="grid gap-2">
               <Label htmlFor="role">Role *</Label>
-              <Select 
-                value={inviteForm.role} 
-                onValueChange={(value: "athlete" | "employer" | "admin") => 
-                  setInviteForm({ ...inviteForm, role: value })
-                }
-              >
+              <Select
+                value={inviteForm.role}
+                onValueChange={(value: "athlete" | "employer" | "admin") =>
+                setInviteForm({ ...inviteForm, role: value })
+                }>
+
                 <SelectTrigger id="role">
                   <SelectValue />
                 </SelectTrigger>
@@ -404,6 +404,6 @@ export const FullUserManagementTable = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
-  );
+    </Card>);
+
 };
