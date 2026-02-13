@@ -1,22 +1,40 @@
 
 
-# Sort News Articles by Last Updated (Descending)
+# Fix: `selectedAthlete` Gets Nullified Before Request Dialog Opens
 
-## Change
+## Root Cause
 
-Update the news query in `src/pages/News.tsx` to sort by `updated_at` instead of `created_at`.
+The bug is a **race condition between two dialogs**. Here's what happens step by step:
 
-## Technical Detail
+1. User clicks an athlete card -- `setSelectedAthlete(athlete)` is called
+2. The athlete detail dialog opens (line 669): `open={!!selectedAthlete && !showRequestDialog}`
+3. User clicks "Request Connection" -- `setShowRequestDialog(true)` is called
+4. The detail dialog's `open` prop becomes `false` (because `!showRequestDialog` is now `false`)
+5. The dialog closing triggers `onOpenChange(false)`, which calls `setSelectedAthlete(null)`
+6. Now when `handleSendRequest` runs, `selectedAthlete` is `null` -- triggering the error toast
 
-In `src/pages/News.tsx`, line 22, change:
+In short: opening the request dialog **closes** the athlete detail dialog, and the detail dialog's close handler **clears** `selectedAthlete`.
 
+## Fix
+
+Change the `onOpenChange` handler on the athlete detail dialog (line 669) so it only clears `selectedAthlete` when the request dialog is **not** being shown. This prevents the close-triggered nullification.
+
+**File: `src/components/employer/AthleteDirectory.tsx`**
+
+Change line 669 from:
 ```typescript
-// From:
-.order('created_at', { ascending: false })
-
-// To:
-.order('updated_at', { ascending: false })
+onOpenChange={(open) => !open && setSelectedAthlete(null)}
+```
+to:
+```typescript
+onOpenChange={(open) => {
+  if (!open && !showRequestDialog) {
+    setSelectedAthlete(null);
+  }
+}}
 ```
 
-This is a single-line change. The `news_articles` table already has an `updated_at` column with a default of `now()`, so all existing rows have valid values for sorting.
+This single-line change ensures `selectedAthlete` is only cleared when the user intentionally closes the detail dialog (e.g., clicks the X or outside), not when it closes because the request dialog is opening.
+
+No other files need to change.
 
