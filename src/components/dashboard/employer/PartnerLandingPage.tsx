@@ -20,6 +20,7 @@ import {
   UserCircle,
   PlusCircle,
 } from "lucide-react";
+import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 
 interface Connection {
   id: string;
@@ -75,6 +76,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
   const [featuredAthletes, setFeaturedAthletes] = useState<AthleteProfile[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getText } = useDashboardTextOverrides("employer");
 
   useEffect(() => {
     loadDashboardData();
@@ -206,7 +208,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                 <CardContent className="pt-6">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Profile Complete</span>
+                      <span className="text-muted-foreground">{getText("hero.profile_complete_label", "Profile Complete")}</span>
                       <span className="font-semibold">{completeness}%</span>
                     </div>
                     <Progress value={completeness} className="h-2" />
@@ -216,7 +218,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                       className="p-0 h-auto"
                       onClick={() => onNavigate("profile")}
                     >
-                      Complete your profile <ArrowRight className="ml-1 h-3 w-3" />
+                      {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
                   </div>
                 </CardContent>
@@ -234,7 +236,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Connection Activity
+                {getText("connection_activity.title", "Connection Activity")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -242,21 +244,21 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-muted-foreground">Pending</span>
+                    <span className="text-sm text-muted-foreground">{getText("connection_activity.pending", "Pending")}</span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.pending}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-muted-foreground">Accepted</span>
+                    <span className="text-sm text-muted-foreground">{getText("connection_activity.accepted", "Accepted")}</span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.accepted}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-muted-foreground">Declined</span>
+                    <span className="text-sm text-muted-foreground">{getText("connection_activity.declined", "Declined")}</span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.rejected}</span>
                 </div>
@@ -265,7 +267,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                   className="w-full mt-2"
                   onClick={() => onNavigate("connections")}
                 >
-                  Manage Connections
+                  {getText("connection_activity.button", "Manage Connections")}
                 </Button>
               </div>
             </CardContent>
@@ -276,7 +278,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                Profile Performance
+                {getText("profile_performance.title", "Profile Performance")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -284,14 +286,14 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Profile Views</span>
+                    <span className="text-sm text-muted-foreground">{getText("profile_performance.views_label", "Profile Views")}</span>
                   </div>
                   <span className="text-4xl font-bold">{profileViewsThisMonth}</span>
-                  <p className="text-xs text-muted-foreground mt-1">All time</p>
+                  <p className="text-xs text-muted-foreground mt-1">{getText("profile_performance.views_subtitle", "All time")}</p>
                 </div>
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">Completeness</span>
+                    <span className="text-sm text-muted-foreground">{getText("profile_performance.completeness_label", "Completeness")}</span>
                     <span className="text-sm font-semibold">{completeness}%</span>
                   </div>
                   <Progress value={completeness} className="h-2" />
@@ -302,7 +304,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                     className="w-full mt-2"
                     onClick={() => onNavigate("profile")}
                   >
-                    Improve Profile
+                    {getText("profile_performance.button", "Improve Profile")}
                   </Button>
                 )}
               </div>
@@ -314,7 +316,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-primary" />
-                Quick Actions
+                {getText("quick_actions.title", "Quick Actions")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -325,7 +327,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                   onClick={() => onNavigate("directory")}
                 >
                   <Users className="mr-2 h-4 w-4" />
-                  Browse Athlete Directory
+                  {getText("quick_actions.browse_directory", "Browse Athlete Directory")}
                 </Button>
                 <Button
                   variant="outline"
@@ -333,7 +335,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                   onClick={() => onNavigate("opportunities")}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Manage Opportunities
+                  {getText("quick_actions.manage_opportunities", "Manage Opportunities")}
                 </Button>
                 <Button
                   variant="outline"
@@ -341,7 +343,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                   onClick={() => onNavigate("profile")}
                 >
                   <UserCircle className="mr-2 h-4 w-4" />
-                  Update Company Profile
+                  {getText("quick_actions.update_profile", "Update Company Profile")}
                 </Button>
                 <Button
                   variant="outline"
@@ -349,7 +351,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                   onClick={() => onNavigate("connections")}
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  View My Connections
+                  {getText("quick_actions.view_connections", "View My Connections")}
                 </Button>
                 <Button
                   variant="outline"
@@ -357,7 +359,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                   onClick={() => onNavigate("preview")}
                 >
                   <Eye className="mr-2 h-4 w-4" />
-                  Preview My Profile
+                  {getText("quick_actions.preview_profile", "Preview My Profile")}
                 </Button>
               </div>
             </CardContent>
@@ -369,9 +371,9 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
           <Card className="mb-8">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>My Connections</CardTitle>
+                <CardTitle>{getText("my_connections.title", "My Connections")}</CardTitle>
                 <Button variant="link" onClick={() => onNavigate("connections")}>
-                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                  {getText("my_connections.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
@@ -420,9 +422,9 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Featured Athletes</CardTitle>
+              <CardTitle>{getText("featured.title", "Featured Athletes")}</CardTitle>
               <Button variant="link" onClick={() => onNavigate("directory")}>
-                View All <ArrowRight className="ml-1 h-4 w-4" />
+                {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
