@@ -11,7 +11,7 @@ interface NewsArticle {
   url: string;
   date: string | null;
   excerpt: string;
-  updated_at: string; // ADD THIS
+  updated_at: string; // ADDED
 }
 
 Deno.serve(async (req) => {
