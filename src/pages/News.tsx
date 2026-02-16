@@ -19,7 +19,6 @@ const News = () => {
         .from("news_articles")
         .select("*")
         .order("date", { ascending: false, nullsFirst: false })
-        .order("source_order", { ascending: true, nullsFirst: false })
         .limit(20);
 
       if (error) throw error;
@@ -97,7 +96,7 @@ const News = () => {
 
         <section className="py-8 sm:py-12">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+            <div className="max-w-3x2 mx-auto space-y-4 sm:space-y-6">
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -105,15 +104,7 @@ const News = () => {
               ) : articles && articles.length > 0 ? (
                 <>
                   {articles.map((article) => (
-                    <Card key={article.id} className="shadow-elegant hover:shadow-hover transition-shadow overflow-hidden">
-                      {article.image_url && (
-                        <img
-                          src={article.image_url}
-                          alt={article.title}
-                          className="w-full h-48 sm:h-56 object-cover"
-                          loading="lazy"
-                        />
-                      )}
+                    <Card key={article.id} className="shadow-elegant hover:shadow-hover transition-shadow">
                       <CardHeader>
                         <CardTitle>
                           <a
