@@ -19,7 +19,6 @@ const News = () => {
         .from("news_articles")
         .select("*")
         .order("date", { ascending: false, nullsFirst: false })
-        .order("source_order", { ascending: true, nullsFirst: false })
         .limit(20);
 
       if (error) throw error;
@@ -97,33 +96,28 @@ const News = () => {
 
         <section className="py-8 sm:py-12">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-              {isLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : articles && articles.length > 0 ? (
-                <>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : articles && articles.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {articles.map((article) => (
-                    <Card key={article.id} className="shadow-elegant hover:shadow-hover transition-shadow overflow-hidden">
-                      {article.image_url && (
-                        <img
-                          src={article.image_url}
-                          alt={article.title}
-                          className="w-full h-48 sm:h-56 object-cover"
-                          loading="lazy"
-                        />
-                      )}
+                    <Card
+                      key={article.id}
+                      className="shadow-elegant hover:shadow-hover transition-shadow flex flex-col"
+                    >
                       <CardHeader>
-                        <CardTitle>
+                        <CardTitle className="text-lg">
                           <a
                             href={article.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hover:text-primary transition-colors flex items-center gap-2"
+                            className="hover:text-primary transition-colors flex items-start gap-2 line-clamp-3"
                           >
-                            {article.title}
-                            <ExternalLink className="h-4 w-4" />
+                            <span className="flex-1">{article.title}</span>
+                            <ExternalLink className="h-4 w-4 flex-shrink-0 mt-1" />
                           </a>
                         </CardTitle>
                         {article.date && (
@@ -136,27 +130,29 @@ const News = () => {
                           </p>
                         )}
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-muted-foreground">{article.excerpt}</p>
+                      <CardContent className="flex-1">
+                        <p className="text-muted-foreground text-sm line-clamp-4">{article.excerpt}</p>
                       </CardContent>
                     </Card>
                   ))}
+                </div>
 
-                  <div className="flex justify-center pt-4 sm:pt-8">
-                    <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                      <a
-                        href="https://www.usskiandsnowboard.org/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        More News at U.S. Ski & Snowboard
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    </Button>
-                  </div>
-                </>
-              ) : (
+                <div className="flex justify-center pt-8 sm:pt-12">
+                  <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+                    <a
+                      href="https://www.usskiandsnowboard.org/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      More News at U.S. Ski & Snowboard
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="max-w-4xl mx-auto">
                 <Card className="shadow-elegant">
                   <CardContent className="py-12 text-center px-4">
                     <p className="text-muted-foreground mb-4">
@@ -175,8 +171,8 @@ const News = () => {
                     </Button>
                   </CardContent>
                 </Card>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </section>
       </main>
