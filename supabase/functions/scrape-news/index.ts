@@ -144,9 +144,13 @@ Deno.serve(async (req) => {
           !line.startsWith("[") &&
           !line.startsWith("#") &&
           !line.startsWith("- ") &&
+          !line.startsWith("*") &&
           !/!\[/.test(line) &&
           !/simpleads/i.test(line) &&
-          !/^(Last\s+)?Updated/i.test(line)
+          !/https?:\/\//i.test(line) &&
+          !/^(Last\s+)?Updated/i.test(line) &&
+          !/^\d{1,2}\/\d{1,2}\/\d{4}/.test(line) &&
+          !/\]\(/.test(line)
         ) {
           excerpt = line.substring(0, 200);
           break;
