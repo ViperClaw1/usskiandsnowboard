@@ -1,40 +1,99 @@
 
 
-# Fix: `selectedAthlete` Gets Nullified Before Request Dialog Opens
+# Fix News Scraping: Excerpts, Images, and Sorting
 
-## Root Cause
+## Issues Found
 
-The bug is a **race condition between two dialogs**. Here's what happens step by step:
+### 1. Raw Markdown in Excerpts
+The scraper's excerpt extraction (line 126-136 in `scrape-news/index.ts`) filters out lines starting with `[`, `#`, digits, and "Updated", but does NOT filter lines starting with `- ` (list items containing ad/sponsor markdown images like `[![xfinity](...)](...)`). Four articles currently have broken excerpts showing raw markdown ad content.
 
-1. User clicks an athlete card -- `setSelectedAthlete(athlete)` is called
-2. The athlete detail dialog opens (line 669): `open={!!selectedAthlete && !showRequestDialog}`
-3. User clicks "Request Connection" -- `setShowRequestDialog(true)` is called
-4. The detail dialog's `open` prop becomes `false` (because `!showRequestDialog` is now `false`)
-5. The dialog closing triggers `onOpenChange(false)`, which calls `setSelectedAthlete(null)`
-6. Now when `handleSendRequest` runs, `selectedAthlete` is `null` -- triggering the error toast
+### 2. No Article Images
+The source site provides a hero image for every article in the markdown (e.g., `[![alt text](image_url)](article_url)`). The scraper currently ignores these. We need a new `image_url` column and scraper logic to extract them.
 
-In short: opening the request dialog **closes** the athlete detail dialog, and the detail dialog's close handler **clears** `selectedAthlete`.
+### 3. Sorting Mismatch
+Our DB stores only a `date` (no time component). Multiple articles sharing the same date (e.g., four articles on 2026-02-14) appear in arbitrary database order rather than matching the editorial order on the source site. The source site orders by "Last Updated" with an implicit time-of-day ordering.
 
-## Fix
+---
 
-Change the `onOpenChange` handler on the athlete detail dialog (line 669) so it only clears `selectedAthlete` when the request dialog is **not** being shown. This prevents the close-triggered nullification.
+## Plan
 
-**File: `src/components/employer/AthleteDirectory.tsx`**
+### Step 1: Database Migration
+Add two new columns to `news_articles`:
+- `image_url` (text, nullable) -- hero image URL for the article
+- `source_order` (integer, nullable) -- position from the source page to preserve editorial ordering within the same date
 
-Change line 669 from:
-```typescript
-onOpenChange={(open) => !open && setSelectedAthlete(null)}
+### Step 2: Update the Scraper (`supabase/functions/scrape-news/index.ts`)
+
+**Extract hero images**: The source markdown has a pattern of `[![alt](image_url)](article_url)` immediately before each article title link. Parse these image URLs and store them in `image_url`.
+
+**Fix excerpt extraction**: Add filters to skip lines that:
+- Start with `- ` (list items, typically ads)
+- Contain markdown image syntax `![` 
+- Contain `simpleads` in the URL (sponsor ads)
+
+**Preserve source order**: Assign a sequential `source_order` value (0, 1, 2, ...) based on the order articles appear in the scraped markdown. This preserves editorial ordering.
+
+**Update the `NewsArticle` interface** to include `image_url` and `source_order`.
+
+### Step 3: Update the Frontend (`src/pages/News.tsx`)
+
+**Add image element**: Render the `image_url` at the top of each Card (above CardHeader), using an `<img>` tag with `object-cover` styling and rounded top corners. Only render if `image_url` exists.
+
+**Update query ordering**: Change from `.order('date', { ascending: false })` to also order by `source_order` ascending as a secondary sort, so articles on the same date appear in editorial order:
 ```
-to:
-```typescript
-onOpenChange={(open) => {
-  if (!open && !showRequestDialog) {
-    setSelectedAthlete(null);
-  }
-}}
+.order('date', { ascending: false, nullsFirst: false })
+.order('source_order', { ascending: true, nullsFirst: false })
 ```
 
-This single-line change ensures `selectedAthlete` is only cleared when the user intentionally closes the detail dialog (e.g., clicks the X or outside), not when it closes because the request dialog is opening.
+### Step 4: Redeploy and Re-scrape
+Deploy the updated edge function and trigger a scrape to populate `image_url`, `source_order`, and fix the broken excerpts for existing articles.
 
-No other files need to change.
+---
+
+## Technical Details
+
+**Scraper image extraction regex:**
+```
+[![alt](IMAGE_URL)](ARTICLE_URL)
+```
+Pattern: look for image markdown linked to the same article URL, appearing just before each title link in the source markdown.
+
+**Excerpt filter additions (line ~126-136):**
+```typescript
+if (
+  line.length > 20 &&
+  !/^\d/.test(line) &&
+  !line.startsWith("[") &&
+  !line.startsWith("#") &&
+  !line.startsWith("- ") &&          // skip list items (ads)
+  !/!\[/.test(line) &&                // skip markdown images
+  !/simpleads/.test(line) &&          // skip sponsor ads
+  !/^(Last\s+)?Updated/i.test(line)
+)
+```
+
+**Card image rendering:**
+```tsx
+<Card key={article.id} className="shadow-elegant hover:shadow-hover transition-shadow overflow-hidden">
+  {article.image_url && (
+    <img
+      src={article.image_url}
+      alt={article.title}
+      className="w-full h-48 sm:h-56 object-cover"
+      loading="lazy"
+    />
+  )}
+  <CardHeader>
+    {/* ...existing title and date... */}
+  </CardHeader>
+  <CardContent>
+    <p className="text-muted-foreground">{article.excerpt}</p>
+  </CardContent>
+</Card>
+```
+
+**Files changed:**
+- `supabase/migrations/[timestamp].sql` -- add `image_url` and `source_order` columns
+- `supabase/functions/scrape-news/index.ts` -- extract images, fix excerpts, add source ordering
+- `src/pages/News.tsx` -- render images, update sort order
 
