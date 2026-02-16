@@ -11,7 +11,9 @@ interface NewsArticle {
   url: string;
   date: string | null;
   excerpt: string;
-  updated_at: string; // ADDED
+  image_url: string | null;
+  source_order: number;
+  updated_at: string;
 }
 
 Deno.serve(async (req) => {
@@ -30,7 +32,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Call Firecrawl scrape API
     const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: {
@@ -59,7 +60,6 @@ Deno.serve(async (req) => {
 
     console.log("Firecrawl returned markdown length:", markdown.length, "links:", links.length);
 
-    // Filter links to news article URLs
     const newsLinks = links
       .filter((link: string) => /usskiandsnowboard\.org\/news\//.test(link))
       .map((link: string) => link.split("?")[0].split("#")[0])
@@ -67,12 +67,28 @@ Deno.serve(async (req) => {
 
     console.log("Filtered news article links:", newsLinks.length);
 
-    // Parse markdown for article blocks
     const articles: NewsArticle[] = [];
     const seenUrls = new Set<string>();
-
-    // CRITICAL: Get current timestamp for all articles scraped in this run
     const currentTimestamp = new Date().toISOString();
+    let sourceOrderCounter = 0;
+
+    // Build a map of article URL -> image URL from markdown image-link patterns
+    // Pattern: [![alt](IMAGE_URL)](ARTICLE_URL)
+    const imageMap = new Map<string, string>();
+    const imageLinkPattern = /\[!\[[^\]]*\]\(([^)]+)\)\]\(((?:https?:\/\/(?:www\.)?usskiandsnowboard\.org)?\/news\/[^)]+)\)/g;
+    let imgMatch;
+    while ((imgMatch = imageLinkPattern.exec(markdown)) !== null) {
+      let articleUrl = imgMatch[2].trim();
+      if (articleUrl.startsWith("/")) {
+        articleUrl = `https://www.usskiandsnowboard.org${articleUrl}`;
+      }
+      articleUrl = articleUrl.split("?")[0].split("#")[0];
+      const imageUrl = imgMatch[1].trim();
+      if (!imageMap.has(articleUrl)) {
+        imageMap.set(articleUrl, imageUrl);
+      }
+    }
+    console.log("Image map entries:", imageMap.size);
 
     // Strategy 1: Extract from markdown link patterns
     const linkPattern = /\[([^\]]{10,})\]\(((?:https?:\/\/(?:www\.)?usskiandsnowboard\.org)?\/news\/[^)]+)\)/g;
@@ -82,7 +98,9 @@ Deno.serve(async (req) => {
       const title = match[1].trim();
       let url = match[2].trim();
 
-      // Make URL absolute
+      // Skip image-wrapped links (already captured in imageMap)
+      if (title.startsWith("![")) continue;
+
       if (url.startsWith("/")) {
         url = `https://www.usskiandsnowboard.org${url}`;
       }
@@ -91,13 +109,10 @@ Deno.serve(async (req) => {
       if (seenUrls.has(url)) continue;
       seenUrls.add(url);
 
-      // Look for a date near this match in the markdown
       const afterMatch = markdown.substring(match.index + match[0].length, match.index + match[0].length + 500);
 
-      // Try multiple date formats: "Month DD, YYYY", "YYYY-MM-DD", "MM/DD/YYYY", "Last Updated: ..."
       let date: string | null = null;
 
-      // Look for "Last Updated" or "Updated" pattern first (this is what the source site uses)
       const updatedMatch = afterMatch.match(/(?:Last\s+)?Updated[:\s]+(\w+ \d{1,2},?\s*\d{4})/i);
       if (updatedMatch) {
         const parsed = new Date(updatedMatch[1]);
@@ -106,7 +121,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Fall back to general date patterns
       if (!date) {
         const dateMatch = afterMatch.match(/(\w+ \d{1,2},?\s*\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/);
         if (dateMatch) {
@@ -117,7 +131,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Extract excerpt: first non-empty line after the link that isn't a date
+      // Extract excerpt with improved filtering
       const lines = afterMatch
         .split("\n")
         .map((l) => l.trim())
@@ -129,6 +143,9 @@ Deno.serve(async (req) => {
           !/^\d/.test(line) &&
           !line.startsWith("[") &&
           !line.startsWith("#") &&
+          !line.startsWith("- ") &&
+          !/!\[/.test(line) &&
+          !/simpleads/i.test(line) &&
           !/^(Last\s+)?Updated/i.test(line)
         ) {
           excerpt = line.substring(0, 200);
@@ -136,17 +153,21 @@ Deno.serve(async (req) => {
         }
       }
 
+      const image_url = imageMap.get(url) || null;
+
       articles.push({
         title,
         url,
         date,
         excerpt,
-        updated_at: currentTimestamp, // ADD THIS - sets when this article was last scraped
+        image_url,
+        source_order: sourceOrderCounter++,
+        updated_at: currentTimestamp,
       });
-      console.log(`Parsed article: ${title} (date: ${date})`);
+      console.log(`Parsed article: ${title} (date: ${date}, image: ${!!image_url}, order: ${sourceOrderCounter - 1})`);
     }
 
-    // Strategy 2: If markdown parsing found few articles, use the filtered links
+    // Strategy 2: fallback for links not found in markdown
     if (articles.length < 3) {
       for (const link of newsLinks) {
         if (seenUrls.has(link)) continue;
@@ -165,7 +186,9 @@ Deno.serve(async (req) => {
           url: link,
           date: null,
           excerpt: title,
-          updated_at: currentTimestamp, // ADD THIS
+          image_url: imageMap.get(link) || null,
+          source_order: sourceOrderCounter++,
+          updated_at: currentTimestamp,
         });
       }
     }
@@ -179,12 +202,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Upsert into database
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // CRITICAL: ignoreDuplicates must be false to update existing articles
     const { error } = await supabase
       .from("news_articles")
       .upsert(articles, { onConflict: "url", ignoreDuplicates: false });

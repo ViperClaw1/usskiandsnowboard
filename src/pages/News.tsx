@@ -19,6 +19,7 @@ const News = () => {
         .from("news_articles")
         .select("*")
         .order("date", { ascending: false, nullsFirst: false })
+        .order("source_order", { ascending: true, nullsFirst: false })
         .limit(20);
 
       if (error) throw error;
@@ -104,7 +105,15 @@ const News = () => {
               ) : articles && articles.length > 0 ? (
                 <>
                   {articles.map((article) => (
-                    <Card key={article.id} className="shadow-elegant hover:shadow-hover transition-shadow">
+                    <Card key={article.id} className="shadow-elegant hover:shadow-hover transition-shadow overflow-hidden">
+                      {article.image_url && (
+                        <img
+                          src={article.image_url}
+                          alt={article.title}
+                          className="w-full h-48 sm:h-56 object-cover"
+                          loading="lazy"
+                        />
+                      )}
                       <CardHeader>
                         <CardTitle>
                           <a
