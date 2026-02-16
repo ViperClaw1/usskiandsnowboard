@@ -602,6 +602,8 @@ export type Database = {
           date: string | null
           excerpt: string | null
           id: string
+          image_url: string | null
+          source_order: number | null
           title: string
           updated_at: string
           url: string
@@ -611,6 +613,8 @@ export type Database = {
           date?: string | null
           excerpt?: string | null
           id?: string
+          image_url?: string | null
+          source_order?: number | null
           title: string
           updated_at?: string
           url: string
@@ -620,6 +624,8 @@ export type Database = {
           date?: string | null
           excerpt?: string | null
           id?: string
+          image_url?: string | null
+          source_order?: number | null
           title?: string
           updated_at?: string
           url?: string
