@@ -106,8 +106,18 @@ const News = () => {
                   {articles.map((article) => (
                     <Card
                       key={article.id}
-                      className="shadow-elegant hover:shadow-hover transition-shadow flex flex-col"
+                      className="shadow-elegant hover:shadow-hover transition-shadow flex flex-col overflow-hidden"
                     >
+                      <div className="w-full h-48 bg-muted overflow-hidden">
+                        <img
+                          src={article.image_url || mountainHeaderBg}
+                          alt={article.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.src = mountainHeaderBg;
+                          }}
+                        />
+                      </div>
                       <CardHeader>
                         <CardTitle className="text-lg">
                           <a
