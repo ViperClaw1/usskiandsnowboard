@@ -18,7 +18,7 @@ const News = () => {
       const { data, error } = await supabase
         .from("news_articles")
         .select("*")
-        .order("updated_at", { ascending: false, nullsFirst: false })
+        .order("date", { ascending: false, nullsFirst: false })
         .limit(20);
 
       if (error) throw error;
