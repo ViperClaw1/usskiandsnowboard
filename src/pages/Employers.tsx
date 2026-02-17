@@ -29,8 +29,6 @@ const Employers = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true); // 👈 add this
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [employers, setEmployers] = useState<EmployerProfile[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
