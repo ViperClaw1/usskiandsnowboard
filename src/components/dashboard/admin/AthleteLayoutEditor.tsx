@@ -5,8 +5,19 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
-  UserCircle, Users, Eye, Briefcase, ArrowRight,
-  TrendingUp, CheckCircle2, Clock, XCircle, Video, EyeIcon, Save, RotateCcw,
+  UserCircle,
+  Users,
+  Eye,
+  Briefcase,
+  ArrowRight,
+  TrendingUp,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Video,
+  EyeIcon,
+  Save,
+  RotateCcw,
 } from "lucide-react";
 import { EditableText } from "./EditableText";
 import { useDashboardLayout } from "@/hooks/useDashboardLayout";
@@ -38,7 +49,8 @@ export const AthleteLayoutEditor = () => {
       {/* Toolbar */}
       <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3 border">
         <p className="text-sm text-muted-foreground">
-          Click any text with a <span className="text-primary font-medium">pencil icon</span> to edit it. Changes apply to all athlete dashboards.
+          Click any text with a <span className="text-primary font-medium">pencil icon</span> to edit it. Changes apply
+          to all athlete dashboards.
         </p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={resetLayout} disabled={saving}>
@@ -68,13 +80,23 @@ export const AthleteLayoutEditor = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
-                      <EditableText value="Profile Complete" textKey="hero.profile_complete_label" overrides={o} onUpdate={updateTextOverride} />
+                      <EditableText
+                        value="Profile Complete"
+                        textKey="hero.profile_complete_label"
+                        overrides={o}
+                        onUpdate={updateTextOverride}
+                      />
                     </span>
                     <span className="font-semibold">{MOCK.completeness}%</span>
                   </div>
                   <Progress value={MOCK.completeness} className="h-2" />
                   <Button variant="link" size="sm" className="p-0 h-auto">
-                    <EditableText value="Complete your profile" textKey="hero.complete_profile_cta" overrides={o} onUpdate={updateTextOverride} />
+                    <EditableText
+                      value="Complete your profile"
+                      textKey="hero.complete_profile_cta"
+                      overrides={o}
+                      onUpdate={updateTextOverride}
+                    />
                     <ArrowRight className="ml-1 h-3 w-3" />
                   </Button>
                 </div>
@@ -92,7 +114,12 @@ export const AthleteLayoutEditor = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                <EditableText value="Connection Activity" textKey="connection_activity.title" overrides={o} onUpdate={updateTextOverride} />
+                <EditableText
+                  value="Connection Activity"
+                  textKey="connection_activity.title"
+                  overrides={o}
+                  onUpdate={updateTextOverride}
+                />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -101,7 +128,12 @@ export const AthleteLayoutEditor = () => {
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-yellow-500" />
                     <span className="text-sm text-muted-foreground">
-                      <EditableText value="Pending" textKey="connection_activity.pending" overrides={o} onUpdate={updateTextOverride} />
+                      <EditableText
+                        value="Pending"
+                        textKey="connection_activity.pending"
+                        overrides={o}
+                        onUpdate={updateTextOverride}
+                      />
                     </span>
                   </div>
                   <span className="text-2xl font-bold">{MOCK.pending}</span>
@@ -110,7 +142,12 @@ export const AthleteLayoutEditor = () => {
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                     <span className="text-sm text-muted-foreground">
-                      <EditableText value="Accepted" textKey="connection_activity.accepted" overrides={o} onUpdate={updateTextOverride} />
+                      <EditableText
+                        value="Accepted"
+                        textKey="connection_activity.accepted"
+                        overrides={o}
+                        onUpdate={updateTextOverride}
+                      />
                     </span>
                   </div>
                   <span className="text-2xl font-bold">{MOCK.accepted}</span>
@@ -119,13 +156,23 @@ export const AthleteLayoutEditor = () => {
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-500" />
                     <span className="text-sm text-muted-foreground">
-                      <EditableText value="Declined" textKey="connection_activity.declined" overrides={o} onUpdate={updateTextOverride} />
+                      <EditableText
+                        value="Declined"
+                        textKey="connection_activity.declined"
+                        overrides={o}
+                        onUpdate={updateTextOverride}
+                      />
                     </span>
                   </div>
                   <span className="text-2xl font-bold">{MOCK.declined}</span>
                 </div>
                 <Button variant="outline" className="w-full mt-2">
-                  <EditableText value="Manage Connections" textKey="connection_activity.button" overrides={o} onUpdate={updateTextOverride} />
+                  <EditableText
+                    value="Manage Connections"
+                    textKey="connection_activity.button"
+                    overrides={o}
+                    onUpdate={updateTextOverride}
+                  />
                 </Button>
               </div>
             </CardContent>
@@ -136,7 +183,12 @@ export const AthleteLayoutEditor = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                <EditableText value="Profile Performance" textKey="profile_performance.title" overrides={o} onUpdate={updateTextOverride} />
+                <EditableText
+                  value="Profile Performance"
+                  textKey="profile_performance.title"
+                  overrides={o}
+                  onUpdate={updateTextOverride}
+                />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -145,25 +197,45 @@ export const AthleteLayoutEditor = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Eye className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      <EditableText value="Profile Views" textKey="profile_performance.views_label" overrides={o} onUpdate={updateTextOverride} />
+                      <EditableText
+                        value="Profile Views"
+                        textKey="profile_performance.views_label"
+                        overrides={o}
+                        onUpdate={updateTextOverride}
+                      />
                     </span>
                   </div>
                   <span className="text-4xl font-bold">{MOCK.views}</span>
                   <p className="text-xs text-muted-foreground mt-1">
-                    <EditableText value="All time" textKey="profile_performance.views_subtitle" overrides={o} onUpdate={updateTextOverride} />
+                    <EditableText
+                      value="All time"
+                      textKey="profile_performance.views_subtitle"
+                      overrides={o}
+                      onUpdate={updateTextOverride}
+                    />
                   </p>
                 </div>
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-muted-foreground">
-                      <EditableText value="Completeness" textKey="profile_performance.completeness_label" overrides={o} onUpdate={updateTextOverride} />
+                      <EditableText
+                        value="Completeness"
+                        textKey="profile_performance.completeness_label"
+                        overrides={o}
+                        onUpdate={updateTextOverride}
+                      />
                     </span>
                     <span className="text-sm font-semibold">{MOCK.completeness}%</span>
                   </div>
                   <Progress value={MOCK.completeness} className="h-2" />
                 </div>
                 <Button variant="outline" className="w-full mt-2">
-                  <EditableText value="Improve Profile" textKey="profile_performance.button" overrides={o} onUpdate={updateTextOverride} />
+                  <EditableText
+                    value="Improve Profile"
+                    textKey="profile_performance.button"
+                    overrides={o}
+                    onUpdate={updateTextOverride}
+                  />
                 </Button>
               </div>
             </CardContent>
@@ -174,30 +246,60 @@ export const AthleteLayoutEditor = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-primary" />
-                <EditableText value="Quick Actions" textKey="quick_actions.title" overrides={o} onUpdate={updateTextOverride} />
+                <EditableText
+                  value="Quick Actions"
+                  textKey="quick_actions.title"
+                  overrides={o}
+                  onUpdate={updateTextOverride}
+                />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <Button variant="outline" className="w-full justify-start">
                   <Users className="mr-2 h-4 w-4" />
-                  <EditableText value="Browse Partner Directory" textKey="quick_actions.browse_directory" overrides={o} onUpdate={updateTextOverride} />
+                  <EditableText
+                    value="Browse Partner Directory"
+                    textKey="quick_actions.browse_directory"
+                    overrides={o}
+                    onUpdate={updateTextOverride}
+                  />
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <UserCircle className="mr-2 h-4 w-4" />
-                  <EditableText value="Update Profile" textKey="quick_actions.update_profile" overrides={o} onUpdate={updateTextOverride} />
+                  <EditableText
+                    value="Update Profile"
+                    textKey="quick_actions.update_profile"
+                    overrides={o}
+                    onUpdate={updateTextOverride}
+                  />
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Video className="mr-2 h-4 w-4" />
-                  <EditableText value="Manage Content" textKey="quick_actions.manage_content" overrides={o} onUpdate={updateTextOverride} />
+                  <EditableText
+                    value="Manage Content"
+                    textKey="quick_actions.manage_content"
+                    overrides={o}
+                    onUpdate={updateTextOverride}
+                  />
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  <EditableText value="View Connections" textKey="quick_actions.view_connections" overrides={o} onUpdate={updateTextOverride} />
+                  <EditableText
+                    value="View Connections"
+                    textKey="quick_actions.view_connections"
+                    overrides={o}
+                    onUpdate={updateTextOverride}
+                  />
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <EyeIcon className="mr-2 h-4 w-4" />
-                  <EditableText value="Preview Profile" textKey="quick_actions.preview_profile" overrides={o} onUpdate={updateTextOverride} />
+                  <EditableText
+                    value="Preview Profile"
+                    textKey="quick_actions.preview_profile"
+                    overrides={o}
+                    onUpdate={updateTextOverride}
+                  />
                 </Button>
               </div>
             </CardContent>
@@ -209,10 +311,20 @@ export const AthleteLayoutEditor = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                <EditableText value="My Connections" textKey="my_connections.title" overrides={o} onUpdate={updateTextOverride} />
+                <EditableText
+                  value="My Connections"
+                  textKey="my_connections.title"
+                  overrides={o}
+                  onUpdate={updateTextOverride}
+                />
               </CardTitle>
               <Button variant="link">
-                <EditableText value="View All" textKey="my_connections.view_all" overrides={o} onUpdate={updateTextOverride} />
+                <EditableText
+                  value="View All"
+                  textKey="my_connections.view_all"
+                  overrides={o}
+                  onUpdate={updateTextOverride}
+                />
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
@@ -220,7 +332,7 @@ export const AthleteLayoutEditor = () => {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {MOCK.partners.map((p) => (
-                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                <Card key={p.id} className="cursor-default hover:shadow-md transition-shadow">
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
                       <Avatar className="h-16 w-16">
@@ -228,7 +340,9 @@ export const AthleteLayoutEditor = () => {
                       </Avatar>
                       <div>
                         <p className="font-semibold text-sm">{p.name}</p>
-                        <Badge variant="secondary" className="mt-2 text-xs">{p.industry}</Badge>
+                        <Badge variant="secondary" className="mt-2 text-xs">
+                          {p.industry}
+                        </Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -243,10 +357,20 @@ export const AthleteLayoutEditor = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                <EditableText value="Featured Partners" textKey="featured.title" overrides={o} onUpdate={updateTextOverride} />
+                <EditableText
+                  value="Featured Partners"
+                  textKey="featured.title"
+                  overrides={o}
+                  onUpdate={updateTextOverride}
+                />
               </CardTitle>
               <Button variant="link">
-                <EditableText value="View All" textKey="featured.view_all" overrides={o} onUpdate={updateTextOverride} />
+                <EditableText
+                  value="View All"
+                  textKey="featured.view_all"
+                  overrides={o}
+                  onUpdate={updateTextOverride}
+                />
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
@@ -262,7 +386,9 @@ export const AthleteLayoutEditor = () => {
                       </Avatar>
                       <div>
                         <p className="font-semibold text-sm">{p.name}</p>
-                        <Badge variant="secondary" className="mt-2 text-xs">{p.industry}</Badge>
+                        <Badge variant="secondary" className="mt-2 text-xs">
+                          {p.industry}
+                        </Badge>
                       </div>
                     </div>
                   </CardContent>
