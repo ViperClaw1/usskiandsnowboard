@@ -89,7 +89,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
         {currentView === "home" ? (
           <PartnerLandingPage user={user} onNavigate={handleNavigate} />
         ) : currentView === "directory" ? (
-          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl animate-fade-in">
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <h2 className="text-xl sm:text-2xl font-bold">Athlete Directory</h2>
               <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
@@ -99,7 +99,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
             <AthleteDirectory />
           </div>
         ) : currentView === "preview" ? (
-          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl animate-fade-in">
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <h2 className="text-xl sm:text-2xl font-bold">Profile Preview</h2>
               <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
@@ -109,7 +109,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
             {profile && <EmployerProfilePreview profile={profile} />}
           </div>
         ) : currentView === "connections" ? (
-          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl animate-fade-in">
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <h2 className="text-xl sm:text-2xl font-bold">My Connections</h2>
               <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">

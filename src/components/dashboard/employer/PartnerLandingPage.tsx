@@ -180,7 +180,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
   const profileViewsThisMonth = profile?.profile_views || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
