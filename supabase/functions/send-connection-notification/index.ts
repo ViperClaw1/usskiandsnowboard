@@ -340,7 +340,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (sendEmail && employerEmail) {
         await resend.emails.send({
-          from: "US Ski & Snowboard <onboarding@resend.dev>",
+          from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
           to: [employerEmail],
           subject: `New Connection Request from ${athleteName}`,
           html: newRequestEmailHtml(companyName, athleteName, request, supabaseUrl),
@@ -367,7 +367,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (sendToAthlete && athleteEmail) {
         await resend.emails.send({
-          from: "US Ski & Snowboard <onboarding@resend.dev>",
+          from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
           to: [athleteEmail],
           subject: `Connection Accepted - ${companyName} wants to connect!`,
           html: acceptedAthleteEmailHtml(athleteName, companyName, request, employerEmail, supabaseUrl),
@@ -377,7 +377,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (sendToEmployer && employerEmail) {
         await resend.emails.send({
-          from: "US Ski & Snowboard <onboarding@resend.dev>",
+          from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
           to: [employerEmail],
           subject: `Connection Confirmed - You're now connected with ${athleteName}!`,
           html: acceptedEmployerEmailHtml(companyName, athleteName, request, athleteEmail, supabaseUrl),
@@ -428,7 +428,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (sendEmail && recipientEmail) {
         await resend.emails.send({
-          from: "US Ski & Snowboard <onboarding@resend.dev>",
+          from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
           to: [recipientEmail],
           subject: `Connection Request Update`,
           html: declinedEmailHtml(recipientName, otherPartyName, supabaseUrl),

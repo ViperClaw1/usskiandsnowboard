@@ -256,7 +256,7 @@ serve(async (req) => {
     `;
 
     const { error: emailError } = await resend.emails.send({
-      from: 'U.S. Ski & Snowboard <onboarding@resend.dev>',
+      from: 'U.S. Ski & Snowboard <notifications@athleteconnection.org>',
       to: [email],
       subject: 'Welcome to U.S. Ski & Snowboard - Set Your Password',
       html,

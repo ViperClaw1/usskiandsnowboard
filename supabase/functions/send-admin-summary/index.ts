@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const resendApiKey = Deno.env.get("RESEND_API_KEY_1")!;
+    const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const resend = new Resend(resendApiKey);
@@ -350,7 +350,7 @@ Deno.serve(async (req) => {
 
       try {
         const { error: emailError } = await resend.emails.send({
-          from: "U.S. Ski & Snowboard <notifications@athleteconnect.org>",
+          from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
           to: [profile.email],
           subject,
           html,

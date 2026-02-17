@@ -223,7 +223,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send emails to all subscribed admins
     const emailPromises = adminProfiles.map(admin => 
       resend.emails.send({
-        from: "US Ski & Snowboard <onboarding@resend.dev>",
+        from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
         to: [admin.email],
         subject: emailSubject,
         html: emailHtml,

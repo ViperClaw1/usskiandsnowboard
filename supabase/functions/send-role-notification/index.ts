@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY_1")!);
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY")!);
     const displayName = user_name || user_email;
     const isGrant = action === "grant";
 
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     `;
 
     const { error: emailError } = await resend.emails.send({
-      from: "U.S. Ski & Snowboard <notifications@athleteconnect.org>",
+      from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
       to: [user_email],
       subject,
       html,
