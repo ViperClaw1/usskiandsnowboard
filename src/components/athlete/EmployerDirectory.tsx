@@ -4,14 +4,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X, RefreshCw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DirectoryCardSkeleton } from "@/components/ui/skeleton-card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -49,7 +54,7 @@ const EmployerDirectory = () => {
   const [existingRequests, setExistingRequests] = useState<Set<string>>(new Set());
   const [selectedEmployer, setSelectedEmployer] = useState<EmployerProfile | null>(null);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterCompanySize, setFilterCompanySize] = useState<string>("all");
@@ -59,43 +64,37 @@ const EmployerDirectory = () => {
   const [pullDistance, setPullDistance] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // 1. Separate the effects — don't let athleteProfileId re-trigger loadEmployers
   useEffect(() => {
     loadEmployers();
-    loadAthleteProfile();
+  }, []); // runs once
 
-    // Set up real-time subscription for connection requests
+  useEffect(() => {
+    loadAthleteProfile();
+  }, []); // runs once
+
+  useEffect(() => {
+    if (!athleteProfileId) return;
+
     const channel = supabase
-      .channel('athlete_connection_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'connection_requests',
-        },
-        () => {
-          // Reload existing requests when any change happens
-          if (athleteProfileId) {
-            loadExistingRequests(athleteProfileId);
-          }
-        }
+      .channel("athlete_connection_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "connection_requests" }, () =>
+        loadExistingRequests(athleteProfileId),
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [athleteProfileId]);
+  }, [athleteProfileId]); // only the subscription depends on athleteProfileId
 
   const loadAthleteProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
-      .from("athlete_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
+    const { data } = await supabase.from("athlete_profiles").select("id").eq("user_id", user.id).single();
 
     if (data) {
       setAthleteProfileId(data.id);
@@ -113,7 +112,7 @@ const EmployerDirectory = () => {
 
       if (error) throw error;
 
-      const requestedEmployerIds = new Set(data?.map(r => r.employer_id) || []);
+      const requestedEmployerIds = new Set(data?.map((r) => r.employer_id) || []);
       setExistingRequests(requestedEmployerIds);
     } catch (error) {
       console.error("Error loading existing requests:", error);
@@ -123,9 +122,7 @@ const EmployerDirectory = () => {
   const loadEmployers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("employer_profiles")
-        .select("*");
+      const { data, error } = await supabase.from("employer_profiles").select("*");
 
       if (error) {
         toast.error("Failed to load partners");
@@ -160,7 +157,9 @@ const EmployerDirectory = () => {
 
     setSendingRequest(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("User not authenticated");
         return;
@@ -174,7 +173,7 @@ const EmployerDirectory = () => {
           message: requestMessage,
           opportunity_type: opportunityType || null,
           status: "pending",
-          initiated_by_user_id: user.id
+          initiated_by_user_id: user.id,
         })
         .select("id")
         .single();
@@ -182,11 +181,11 @@ const EmployerDirectory = () => {
       if (error) throw error;
 
       if (insertedRequest?.id) {
-        await supabase.functions.invoke('send-connection-notification', {
+        await supabase.functions.invoke("send-connection-notification", {
           body: {
-            notification_type: 'new_request',
+            notification_type: "new_request",
             request_id: insertedRequest.id,
-          }
+          },
         });
       }
 
@@ -194,9 +193,9 @@ const EmployerDirectory = () => {
       setRequestMessage("");
       setOpportunityType("");
       setOpenDialogId(null);
-      
+
       // Add to existing requests
-      setExistingRequests(prev => new Set([...prev, employerId]));
+      setExistingRequests((prev) => new Set([...prev, employerId]));
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
@@ -207,17 +206,17 @@ const EmployerDirectory = () => {
 
   // Get unique values for filters
   const uniqueCompanySizes = useMemo(() => {
-    const sizes = employers.map(e => e.company_size).filter(Boolean);
+    const sizes = employers.map((e) => e.company_size).filter(Boolean);
     return [...new Set(sizes)];
   }, [employers]);
 
   const uniqueLocations = useMemo(() => {
-    const locations = employers.map(e => e.hq_location).filter(Boolean);
+    const locations = employers.map((e) => e.hq_location).filter(Boolean);
     return [...new Set(locations)];
   }, [employers]);
 
   const uniqueIndustries = useMemo(() => {
-    const industries = employers.map(e => e.industry).filter(Boolean);
+    const industries = employers.map((e) => e.industry).filter(Boolean);
     return [...new Set(industries)];
   }, [employers]);
 
@@ -252,17 +251,17 @@ const EmployerDirectory = () => {
     "Sports & Recreation",
     "Government & Public Sector",
     "Environmental Services",
-    "Other"
+    "Other",
   ];
 
   // Filter employers based on search term and selected filters
   const filteredEmployers = useMemo(() => {
-    return employers.filter(employer => {
+    return employers.filter((employer) => {
       // Filter by dropdown selections
       if (filterCompanySize !== "all" && employer.company_size !== filterCompanySize) return false;
       if (filterLocation !== "all" && employer.hq_location !== filterLocation) return false;
       if (filterIndustry !== "all" && employer.industry !== filterIndustry) return false;
-      
+
       // Filter by search term
       if (searchTerm.trim()) {
         const search = searchTerm.toLowerCase();
@@ -272,11 +271,14 @@ const EmployerDirectory = () => {
           employer.about,
           employer.opportunities_offered,
           employer.contact_person,
-        ].filter(Boolean).join(" ").toLowerCase();
-        
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
         if (!searchableFields.includes(search)) return false;
       }
-      
+
       return true;
     });
   }, [employers, filterCompanySize, filterLocation, filterIndustry, searchTerm]);
@@ -313,18 +315,8 @@ const EmployerDirectory = () => {
 
   if (loading) {
     return (
-      <div className="animate-fade-in">
-        <div className="mb-4"><Skeleton className="h-10 w-full" /></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-card rounded-lg border">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <DirectoryCardSkeleton />
-          <DirectoryCardSkeleton />
-          <DirectoryCardSkeleton />
-        </div>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -343,12 +335,12 @@ const EmployerDirectory = () => {
       <div ref={scrollContainerRef} {...pullHandlers} className="relative">
         {/* Pull to refresh indicator */}
         {pullDistance > 0 && (
-          <div 
+          <div
             className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 bg-primary/10 transition-all duration-200"
             style={{ transform: `translateY(${pullDistance - 100}px)` }}
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="ml-2 text-sm">{isRefreshing ? 'Refreshing...' : 'Pull to refresh'}</span>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span className="ml-2 text-sm">{isRefreshing ? "Refreshing..." : "Pull to refresh"}</span>
           </div>
         )}
 
@@ -376,55 +368,65 @@ const EmployerDirectory = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-card rounded-lg border">
           <div>
-            <Label htmlFor="filter-size" className="text-sm font-medium mb-2 block">Company Size</Label>
+            <Label htmlFor="filter-size" className="text-sm font-medium mb-2 block">
+              Company Size
+            </Label>
             <Select value={filterCompanySize} onValueChange={setFilterCompanySize}>
               <SelectTrigger id="filter-size">
                 <SelectValue placeholder="All Sizes" />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
                 <SelectItem value="all">All Sizes</SelectItem>
-                {uniqueCompanySizes.map(size => (
-                  <SelectItem key={size} value={size!}>{size}</SelectItem>
+                {uniqueCompanySizes.map((size) => (
+                  <SelectItem key={size} value={size!}>
+                    {size}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
-            <Label htmlFor="filter-location" className="text-sm font-medium mb-2 block">Location</Label>
+            <Label htmlFor="filter-location" className="text-sm font-medium mb-2 block">
+              Location
+            </Label>
             <Select value={filterLocation} onValueChange={setFilterLocation}>
               <SelectTrigger id="filter-location">
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
                 <SelectItem value="all">All Locations</SelectItem>
-                {uniqueLocations.map(location => (
-                  <SelectItem key={location} value={location!}>{location}</SelectItem>
+                {uniqueLocations.map((location) => (
+                  <SelectItem key={location} value={location!}>
+                    {location}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
-            <Label htmlFor="filter-industry" className="text-sm font-medium mb-2 block">Industry</Label>
+            <Label htmlFor="filter-industry" className="text-sm font-medium mb-2 block">
+              Industry
+            </Label>
             <Select value={filterIndustry} onValueChange={setFilterIndustry}>
               <SelectTrigger id="filter-industry">
                 <SelectValue placeholder="All Industries" />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
                 <SelectItem value="all">All Industries</SelectItem>
-                {industryOptions.map(industry => (
-                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                {industryOptions.map((industry) => (
+                  <SelectItem key={industry} value={industry}>
+                    {industry}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
-        
+
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-muted-foreground">
-            No partners match your filters
-          </p>
+          <p className="text-sm text-muted-foreground">No partners match your filters</p>
           <Button variant="outline" size="sm" onClick={clearFilters}>
             <FilterX className="h-4 w-4 mr-2" />
             Clear Filters
@@ -438,12 +440,12 @@ const EmployerDirectory = () => {
     <div ref={scrollContainerRef} {...pullHandlers} className="relative">
       {/* Pull to refresh indicator */}
       {pullDistance > 0 && (
-        <div 
+        <div
           className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 bg-primary/10 transition-all duration-200 z-50"
           style={{ transform: `translateY(${pullDistance - 100}px)` }}
         >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span className="ml-2 text-sm">{isRefreshing ? 'Refreshing...' : 'Pull to refresh'}</span>
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <span className="ml-2 text-sm">{isRefreshing ? "Refreshing..." : "Pull to refresh"}</span>
         </div>
       )}
 
@@ -471,45 +473,57 @@ const EmployerDirectory = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-card rounded-lg border">
         <div>
-          <Label htmlFor="filter-size" className="text-sm font-medium mb-2 block">Company Size</Label>
+          <Label htmlFor="filter-size" className="text-sm font-medium mb-2 block">
+            Company Size
+          </Label>
           <Select value={filterCompanySize} onValueChange={setFilterCompanySize}>
             <SelectTrigger id="filter-size">
               <SelectValue placeholder="All Sizes" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
               <SelectItem value="all">All Sizes</SelectItem>
-              {uniqueCompanySizes.map(size => (
-                <SelectItem key={size} value={size!}>{size}</SelectItem>
+              {uniqueCompanySizes.map((size) => (
+                <SelectItem key={size} value={size!}>
+                  {size}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
-          <Label htmlFor="filter-location" className="text-sm font-medium mb-2 block">Location</Label>
+          <Label htmlFor="filter-location" className="text-sm font-medium mb-2 block">
+            Location
+          </Label>
           <Select value={filterLocation} onValueChange={setFilterLocation}>
             <SelectTrigger id="filter-location">
               <SelectValue placeholder="All Locations" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
               <SelectItem value="all">All Locations</SelectItem>
-              {uniqueLocations.map(location => (
-                <SelectItem key={location} value={location!}>{location}</SelectItem>
+              {uniqueLocations.map((location) => (
+                <SelectItem key={location} value={location!}>
+                  {location}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
-          <Label htmlFor="filter-industry" className="text-sm font-medium mb-2 block">Industry</Label>
+          <Label htmlFor="filter-industry" className="text-sm font-medium mb-2 block">
+            Industry
+          </Label>
           <Select value={filterIndustry} onValueChange={setFilterIndustry}>
             <SelectTrigger id="filter-industry">
               <SelectValue placeholder="All Industries" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
               <SelectItem value="all">All Industries</SelectItem>
-              {industryOptions.map(industry => (
-                <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+              {industryOptions.map((industry) => (
+                <SelectItem key={industry} value={industry}>
+                  {industry}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -527,16 +541,20 @@ const EmployerDirectory = () => {
           </Button>
         )}
       </div>
-      
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredEmployers.map((employer) => (
-          <Card key={employer.id} className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50" onClick={() => setSelectedEmployer(employer)}>
+          <Card
+            key={employer.id}
+            className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50"
+            onClick={() => setSelectedEmployer(employer)}
+          >
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-24 w-24">
                   {employer.logo_url ? (
-                    <img 
-                      src={employer.logo_url} 
+                    <img
+                      src={employer.logo_url}
                       alt={`${employer.company_name} logo`}
                       className="h-full w-full object-contain p-2"
                     />
@@ -548,37 +566,37 @@ const EmployerDirectory = () => {
                 </Avatar>
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{employer.company_name}</CardTitle>
-                  {employer.industry && (
-                    <p className="text-sm text-muted-foreground">{employer.industry}</p>
-                  )}
+                  {employer.industry && <p className="text-sm text-muted-foreground">{employer.industry}</p>}
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {employer.about && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
-              )}
+              {employer.about && <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>}
 
               <div className="flex flex-wrap gap-2">
                 {employer.company_size && (
-                  <Badge variant="outline" className="text-xs">{employer.company_size}</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {employer.company_size}
+                  </Badge>
                 )}
                 {employer.hq_location && (
-                  <Badge variant="outline" className="text-xs">{employer.hq_location}</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {employer.hq_location}
+                  </Badge>
                 )}
               </div>
 
               {employer.website && (
                 <div className="flex items-center gap-2">
                   <LinkIcon className="h-3 w-3 text-muted-foreground" />
-                  <a 
+                  <a
                     href={employer.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline truncate"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {employer.website.replace(/^https?:\/\//, '')}
+                    {employer.website.replace(/^https?:\/\//, "")}
                   </a>
                 </div>
               )}
@@ -587,14 +605,12 @@ const EmployerDirectory = () => {
                 <div>
                   <p className="text-xs font-semibold text-foreground mb-1">Contact</p>
                   <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
-                  {employer.contact_title && (
-                    <p className="text-xs text-muted-foreground">{employer.contact_title}</p>
-                  )}
+                  {employer.contact_title && <p className="text-xs text-muted-foreground">{employer.contact_title}</p>}
                 </div>
               )}
-              
-              <Button 
-                className="w-full" 
+
+              <Button
+                className="w-full"
                 disabled={existingRequests.has(employer.id)}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -616,7 +632,7 @@ const EmployerDirectory = () => {
             <DialogHeader>
               <DialogTitle>{selectedEmployer.company_name}</DialogTitle>
             </DialogHeader>
-            
+
             <Tabs defaultValue="profile" className="mt-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -718,7 +734,8 @@ const EmployerDirectory = () => {
               </TabsContent>
 
               <TabsContent value="positions" className="mt-6">
-                {(selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0) || selectedEmployer.job_board_url ? (
+                {(selectedEmployer.individual_roles && selectedEmployer.individual_roles.length > 0) ||
+                selectedEmployer.job_board_url ? (
                   <div className="space-y-4">
                     <h4 className="font-medium mb-4">Featured Positions</h4>
 
@@ -731,19 +748,19 @@ const EmployerDirectory = () => {
                                 <h5 className="font-semibold">{role.title}</h5>
                                 <div className="flex flex-wrap gap-2">
                                   {role.type && (
-                                    <Badge variant="secondary" className="text-xs">{role.type}</Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {role.type}
+                                    </Badge>
                                   )}
                                   {role.location && (
-                                    <Badge variant="outline" className="text-xs">{role.location}</Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {role.location}
+                                    </Badge>
                                   )}
                                 </div>
                                 {role.url && (
                                   <Button variant="outline" size="sm" asChild className="mt-2">
-                                    <a
-                                      href={role.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
+                                    <a href={role.url} target="_blank" rel="noopener noreferrer">
                                       <LinkIcon className="mr-2 h-3 w-3" />
                                       View Details
                                     </a>
@@ -755,7 +772,7 @@ const EmployerDirectory = () => {
                         ))}
                       </>
                     )}
-                    
+
                     {selectedEmployer.job_board_url && (
                       <Button variant="outline" asChild className="w-full">
                         <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
@@ -788,19 +805,20 @@ const EmployerDirectory = () => {
 
       {/* Request Dialog */}
       {selectedEmployer && showRequestDialog && (
-        <Dialog open={showRequestDialog} onOpenChange={(open) => {
-          setShowRequestDialog(open);
-          if (!open) {
-            setRequestMessage("");
-            setOpportunityType("");
-          }
-        }}>
+        <Dialog
+          open={showRequestDialog}
+          onOpenChange={(open) => {
+            setShowRequestDialog(open);
+            if (!open) {
+              setRequestMessage("");
+              setOpportunityType("");
+            }
+          }}
+        >
           <DialogContent className="max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Request Connection</DialogTitle>
-              <DialogDescription>
-                Send a connection request to {selectedEmployer.company_name}
-              </DialogDescription>
+              <DialogDescription>Send a connection request to {selectedEmployer.company_name}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div>
@@ -811,11 +829,14 @@ const EmployerDirectory = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
                     <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                    {selectedEmployer.individual_roles && selectedEmployer.individual_roles.filter(role => role.title && role.title.trim()).map((role, index) => (
-                      <SelectItem key={index} value={role.title}>
-                        {role.title}
-                      </SelectItem>
-                    ))}
+                    {selectedEmployer.individual_roles &&
+                      selectedEmployer.individual_roles
+                        .filter((role) => role.title && role.title.trim())
+                        .map((role, index) => (
+                          <SelectItem key={index} value={role.title}>
+                            {role.title}
+                          </SelectItem>
+                        ))}
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
