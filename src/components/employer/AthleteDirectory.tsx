@@ -12,8 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
@@ -442,21 +440,8 @@ const AthleteDirectory = () => {
 
   if (loading) {
     return (
-      <div className="animate-fade-in">
-        <div className="mb-6 space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <ProfileCardSkeleton />
-          <ProfileCardSkeleton />
-          <ProfileCardSkeleton />
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
