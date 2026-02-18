@@ -1,30 +1,52 @@
 
 
-# Fix Layout Shift from Radix UI Scroll-Lock Conflict
+# Fix Layout Shift Caused by Radix UI Scroll Lock
 
 ## Root Cause
 
-The layout shift is NOT caused by a scrollbar appearing/disappearing. It is caused by a **conflict between two systems** both trying to handle scrollbar space:
+Radix UI (used by Select, Dialog, Popover, etc.) uses `react-remove-scroll` internally. When a dropdown opens, it:
 
-1. **`scrollbar-gutter: stable`** on `html` -- always reserves scrollbar space (our fix from earlier)
-2. **Radix UI's `react-remove-scroll`** -- when a Select/Dialog/Popover opens, it sets `overflow: hidden` on the body AND adds `padding-right` equal to the scrollbar width to compensate
+1. Adds `data-scroll-locked="1"` attribute to the `<body>`
+2. Sets `overflow: hidden` on the body
+3. Adds `margin-right` (via `--removed-body-scroll-bar-size` CSS variable) to compensate for the removed scrollbar
 
-Result: the gutter space is reserved AND extra padding is added, causing the content to shift right by the scrollbar width.
+Since the page already uses `scrollbar-gutter: stable` on `:root` to reserve scrollbar space, the additional `margin-right` from Radix creates "double compensation" -- the gutter space PLUS the margin, causing a visible rightward shift.
+
+The current `padding-right: 0 !important` fix targets the wrong property. Radix uses `margin-right`, not `padding-right`.
 
 ## Solution
 
-Add a single CSS rule in `src/index.css` to prevent the inline `padding-right` that Radix injects on the body from taking effect:
-
-```css
-body {
-  padding-right: 0 !important;
-}
-```
-
-This keeps `scrollbar-gutter: stable` doing its job (reserving consistent space) while stopping the duplicate compensation from Radix's scroll-lock.
+Override the scroll-locked body styles with a targeted CSS rule using the `data-scroll-locked` attribute that Radix adds. This is the community-verified fix from Radix's own GitHub issue tracker.
 
 ## File to Modify
 
-**`src/index.css`** -- Add `padding-right: 0 !important;` to the existing `body` rule inside the `@layer base` block.
+**`src/index.css`** -- Replace the current partial fixes with a comprehensive override:
 
-No other files need to change. This is a single-line addition to an existing rule.
+1. Keep `scrollbar-gutter: stable` on `:root` (already there)
+2. Remove `overflow-y: scroll !important` and `padding-right: 0 !important` from the `html` rule (no longer needed)
+3. Add a new rule targeting `body[data-scroll-locked]` that:
+   - Forces `overflow-y: scroll !important` so the scrollbar stays visible
+   - Zeros out `margin-right` with `!important` to cancel Radix's compensation
+   - Keeps `padding-right: 0 !important` on body as a safety net
+
+This approach neutralizes Radix's scroll lock compensation while letting `scrollbar-gutter: stable` handle everything.
+
+## Technical Details
+
+The CSS changes in `src/index.css`:
+
+```css
+/* Remove from html rule: */
+/* overflow-y: scroll !important;  -- DELETE */
+/* padding-right: 0 !important;    -- DELETE */
+
+/* Add new rule: */
+html body[data-scroll-locked] {
+  overflow-y: scroll !important;
+  margin-right: 0 !important;
+}
+```
+
+The `body` rule keeps `padding-right: 0 !important` as-is for general protection.
+
+No other files need changes. This fix applies globally to every Radix component that uses scroll locking (Select, Dialog, Popover, AlertDialog, Sheet, etc.).
