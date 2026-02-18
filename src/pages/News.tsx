@@ -7,7 +7,6 @@ import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { MobileNav } from "@/components/MobileNav";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 import { useAuth } from "@/components/auth/AuthContext";
 
 const News = () => {
@@ -28,9 +27,7 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {user ? (
-        <AuthenticatedNav />
-      ) : (
+      {!user && (
         <header
           className="border-b sticky top-0 z-50"
           style={{

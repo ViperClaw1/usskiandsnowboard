@@ -10,7 +10,7 @@ import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { User } from "@supabase/supabase-js";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 
 interface AthleteProfile {
@@ -134,7 +134,7 @@ const Athletes = () => {
     // Always render the nav so its height is established from the very first
     // paint — no height pop when auth resolves.
     <div className="min-h-screen bg-background">
-      <AuthenticatedNav />
+      
 
       {/* Wrap the swapping content in a container that fades in once ready */}
       <main className={`transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}>
