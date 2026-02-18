@@ -63,10 +63,8 @@ All colors MUST be HSL.
     --sidebar-ring: 215 65% 25%;
   }
 
-  html,
-  body {
-    overflow-y: scroll; /* always reserve scrollbar gutter */
-    scrollbar-gutter: stable; /* modern browsers */
+  html {
+    scrollbar-gutter: stable;
   }
 
   .dark {
