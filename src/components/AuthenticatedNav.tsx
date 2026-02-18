@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { Settings } from "lucide-react";
 
 export const AuthenticatedNav = () => {
   const navigate = useNavigate();
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       await supabase.auth.signOut({ scope: "local" });
       localStorage.clear();
@@ -24,7 +25,7 @@ export const AuthenticatedNav = () => {
       toast.success("Signed out successfully");
     }
     navigate("/");
-  };
+  }, [navigate]);
 
   return (
     <header
