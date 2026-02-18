@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+i"mport { useState, useEffect, useMemo, useRef } from "react";
 import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -372,7 +372,7 @@ const EmployerDirectory = () => {
               Company Size
             </Label>
             <Select value={filterCompanySize} onValueChange={setFilterCompanySize}>
-              <SelectTrigger id="filter-size" className="w-full min-w-[200px]>
+              <SelectTrigger id="filter-size" className="w-full min-w-[200px]">
                 <SelectValue placeholder="All Sizes" />
               </SelectTrigger>
               <SelectContent position="popper" className="bg-popover z-50">
@@ -391,7 +391,7 @@ const EmployerDirectory = () => {
               Location
             </Label>
             <Select value={filterLocation} onValueChange={setFilterLocation}>
-              <SelectTrigger id="filter-location" className="w-full min-w-[200px]>
+              <SelectTrigger id="filter-location" className="w-full min-w-[200px]">
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
               <SelectContent position="popper" className="bg-popover z-50">
@@ -410,7 +410,7 @@ const EmployerDirectory = () => {
               Industry
             </Label>
             <Select value={filterIndustry} onValueChange={setFilterIndustry}>
-              <SelectTrigger id="filter-industry" className="w-full min-w-[200px]>
+              <SelectTrigger id="filter-industry" className="w-full min-w-[200px]">
                 <SelectValue placeholder="All Industries" />
               </SelectTrigger>
               <SelectContent position="popper" className="bg-popover z-50">
