@@ -12,16 +12,30 @@ import ConnectionsList from "@/components/athlete/ConnectionsList";
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 import { AthleteLandingPage } from "@/components/dashboard/athlete/AthleteLandingPage";
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AthleteDashboardProps {
   user: User;
   isAdminView?: boolean;
 }
 
-const AthleteDashboard = ({
-  user,
-  isAdminView = false
-}: AthleteDashboardProps) => {
+// ---------------------------------------------------------------------------
+// Skeleton that matches the rough shape of AthleteLandingPage so there's no
+// blank flash or content pop while the profile is being fetched.
+// ---------------------------------------------------------------------------
+const DashboardSkeleton = () => (
+  <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl space-y-6">
+    <Skeleton className="h-8 w-48" />
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Skeleton className="h-36 rounded-xl" />
+      <Skeleton className="h-36 rounded-xl" />
+      <Skeleton className="h-36 rounded-xl" />
+    </div>
+    <Skeleton className="h-48 rounded-xl" />
+  </div>
+);
+
+const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) => {
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -37,14 +51,16 @@ const AthleteDashboard = ({
       return;
     }
     const MAX_RETRIES = 3;
-    
+
     try {
       const { data, error } = await supabase
         .from("athlete_profiles")
-        .select(`
+        .select(
+          `
           *,
           profiles!inner(full_name)
-        `)
+        `,
+        )
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -57,6 +73,8 @@ const AthleteDashboard = ({
         toast.error("Failed to load profile. Please refresh the page.");
       }
     } finally {
+      // Only clear the initial loading state on the first attempt — retries
+      // should not re-show the skeleton since partial data may already be set.
       if (retryCount === 0) {
         setLoading(false);
       }
@@ -79,10 +97,14 @@ const AthleteDashboard = ({
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      {/* Nav is always rendered unconditionally so its height never pops */}
       <AuthenticatedNav />
 
-      <main>
-        {currentView === "home" ? (
+      {/* Fade in once the profile fetch resolves to avoid a content snap */}
+      <main className={`transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}>
+        {loading ? (
+          <DashboardSkeleton />
+        ) : currentView === "home" ? (
           <AthleteLandingPage user={user} onNavigate={handleNavigate} />
         ) : currentView === "directory" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
@@ -137,7 +159,9 @@ const AthleteDashboard = ({
             <DialogHeader>
               <DialogTitle>{profile ? "Edit Your Profile" : "Complete Your Athlete Profile"}</DialogTitle>
               <DialogDescription>
-                {profile ? "Update your athletic background and career interests" : "Share your athletic background, skills, and career interests"}
+                {profile
+                  ? "Update your athletic background and career interests"
+                  : "Share your athletic background, skills, and career interests"}
               </DialogDescription>
             </DialogHeader>
             {profile ? (
