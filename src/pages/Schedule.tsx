@@ -5,7 +5,6 @@ import usLogo from "@/assets/us-logo-new.png";
 import scheduleImage from "@/assets/schedule-image.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 import { useAuth } from "@/components/auth/AuthContext";
 
 const Schedule = () => {
@@ -13,9 +12,7 @@ const Schedule = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {user ? (
-        <AuthenticatedNav />
-      ) : (
+      {!user && (
         <header className="border-b sticky top-0 z-50" style={{ 
           backgroundImage: `url(${mountainHeaderBg})`,
           backgroundSize: 'cover',

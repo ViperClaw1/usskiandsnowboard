@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, TrendingUp, ArrowRight, Newspaper, Loader2, ExternalLink } from "lucide-react";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import heroImage from "@/assets/hero-skiing.jpg";
@@ -42,7 +42,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AuthenticatedNav />
+      
 
       <main>
         {/* Hero Section */}

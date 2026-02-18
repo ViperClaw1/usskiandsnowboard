@@ -10,7 +10,7 @@ import OpportunitiesForm from "@/components/employer/OpportunitiesForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+
 import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 
@@ -83,7 +83,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <AuthenticatedNav />
+      
 
       <main>
         {currentView === "home" ? (

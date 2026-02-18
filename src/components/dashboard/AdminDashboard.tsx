@@ -16,7 +16,7 @@ import { UserManagementTable } from "./admin/UserManagementTable";
 import { TopProfilesTable } from "./admin/TopProfilesTable";
 import { AthleteLayoutEditor } from "./admin/AthleteLayoutEditor";
 import { PartnerLayoutEditor } from "./admin/PartnerLayoutEditor";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+
 
 interface AdminDashboardProps {
   user: User;
@@ -64,7 +64,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AuthenticatedNav />
+      
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

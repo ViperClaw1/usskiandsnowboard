@@ -9,7 +9,7 @@ import ProfileForm from "@/components/athlete/ProfileForm";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import ConnectionRequestsManager from "@/components/athlete/ConnectionRequestsManager";
 import ConnectionsList from "@/components/athlete/ConnectionsList";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
+
 import { AthleteLandingPage } from "@/components/dashboard/athlete/AthleteLandingPage";
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -97,8 +97,6 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* Nav is always rendered unconditionally so its height never pops */}
-      <AuthenticatedNav />
 
       {/* Fade in once the profile fetch resolves to avoid a content snap */}
       <main className={`transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}>
