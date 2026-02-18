@@ -1,56 +1,103 @@
 
 
-# Skeleton Loading and Fade-In Transitions for Athletes.tsx and Employers.tsx
+# Fix AuthenticatedNav Flashing with a Shared Layout Route
 
-## Summary
+## Problem
 
-Replace all loading states with comprehensive skeleton elements that cover every UI element (nav area, headings, subtext, cards). Add a smooth `animate-fade-in` transition when the real content appears. Remove any remaining spinner usage.
+`AuthenticatedNav` is rendered inside each individual page component. When navigating between routes, React unmounts the entire previous page (including the nav) and mounts a fresh one, causing a visible flash/remount of the navigation bar.
 
-## Changes
+## Solution
 
-### Files Modified
-- `src/pages/Athletes.tsx`
-- `src/pages/Employers.tsx`
+Create a layout route component that renders `AuthenticatedNav` once, above an `<Outlet />`. All routes wrap inside this layout so the nav persists across navigation without unmounting.
 
-### What Changes in Each File
+## Architecture
 
-**1. Auth-loading skeleton (while `getUser()` resolves)**
+```text
+BrowserRouter
+  +-- Routes
+       +-- Route element={<AppLayout />}       <-- NEW shared layout
+       |     +-- Route path="/" ...
+       |     +-- Route path="/dashboard" ...
+       |     +-- Route path="/athletes" ...
+       |     +-- Route path="/employers" ...
+       |     +-- ... all other routes
+       +-- (no routes outside the layout)
+```
 
-Currently Athletes.tsx has a partial skeleton (heading placeholders + 3 `ProfileCardSkeleton`). Employers.tsx has no `authLoading` guard at all -- it jumps straight to the authenticated or unauthenticated view, causing a flash.
+The layout component checks auth state:
+- If user is logged in: renders `AuthenticatedNav` + `<Outlet />`
+- If user is not logged in: renders only `<Outlet />` (pages handle their own public headers)
 
-Both files will get a full-page skeleton that mirrors the final layout:
-- A skeleton bar where the nav/header sits (matching the height of `AuthenticatedNav`)
-- Skeleton rectangles for the page title and subtitle
-- 3 `ProfileCardSkeleton` cards in the grid
+## Files to Create
 
-**2. Unauthenticated data-loading skeleton (while `loadEmployers()` runs)**
+**`src/components/AppLayout.tsx`** -- Layout component that renders `AuthenticatedNav` conditionally based on auth, plus `<Outlet />` for child routes.
 
-Already using `ProfileCardSkeleton` in the grid, but the hero section (title + subtitle) renders immediately while cards are still loading, creating a visual mismatch. The hero section will also get skeleton placeholders during `loading === true`, so the entire page is skeletonized until data arrives.
+## Files to Modify
 
-**3. Fade-in transition on resolved content**
-
-Every final-render branch (authenticated view and unauthenticated view) will wrap its content in a `div` with `className="animate-fade-in"` using the existing 300ms ease-out animation already defined in the project's Tailwind config. This gives a smooth reveal once skeletons are replaced.
-
-**4. No spinners**
-
-Neither file currently imports `LoadingSpinner`, so no removal is needed. The existing `animate-pulse` skeleton approach is already in place and will be extended to cover all elements.
-
----
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Wrap all routes inside a parent `<Route element={<AppLayout />}>` layout route |
+| `src/pages/Home.tsx` | Remove `<AuthenticatedNav />` import and usage |
+| `src/pages/Athletes.tsx` | Remove `<AuthenticatedNav />` import and usage; keep public header for unauthenticated view |
+| `src/pages/Employers.tsx` | Remove `<AuthenticatedNav />` import and usage; keep public header for unauthenticated view |
+| `src/pages/Schedule.tsx` | Remove `<AuthenticatedNav />` conditional; keep public header for unauthenticated view |
+| `src/pages/News.tsx` | Remove `<AuthenticatedNav />` conditional; keep public header for unauthenticated view |
+| `src/components/dashboard/AthleteDashboard.tsx` | Remove `<AuthenticatedNav />` import and usage |
+| `src/components/dashboard/EmployerDashboard.tsx` | Remove `<AuthenticatedNav />` import and usage |
+| `src/components/dashboard/AdminDashboard.tsx` | Remove `<AuthenticatedNav />` import and usage |
 
 ## Technical Details
 
-### Employers.tsx
-- Add an `authLoading` early-return block (same pattern Athletes.tsx already has) with full-page skeletons including a nav-height placeholder, title skeleton, subtitle skeleton, and 3 card skeletons.
-- Wrap the authenticated return in `<div className="animate-fade-in">`.
-- Wrap the unauthenticated return in `<div className="animate-fade-in">`.
-- In the unauthenticated loading branch, add skeleton placeholders for the hero section (title + subtitle) above the card grid.
+### AppLayout Component
 
-### Athletes.tsx
-- Enhance the existing `authLoading` skeleton to include a nav-height placeholder bar at the top.
-- Wrap the authenticated return in `<div className="animate-fade-in">`.
-- Wrap the unauthenticated return in `<div className="animate-fade-in">`.
-- In the unauthenticated loading branch, add skeleton placeholders for the hero section above the card grid.
+```tsx
+import { Outlet } from "react-router-dom";
+import { useAuth } from "@/components/auth/AuthContext";
+import { AuthenticatedNav } from "@/components/AuthenticatedNav";
 
-### No new files or dependencies needed
-Uses the existing `ProfileCardSkeleton`, `Skeleton` component, and `animate-fade-in` class.
+export const AppLayout = () => {
+  const { user } = useAuth();
+  return (
+    <>
+      {user && <AuthenticatedNav />}
+      <Outlet />
+    </>
+  );
+};
+```
+
+### App.tsx Route Structure
+
+All existing routes become children of a single layout route:
+
+```tsx
+<Routes>
+  <Route element={<AppLayout />}>
+    <Route path="/" element={user ? <Home /> : <Index />} />
+    <Route path="/auth" element={<Auth />} />
+    {/* ... all other routes ... */}
+  </Route>
+</Routes>
+```
+
+### Page-Level Changes
+
+For pages like **Schedule.tsx** and **News.tsx** that conditionally render either `AuthenticatedNav` or a public header:
+- Remove the `AuthenticatedNav` branch entirely
+- Keep only the public header branch, but wrap it in `{!user && ( ... )}` so it only shows for unauthenticated visitors (the layout handles the authenticated nav)
+
+For purely authenticated pages like **Home.tsx**, **AthleteDashboard.tsx**, **EmployerDashboard.tsx**, **AdminDashboard.tsx**:
+- Simply delete the `<AuthenticatedNav />` line and its import
+
+For **Athletes.tsx** and **Employers.tsx**:
+- Remove `<AuthenticatedNav />` from the authenticated view
+- Keep the public header in the unauthenticated skeleton/view
+- The `FullPageSkeleton` nav placeholder can be removed since the real nav is already rendered by the layout
+
+### What Stays Unchanged
+
+- Admin sub-pages (`/admin/*`) use their own simple `<header>` with a back button -- these are unaffected since they never used `AuthenticatedNav`
+- Settings.tsx has no nav (just a back button) -- unaffected
+- The `AuthenticatedNav` component itself is unchanged
+- `MobileNav` inside `AuthenticatedNav` is unchanged
 
