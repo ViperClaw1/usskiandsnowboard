@@ -125,7 +125,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    padding-right: 15px;
+    padding-right: 0 !important;
     font-family:
       "Montserrat",
       -apple-system,
