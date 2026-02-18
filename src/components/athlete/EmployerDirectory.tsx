@@ -477,7 +477,7 @@ const EmployerDirectory = () => {
             Company Size
           </Label>
           <Select value={filterCompanySize} onValueChange={setFilterCompanySize}>
-            <SelectTrigger id="filter-size">
+            <SelectTrigger id="filter-size" className="w-full min-w-[200px]">
               <SelectValue placeholder="All Sizes" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
@@ -496,7 +496,7 @@ const EmployerDirectory = () => {
             Location
           </Label>
           <Select value={filterLocation} onValueChange={setFilterLocation}>
-            <SelectTrigger id="filter-location">
+            <SelectTrigger id="filter-location" className="w-full min-w-[200px]">
               <SelectValue placeholder="All Locations" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
@@ -515,7 +515,7 @@ const EmployerDirectory = () => {
             Industry
           </Label>
           <Select value={filterIndustry} onValueChange={setFilterIndustry}>
-            <SelectTrigger id="filter-industry">
+            <SelectTrigger id="filter-industry" className="w-full min-w-[200px]">
               <SelectValue placeholder="All Industries" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
@@ -824,7 +824,7 @@ const EmployerDirectory = () => {
               <div>
                 <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
                 <Select value={opportunityType} onValueChange={setOpportunityType}>
-                  <SelectTrigger id="opportunity-type" className="mt-2">
+                  <SelectTrigger id="opportunity-type" className="w-full min-w-[200px]">
                     <SelectValue placeholder="Select opportunity type" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
