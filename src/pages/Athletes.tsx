@@ -23,48 +23,52 @@ interface EmployerProfile {
   profile_views: number;
 }
 
-const FullPageSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    {/* Nav skeleton */}
-    <div className="sticky top-0 z-50 h-[72px] sm:h-[88px] bg-muted animate-pulse" />
-    <main className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Skeleton className="h-9 w-64 mb-2" />
-        <Skeleton className="h-5 w-96" />
+// ---------------------------------------------------------------------------
+// A single unified skeleton that mirrors the real unauthenticated page layout
+// exactly — same nav always rendered above, same hero section, same card grid
+// — so there is no structural shift when real content replaces it.
+// ---------------------------------------------------------------------------
+const PageSkeleton = () => (
+  <>
+    <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
+      <div className="container mx-auto px-4 text-center space-y-3">
+        <Skeleton className="h-9 sm:h-10 w-72 mx-auto" />
+        <Skeleton className="h-5 sm:h-6 w-96 max-w-full mx-auto" />
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <ProfileCardSkeleton />
-        <ProfileCardSkeleton />
-        <ProfileCardSkeleton />
+    </section>
+
+    <section className="py-8 sm:py-12">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <ProfileCardSkeleton />
+          <ProfileCardSkeleton />
+          <ProfileCardSkeleton />
+        </div>
       </div>
-    </main>
-  </div>
+    </section>
+  </>
 );
 
-const HeroSkeleton = () => (
-  <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
-    <div className="container mx-auto px-4 text-center space-y-3">
-      <Skeleton className="h-9 sm:h-10 w-72 mx-auto" />
-      <Skeleton className="h-5 sm:h-6 w-96 max-w-full mx-auto" />
-    </div>
-  </section>
-);
-
-const Employers = () => {
+const Athletes = () => {
   const navigate = useNavigate();
   const [employers, setEmployers] = useState<EmployerProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Track both fetches with a single "ready" flag so we only render once both
+  // the auth state AND the employer list are known.
+  const [authLoading, setAuthLoading] = useState(true);
+  const [employersLoading, setEmployersLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    // Kick off the employer fetch immediately in parallel with the auth check
+    // so we don't waterfall. Authenticated users get EmployerDirectory anyway,
+    // so this data is only shown to unauthenticated visitors.
+    loadEmployers();
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       if (user) {
         loadUserRole(user.id);
-      } else {
-        loadEmployers();
       }
       setAuthLoading(false);
     });
@@ -83,9 +87,7 @@ const Employers = () => {
 
   const loadUserRole = async (userId: string) => {
     const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).single();
-    if (data) {
-      setUserRole(data.role);
-    }
+    if (data) setUserRole(data.role);
   };
 
   const loadEmployers = async () => {
@@ -93,74 +95,58 @@ const Employers = () => {
       const { data, error } = await supabase
         .from("employer_profiles")
         .select(
-          `id, user_id, company_name, industry, logo_url, about, connection_to_ussa, opportunities_offered, profile_views`,
+          `id, user_id, company_name, industry, logo_url, about,
+           connection_to_ussa, opportunities_offered, profile_views`,
         )
         .order("profile_views", { ascending: false })
         .limit(3);
 
-      if (error) {
-        console.error("Database error:", error);
-        throw error;
-      }
+      if (error) throw error;
       setEmployers(data || []);
     } catch (error) {
       console.error("Error loading employers:", error);
     } finally {
-      setLoading(false);
+      setEmployersLoading(false);
     }
   };
 
-  const handleEmployerClick = () => {
-    navigate("/auth?type=athlete");
-  };
+  const handleEmployerClick = () => navigate("/auth?type=athlete");
 
-  if (authLoading) {
-    return <FullPageSkeleton />;
-  }
-
-  if (user) {
-    const isEmployer = userRole === "employer";
-    const isAthlete = userRole === "athlete";
-    return (
-      <div className="min-h-screen bg-background animate-fade-in">
-        <AuthenticatedNav />
-        <main className="container mx-auto px-4 py-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">Partner Directory</h1>
-            {isEmployer && (
-              <p className="text-muted-foreground mt-2">
-                View the profiles of your fellow U.S. Ski & Snowboard supporters
-              </p>
-            )}
-            {isAthlete && (
-              <p className="text-muted-foreground mt-2">View U.S. Ski & Snowboard partners seeking to hire athletes</p>
-            )}
-          </div>
-          <EmployerDirectory />
-        </main>
-      </div>
-    );
-  }
+  // Wait until BOTH auth and employer data are resolved before rendering.
+  // This prevents the double-render jump (skeleton → wrong view → right view).
+  const isLoading = authLoading || employersLoading;
 
   return (
-    <div className="min-h-screen bg-background animate-fade-in">
+    // Always render the nav so its height is established from the very first
+    // paint — no height pop when auth resolves.
+    <div className="min-h-screen bg-background">
       <AuthenticatedNav />
 
-      <main>
-        {loading ? (
-          <>
-            <HeroSkeleton />
-            <section className="py-8 sm:py-12">
-              <div className="container mx-auto px-4 max-w-7xl">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  <ProfileCardSkeleton />
-                  <ProfileCardSkeleton />
-                  <ProfileCardSkeleton />
-                </div>
-              </div>
-            </section>
-          </>
+      {/* Wrap the swapping content in a container that fades in once ready */}
+      <main className={`transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}>
+        {isLoading ? (
+          // Invisible placeholder that keeps the page height stable while loading.
+          <PageSkeleton />
+        ) : user ? (
+          /* ── Authenticated view ── */
+          <div className="container mx-auto px-4 py-8">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold">Partner Directory</h1>
+              {userRole === "employer" && (
+                <p className="text-muted-foreground mt-2">
+                  View the profiles of your fellow U.S. Ski & Snowboard supporters
+                </p>
+              )}
+              {userRole === "athlete" && (
+                <p className="text-muted-foreground mt-2">
+                  View U.S. Ski & Snowboard partners seeking to hire athletes
+                </p>
+              )}
+            </div>
+            <EmployerDirectory />
+          </div>
         ) : (
+          /* ── Public / unauthenticated view ── */
           <>
             <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
               <div className="container mx-auto px-4 text-center">
@@ -183,23 +169,19 @@ const Employers = () => {
                   />
                 ) : (
                   <>
-                    <div className="blur-sm pointer-events-none">
+                    {/* Blurred card grid — pointer-events disabled intentionally */}
+                    <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
                         {employers.map((employer) => (
-                          <Card
-                            key={employer.id}
-                            className="w-full cursor-pointer hover:shadow-lg transition-shadow"
-                            onClick={handleEmployerClick}
-                          >
+                          <Card key={employer.id} className="w-full">
                             <CardHeader className="pb-3">
                               <div className="flex items-center gap-3">
                                 {employer.logo_url ? (
-                                  <div className="flex-shrink-0" style={{ width: "48px", height: "48px" }}>
+                                  <div className="flex-shrink-0 w-12 h-12">
                                     <img
                                       src={employer.logo_url}
                                       alt={employer.company_name}
                                       className="w-full h-full object-contain rounded"
-                                      style={{ width: "48px", height: "48px" }}
                                     />
                                   </div>
                                 ) : (
@@ -215,18 +197,19 @@ const Employers = () => {
                                 </div>
                               </div>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                              {employer.about && (
+                            {employer.about && (
+                              <CardContent>
                                 <p className="text-sm text-muted-foreground line-clamp-2">{employer.about}</p>
-                              )}
-                            </CardContent>
+                              </CardContent>
+                            )}
                           </Card>
                         ))}
                       </div>
                     </div>
 
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/10 backdrop-blur-[1px]">
-                      <Card className="max-w-md mx-4">
+                    {/* Lock overlay — positioned over the blurred grid */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Card className="max-w-md mx-4 shadow-xl">
                         <CardContent className="pt-6 text-center space-y-4">
                           <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
                           <div>
@@ -250,4 +233,4 @@ const Employers = () => {
   );
 };
 
-export default Employers;
+export default Athletes;
