@@ -1,103 +1,36 @@
 
-
-# Fix AuthenticatedNav Flashing with a Shared Layout Route
+# Fix Layout Shift from Scrollbar on Dropdown Open
 
 ## Problem
 
-`AuthenticatedNav` is rendered inside each individual page component. When navigating between routes, React unmounts the entire previous page (including the nav) and mounts a fresh one, causing a visible flash/remount of the navigation bar.
+When a Radix UI Select dropdown opens, its portaled content can cause the page body to exceed the viewport height. This triggers a vertical scrollbar to appear, which shifts the entire page layout to the left by the scrollbar width (~15-17px). When the dropdown closes, the scrollbar disappears and the layout shifts back.
+
+## Root Cause
+
+The `html` element has no `scrollbar-gutter` or permanent `overflow-y` setting, so the scrollbar only appears when content overflows, causing the layout jump.
 
 ## Solution
 
-Create a layout route component that renders `AuthenticatedNav` once, above an `<Outlet />`. All routes wrap inside this layout so the nav persists across navigation without unmounting.
+Add `scrollbar-gutter: stable` to the `html` element in `src/index.css`. This CSS property reserves space for the scrollbar at all times, so when it appears or disappears, there is no layout shift.
 
-## Architecture
+## File to Modify
 
-```text
-BrowserRouter
-  +-- Routes
-       +-- Route element={<AppLayout />}       <-- NEW shared layout
-       |     +-- Route path="/" ...
-       |     +-- Route path="/dashboard" ...
-       |     +-- Route path="/athletes" ...
-       |     +-- Route path="/employers" ...
-       |     +-- ... all other routes
-       +-- (no routes outside the layout)
+**`src/index.css`** -- Add one rule inside the existing `@layer base` block:
+
+```css
+html {
+  scrollbar-gutter: stable;
+}
 ```
 
-The layout component checks auth state:
-- If user is logged in: renders `AuthenticatedNav` + `<Outlet />`
-- If user is not logged in: renders only `<Outlet />` (pages handle their own public headers)
+This is placed before the existing `body` rule. No other files need to change. The fix applies globally to all pages and all dropdown types (Select, DropdownMenu, Popover, etc.).
 
-## Files to Create
+## Why This Approach
 
-**`src/components/AppLayout.tsx`** -- Layout component that renders `AuthenticatedNav` conditionally based on auth, plus `<Outlet />` for child routes.
+| Option | Pros | Cons |
+|--------|------|------|
+| `scrollbar-gutter: stable` | No visual change when scrollbar not needed; modern, clean | Not supported in very old browsers (pre-2021) |
+| `overflow-y: scroll` | Universal support | Always shows a scrollbar track, even on short pages |
+| `overflow: hidden` on body when dropdown opens | No scrollbar at all | Requires JS logic, blocks page scroll |
 
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Wrap all routes inside a parent `<Route element={<AppLayout />}>` layout route |
-| `src/pages/Home.tsx` | Remove `<AuthenticatedNav />` import and usage |
-| `src/pages/Athletes.tsx` | Remove `<AuthenticatedNav />` import and usage; keep public header for unauthenticated view |
-| `src/pages/Employers.tsx` | Remove `<AuthenticatedNav />` import and usage; keep public header for unauthenticated view |
-| `src/pages/Schedule.tsx` | Remove `<AuthenticatedNav />` conditional; keep public header for unauthenticated view |
-| `src/pages/News.tsx` | Remove `<AuthenticatedNav />` conditional; keep public header for unauthenticated view |
-| `src/components/dashboard/AthleteDashboard.tsx` | Remove `<AuthenticatedNav />` import and usage |
-| `src/components/dashboard/EmployerDashboard.tsx` | Remove `<AuthenticatedNav />` import and usage |
-| `src/components/dashboard/AdminDashboard.tsx` | Remove `<AuthenticatedNav />` import and usage |
-
-## Technical Details
-
-### AppLayout Component
-
-```tsx
-import { Outlet } from "react-router-dom";
-import { useAuth } from "@/components/auth/AuthContext";
-import { AuthenticatedNav } from "@/components/AuthenticatedNav";
-
-export const AppLayout = () => {
-  const { user } = useAuth();
-  return (
-    <>
-      {user && <AuthenticatedNav />}
-      <Outlet />
-    </>
-  );
-};
-```
-
-### App.tsx Route Structure
-
-All existing routes become children of a single layout route:
-
-```tsx
-<Routes>
-  <Route element={<AppLayout />}>
-    <Route path="/" element={user ? <Home /> : <Index />} />
-    <Route path="/auth" element={<Auth />} />
-    {/* ... all other routes ... */}
-  </Route>
-</Routes>
-```
-
-### Page-Level Changes
-
-For pages like **Schedule.tsx** and **News.tsx** that conditionally render either `AuthenticatedNav` or a public header:
-- Remove the `AuthenticatedNav` branch entirely
-- Keep only the public header branch, but wrap it in `{!user && ( ... )}` so it only shows for unauthenticated visitors (the layout handles the authenticated nav)
-
-For purely authenticated pages like **Home.tsx**, **AthleteDashboard.tsx**, **EmployerDashboard.tsx**, **AdminDashboard.tsx**:
-- Simply delete the `<AuthenticatedNav />` line and its import
-
-For **Athletes.tsx** and **Employers.tsx**:
-- Remove `<AuthenticatedNav />` from the authenticated view
-- Keep the public header in the unauthenticated skeleton/view
-- The `FullPageSkeleton` nav placeholder can be removed since the real nav is already rendered by the layout
-
-### What Stays Unchanged
-
-- Admin sub-pages (`/admin/*`) use their own simple `<header>` with a back button -- these are unaffected since they never used `AuthenticatedNav`
-- Settings.tsx has no nav (just a back button) -- unaffected
-- The `AuthenticatedNav` component itself is unchanged
-- `MobileNav` inside `AuthenticatedNav` is unchanged
-
+`scrollbar-gutter: stable` is the best modern solution -- it is supported by all current browsers and requires zero JavaScript.
