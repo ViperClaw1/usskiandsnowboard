@@ -65,6 +65,7 @@ All colors MUST be HSL.
 
   html {
     overflow-y: scroll !important;
+    padding-right: 0 !important;
   }
 
   .dark {
