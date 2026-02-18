@@ -64,7 +64,7 @@ All colors MUST be HSL.
   }
 
   html {
-    overflow-y: scroll; /* always reserve scrollbar gutter — prevents layout shift on page height changes */
+    scrollbar-gutter: stable;
   }
 
   .dark {
