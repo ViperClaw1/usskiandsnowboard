@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { User } from "@supabase/supabase-js";
 import { AuthenticatedNav } from "@/components/AuthenticatedNav";
@@ -23,47 +22,30 @@ interface EmployerProfile {
   profile_views: number;
 }
 
-const FullPageSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    {/* Nav skeleton */}
-    <div className="sticky top-0 z-50 h-[72px] sm:h-[88px] bg-muted animate-pulse" />
-    <main className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Skeleton className="h-9 w-64 mb-2" />
-        <Skeleton className="h-5 w-96" />
-      </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <ProfileCardSkeleton />
-        <ProfileCardSkeleton />
-        <ProfileCardSkeleton />
-      </div>
-    </main>
-  </div>
-);
-
-const HeroSkeleton = () => (
-  <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
-    <div className="container mx-auto px-4 text-center space-y-3">
-      <Skeleton className="h-9 sm:h-10 w-72 mx-auto" />
-      <Skeleton className="h-5 sm:h-6 w-96 max-w-full mx-auto" />
-    </div>
-  </section>
-);
-
 const Employers = () => {
   const navigate = useNavigate();
   const [employers, setEmployers] = useState<EmployerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  // FIX: Explicit auth-loading state so the component never renders the wrong
+  // branch while waiting for Supabase to resolve the current session.
+  // Without this, user starts as null and the unauthenticated view flashes
+  // for every logged-in visitor before the real session arrives.
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       if (user) {
+        // FIX: Only load the role for authenticated users; skip loadEmployers
+        // entirely because authenticated users see <EmployerDirectory> instead.
         loadUserRole(user.id);
       } else {
+        // FIX: Only fetch preview cards when we know the user is logged out,
+        // eliminating the redundant fetch that happened for every authenticated
+        // visitor in the original code.
         loadEmployers();
       }
       setAuthLoading(false);
@@ -83,6 +65,7 @@ const Employers = () => {
 
   const loadUserRole = async (userId: string) => {
     const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).single();
+
     if (data) {
       setUserRole(data.role);
     }
@@ -93,7 +76,17 @@ const Employers = () => {
       const { data, error } = await supabase
         .from("employer_profiles")
         .select(
-          `id, user_id, company_name, industry, logo_url, about, connection_to_ussa, opportunities_offered, profile_views`,
+          `
+          id,
+          user_id,
+          company_name,
+          industry,
+          logo_url,
+          about,
+          connection_to_ussa,
+          opportunities_offered,
+          profile_views
+        `,
         )
         .order("profile_views", { ascending: false })
         .limit(3);
@@ -102,6 +95,7 @@ const Employers = () => {
         console.error("Database error:", error);
         throw error;
       }
+
       setEmployers(data || []);
     } catch (error) {
       console.error("Error loading employers:", error);
@@ -114,15 +108,35 @@ const Employers = () => {
     navigate("/auth?type=athlete");
   };
 
+  // FIX: Render a neutral skeleton layout while auth state is being resolved.
+  // This prevents the flash between the unauthenticated and authenticated views
+  // that occurred because user was null for the first render even when a valid
+  // session existed.
   if (authLoading) {
-    return <FullPageSkeleton />;
+    return (
+      <div className="min-h-screen bg-background">
+        <AuthenticatedNav />
+        <main className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <div className="h-9 w-64 bg-muted rounded animate-pulse mb-2" />
+            <div className="h-5 w-96 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <ProfileCardSkeleton />
+            <ProfileCardSkeleton />
+            <ProfileCardSkeleton />
+          </div>
+        </main>
+      </div>
+    );
   }
 
+  // Authenticated view — auth is resolved, user is confirmed logged in
   if (user) {
     const isEmployer = userRole === "employer";
     const isAthlete = userRole === "athlete";
     return (
-      <div className="min-h-screen bg-background animate-fade-in">
+      <div className="min-h-screen bg-background">
         <AuthenticatedNav />
         <main className="container mx-auto px-4 py-8">
           <div className="mb-6">
@@ -142,109 +156,103 @@ const Employers = () => {
     );
   }
 
+  // Unauthenticated view — auth is resolved, user is confirmed logged out.
+  // FIX: The loading state here now exclusively covers the preview card fetch,
+  // so skeleton cards replace the old spinner for a more polished transition.
   return (
-    <div className="min-h-screen bg-background animate-fade-in">
+    <div className="min-h-screen bg-background">
       <AuthenticatedNav />
 
       <main>
-        {loading ? (
-          <>
-            <HeroSkeleton />
-            <section className="py-8 sm:py-12">
-              <div className="container mx-auto px-4 max-w-7xl">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  <ProfileCardSkeleton />
-                  <ProfileCardSkeleton />
-                  <ProfileCardSkeleton />
-                </div>
-              </div>
-            </section>
-          </>
-        ) : (
-          <>
-            <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
-              <div className="container mx-auto px-4 text-center">
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Partner Organizations</h1>
-                <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-                  Companies partnering with talented U.S. Ski & Snowboard athletes
-                </p>
-              </div>
-            </section>
+        <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Partner Organizations</h1>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+              Companies partnering with talented U.S. Ski & Snowboard athletes
+            </p>
+          </div>
+        </section>
 
-            <section className="py-8 sm:py-12 relative">
-              <div className="container mx-auto px-4 max-w-7xl">
-                {employers.length === 0 ? (
-                  <EmptyState
-                    icon={Building2}
-                    title="No Featured Partners Yet"
-                    description="Check back soon to see companies partnering with talented athletes."
-                    actionLabel="Sign In to Learn More"
-                    onAction={() => navigate("/auth")}
-                  />
-                ) : (
-                  <>
-                    <div className="blur-sm pointer-events-none">
-                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                        {employers.map((employer) => (
-                          <Card
-                            key={employer.id}
-                            className="w-full cursor-pointer hover:shadow-lg transition-shadow"
-                            onClick={handleEmployerClick}
-                          >
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center gap-3">
-                                {employer.logo_url ? (
-                                  <div className="flex-shrink-0" style={{ width: "48px", height: "48px" }}>
-                                    <img
-                                      src={employer.logo_url}
-                                      alt={employer.company_name}
-                                      className="w-full h-full object-contain rounded"
-                                      style={{ width: "48px", height: "48px" }}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                                    <Building2 className="h-6 w-6 text-muted-foreground" />
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <CardTitle className="text-lg truncate">{employer.company_name}</CardTitle>
-                                  {employer.industry && (
-                                    <p className="text-sm text-muted-foreground truncate">{employer.industry}</p>
-                                  )}
-                                </div>
+        <section className="py-8 sm:py-12 relative">
+          <div className="container mx-auto px-4 max-w-7xl">
+            {/* FIX: Skeleton cards instead of a spinner — matches the shape of
+                the real content so the layout doesn't jump when data arrives. */}
+            {loading ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <ProfileCardSkeleton />
+                <ProfileCardSkeleton />
+                <ProfileCardSkeleton />
+              </div>
+            ) : employers.length === 0 ? (
+              <EmptyState
+                icon={Building2}
+                title="No Featured Partners Yet"
+                description="Check back soon to see companies partnering with talented athletes."
+                actionLabel="Sign In to Learn More"
+                onAction={() => navigate("/auth")}
+              />
+            ) : (
+              <>
+                <div className="blur-sm pointer-events-none">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
+                    {employers.map((employer) => (
+                      <Card
+                        key={employer.id}
+                        className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={handleEmployerClick}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-3">
+                            {employer.logo_url ? (
+                              <div className="flex-shrink-0" style={{ width: "48px", height: "48px" }}>
+                                <img
+                                  src={employer.logo_url}
+                                  alt={employer.company_name}
+                                  className="w-full h-full object-contain rounded"
+                                  style={{ width: "48px", height: "48px" }}
+                                />
                               </div>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {employer.about && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">{employer.about}</p>
+                            ) : (
+                              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                <Building2 className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg truncate">{employer.company_name}</CardTitle>
+                              {employer.industry && (
+                                <p className="text-sm text-muted-foreground truncate">{employer.industry}</p>
                               )}
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/10 backdrop-blur-[1px]">
-                      <Card className="max-w-md mx-4">
-                        <CardContent className="pt-6 text-center space-y-4">
-                          <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
-                          <div>
-                            <h3 className="text-lg font-semibold mb-2">Sign In to View Partners</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Create an account or sign in to connect with partner organizations
-                            </p>
+                            </div>
                           </div>
-                          <Button onClick={() => navigate("/auth")}>Sign In</Button>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {employer.about && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{employer.about}</p>
+                          )}
                         </CardContent>
                       </Card>
-                    </div>
-                  </>
-                )}
-              </div>
-            </section>
-          </>
-        )}
+                    ))}
+                  </div>
+                </div>
+
+                <div className="absolute inset-0 flex items-center justify-center bg-background/10 backdrop-blur-[1px]">
+                  <Card className="max-w-md mx-4">
+                    <CardContent className="pt-6 text-center space-y-4">
+                      <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Sign In to View Partners</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Create an account or sign in to connect with partner organizations
+                        </p>
+                      </div>
+                      <Button onClick={() => navigate("/auth")}>Sign In</Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
