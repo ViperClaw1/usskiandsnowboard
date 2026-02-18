@@ -372,10 +372,10 @@ const EmployerDirectory = () => {
               Company Size
             </Label>
             <Select value={filterCompanySize} onValueChange={setFilterCompanySize}>
-              <SelectTrigger id="filter-size">
+              <SelectTrigger id="filter-size" className="w-full min-w-[200px]>
                 <SelectValue placeholder="All Sizes" />
               </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
+              <SelectContent position="popper" className="bg-popover z-50">
                 <SelectItem value="all">All Sizes</SelectItem>
                 {uniqueCompanySizes.map((size) => (
                   <SelectItem key={size} value={size!}>
@@ -391,10 +391,10 @@ const EmployerDirectory = () => {
               Location
             </Label>
             <Select value={filterLocation} onValueChange={setFilterLocation}>
-              <SelectTrigger id="filter-location">
+              <SelectTrigger id="filter-location" className="w-full min-w-[200px]>
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
+              <SelectContent position="popper" className="bg-popover z-50">
                 <SelectItem value="all">All Locations</SelectItem>
                 {uniqueLocations.map((location) => (
                   <SelectItem key={location} value={location!}>
@@ -410,10 +410,10 @@ const EmployerDirectory = () => {
               Industry
             </Label>
             <Select value={filterIndustry} onValueChange={setFilterIndustry}>
-              <SelectTrigger id="filter-industry">
+              <SelectTrigger id="filter-industry" className="w-full min-w-[200px]>
                 <SelectValue placeholder="All Industries" />
               </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
+              <SelectContent position="popper" className="bg-popover z-50">
                 <SelectItem value="all">All Industries</SelectItem>
                 {industryOptions.map((industry) => (
                   <SelectItem key={industry} value={industry}>
