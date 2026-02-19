@@ -21,6 +21,7 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
+import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 
 interface Connection {
   id: string;
@@ -220,6 +221,11 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                     >
                       {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
+                    <AIProfilePopulator
+                      role="employer"
+                      userId={user.id}
+                      onComplete={() => loadDashboardData()}
+                    />
                   </div>
                 </CardContent>
               </Card>
