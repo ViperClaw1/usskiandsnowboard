@@ -35,8 +35,8 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
   const isEmployer = role === "employer";
   const nameLabel = isEmployer ? "Company Name" : "Full Name";
   const namePlaceholder = isEmployer ? "Acme Corporation" : "Jane Smith";
-  const urlLabel = isEmployer ? "Company Website" : "LinkedIn Profile URL";
-  const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.linkedin.com/in/username";
+  const urlLabel = isEmployer ? "Company Website" : "Instagram Profile URL";
+  const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.instagram.com/username";
 
   // Animate loading messages and progress
   useEffect(() => {
