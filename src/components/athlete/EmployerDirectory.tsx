@@ -394,11 +394,7 @@ const EmployerDirectory = () => {
               <SelectTrigger id="filter-location">
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
-              <SelectContent
-                position="popper"
-                className="bg-popover z-50 min-w-[var(--radix-select-trigger-width)]"
-                onCloseAutoFocus={(e) => e.preventDefault()}
-              >
+              <SelectContent position="popper" className="bg-popover z-50" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <SelectItem value="all">All Locations</SelectItem>
                 {uniqueLocations.map((location) => (
                   <SelectItem key={location} value={location!}>
@@ -484,7 +480,7 @@ const EmployerDirectory = () => {
             <SelectTrigger id="filter-size" className="w-full min-w-[200px]">
               <SelectValue placeholder="All Sizes" />
             </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
+            <SelectContent className="bg-popover">
               <SelectItem value="all">All Sizes</SelectItem>
               {uniqueCompanySizes.map((size) => (
                 <SelectItem key={size} value={size!}>
@@ -503,7 +499,7 @@ const EmployerDirectory = () => {
             <SelectTrigger id="filter-location" className="w-full min-w-[200px]">
               <SelectValue placeholder="All Locations" />
             </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
+            <SelectContent className="bg-popover">
               <SelectItem value="all">All Locations</SelectItem>
               {uniqueLocations.map((location) => (
                 <SelectItem key={location} value={location!}>
@@ -522,7 +518,7 @@ const EmployerDirectory = () => {
             <SelectTrigger id="filter-industry" className="w-full min-w-[200px]">
               <SelectValue placeholder="All Industries" />
             </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
+            <SelectContent className="bg-popover">
               <SelectItem value="all">All Industries</SelectItem>
               {industryOptions.map((industry) => (
                 <SelectItem key={industry} value={industry}>
