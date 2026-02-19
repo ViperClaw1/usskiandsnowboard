@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
+import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 
 interface Connection {
   id: string;
@@ -214,6 +215,11 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                     >
                       {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
+                    <AIProfilePopulator
+                      role="athlete"
+                      userId={user.id}
+                      onComplete={() => loadDashboardData()}
+                    />
                   </div>
                 </CardContent>
               </Card>
