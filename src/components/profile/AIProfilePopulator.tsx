@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,11 +23,7 @@ const LOADING_MESSAGES = [
   "Almost done...",
 ];
 
-export const AIProfilePopulator = ({
-  role,
-  userId,
-  onComplete,
-}: AIProfilePopulatorProps) => {
+export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopulatorProps) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"input" | "loading" | "done">("input");
   const [name, setName] = useState("");
@@ -46,9 +36,7 @@ export const AIProfilePopulator = ({
   const nameLabel = isEmployer ? "Company Name" : "Full Name";
   const namePlaceholder = isEmployer ? "Acme Corporation" : "Jane Smith";
   const urlLabel = isEmployer ? "Company Website" : "LinkedIn Profile URL";
-  const urlPlaceholder = isEmployer
-    ? "https://www.example.com"
-    : "https://www.linkedin.com/in/username";
+  const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.linkedin.com/in/username";
 
   // Animate loading messages and progress
   useEffect(() => {
@@ -80,10 +68,9 @@ export const AIProfilePopulator = ({
 
     try {
       // Call edge function
-      const { data: fnData, error: fnError } = await supabase.functions.invoke(
-        "ai-populate-profile",
-        { body: { role, url: url.trim(), name: name.trim() } }
-      );
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("ai-populate-profile", {
+        body: { role, url: url.trim(), name: name.trim() },
+      });
 
       if (fnError) throw new Error(fnError.message || "Failed to process");
       if (!fnData?.success || !fnData?.data) {
@@ -130,11 +117,7 @@ export const AIProfilePopulator = ({
         }
 
         // Check if athlete profile exists
-        const { data: existing } = await supabase
-          .from("athlete_profiles")
-          .select("id")
-          .eq("user_id", userId)
-          .single();
+        const { data: existing } = await supabase.from("athlete_profiles").select("id").eq("user_id", userId).single();
 
         const athleteFields = {
           sport_discipline: profileData.sport_discipline || null,
@@ -189,13 +172,19 @@ export const AIProfilePopulator = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setStep("input"); setError(""); setProgress(0); } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) {
+          setStep("input");
+          setError("");
+          setProgress(0);
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="p-0 h-auto text-primary hover:text-primary/80 gap-1.5"
-        >
+        <Button variant="ghost" size="sm" className="p-0 h-auto text-primary">
           <Sparkles className="h-3.5 w-3.5" />
           Complete with AI
         </Button>
@@ -240,9 +229,7 @@ export const AIProfilePopulator = ({
                   onChange={(e) => setUrl(e.target.value)}
                 />
               </div>
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <Button className="w-full" onClick={handleSubmit}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 Auto-fill my profile
