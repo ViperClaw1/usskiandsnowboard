@@ -69,7 +69,7 @@ const ATHLETE_TOOL = {
           type: "string",
           enum: ["Immediate", "Off-Season Only", "Post-Retirement", "Part-Time", "Flexible"],
         },
-        affiliation: { type: "string" },
+        affiliation: { type: "string", enum: ["Current Team Member", "Former Team Member"], description: "Athlete's affiliation with U.S. Ski & Snowboard" },
         home_mountain: { type: "string" },
         photo_url: { type: "string", description: "URL to the athlete's profile photo or headshot image found on the page." },
         instagram_url: { type: "string" },

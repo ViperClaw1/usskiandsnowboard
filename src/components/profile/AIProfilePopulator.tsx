@@ -132,7 +132,7 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
         }
 
         // Check if athlete profile exists
-        const { data: existing } = await supabase.from("athlete_profiles").select("id").eq("user_id", userId).single();
+        const { data: existing } = await supabase.from("athlete_profiles").select("id").eq("user_id", userId).maybeSingle();
 
         const athleteFields = {
           sport_discipline: profileData.sport_discipline || null,
@@ -140,7 +140,7 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
           career_interests: profileData.career_interests || [],
           skills: profileData.skills || [],
           availability: profileData.availability || null,
-          affiliation: profileData.affiliation || null,
+          affiliation: ["Current Team Member", "Former Team Member"].includes(profileData.affiliation) ? profileData.affiliation : "Current Team Member",
           home_mountain: profileData.home_mountain || null,
           photo_url: profileData.photo_url || null,
           instagram_url: profileData.instagram_url || null,
