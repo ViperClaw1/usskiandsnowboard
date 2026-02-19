@@ -103,7 +103,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
         {loading ? (
           <DashboardSkeleton />
         ) : currentView === "home" ? (
-          <AthleteLandingPage user={user} onNavigate={handleNavigate} />
+          <AthleteLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={loadProfile} />
         ) : currentView === "directory" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">

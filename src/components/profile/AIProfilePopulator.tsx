@@ -147,8 +147,16 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
           sponsors: profileData.sponsors || [],
           professional_highlights: profileData.professional_highlights || null,
           is_public: true,
-          profile_completeness: 100,
         };
+
+        // Calculate real completeness based on filled fields
+        const completenessFields = Object.values(athleteFields).filter((_, i) => i < 12); // exclude is_public
+        const filledCount = completenessFields.filter(v =>
+          v !== null && v !== undefined && v !== "" &&
+          !(Array.isArray(v) && v.length === 0)
+        ).length;
+        const completeness = Math.round((filledCount / completenessFields.length) * 100);
+        (athleteFields as any).profile_completeness = completeness;
 
         if (existing) {
           const { error: updateErr } = await supabase
