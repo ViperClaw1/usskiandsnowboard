@@ -82,28 +82,43 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
 
       // Upsert profile data
       if (isEmployer) {
-        // Update employer profile
-        const { error: updateErr } = await supabase
+        // Check if employer profile exists first
+        const { data: existing } = await supabase
           .from("employer_profiles")
-          .update({
-            company_name: profileData.company_name,
-            industry: profileData.industry || null,
-            company_size: profileData.company_size || null,
-            hq_location: profileData.hq_location || null,
-            about: profileData.about || null,
-            website: profileData.website || url.trim(),
-            linkedin_url: profileData.linkedin_url || null,
-            contact_person: profileData.contact_person || null,
-            contact_email: profileData.contact_email || null,
-            contact_title: profileData.contact_title || null,
-            phone: profileData.phone || null,
-            opportunities_offered: profileData.opportunities_offered || null,
-            connection_to_ussa: profileData.connection_to_ussa || null,
-            job_board_url: profileData.job_board_url || null,
-          })
-          .eq("user_id", userId);
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-        if (updateErr) throw updateErr;
+        const employerFields = {
+          company_name: profileData.company_name,
+          industry: profileData.industry || null,
+          company_size: profileData.company_size || null,
+          hq_location: profileData.hq_location || null,
+          about: profileData.about || null,
+          website: profileData.website || url.trim(),
+          logo_url: profileData.logo_url || null,
+          linkedin_url: profileData.linkedin_url || null,
+          contact_person: profileData.contact_person || null,
+          contact_email: profileData.contact_email || null,
+          contact_title: profileData.contact_title || null,
+          phone: profileData.phone || null,
+          opportunities_offered: profileData.opportunities_offered || null,
+          connection_to_ussa: profileData.connection_to_ussa || null,
+          job_board_url: profileData.job_board_url || null,
+        };
+
+        if (existing) {
+          const { error: updateErr } = await supabase
+            .from("employer_profiles")
+            .update(employerFields)
+            .eq("user_id", userId);
+          if (updateErr) throw updateErr;
+        } else {
+          const { error: insertErr } = await supabase
+            .from("employer_profiles")
+            .insert({ user_id: userId, ...employerFields });
+          if (insertErr) throw insertErr;
+        }
       } else {
         // Update profiles table with name
         if (profileData.first_name || profileData.last_name) {
@@ -127,6 +142,7 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
           availability: profileData.availability || null,
           affiliation: profileData.affiliation || null,
           home_mountain: profileData.home_mountain || null,
+          photo_url: profileData.photo_url || null,
           instagram_url: profileData.instagram_url || null,
           sponsors: profileData.sponsors || [],
           professional_highlights: profileData.professional_highlights || null,
