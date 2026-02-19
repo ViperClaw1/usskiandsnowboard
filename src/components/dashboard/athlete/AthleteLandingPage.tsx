@@ -77,9 +77,10 @@ interface ConnectionStats {
 interface AthleteHomeProps {
   user: User;
   onNavigate: (view: string) => void;
+  onProfileUpdated?: () => void;
 }
 
-export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
+export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: AthleteHomeProps) => {
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [connectionStats, setConnectionStats] = useState<ConnectionStats>({
     pending: 0,
@@ -218,7 +219,7 @@ export const AthleteLandingPage = ({ user, onNavigate }: AthleteHomeProps) => {
                     <AIProfilePopulator
                       role="athlete"
                       userId={user.id}
-                      onComplete={() => loadDashboardData()}
+                      onComplete={() => { loadDashboardData(); onProfileUpdated?.(); }}
                     />
                   </div>
                 </CardContent>

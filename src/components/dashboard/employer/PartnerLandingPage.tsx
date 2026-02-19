@@ -65,9 +65,10 @@ interface ConnectionStats {
 interface PartnerLandingPageProps {
   user: User;
   onNavigate: (view: string) => void;
+  onProfileUpdated?: () => void;
 }
 
-export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps) => {
+export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: PartnerLandingPageProps) => {
   const [profile, setProfile] = useState<EmployerProfile | null>(null);
   const [connectionStats, setConnectionStats] = useState<ConnectionStats>({
     pending: 0,
@@ -224,7 +225,7 @@ export const PartnerLandingPage = ({ user, onNavigate }: PartnerLandingPageProps
                     <AIProfilePopulator
                       role="employer"
                       userId={user.id}
-                      onComplete={() => loadDashboardData()}
+                      onComplete={() => { loadDashboardData(); onProfileUpdated?.(); }}
                     />
                   </div>
                 </CardContent>
