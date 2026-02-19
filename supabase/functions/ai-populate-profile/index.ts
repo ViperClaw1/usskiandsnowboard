@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 1: Scrape URL with Firecrawl
-    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY_1") || Deno.env.get("FIRECRAWL_API_KEY");
     if (!firecrawlKey) {
       return new Response(JSON.stringify({ error: "Firecrawl not configured" }), {
         status: 500,
