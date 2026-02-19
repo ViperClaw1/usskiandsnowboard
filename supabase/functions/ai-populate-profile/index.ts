@@ -181,22 +181,31 @@ Deno.serve(async (req) => {
     const toolName = isEmployer ? "populate_employer_profile" : "populate_athlete_profile";
 
     console.log("Calling Lovable AI for extraction...");
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}` },
-        ],
-        tools: [tool],
-        tool_choice: { type: "function", function: { name: toolName } },
-      }),
-    });
+
+    const makeAiCall = async (model: string) => {
+      return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}` },
+          ],
+          tools: [tool],
+          tool_choice: "required",
+        }),
+      });
+    };
+
+    let aiResp = await makeAiCall("google/gemini-2.5-flash");
+    if (!aiResp.ok) {
+      console.error("Primary model failed, trying fallback...", aiResp.status);
+      aiResp = await makeAiCall("google/gemini-3-flash-preview");
+    }
 
     if (!aiResp.ok) {
       const status = aiResp.status;
