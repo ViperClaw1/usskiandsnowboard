@@ -1,52 +1,43 @@
 
-# Athlete AI Scraping: Switch to Instagram + Fix Instagram Link Blocking
 
-## Issue 1: Switch athlete scraping from LinkedIn to Instagram
+# Fix AI Profile Populator Database Errors
 
-Currently, the AI profile populator asks athletes for their LinkedIn URL. We need to change this to Instagram.
+## Problem Summary
 
-### Changes
+Three console errors occur when the AI populator tries to save athlete profile data:
 
-**File: `src/components/profile/AIProfilePopulator.tsx`**
-- Change the athlete URL label from "LinkedIn Profile URL" to "Instagram Profile URL"
-- Change placeholder from `https://www.linkedin.com/in/username` to `https://www.instagram.com/username`
+1. **GET 406**: `.single()` throws when no athlete profile row exists (returns 0 rows)
+2. **POST 400**: The `affiliation` field has a database CHECK constraint limiting values to `'Current Team Member'` or `'Former Team Member'` only. The AI returns free-text like `"U.S. Ski & Snowboard"`, causing the insert to fail.
+3. **Console error log**: Same constraint violation surfaced as an uncaught error.
 
-**File: `supabase/functions/ai-populate-profile/index.ts`**
-- Update the athlete system prompt to reference Instagram instead of LinkedIn
-- The AI tool schema already has `instagram_url` as a field, so extraction will work as-is
+## Changes
 
----
+### File: `src/components/profile/AIProfilePopulator.tsx`
 
-## Issue 2: Instagram links blocked (`ERR_BLOCKED_BY_RESPONSE`)
+**Fix 1 -- Line 135**: Replace `.single()` with `.maybeSingle()` so the query returns `null` instead of throwing a 406 when no row exists.
 
-This is **not caused by your code or by private profiles**. Instagram sets an `X-Frame-Options: DENY` HTTP header, which prevents any page from loading inside an iframe. Since the Lovable preview runs your app inside an iframe, `target="_blank"` links to Instagram get intercepted and blocked.
+**Fix 2 -- Affiliation mapping**: After building `athleteFields`, validate the `affiliation` value against the allowed values (`'Current Team Member'`, `'Former Team Member'`). If the AI returns something else, default to `'Current Team Member'` (reasonable default for athletes in the U.S. Ski and Snowboard directory).
 
-**On your published site** (`usskiandsnowboard.lovable.app`), Instagram links will open normally in a new tab.
+### File: `supabase/functions/ai-populate-profile/index.ts`
 
-No code change is needed for this -- it is a preview-environment limitation only. You can verify by testing on the published URL.
+**Fix 3 -- Constrain AI output**: Update the `affiliation` field in the `ATHLETE_TOOL` schema to use an `enum` with the two allowed values, so the AI model is guided to pick a valid option rather than free-texting.
 
----
+```typescript
+// Before
+affiliation: { type: "string" },
+
+// After
+affiliation: { 
+  type: "string", 
+  enum: ["Current Team Member", "Former Team Member"],
+  description: "Athlete's affiliation with U.S. Ski & Snowboard" 
+},
+```
 
 ## Technical Details
 
-### AIProfilePopulator.tsx (lines 38-39)
-```typescript
-// Before
-const urlLabel = isEmployer ? "Company Website" : "LinkedIn Profile URL";
-const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.linkedin.com/in/username";
+- `AIProfilePopulator.tsx` line 135: `.single()` to `.maybeSingle()`
+- `AIProfilePopulator.tsx` around line 146: Add validation to clamp `affiliation` to allowed values
+- `ai-populate-profile/index.ts` around line 70: Add `enum` constraint to the tool schema's `affiliation` property
+- Redeploy the edge function after the schema change
 
-// After
-const urlLabel = isEmployer ? "Company Website" : "Instagram Profile URL";
-const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.instagram.com/username";
-```
-
-### Edge function system prompt (ai-populate-profile/index.ts)
-```typescript
-// Before
-`You are extracting athlete profile information from a LinkedIn profile...`
-
-// After
-`You are extracting athlete profile information from an Instagram profile...`
-```
-
-Note: Instagram public profiles can be scraped by Firecrawl. For private profiles, the AI will extract what it can from the limited public info (username, bio, profile photo) and fill remaining fields with reasonable suggestions based on the athlete's name and winter sports context -- this is already how the system prompt is configured.
