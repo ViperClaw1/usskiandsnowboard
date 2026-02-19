@@ -20,6 +20,7 @@ const EMPLOYER_TOOL = {
         hq_location: { type: "string" },
         about: { type: "string", description: "Company description, 2-4 sentences" },
         website: { type: "string" },
+        logo_url: { type: "string", description: "URL to the company logo image found on the website. Look for img tags with 'logo' in src, alt, or class." },
         linkedin_url: { type: "string" },
         contact_person: { type: "string" },
         contact_email: { type: "string" },
@@ -70,6 +71,7 @@ const ATHLETE_TOOL = {
         },
         affiliation: { type: "string" },
         home_mountain: { type: "string" },
+        photo_url: { type: "string", description: "URL to the athlete's profile photo or headshot image found on the page." },
         instagram_url: { type: "string" },
         sponsors: {
           type: "array",
@@ -104,9 +106,9 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error("Auth error:", userError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
