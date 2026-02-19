@@ -1,81 +1,52 @@
 
+# Athlete AI Scraping: Switch to Instagram + Fix Instagram Link Blocking
 
-# Apply AI Profile Data to Frontend and Handle Incomplete Scrapes
+## Issue 1: Switch athlete scraping from LinkedIn to Instagram
 
-## What This Fixes
+Currently, the AI profile populator asks athletes for their LinkedIn URL. We need to change this to Instagram.
 
-**Problem 1**: After AI auto-populates a profile, clicking "Update Profile" or "Preview My Profile" shows stale/empty data because the parent dashboard components (AthleteDashboard, EmployerDashboard) don't reload their local `profile` state.
+### Changes
 
-**Problem 2**: The AI populator hardcodes `profile_completeness: 100` for athletes even when some fields weren't found, giving a false sense of completion.
+**File: `src/components/profile/AIProfilePopulator.tsx`**
+- Change the athlete URL label from "LinkedIn Profile URL" to "Instagram Profile URL"
+- Change placeholder from `https://www.linkedin.com/in/username` to `https://www.instagram.com/username`
+
+**File: `supabase/functions/ai-populate-profile/index.ts`**
+- Update the athlete system prompt to reference Instagram instead of LinkedIn
+- The AI tool schema already has `instagram_url` as a field, so extraction will work as-is
 
 ---
 
-## Changes Overview
+## Issue 2: Instagram links blocked (`ERR_BLOCKED_BY_RESPONSE`)
 
-### 1. Refresh parent dashboard profile after AI completion
+This is **not caused by your code or by private profiles**. Instagram sets an `X-Frame-Options: DENY` HTTP header, which prevents any page from loading inside an iframe. Since the Lovable preview runs your app inside an iframe, `target="_blank"` links to Instagram get intercepted and blocked.
 
-**Files**: `AthleteDashboard.tsx`, `EmployerDashboard.tsx`, `AthleteLandingPage.tsx`, `PartnerLandingPage.tsx`
+**On your published site** (`usskiandsnowboard.lovable.app`), Instagram links will open normally in a new tab.
 
-Currently, the AI populator's `onComplete` only refreshes the landing page's local data. The parent dashboard holds a separate `profile` state used by the Edit Profile dialog and the Employer Preview page.
-
-**Fix**: Pass a `onProfileUpdated` callback from the parent dashboards down to the landing pages. When the AI populator completes (or any profile update happens), both the landing page AND the parent dashboard refresh their profile data.
-
-- `AthleteDashboard` will pass `loadProfile` as an `onProfileUpdated` prop to `AthleteLandingPage`
-- `EmployerDashboard` will pass `loadProfile` as an `onProfileUpdated` prop to `PartnerLandingPage`
-- The landing pages will call `onProfileUpdated()` alongside their own `loadDashboardData()` when the AI populator finishes
-
-### 2. Calculate real profile completeness instead of hardcoding 100
-
-**File**: `AIProfilePopulator.tsx`
-
-Replace the hardcoded `profile_completeness: 100` with a calculation that mirrors the onboarding wizard's approach: count non-null/non-empty fields and compute a percentage. This way, if scraping missed some fields, the completeness reflects reality.
-
-For athletes, the key fields considered:
-- photo_url, sport_discipline, bio, career_interests, skills, availability, affiliation, home_mountain, instagram_url, sponsors, professional_highlights, email
-
-For employers, the database trigger (`calculate_employer_profile_completeness`) already handles completeness automatically on insert/update, so no change needed there.
-
-### 3. Employer Preview uses fresh data
-
-**File**: `EmployerDashboard.tsx`
-
-The employer "Preview My Profile" view renders `EmployerProfilePreview` with the dashboard's `profile` state, which currently only fetches a limited set of columns (`id, company_name, logo_url, industry, ...`). After the fix in item 1, `loadProfile` fetches all columns (`select("*")`), so the preview will have full data.
-
-### 4. Ensure "Complete your profile" button and AI button remain visible when incomplete
-
-No code change needed for this -- the existing `completeness < 100` check already controls visibility of the "Complete your profile" block and the AI populator button. With the real completeness calculation from item 2, these will correctly remain visible when some fields are missing.
-
-When the user clicks "Complete your profile" after a partial AI fill:
-- **Athletes**: The `ProfileForm` component runs `loadExistingProfile()` on mount, fetching all current data from the database. Fields populated by AI will appear as initial values. The user fills in the blanks manually.
-- **Employers**: The `CompanyProfileForm` receives `existingProfile` as a prop. After fix 1, this prop will contain the AI-populated data. Missing fields show as empty inputs for the user to complete.
+No code change is needed for this -- it is a preview-environment limitation only. You can verify by testing on the published URL.
 
 ---
 
 ## Technical Details
 
-### AthleteDashboard.tsx
-- Add `onProfileUpdated` prop to `AthleteLandingPage` component call: `<AthleteLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={loadProfile} />`
-
-### EmployerDashboard.tsx  
-- Add `onProfileUpdated` prop to `PartnerLandingPage` component call: `<PartnerLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={loadProfile} />`
-
-### AthleteLandingPage.tsx
-- Add `onProfileUpdated?: () => void` to the `AthleteHomeProps` interface
-- In the `AIProfilePopulator` `onComplete`, call both `loadDashboardData()` and `onProfileUpdated?.()`
-
-### PartnerLandingPage.tsx
-- Add `onProfileUpdated?: () => void` to the `PartnerLandingPageProps` interface
-- In the `AIProfilePopulator` `onComplete`, call both `loadDashboardData()` and `onProfileUpdated?.()`
-
-### AIProfilePopulator.tsx
-- Replace `profile_completeness: 100` with a calculated value:
+### AIProfilePopulator.tsx (lines 38-39)
 ```typescript
-const athleteFieldValues = Object.values(athleteFields);
-const filledCount = athleteFieldValues.filter(v => 
-  v !== null && v !== undefined && v !== "" && 
-  !(Array.isArray(v) && v.length === 0)
-).length;
-const completeness = Math.round((filledCount / athleteFieldValues.length) * 100);
-```
-- Include `profile_completeness: completeness` instead of `profile_completeness: 100`
+// Before
+const urlLabel = isEmployer ? "Company Website" : "LinkedIn Profile URL";
+const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.linkedin.com/in/username";
 
+// After
+const urlLabel = isEmployer ? "Company Website" : "Instagram Profile URL";
+const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.instagram.com/username";
+```
+
+### Edge function system prompt (ai-populate-profile/index.ts)
+```typescript
+// Before
+`You are extracting athlete profile information from a LinkedIn profile...`
+
+// After
+`You are extracting athlete profile information from an Instagram profile...`
+```
+
+Note: Instagram public profiles can be scraped by Firecrawl. For private profiles, the AI will extract what it can from the limited public info (username, bio, profile photo) and fill remaining fields with reasonable suggestions based on the athlete's name and winter sports context -- this is already how the system prompt is configured.
