@@ -193,22 +193,25 @@ Deno.serve(async (req) => {
           model,
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}` },
+            { role: "user", content: `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}\n\nPlease call the ${toolName} function with all extracted data.` },
           ],
           tools: [tool],
-          tool_choice: "required",
+          tool_choice: "auto",
         }),
       });
     };
 
-    let aiResp = await makeAiCall("google/gemini-2.5-flash");
-    if (!aiResp.ok) {
-      console.error("Primary model failed, trying fallback...", aiResp.status);
-      aiResp = await makeAiCall("google/gemini-3-flash-preview");
+    const models = ["google/gemini-2.5-flash", "openai/gpt-5-mini", "google/gemini-2.5-flash-lite"];
+    let aiResp: Response | null = null;
+    for (const model of models) {
+      console.log("Trying model:", model);
+      aiResp = await makeAiCall(model);
+      if (aiResp.ok) break;
+      console.error(`Model ${model} failed with status ${aiResp.status}`);
     }
 
-    if (!aiResp.ok) {
-      const status = aiResp.status;
+    if (!aiResp || !aiResp.ok) {
+      const status = aiResp?.status || 0;
       const errText = await aiResp.text();
       console.error("AI error:", status, errText);
       if (status === 429) {
