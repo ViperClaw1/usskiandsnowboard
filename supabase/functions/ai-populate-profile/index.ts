@@ -138,30 +138,32 @@ Deno.serve(async (req) => {
     }
 
     console.log("Scraping URL:", formattedUrl);
-    const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ["markdown", "links"],
-        onlyMainContent: true,
-      }),
-    });
-
-    const scrapeData = await scrapeResp.json();
-    if (!scrapeResp.ok) {
-      console.error("Firecrawl error:", scrapeData);
-      return new Response(JSON.stringify({ error: "Failed to scrape the website. Please check the URL and try again." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let truncatedMarkdown = "";
+    
+    try {
+      const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${firecrawlKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: formattedUrl,
+          formats: ["markdown", "links"],
+          onlyMainContent: true,
+        }),
       });
-    }
 
-    const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
-    const truncatedMarkdown = markdown.slice(0, 15000); // Keep within token limits
+      const scrapeData = await scrapeResp.json();
+      if (scrapeResp.ok) {
+        const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
+        truncatedMarkdown = markdown.slice(0, 15000);
+      } else {
+        console.warn("Firecrawl scrape failed, falling back to AI-only:", scrapeData?.error);
+      }
+    } catch (scrapeErr) {
+      console.warn("Firecrawl request error, falling back to AI-only:", scrapeErr);
+    }
 
     // Step 2: Call Lovable AI with tool calling
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
@@ -193,7 +195,9 @@ Deno.serve(async (req) => {
           model,
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}\n\nPlease call the ${toolName} function with all extracted data.` },
+            { role: "user", content: truncatedMarkdown
+              ? `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}\n\nPlease call the ${toolName} function with all extracted data.`
+              : `I could not scrape the URL ${formattedUrl}. Based on the name "${name}" and the URL provided, please call the ${toolName} function with your best suggestions for all fields. Use the URL as the instagram_url if it looks like an Instagram profile.` },
           ],
           tools: [tool],
           tool_choice: "auto",
