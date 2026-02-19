@@ -394,7 +394,7 @@ const EmployerDirectory = () => {
               <SelectTrigger id="filter-location">
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
-              <SelectContent className="bg-popover z-50" onCloseAutoFocus={(e) => e.preventDefault()}>
+              <SelectContent position="popper" className="bg-popover z-50" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <SelectItem value="all">All Locations</SelectItem>
                 {uniqueLocations.map((location) => (
                   <SelectItem key={location} value={location!}>
