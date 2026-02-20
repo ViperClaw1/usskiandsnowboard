@@ -17,7 +17,7 @@ const EMPLOYER_TOOL = {
         company_name: { type: "string" },
         industry: { type: "string" },
         company_size: { type: "string", description: "e.g. 1-10, 11-50, 51-200, 201-500, 500+" },
-        hq_location: { type: "string" },
+        hq_location: { type: "string", description: "Short location name only, e.g. 'Denver, CO' or 'Mountain West'. No parenthetical notes, explanations, or extra context." },
         about: { type: "string", description: "Company description, 2-4 sentences" },
         website: { type: "string" },
         logo_url: { type: "string", description: "URL to the company logo image found on the website. Look for img tags with 'logo' in src, alt, or class." },
@@ -70,7 +70,7 @@ const ATHLETE_TOOL = {
           enum: ["Immediate", "Off-Season Only", "Post-Retirement", "Part-Time", "Flexible"],
         },
         affiliation: { type: "string", enum: ["Current Team Member", "Former Team Member"], description: "Athlete's affiliation with U.S. Ski & Snowboard" },
-        home_mountain: { type: "string" },
+        home_mountain: { type: "string", description: "Short location or mountain name only, e.g. 'Park City, UT' or 'Vail'. No parenthetical notes, explanations, or extra context." },
         photo_url: { type: "string", description: "URL to the athlete's profile photo or headshot image found on the page." },
         instagram_url: { type: "string" },
         sponsors: {
