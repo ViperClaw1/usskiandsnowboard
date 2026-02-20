@@ -1,80 +1,35 @@
 
-# Admin Invitation Flow: AI Profile Auto-Complete Popup
+# Fix: Add Redirect URL to Auth Allowlist
 
-## Overview
+## Root Cause
 
-When an admin invites a new user, the invitation email links to `/reset-password`. After the user sets their password, they should see a popup offering to auto-complete their profile with AI -- using the exact same `AIProfilePopulator` component already used on the dashboard.
+Supabase auth has a "Redirect URLs" allowlist. When `generateLink` specifies a `redirectTo`, Supabase checks it against this list. If the URL (with path) isn't allowed, it silently falls back to the base site URL. That's why the email link redirects to the home page instead of `/reset-password?invited=true`.
 
-## Approach: Use a URL parameter + localStorage flag
+## Solution
 
-### Why not just a URL parameter alone?
+Add the redirect URL patterns to the Supabase auth configuration so the `/reset-password` path is permitted.
 
-The `/reset-password` page redirects to another page after success. Passing a query param through Supabase's recovery redirect is fragile. Instead:
+### Step 1: Configure Auth Redirect URLs
 
-1. **Edge function change**: Add `?invited=true` to the `redirectTo` URL in the invite-user function
-2. **ResetPassword page**: Detect `invited=true` in the URL search params. On successful password update, store a `pending_ai_profile` flag in localStorage, then navigate to `/dashboard` (instead of `/auth`)
-3. **Dashboard page**: On mount, check localStorage for the flag. If present, clear it and show the AI Profile Populator dialog automatically
+Use the Supabase auth configuration to add these URLs to the allowed redirect list:
+- `https://usskiandsnowboard.lovable.app/reset-password`
+- `https://id-preview--6c20180f-3057-4b8f-a30d-347720c7006f.lovable.app/reset-password`
 
-This is clean because it avoids modifying the AIProfilePopulator component itself.
+This can be done via the Lovable Cloud auth settings (adding allowed redirect URL patterns).
 
-## Detailed Changes
+### Step 2: Verify the edge function URL construction
 
-### 1. Edge Function: `supabase/functions/invite-user/index.ts` (line 191)
+The edge function currently computes `appUrl` by replacing `.supabase.co` with `.lovable.app` in the Supabase URL, which produces `https://fihcubajfjjbcjqiqqrv.lovable.app`. This may differ from the published domain `usskiandsnowboard.lovable.app`. We should update the function to use the correct published app URL, or pass it as an environment variable / hardcode it. The most robust approach:
+- Add a secret/env var `APP_URL` with the value `https://usskiandsnowboard.lovable.app`, or
+- Hardcode the published URL in the function
 
-Change the redirectTo from:
-```
-redirectTo: `${appUrl}/reset-password`
-```
-to:
-```
-redirectTo: `${appUrl}/reset-password?invited=true`
-```
+### Summary of Changes
 
-### 2. `src/pages/ResetPassword.tsx`
-
-- Import `useSearchParams` from react-router-dom
-- Detect `invited=true` query parameter
-- On successful password update: if `invited=true`, set `localStorage.setItem('pending_ai_profile', 'true')` and navigate to `/dashboard` instead of `/auth`
-
-### 3. `src/pages/Dashboard.tsx`
-
-- Import `AIProfilePopulator` and Dialog components
-- Add state `showAIPopup` (boolean, default false)
-- In a `useEffect` (after role is loaded): check if `localStorage.getItem('pending_ai_profile')` is set. If yes, remove it and set `showAIPopup = true`
-- Render a standalone Dialog that wraps the `AIProfilePopulator` component, controlled by `showAIPopup`
-- The AIProfilePopulator already accepts `role` and `userId` props and has its own Dialog internally. Since we must not modify it, we will render it with its dialog pre-opened by programmatically triggering it
-
-**Alternative (simpler)**: Since `AIProfilePopulator` manages its own Dialog state internally and we cannot modify it, we will instead create a small wrapper popup that:
-- Shows a welcome message: "Welcome! Would you like to auto-complete your profile with AI?"
-- Has two buttons: "Complete with AI" (which renders/triggers the AIProfilePopulator) and "Skip"
-- This wrapper dialog is controlled by the `showAIPopup` state
-
-### 4. No changes to `AIProfilePopulator`
-
-The existing component remains untouched. It will be rendered inside the welcome popup and the user clicks "Complete with AI" to open it naturally.
-
-## Technical Summary
-
-| File | Change |
+| What | Change |
 |------|--------|
-| `supabase/functions/invite-user/index.ts` | Add `?invited=true` to redirectTo URL |
-| `src/pages/ResetPassword.tsx` | Detect `invited` param; on success, set localStorage flag and navigate to `/dashboard` |
-| `src/pages/Dashboard.tsx` | Check localStorage flag on mount; show welcome popup with embedded AIProfilePopulator |
+| Auth config | Add `/reset-password` redirect URL patterns to the allowed list |
+| Edge function (`invite-user/index.ts`) | Use the correct published app URL instead of deriving it from the Supabase URL |
 
-## Flow Diagram
+### No frontend changes needed
 
-```text
-Admin invites user
-       |
-       v
-Email link -> /reset-password?invited=true
-       |
-       v
-User sets password -> localStorage flag set -> navigate to /dashboard
-       |
-       v
-Dashboard detects flag -> shows welcome popup
-       |
-       v
-User clicks "Complete with AI" -> AIProfilePopulator opens (unchanged)
-```
+The `ResetPassword.tsx` and `Dashboard.tsx` changes from the previous implementation are correct and don't need modification. The issue is purely on the backend configuration side.
