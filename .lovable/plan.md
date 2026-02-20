@@ -1,43 +1,31 @@
 
+# Fix Location Dropdown Overflow
 
-# Fix AI Profile Populator Database Errors
+## Root Cause
 
-## Problem Summary
+The Location dropdown has the same classes as Company Size and Industry, but one employer's `hq_location` value is an extremely long AI-generated string: *"Mountain West and Northeast (based on Bryan Dunn's location), likely with projects in Big Sky, MT, and Teton Valley, ID"*. The `SelectContent` component naturally expands to fit its widest item, causing it to overflow the page.
 
-Three console errors occur when the AI populator tries to save athlete profile data:
+## Fix
 
-1. **GET 406**: `.single()` throws when no athlete profile row exists (returns 0 rows)
-2. **POST 400**: The `affiliation` field has a database CHECK constraint limiting values to `'Current Team Member'` or `'Former Team Member'` only. The AI returns free-text like `"U.S. Ski & Snowboard"`, causing the insert to fail.
-3. **Console error log**: Same constraint violation surfaced as an uncaught error.
+### 1. Constrain the dropdown width (UI)
 
-## Changes
+**File: `src/components/athlete/EmployerDirectory.tsx`**
 
-### File: `src/components/profile/AIProfilePopulator.tsx`
+Add `max-w` and text truncation to the Location `SelectContent` on both mobile and desktop views so the dropdown never exceeds a reasonable width, regardless of content length.
 
-**Fix 1 -- Line 135**: Replace `.single()` with `.maybeSingle()` so the query returns `null` instead of throwing a 406 when no row exists.
+- Desktop (line 502): Add `className="bg-popover max-w-[400px]"`
+- Mobile (line 397): Add `max-w-[300px]` similarly
+- Wrap `SelectItem` text in a truncated span so long values get ellipsis: `<span className="truncate block max-w-full">{location}</span>`
 
-**Fix 2 -- Affiliation mapping**: After building `athleteFields`, validate the `affiliation` value against the allowed values (`'Current Team Member'`, `'Former Team Member'`). If the AI returns something else, default to `'Current Team Member'` (reasonable default for athletes in the U.S. Ski and Snowboard directory).
+### 2. (Data quality note -- no code change)
 
-### File: `supabase/functions/ai-populate-profile/index.ts`
+The long location value is caused by the AI profile populator generating a sentence instead of a short city/state. This is a data quality issue from AI scraping. For now the UI fix handles it gracefully. If desired in the future, the AI prompt could be updated to constrain location output to "City, State" format.
 
-**Fix 3 -- Constrain AI output**: Update the `affiliation` field in the `ATHLETE_TOOL` schema to use an `enum` with the two allowed values, so the AI model is guided to pick a valid option rather than free-texting.
-
-```typescript
-// Before
-affiliation: { type: "string" },
-
-// After
-affiliation: { 
-  type: "string", 
-  enum: ["Current Team Member", "Former Team Member"],
-  description: "Athlete's affiliation with U.S. Ski & Snowboard" 
-},
-```
+---
 
 ## Technical Details
 
-- `AIProfilePopulator.tsx` line 135: `.single()` to `.maybeSingle()`
-- `AIProfilePopulator.tsx` around line 146: Add validation to clamp `affiliation` to allowed values
-- `ai-populate-profile/index.ts` around line 70: Add `enum` constraint to the tool schema's `affiliation` property
-- Redeploy the edge function after the schema change
-
+Both the desktop filter section (around line 502-509) and mobile filter section (around line 397-406) will get:
+- `SelectContent` gets `max-w-[400px]` to cap width
+- Each `SelectItem` wraps location text in `<span className="truncate block">` for ellipsis on overflow
+- A `title` attribute on the span provides the full text on hover
