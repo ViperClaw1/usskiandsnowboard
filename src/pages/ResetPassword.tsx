@@ -14,7 +14,10 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isInvited = searchParams.get("invited") === "true";
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(true);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,16 +25,34 @@ const ResetPassword = () => {
   const [validToken, setValidToken] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid recovery session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setValidToken(true);
+    const verifySession = async () => {
+      // If we have a token_hash param (from invitation email), verify it client-side
+      if (tokenHash && type === "recovery") {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "recovery",
+        });
+        if (error) {
+          console.error("Token verification failed:", error);
+          toast.error("Invalid or expired reset link");
+          navigate("/auth");
+        } else {
+          setValidToken(true);
+        }
       } else {
-        toast.error("Invalid or expired reset link");
-        navigate("/auth");
+        // Standard flow: check if we already have a recovery session (from Supabase redirect)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setValidToken(true);
+        } else {
+          toast.error("Invalid or expired reset link");
+          navigate("/auth");
+        }
       }
-    });
-  }, [navigate]);
+      setVerifying(false);
+    };
+    verifySession();
+  }, [navigate, tokenHash, type]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +90,7 @@ const ResetPassword = () => {
     }
   };
 
-  if (!validToken) {
+  if (!validToken || verifying) {
     return null;
   }
 
