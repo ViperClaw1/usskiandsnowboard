@@ -1,18 +1,20 @@
 
-# Fix Location Dropdown: Truncate Text Instead of Limiting Container
+# Fix AI Location Extraction to Return Clean, Short Values
 
-## Change
+## Problem
 
-Remove the `max-w-[...]` constraint from the `SelectContent` container and instead set a fixed `max-w` on the text `<span>` inside each `SelectItem`. This way the dropdown sizes naturally but long text gets an ellipsis ("Some text...").
+The AI extraction returns verbose, descriptive location strings like *"Mountain West and Northeast (based on Bryan Dunn's location), likely with projects in Big Sky, MT, and Teton Valley, ID"* instead of a clean location name like *"Mountain West and Northeast"*. This affects the location badge display on Partner Directory cards.
 
-### File: `src/components/athlete/EmployerDirectory.tsx`
+## Solution
 
-**Mobile filter (line 397):**
-- Remove `max-w-[400px]` from `SelectContent` -- revert to just `className="bg-popover z-50"`
-- Change span from `max-w-full` to `max-w-[250px]` so long text truncates
+Update the AI tool schemas in the edge function to add explicit description constraints on location fields, instructing the AI to return only short place names.
 
-**Desktop filter (line 504):**
-- Remove `max-w-[500px]` from `SelectContent` -- revert to just `className="bg-popover"`
-- Change span from `max-w-full` to `max-w-[350px]` so long text truncates
+### File: `supabase/functions/ai-populate-profile/index.ts`
 
-The `truncate` class already handles the ellipsis; we just need to give the span a concrete max-width instead of `max-w-full` (which doesn't constrain anything).
+**Employer tool -- line 20** (`hq_location`):
+- Add a description: `"Short location name only, e.g. 'Denver, CO' or 'Mountain West'. No parenthetical notes, explanations, or extra context."`
+
+**Athlete tool -- line 73** (`home_mountain`):
+- Add a description: `"Short location or mountain name only, e.g. 'Park City, UT' or 'Vail'. No parenthetical notes, explanations, or extra context."`
+
+This constrains the AI model at the schema level so future extractions produce clean values. Existing long values in the database would need to be manually corrected or re-scraped.
