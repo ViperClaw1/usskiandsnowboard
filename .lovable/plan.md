@@ -1,28 +1,49 @@
 
-# Fix: 403 "User from sub claim in JWT does not exist" on Password Reset
 
-## Root Cause
+# Profile Re-render After AI Auto-Population
 
-In `supabase/functions/invite-user/index.ts`, the admin-created user has `email_confirm: false`. When the invited user clicks the direct link and `verifyOtp` establishes a recovery session, the unconfirmed email status causes Supabase to reject the subsequent `updateUser({ password })` call with a 403.
+## Problem
 
-## Fix
+When the AI Profile Populator finishes extracting data, the dashboard components don't refresh. This happens in two scenarios:
 
-**File: `supabase/functions/invite-user/index.ts`**
+1. **Welcome popup flow** (invited users): The `onComplete` callback in `Dashboard.tsx` only hides the populator -- it never tells `AthleteDashboard` or `EmployerDashboard` to reload their profile data.
 
-Change `email_confirm: false` to `email_confirm: true` in the `createUser` call (around line 120). Since the admin is inviting this user, email confirmation is unnecessary -- the admin has already verified the user's identity.
+2. **Inline AI populator** (on landing pages): This already works because `onComplete` calls `loadDashboardData()` directly. However, the parent `AthleteDashboard`/`EmployerDashboard` profile state (used for the edit dialog and portfolio view) is not refreshed.
 
-```typescript
-// Before
-email_confirm: false,
+## Solution
 
-// After
-email_confirm: true,
+Use a simple `refreshKey` counter pattern: increment it whenever the AI populator completes, and pass it as a `key` prop to the dashboard component so it fully re-mounts and re-fetches all data.
+
+### Changes
+
+**1. `src/pages/Dashboard.tsx`**
+- Add a `refreshKey` state counter (starts at 0)
+- In the welcome popup's `onComplete`, increment `refreshKey`
+- Pass `key={refreshKey}` to `AthleteDashboard` and `EmployerDashboard` so they re-mount and re-fetch everything
+
+**2. `src/components/dashboard/AthleteDashboard.tsx`**
+- Accept an optional `onProfileUpdated` callback prop
+- Add a `refreshKey` state that increments when profile data changes
+- Pass `onProfileUpdated` through to `AthleteLandingPage` so when the inline AI populator completes, it calls both `loadDashboardData()` (landing page internal) and `loadProfile()` (dashboard level)
+
+**3. `src/components/dashboard/EmployerDashboard.tsx`**
+- Same pattern: accept optional `onProfileUpdated` and ensure `loadProfile()` is called after AI completion via the `PartnerLandingPage` callback chain
+
+**4. `src/components/profile/AIProfilePopulator.tsx`**
+- After the successful database upsert and before calling `onComplete()`, add a small delay (the existing 1500ms is already there) to ensure the DB trigger for employer completeness has fired
+- No structural changes needed -- `onComplete` is already called at the right time
+
+## Technical Details
+
+The key insight is that `Dashboard.tsx` renders `AthleteDashboard`/`EmployerDashboard` which each have their own `loadProfile()`. When the welcome popup's AI populator finishes, we need those components to re-fetch. The cleanest approach:
+
+```text
+Dashboard.tsx
+  |-- refreshKey state (incremented on AI complete)
+  |-- <AthleteDashboard key={refreshKey} />
+       |-- loadProfile() runs on mount (triggered by key change)
+       |-- <AthleteLandingPage onProfileUpdated={loadProfile} />
+            |-- <AIProfilePopulator onComplete={loadDashboardData + onProfileUpdated} />
 ```
 
-This single change ensures the user account is fully activated at creation time, so the recovery JWT session works correctly when the user sets their password.
-
-## Why This Is Safe
-
-- Admin-invited users don't need to verify their email -- the admin vouches for them
-- The password-setting step via the direct link already acts as proof of email ownership
-- No other files need changes; the frontend logic in `ResetPassword.tsx` and `Dashboard.tsx` is correct
+This ensures both the welcome popup flow and the inline populator flow result in full data refresh across all components.
