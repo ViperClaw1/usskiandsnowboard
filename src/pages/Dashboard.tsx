@@ -27,6 +27,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [showAIPopulator, setShowAIPopulator] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -110,9 +111,9 @@ const Dashboard = () => {
   const renderDashboard = () => {
     switch (role) {
       case "athlete":
-        return <AthleteDashboard user={user} />;
+        return <AthleteDashboard key={refreshKey} user={user} onProfileUpdated={() => setRefreshKey(k => k + 1)} />;
       case "employer":
-        return <EmployerDashboard user={user} />;
+        return <EmployerDashboard key={refreshKey} user={user} onProfileUpdated={() => setRefreshKey(k => k + 1)} />;
       case "admin":
         return <AdminDashboard user={user} />;
       default:
@@ -165,7 +166,7 @@ const Dashboard = () => {
             <AIProfilePopulator
               role={role as "athlete" | "employer"}
               userId={user.id}
-              onComplete={() => setShowAIPopulator(false)}
+              onComplete={() => { setShowAIPopulator(false); setRefreshKey(k => k + 1); }}
             />
           </div>
         </div>

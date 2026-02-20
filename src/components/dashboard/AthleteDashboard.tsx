@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface AthleteDashboardProps {
   user: User;
   isAdminView?: boolean;
+  onProfileUpdated?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +144,7 @@ const DirectorySkeleton = () => (
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) => {
+const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated }: AthleteDashboardProps) => {
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -220,7 +221,7 @@ const AthleteDashboard = ({ user, isAdminView = false }: AthleteDashboardProps) 
       case "home":
         return (
           <FadeIn key={viewKey}>
-            <AthleteLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={loadProfile} />
+            <AthleteLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={() => { loadProfile(); onProfileUpdated?.(); }} />
           </FadeIn>
         );
 
