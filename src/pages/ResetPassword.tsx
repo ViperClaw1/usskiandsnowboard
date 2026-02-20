@@ -6,9 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+
+const passwordRules = [
+  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { label: "At least one number", test: (p: string) => /\d/.test(p) },
+  { label: "At least one special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p) },
+];
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -23,6 +29,14 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validToken, setValidToken] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const markTouched = (field: string) =>
+    setTouched((prev) => ({ ...prev, [field]: true }));
+
+  const allPasswordRulesPass = passwordRules.every((rule) => rule.test(password));
+  const passwordsMatch = password === confirmPassword;
+  const isFormValid = allPasswordRulesPass && passwordsMatch && confirmPassword !== "";
 
   useEffect(() => {
     const verifySession = async () => {
@@ -56,16 +70,7 @@ const ResetPassword = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (password !== confirmPassword) {
-      toast.error("Passwords don't match");
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
+    if (!isFormValid) return;
 
     setLoading(true);
 
@@ -122,13 +127,13 @@ const ResetPassword = () => {
                     placeholder="Enter new password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
+                    onBlur={() => markTouched("password")}
                     className="pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon"
+                    size="sm"
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
@@ -139,6 +144,23 @@ const ResetPassword = () => {
                     )}
                   </Button>
                 </div>
+                {password.length > 0 && (
+                  <ul className="space-y-1 mt-2">
+                    {passwordRules.map((rule) => {
+                      const passes = rule.test(password);
+                      return (
+                        <li key={rule.label} className="flex items-center gap-2 text-sm">
+                          {passes ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          )}
+                          <span className={passes ? "text-green-600" : "text-muted-foreground"}>{rule.label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm New Password</Label>
@@ -149,13 +171,13 @@ const ResetPassword = () => {
                     placeholder="Confirm new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
+                    onBlur={() => markTouched("confirmPassword")}
                     className="pr-10"
                   />
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon"
+                    size="sm"
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
@@ -166,8 +188,11 @@ const ResetPassword = () => {
                     )}
                   </Button>
                 </div>
+                {touched.confirmPassword && confirmPassword && !passwordsMatch && (
+                  <p className="text-sm text-destructive">Passwords do not match.</p>
+                )}
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || !isFormValid}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
