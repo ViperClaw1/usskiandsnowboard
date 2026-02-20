@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isInvited = searchParams.get("invited") === "true";
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -54,7 +56,12 @@ const ResetPassword = () => {
       if (error) throw error;
 
       toast.success("Password updated successfully!");
-      navigate("/auth");
+      if (isInvited) {
+        localStorage.setItem("pending_ai_profile", "true");
+        navigate("/dashboard");
+      } else {
+        navigate("/auth");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
     } finally {

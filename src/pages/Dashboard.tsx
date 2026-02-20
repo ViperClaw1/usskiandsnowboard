@@ -8,6 +8,16 @@ import EmployerDashboard from "@/components/dashboard/EmployerDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +25,8 @@ const Dashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [showAIPopulator, setShowAIPopulator] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -39,6 +51,16 @@ const Dashboard = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Check for pending AI profile flag after role is loaded
+  useEffect(() => {
+    if (role && role !== "admin" && user) {
+      if (localStorage.getItem("pending_ai_profile") === "true") {
+        localStorage.removeItem("pending_ai_profile");
+        setShowWelcomePopup(true);
+      }
+    }
+  }, [role, user]);
 
   const loadUserRole = async (userId: string, retryCount = 0) => {
     const MAX_RETRIES = 3;
@@ -101,6 +123,53 @@ const Dashboard = () => {
   return (
     <ErrorBoundary>
       {renderDashboard()}
+
+      {/* Welcome popup for invited users */}
+      <Dialog open={showWelcomePopup} onOpenChange={setShowWelcomePopup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Welcome to U.S. Ski & Snowboard!
+            </DialogTitle>
+            <DialogDescription>
+              Would you like to auto-complete your profile using AI? Just provide a URL and we'll fill in the details for you.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-2">
+            <Button
+              onClick={() => {
+                setShowWelcomePopup(false);
+                setShowAIPopulator(true);
+              }}
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Complete with AI
+            </Button>
+            <Button variant="ghost" onClick={() => setShowWelcomePopup(false)}>
+              Skip for now
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Render AIProfilePopulator when user chooses to proceed - auto-click trigger */}
+      {showAIPopulator && (role === "athlete" || role === "employer") && (
+        <div className="hidden">
+          <div ref={(el) => {
+            if (el) {
+              const btn = el.querySelector("button");
+              if (btn) setTimeout(() => btn.click(), 100);
+            }
+          }}>
+            <AIProfilePopulator
+              role={role as "athlete" | "employer"}
+              userId={user.id}
+              onComplete={() => setShowAIPopulator(false)}
+            />
+          </div>
+        </div>
+      )}
     </ErrorBoundary>
   );
 };
