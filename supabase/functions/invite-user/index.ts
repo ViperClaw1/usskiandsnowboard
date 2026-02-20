@@ -181,21 +181,20 @@ serve(async (req) => {
     }
 
     // Generate password reset link
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const appUrl = supabaseUrl.replace('.supabase.co', '.lovable.app');
+    const appUrl = 'https://usskiandsnowboard.lovable.app';
     
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
-      options: {
-        redirectTo: `${appUrl}/reset-password?invited=true`
-      }
     });
 
     if (resetError) {
       console.error('Error generating reset link:', resetError);
       throw resetError;
     }
+
+    // Construct direct link to our app with token_hash (bypasses Supabase redirect allowlist)
+    const directLink = `${appUrl}/reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
 
     console.log('Sending invitation email to:', email);
 
@@ -225,7 +224,7 @@ serve(async (req) => {
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td align="center">
-                      <a href="${resetData.properties.action_link}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Set Your Password</a>
+                      <a href="${directLink}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Set Your Password</a>
                     </td>
                   </tr>
                 </table>
@@ -233,7 +232,7 @@ serve(async (req) => {
                   Or copy and paste this link into your browser:
                 </p>
                 <p style="margin: 0 0 30px; padding: 15px; background-color: #f4f4f4; border-radius: 5px; font-size: 12px; word-break: break-all; color: #333;">
-                  ${resetData.properties.action_link}
+                  ${directLink}
                 </p>
                 <p style="margin: 0 0 10px; font-size: 14px; color: #666;">
                   Your login email is: <strong>${email}</strong>
