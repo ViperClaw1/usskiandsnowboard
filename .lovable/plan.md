@@ -1,35 +1,28 @@
 
-# Fix: Add Redirect URL to Auth Allowlist
+# Fix: 403 "User from sub claim in JWT does not exist" on Password Reset
 
 ## Root Cause
 
-Supabase auth has a "Redirect URLs" allowlist. When `generateLink` specifies a `redirectTo`, Supabase checks it against this list. If the URL (with path) isn't allowed, it silently falls back to the base site URL. That's why the email link redirects to the home page instead of `/reset-password?invited=true`.
+In `supabase/functions/invite-user/index.ts`, the admin-created user has `email_confirm: false`. When the invited user clicks the direct link and `verifyOtp` establishes a recovery session, the unconfirmed email status causes Supabase to reject the subsequent `updateUser({ password })` call with a 403.
 
-## Solution
+## Fix
 
-Add the redirect URL patterns to the Supabase auth configuration so the `/reset-password` path is permitted.
+**File: `supabase/functions/invite-user/index.ts`**
 
-### Step 1: Configure Auth Redirect URLs
+Change `email_confirm: false` to `email_confirm: true` in the `createUser` call (around line 120). Since the admin is inviting this user, email confirmation is unnecessary -- the admin has already verified the user's identity.
 
-Use the Supabase auth configuration to add these URLs to the allowed redirect list:
-- `https://usskiandsnowboard.lovable.app/reset-password`
-- `https://id-preview--6c20180f-3057-4b8f-a30d-347720c7006f.lovable.app/reset-password`
+```typescript
+// Before
+email_confirm: false,
 
-This can be done via the Lovable Cloud auth settings (adding allowed redirect URL patterns).
+// After
+email_confirm: true,
+```
 
-### Step 2: Verify the edge function URL construction
+This single change ensures the user account is fully activated at creation time, so the recovery JWT session works correctly when the user sets their password.
 
-The edge function currently computes `appUrl` by replacing `.supabase.co` with `.lovable.app` in the Supabase URL, which produces `https://fihcubajfjjbcjqiqqrv.lovable.app`. This may differ from the published domain `usskiandsnowboard.lovable.app`. We should update the function to use the correct published app URL, or pass it as an environment variable / hardcode it. The most robust approach:
-- Add a secret/env var `APP_URL` with the value `https://usskiandsnowboard.lovable.app`, or
-- Hardcode the published URL in the function
+## Why This Is Safe
 
-### Summary of Changes
-
-| What | Change |
-|------|--------|
-| Auth config | Add `/reset-password` redirect URL patterns to the allowed list |
-| Edge function (`invite-user/index.ts`) | Use the correct published app URL instead of deriving it from the Supabase URL |
-
-### No frontend changes needed
-
-The `ResetPassword.tsx` and `Dashboard.tsx` changes from the previous implementation are correct and don't need modification. The issue is purely on the backend configuration side.
+- Admin-invited users don't need to verify their email -- the admin vouches for them
+- The password-setting step via the direct link already acts as proof of email ownership
+- No other files need changes; the frontend logic in `ResetPassword.tsx` and `Dashboard.tsx` is correct
