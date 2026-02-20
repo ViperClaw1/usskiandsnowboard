@@ -17,9 +17,10 @@ import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePrev
 interface EmployerDashboardProps {
   user: User;
   isAdminView?: boolean;
+  onProfileUpdated?: () => void;
 }
 
-const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps) => {
+const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated }: EmployerDashboardProps) => {
   const [currentView, setCurrentView] = useState<string>("home");
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +88,7 @@ const EmployerDashboard = ({ user, isAdminView = false }: EmployerDashboardProps
 
       <main>
         {currentView === "home" ? (
-          <PartnerLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={loadProfile} />
+          <PartnerLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={() => { loadProfile(); onProfileUpdated?.(); }} />
         ) : currentView === "directory" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
