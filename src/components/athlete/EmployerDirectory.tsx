@@ -394,11 +394,11 @@ const EmployerDirectory = () => {
               <SelectTrigger id="filter-location">
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
-              <SelectContent position="popper" className="bg-popover z-50 max-w-[400px]">
+              <SelectContent position="popper" className="bg-popover z-50">
                 <SelectItem value="all">All Locations</SelectItem>
                 {uniqueLocations.map((location) => (
                   <SelectItem key={location} value={location!}>
-                    <span className="truncate block max-w-full" title={location!}>
+                    <span className="truncate block max-w-[250px]" title={location!}>
                       {location}
                     </span>
                   </SelectItem>
@@ -501,11 +501,11 @@ const EmployerDirectory = () => {
             <SelectTrigger id="filter-location" className="w-full min-w-[200px]">
               <SelectValue placeholder="All Locations" />
             </SelectTrigger>
-            <SelectContent className="bg-popover max-w-[500px]">
+            <SelectContent className="bg-popover">
               <SelectItem value="all">All Locations</SelectItem>
               {uniqueLocations.map((location) => (
                 <SelectItem key={location} value={location!}>
-                  <span className="truncate block max-w-full" title={location!}>
+                  <span className="truncate block max-w-[350px]" title={location!}>
                     {location}
                   </span>
                 </SelectItem>
