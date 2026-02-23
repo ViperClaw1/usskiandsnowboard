@@ -17,7 +17,41 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ClipboardEdit } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+const athleteWelcome = {
+  header: "Welcome to Athlete Connection",
+  body: `You've dedicated years to mastering your sport. Athlete Connection is here to support your next chapter.
+
+This platform was built specifically for U.S. Ski & Snowboard athletes — to help you translate the discipline, leadership, resilience, and performance mindset you've developed into meaningful career opportunities beyond competition.`,
+  bullets: [
+    "Build a professional profile that highlights your unique strengths",
+    "Connect with mentors across industries",
+    "Discover internships, jobs, and short-term projects",
+    "Request warm introductions from trusted supporters",
+    "Access career tools and transition resources",
+  ],
+  outro: `Whether you're actively exploring your next step or just starting to think about it, this platform exists to make the transition smoother, faster, and more empowering.
+
+Your first step is completing your profile. This helps mentors and partners understand your interests, goals, and background — and allows the system to match you with relevant opportunities.`,
+};
+
+const partnerWelcome = {
+  header: "Welcome to Athlete Connection",
+  body: `Thank you for supporting the next generation of U.S. Ski & Snowboard athletes.
+
+Athlete Connection exists to bridge the gap between elite sport and long-term professional success. Our athletes bring exceptional discipline, accountability, resilience, and leadership — qualities that translate powerfully into business, entrepreneurship, and community leadership.`,
+  bullets: [
+    "Post internships, jobs, and short-term projects",
+    "Offer mentorship or advisory time",
+    "Provide introductions within your network",
+    "Engage directly with high-character, high-performance individuals",
+  ],
+  outro: `This is not a public job board. It is a curated, trust-based network designed to create meaningful, long-term connections between athletes and supporters.
+
+To get started, complete your profile so athletes can understand your background, industry expertise, and how you're willing to engage.`,
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -26,8 +60,10 @@ const Dashboard = () => {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [welcomeStep, setWelcomeStep] = useState<"welcome" | "choose">("welcome");
   const [showAIPopulator, setShowAIPopulator] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pendingManualProfile, setPendingManualProfile] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -111,9 +147,25 @@ const Dashboard = () => {
   const renderDashboard = () => {
     switch (role) {
       case "athlete":
-        return <AthleteDashboard key={refreshKey} user={user} onProfileUpdated={() => setRefreshKey(k => k + 1)} />;
+        return (
+          <AthleteDashboard
+            key={refreshKey}
+            user={user}
+            onProfileUpdated={() => setRefreshKey(k => k + 1)}
+            openProfileDialog={pendingManualProfile}
+            onProfileDialogOpened={() => setPendingManualProfile(false)}
+          />
+        );
       case "employer":
-        return <EmployerDashboard key={refreshKey} user={user} onProfileUpdated={() => setRefreshKey(k => k + 1)} />;
+        return (
+          <EmployerDashboard
+            key={refreshKey}
+            user={user}
+            onProfileUpdated={() => setRefreshKey(k => k + 1)}
+            openProfileDialog={pendingManualProfile}
+            onProfileDialogOpened={() => setPendingManualProfile(false)}
+          />
+        );
       case "admin":
         return <AdminDashboard user={user} />;
       default:
@@ -126,31 +178,78 @@ const Dashboard = () => {
       {renderDashboard()}
 
       {/* Welcome popup for invited users */}
-      <Dialog open={showWelcomePopup} onOpenChange={setShowWelcomePopup}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Welcome to U.S. Ski & Snowboard!
-            </DialogTitle>
-            <DialogDescription>
-              Would you like to auto-complete your profile using AI? Just provide a URL and we'll fill in the details for you.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 pt-2">
-            <Button
-              onClick={() => {
-                setShowWelcomePopup(false);
-                setShowAIPopulator(true);
-              }}
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Complete with AI
-            </Button>
-            <Button variant="ghost" onClick={() => setShowWelcomePopup(false)}>
-              Skip for now
-            </Button>
-          </div>
+      <Dialog
+        open={showWelcomePopup}
+        onOpenChange={(open) => {
+          setShowWelcomePopup(open);
+          if (!open) setWelcomeStep("welcome");
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          {welcomeStep === "welcome" ? (() => {
+            const content = role === "employer" ? partnerWelcome : athleteWelcome;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-xl">{content.header}</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[60vh] pr-3">
+                  <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                    <p className="whitespace-pre-line">{content.body}</p>
+                    <ul className="space-y-2 pl-1">
+                      {content.bullets.map((b, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="text-primary font-bold mt-0.5">•</span>
+                          <span><strong>{b.split(" ").slice(0, 1).join(" ")}</strong> {b.split(" ").slice(1).join(" ")}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="whitespace-pre-line">{content.outro}</p>
+                  </div>
+                </ScrollArea>
+                <div className="pt-2">
+                  <Button className="w-full" onClick={() => setWelcomeStep("choose")}>
+                    Complete Your Profile
+                  </Button>
+                </div>
+              </>
+            );
+          })() : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  How would you like to complete your profile?
+                </DialogTitle>
+                <DialogDescription>
+                  Choose AI to auto-fill from a URL, or complete it manually.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-3 pt-2">
+                <Button
+                  onClick={() => {
+                    setShowWelcomePopup(false);
+                    setWelcomeStep("welcome");
+                    setShowAIPopulator(true);
+                  }}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Complete with AI
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowWelcomePopup(false);
+                    setWelcomeStep("welcome");
+                    setPendingManualProfile(true);
+                  }}
+                >
+                  <ClipboardEdit className="mr-2 h-4 w-4" />
+                  Complete Manually
+                </Button>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

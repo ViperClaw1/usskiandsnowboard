@@ -18,9 +18,11 @@ interface EmployerDashboardProps {
   user: User;
   isAdminView?: boolean;
   onProfileUpdated?: () => void;
+  openProfileDialog?: boolean;
+  onProfileDialogOpened?: () => void;
 }
 
-const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated }: EmployerDashboardProps) => {
+const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated, openProfileDialog, onProfileDialogOpened }: EmployerDashboardProps) => {
   const [currentView, setCurrentView] = useState<string>("home");
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +32,14 @@ const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated }: Empl
   useEffect(() => {
     loadProfile();
   }, [user.id]);
+
+  // Open profile dialog when triggered from parent (e.g. "Complete Manually")
+  useEffect(() => {
+    if (openProfileDialog) {
+      setShowProfileDialog(true);
+      onProfileDialogOpened?.();
+    }
+  }, [openProfileDialog]);
 
   const loadProfile = async (retryCount = 0) => {
     if (isAdminView) {
