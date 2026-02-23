@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building2, Upload } from "lucide-react";
+import { LocationSearch } from "@/components/ui/location-search";
 
 interface EmployerOnboardingWizardProps {
   user: User;
@@ -364,11 +365,10 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
       case 5:
         return (
           <OnboardingStep title="Where is your HQ located?">
-            <Input
-              {...register("hqLocation", { required: true })}
-              placeholder="San Francisco, CA"
-              className="h-14 text-lg px-4 border-2"
-              autoFocus
+            <LocationSearch
+              value={formValues.hqLocation}
+              onValueChange={(val) => setValue("hqLocation", val)}
+              placeholder="Search for a city or region..."
             />
             <StepNavigation
               currentStep={currentStep}
