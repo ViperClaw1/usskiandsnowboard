@@ -17,6 +17,8 @@ interface AthleteDashboardProps {
   user: User;
   isAdminView?: boolean;
   onProfileUpdated?: () => void;
+  openProfileDialog?: boolean;
+  onProfileDialogOpened?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -144,7 +146,7 @@ const DirectorySkeleton = () => (
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated }: AthleteDashboardProps) => {
+const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated, openProfileDialog, onProfileDialogOpened }: AthleteDashboardProps) => {
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -152,6 +154,14 @@ const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated }: Athle
   const [profileLoading, setProfileLoading] = useState(true);
   // `viewKey` increments on every navigation so <FadeIn> re-animates.
   const [viewKey, setViewKey] = useState(0);
+
+  // Open profile dialog when triggered from parent (e.g. "Complete Manually")
+  useEffect(() => {
+    if (openProfileDialog) {
+      setShowProfileDialog(true);
+      onProfileDialogOpened?.();
+    }
+  }, [openProfileDialog]);
 
   useEffect(() => {
     loadProfile();
