@@ -66,6 +66,12 @@ export const AuthenticatedNav = () => {
           >
             News
           </Link>
+          <Link
+            to="/training"
+            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
+          >
+            Training
+          </Link>
           <Link to="/dashboard">
             <Button size="sm" className="lg:h-10 bg-red-600 hover:bg-red-700">
               Dashboard
