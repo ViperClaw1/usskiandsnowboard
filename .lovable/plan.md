@@ -1,47 +1,170 @@
 
-# Location Search Box + Re-rendering for Manual Profile Flow
+
+# Training Tab -- Article Publishing Platform
 
 ## Overview
 
-Two changes:
-1. Replace the plain text input on the HQ Location step (step 5) of the Employer Onboarding Wizard with a searchable combobox featuring geographic address suggestions
-2. Ensure the manual profile completion flow triggers the same re-rendering and profile completeness recalculation as the AI flow
+Add a "Training" content channel to the platform where admins can publish articles for athletes. This includes a new database table, a storage bucket for images, an article feed page for athletes, individual article detail pages, an admin article management section, and navigation updates.
 
-## Changes
+## Database Changes
 
-### 1. New Component: `src/components/ui/location-search.tsx`
+### New table: `training_articles`
 
-Create a reusable `LocationSearch` combobox component using the existing `Command` (cmdk) primitives already in the project. It will:
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK, default gen_random_uuid()) | |
+| title | text, NOT NULL | |
+| slug | text, NOT NULL, UNIQUE | Auto-generated from title |
+| subtitle | text | Italic subheading |
+| body | text, NOT NULL | Rich text / HTML content |
+| category | text | e.g. "Career Development", "Financial Literacy", "Mental Performance", "Life After Sport" |
+| hero_image_url | text | URL from storage bucket |
+| author_name | text | Free-text author name |
+| author_image_url | text | Headshot or logo URL |
+| status | text, default 'draft' | 'draft' or 'published' |
+| reading_time_minutes | integer | Estimated read time |
+| published_at | timestamptz | When the article was published |
+| created_at | timestamptz, default now() | |
+| updated_at | timestamptz, default now() | |
+| created_by | uuid, NOT NULL | References auth.users(id) via user_id pattern |
 
-- Accept `value`, `onValueChange`, `placeholder`, and `className` props
-- Contain a curated list of ~50 major US cities/regions (e.g., "San Francisco, CA", "New York, NY", "Denver, CO", "Salt Lake City, UT", "Park City, UT", etc.) with emphasis on ski/snowboard-relevant locations
-- Use a `Popover` + `Command` pattern: typing filters the list, clicking an option selects it
-- Allow free-text entry so users aren't limited to the predefined list -- if they type something not in the list, it's accepted as-is
-- Style it to match the existing onboarding inputs (h-14, text-lg, border-2)
+### RLS Policies
 
-### 2. Update: `src/components/employer/EmployerOnboardingWizard.tsx`
+- **SELECT**: Authenticated users can read articles where `status = 'published'`. Admins can read all articles.
+- **INSERT / UPDATE / DELETE**: Only users with admin role (via `has_role` function check).
 
-**Step 5 (case 5)**: Replace the plain `<Input>` with the new `<LocationSearch>` component:
-- Wire it to `formValues.hqLocation` and `setValue("hqLocation", value)`
-- Keep the same validation (non-empty string required to proceed)
+### Storage bucket: `training-images`
 
-### 3. Re-rendering (already working -- verification)
+- Public bucket for hero images and author headshots
+- INSERT/UPDATE/DELETE policies restricted to authenticated users with the admin role
 
-The re-rendering and profile completeness recalculation for the manual flow is already properly wired:
+### Trigger
 
-- **Employer Onboarding Wizard**: `onComplete()` calls `handleProfileComplete` in `EmployerDashboard`, which calls `loadProfile()` (re-fetches profile including DB-trigger-calculated `profile_completeness`) and `onProfileUpdated?.()` (propagates to `Dashboard.tsx` to increment `refreshKey`)
-- **Company Profile Form** (edit mode): `onSuccess` callback follows the same path
-- **DB trigger** `calculate_employer_profile_completeness` automatically recalculates completeness on every upsert/update to `employer_profiles`
-- **Athlete Onboarding Wizard**: Calculates completeness client-side before upsert, then `onComplete()` triggers the same refresh chain
+- Auto-update `updated_at` on row update (reuse existing trigger pattern)
 
-No additional code changes are needed for re-rendering -- the existing callback chain handles it.
+## New Files
+
+### 1. `src/pages/Training.tsx` -- Article Feed Page
+
+The main Training page visible to authenticated athletes. Styled to match the reference screenshots:
+
+- **Hero section**: Dark navy gradient background with a "TRAINING & DEVELOPMENT" badge, large serif-style heading "Resources to Help You Thrive Beyond the Mountain", and subtitle text. Curved bottom edge using an SVG or CSS clip-path.
+- **Category filter bar**: Horizontal row of text buttons -- "All Topics", "Career Development", "Mental Performance", "Financial Literacy", "Life After Sport". Active category has a red underline. No inner tabs component.
+- **Article cards grid**: Two-column responsive grid. Each card shows:
+  - Hero image with colored gradient overlay
+  - Category badge (colored pill)
+  - Title (bold, serif-inspired)
+  - Excerpt (2-3 lines, truncated)
+  - Author name + date on bottom row
+  - Reading time badge
+- **Empty state** when no published articles exist
+
+Data is fetched from `training_articles` where `status = 'published'`, ordered by `published_at desc`.
+
+### 2. `src/pages/TrainingArticle.tsx` -- Article Detail Page
+
+Route: `/training/:slug`
+
+- "Back to Training" link at the top
+- Hero image (full-width, if provided)
+- Category badge + reading time + publish date row
+- Title (H1)
+- Subtitle (italic)
+- Author attribution block: avatar/logo image + author name text
+- Article body rendered as HTML (using `dangerouslySetInnerHTML` with the stored rich text)
+- Clean, readable typography with proper spacing
+
+### 3. `src/components/dashboard/admin/TrainingArticleManager.tsx` -- Admin CRUD
+
+A section added as a new tab in the Admin Dashboard. Contains:
+
+- **Article list table**: Shows title, category, status (draft/published), published date, and action buttons (Edit, Unpublish/Publish, Delete)
+- **Create/Edit dialog**: Form with fields for:
+  - Title (text input)
+  - Subtitle (text input)
+  - Category (select dropdown with predefined categories)
+  - Body (textarea for rich text / HTML content)
+  - Author name (free-text input)
+  - Author image (file upload -- headshot or logo; shows fallback description)
+  - Hero image (file upload)
+  - Status toggle (Draft / Published)
+  - Reading time (number input, optional -- can auto-calculate from body word count)
+- Slug is auto-generated from the title on create, editable on edit
+- Publishing sets `published_at` to current timestamp; unpublishing sets status back to 'draft'
+
+### 4. Updates to Existing Files
+
+**`src/App.tsx`**: Add two new routes:
+- `/training` -> `Training` page
+- `/training/:slug` -> `TrainingArticle` page
+
+**`src/components/AuthenticatedNav.tsx`**: Add a "Training" link between "News" and "Dashboard" in the desktop nav. Style it similarly to the reference screenshot (could use a slightly highlighted button style or a simple text link).
+
+**`src/components/MobileNav.tsx`**: Add "Training" to the `navItems` array.
+
+**`src/components/dashboard/AdminDashboard.tsx`**: Add a fourth tab "Training" to the admin tabs, rendering `TrainingArticleManager`.
+
+## Design Notes
+
+- The hero section uses the existing navy color scheme (`--primary: 215 65% 25%`) with a gradient
+- Category badges use color-coded pills (red for Career Development, green for Financial Literacy, blue for Mental Performance, etc.)
+- Article cards have rounded corners, subtle shadows matching `shadow-elegant`, and hover effects
+- The curved transition between hero and content area is achieved with a CSS clip-path or inline SVG
+- Typography uses the existing Montserrat font family with heavier weights for headings
+- The article body on the detail page uses clean prose styling with proper heading hierarchy (H2 for section headings), bullet lists, and paragraph spacing
 
 ## Technical Details
 
-The `LocationSearch` component structure:
-- Uses `Popover` from `@radix-ui/react-popover` (already installed)
-- Uses `Command`, `CommandInput`, `CommandList`, `CommandItem`, `CommandEmpty` from cmdk (already installed)
-- Curated city list stored as a constant array within the component
-- Filter is handled by cmdk's built-in fuzzy matching
-- Free-text fallback: if user presses Enter or clicks away with custom text, the typed value is accepted
-- The popover gets `z-50` and `bg-popover` to avoid transparency issues per project conventions
+### Slug Generation
+
+```typescript
+const generateSlug = (title: string) =>
+  title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+```
+
+### Category Constants
+
+```typescript
+const TRAINING_CATEGORIES = [
+  "Career Development",
+  "Mental Performance",
+  "Financial Literacy",
+  "Life After Sport",
+  "Leadership",
+  "Networking",
+];
+```
+
+### Image Upload Pattern
+
+Reuse the existing upload pattern from `CompanyProfileForm` -- upload to the `training-images` bucket under `articles/{articleId}/hero.ext` or `authors/{filename}`.
+
+### Article Body
+
+The body field stores HTML content. On the detail page it is rendered with `dangerouslySetInnerHTML`. The admin form uses a `<Textarea>` for now (HTML input). This can be upgraded to a WYSIWYG editor later.
+
+### Reading Time Calculation
+
+```typescript
+const estimateReadingTime = (text: string) =>
+  Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, '').split(/\s+/).length / 200));
+```
+
+### File Structure Summary
+
+```text
+New files:
+  src/pages/Training.tsx
+  src/pages/TrainingArticle.tsx
+  src/components/dashboard/admin/TrainingArticleManager.tsx
+
+Modified files:
+  src/App.tsx                    (add routes)
+  src/components/AuthenticatedNav.tsx  (add Training link)
+  src/components/MobileNav.tsx         (add Training nav item)
+  src/components/dashboard/AdminDashboard.tsx  (add Training tab)
+
+Database migration:
+  training_articles table + RLS policies + storage bucket
+```
+
