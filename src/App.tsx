@@ -26,6 +26,8 @@ import AllRequests from "./pages/admin/AllRequests";
 import AcceptedConnections from "./pages/admin/AcceptedConnections";
 import RejectedRequests from "./pages/admin/RejectedRequests";
 import Settings from "./pages/Settings";
+import Training from "./pages/Training";
+import TrainingArticle from "./pages/TrainingArticle";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,8 @@ const AppRoutes = () => {
         <Route path="/employers" element={<Employers />} />
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/news" element={<News />} />
+        <Route path="/training" element={<Training />} />
+        <Route path="/training/:slug" element={<TrainingArticle />} />
         <Route path="/admin/users" element={<AllUsers />} />
         <Route path="/admin/athletes" element={<AllAthletes />} />
         <Route path="/admin/employers" element={<AllEmployers />} />

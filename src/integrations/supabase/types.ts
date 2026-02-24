@@ -767,6 +767,60 @@ export type Database = {
         }
         Relationships: []
       }
+      training_articles: {
+        Row: {
+          author_image_url: string | null
+          author_name: string | null
+          body: string
+          category: string | null
+          created_at: string
+          created_by: string
+          hero_image_url: string | null
+          id: string
+          published_at: string | null
+          reading_time_minutes: number | null
+          slug: string
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_image_url?: string | null
+          author_name?: string | null
+          body: string
+          category?: string | null
+          created_at?: string
+          created_by: string
+          hero_image_url?: string | null
+          id?: string
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          slug: string
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_image_url?: string | null
+          author_name?: string | null
+          body?: string
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          hero_image_url?: string | null
+          id?: string
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          slug?: string
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

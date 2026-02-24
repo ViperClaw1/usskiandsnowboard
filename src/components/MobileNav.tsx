@@ -21,6 +21,7 @@ export const MobileNav = () => {
     { to: "/employers", label: "Partners" },
     { to: "/schedule", label: "Schedule" },
     { to: "/news", label: "News" },
+    { to: "/training", label: "Training" },
   ];
 
   const handleSignOut = async () => {
