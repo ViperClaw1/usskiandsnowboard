@@ -4,7 +4,7 @@ import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -370,11 +370,11 @@ export const TrainingArticleManager = () => {
             </div>
             <div>
               <Label>Body (HTML) *</Label>
-              <Textarea
+              <RichTextarea
                 value={form.body}
                 onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
                 placeholder="<p>Your article content…</p>"
-                className="min-h-[200px] font-mono text-sm"
+                className="min-h-[200px]"
               />
             </div>
             <div>
