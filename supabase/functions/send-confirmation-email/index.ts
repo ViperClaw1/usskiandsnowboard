@@ -1,15 +1,15 @@
-import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0';
-import { Resend } from 'https://esm.sh/resend@4.0.0';
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
-const hookSecret = Deno.env.get('SEND_CONFIRMATION_EMAIL_HOOK_SECRET') as string;
+const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
+const hookSecret = Deno.env.get("SEND_CONFIRMATION_EMAIL_HOOK_SECRET") as string;
 
 Deno.serve(async (req) => {
-  console.log('Confirmation email function called');
+  console.log("Confirmation email function called");
 
-  if (req.method !== 'POST') {
-    console.log('Invalid method:', req.method);
-    return new Response('Method not allowed', { status: 400 });
+  if (req.method !== "POST") {
+    console.log("Invalid method:", req.method);
+    return new Response("Method not allowed", { status: 400 });
   }
 
   const payload = await req.text();
@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const wh = new Webhook(hookSecret);
 
   try {
-    console.log('Verifying webhook signature...');
+    console.log("Verifying webhook signature...");
     const {
       user,
       email_data: { token_hash, redirect_to },
@@ -32,9 +32,9 @@ Deno.serve(async (req) => {
       };
     };
 
-    console.log('Webhook verified. Sending confirmation email to:', user.email);
+    console.log("Webhook verified. Sending confirmation email to:", user.email);
 
-    const confirmationUrl = `${Deno.env.get('SUPABASE_URL')}/auth/v1/verify?token=${token_hash}&type=email&redirect_to=${redirect_to}`;
+    const confirmationUrl = `${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token_hash}&type=email&redirect_to=${redirect_to}`;
 
     const html = `
       <!DOCTYPE html>
@@ -46,8 +46,31 @@ Deno.serve(async (req) => {
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
           <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <tr>
-              <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #0066cc 0%, #004999 100%);">
-                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">Welcome to U.S. Ski & Snowboard!</h1>
+              <td style="
+                padding: 50px 30px 40px;
+                text-align: center;
+                background-image: url('${mountainHeaderBg}');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                position: relative;
+              ">
+                <!-- Dark overlay for readability -->
+                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
+                <!-- Logo -->
+                <div style="position: relative; z-index: 1; margin-bottom: 16px;">
+                  <img
+                    src="${usLogo}"
+                    alt="U.S. Ski & Snowboard"
+                    width="90"
+                    height="90"
+                    style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
+                  />
+                </div>
+                <!-- Heading -->
+                <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+                  Welcome to U.S. Ski &amp; Snowboard!
+                </h1>
               </td>
             </tr>
             <tr>
@@ -89,36 +112,36 @@ Deno.serve(async (req) => {
     `;
 
     const { error } = await resend.emails.send({
-      from: 'U.S. Ski & Snowboard <notifications@athleteconnection.org>',
+      from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
       to: [user.email],
-      subject: 'Confirm your email address',
+      subject: "Confirm your email address",
       html,
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error("Resend error:", error);
       throw error;
     }
 
-    console.log('Confirmation email sent successfully to:', user.email);
+    console.log("Confirmation email sent successfully to:", user.email);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    console.error('Error in send-confirmation-email function:', error);
+    console.error("Error in send-confirmation-email function:", error);
     return new Response(
       JSON.stringify({
         error: {
           http_code: error?.code || 500,
-          message: error?.message || 'Unknown error',
+          message: error?.message || "Unknown error",
         },
       }),
       {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      }
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
 });
