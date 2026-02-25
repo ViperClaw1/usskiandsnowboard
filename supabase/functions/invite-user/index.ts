@@ -220,7 +220,7 @@ serve(async (req) => {
                 <!-- Logo -->
                 <div style="position: relative; z-index: 1; margin-bottom: 16px;">
                   <img
-                    src={usLogo}
+                    src="${usLogo}"
                     alt="U.S. Ski & Snowboard"
                     width="90"
                     height="90"
