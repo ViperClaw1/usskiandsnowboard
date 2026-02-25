@@ -1,5 +1,7 @@
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import mountainHeaderBg from "@/assets/mountain-header-bg.png";
+import usLogo from "@/assets/us-logo-new.png";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
 const hookSecret = Deno.env.get("SEND_CONFIRMATION_EMAIL_HOOK_SECRET") as string;
