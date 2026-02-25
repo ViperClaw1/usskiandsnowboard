@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import mountainHeaderBg from "@/assets/mountain-header-bg.png";
+import usLogo from "@/assets/us-logo-new.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
