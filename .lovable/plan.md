@@ -1,29 +1,77 @@
 
-The goal is to improve the administrative experience for writing training articles by providing HTML syntax highlighting in the article body editor. Since the project currently uses a standard plain-text `Textarea`, I will create a new reusable `RichTextarea` component that uses a common "overlay" technique to provide real-time highlighting of HTML tags, attributes, and values.
 
-### 1. Create the `RichTextarea` Component
-I will create a new UI component `src/components/ui/rich-textarea.tsx`. This component will:
-- Use a `relative` container to house both a background `pre` element and a foreground `textarea`.
-- The `textarea` will be styled with `text-transparent` and `bg-transparent`, but will retain a visible `caret-foreground`. This allows the user to interact with the text (typing, selecting, scrolling) while seeing the highlighted version rendered by the `pre` tag behind it.
-- Implement a `highlightHTML` function that uses regular expressions to identify and wrap HTML tags, attributes, and values in colored `<span>` elements using Tailwind CSS utility classes.
-- Ensure perfect synchronization of scrolling, padding, font size (`font-mono text-sm`), and line height between the two elements.
+# Fix: Email Template Image URLs in Edge Functions
 
-### 2. Update `TrainingArticleManager.tsx`
-I will modify `src/components/dashboard/admin/TrainingArticleManager.tsx` to integrate the new component:
-- Update the imports to include `RichTextarea` instead of `Textarea` for the article body.
-- Replace the article body input field with the `RichTextarea` component.
-- The state management (`form.body` and `onChange`) will remain identical, making the transition seamless.
+## Root Cause
 
-### Technical Details & Highlights
-- **Syntax Highlighting Colors**: 
-  - **Tags**: Blue (`text-blue-600` / `text-blue-400`)
-  - **Attributes**: Sky Blue (`text-sky-500`)
-  - **Attribute Values**: Amber/Orange (`text-amber-600` / `text-amber-400`)
-- **Accessibility**: The background `pre` element will have `aria-hidden="true"` and `pointer-events: none` to ensure it doesn't interfere with screen readers or user interactions.
-- **Maintenance**: The component is built using standard React and Tailwind, avoiding the need for heavy external code editor libraries while fulfilling the specific requirement for HTML tag highlighting.
+All three edge functions (`invite-user`, `resend-confirmation`, `send-confirmation-email`) have the same two bugs preventing images from rendering:
 
-```text
-File changes:
-- Create src/components/ui/rich-textarea.tsx
-- Modify src/components/dashboard/admin/TrainingArticleManager.tsx
+### Bug 1: Invalid Vite/React imports in Deno edge functions
+
+```typescript
+import mountainHeaderBg from "@/assets/mountain-header-bg.png";
+import usLogo from "@/assets/us-logo-new.png";
 ```
+
+The `@/` path alias is a **Vite bundler feature** that only works in the frontend build pipeline. Edge functions run in **Deno**, which has no knowledge of Vite aliases or asset bundling. These imports silently resolve to `undefined`, so every reference to `mountainHeaderBg` or `usLogo` in the HTML produces broken URLs.
+
+### Bug 2: Nested backticks and JSX syntax in HTML strings
+
+In `send-confirmation-email` and `resend-confirmation`, the logo image uses JSX-style attribute syntax inside an HTML template literal:
+
+```html
+<img src={usLogo} ... />          <!-- JSX syntax, not valid in a string -->
+```
+
+And the background image uses nested backticks which break the outer template literal:
+
+```
+background-image: `url(${mountainHeaderBg})`;
+```
+
+The `invite-user` function correctly uses `src="${usLogo}"` but still has the nested backtick issue on `background-image`.
+
+## Fix
+
+### 1. Host images publicly
+
+Copy `src/assets/mountain-header-bg.png` and `src/assets/us-logo-new.png` into the `public/` directory (e.g., `public/email/mountain-header-bg.png` and `public/email/us-logo-new.png`). Files in `public/` are served as-is at the published URL without Vite hashing.
+
+### 2. Replace imports with absolute URLs in all three edge functions
+
+Remove the two `import` lines and replace all image references with full URLs pointing to the published app:
+
+```typescript
+const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
+const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
+```
+
+### 3. Fix the HTML template syntax
+
+Replace the broken backtick/JSX patterns with proper template literal interpolation:
+
+**Background image** (all three files):
+```
+background-image: url('${MOUNTAIN_BG_URL}');
+```
+
+**Logo src** (send-confirmation-email and resend-confirmation):
+```html
+<img src="${US_LOGO_URL}" ... />
+```
+
+### Files changed
+
+```
+New files (asset copies):
+  public/email/mountain-header-bg.png   (copy from src/assets/)
+  public/email/us-logo-new.png          (copy from src/assets/)
+
+Modified files:
+  supabase/functions/invite-user/index.ts
+  supabase/functions/resend-confirmation/index.ts
+  supabase/functions/send-confirmation-email/index.ts
+```
+
+Each edge function file gets three small edits: remove the two `import` lines, add two URL constants, and fix the `background-image` / `src` references in the HTML string.
+
