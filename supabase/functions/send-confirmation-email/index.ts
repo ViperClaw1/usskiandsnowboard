@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
               <td style="
                 padding: 50px 30px 40px;
                 text-align: center;
-                background-image: url('${mountainHeaderBg}');
+                background-image: `url(${mountainHeaderBg})`;
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
