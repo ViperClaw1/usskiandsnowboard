@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import mountainHeaderBg from "@/assets/mountain-header-bg.png";
-import usLogo from "@/assets/us-logo-new.png";
+const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
+const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
               <td style="
                 padding: 50px 30px 40px;
                 text-align: center;
-                background-image: `url(${mountainHeaderBg})`;
+                background-image: url('${MOUNTAIN_BG_URL}');
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
                 <!-- Logo -->
                 <div style="position: relative; z-index: 1; margin-bottom: 16px;">
                   <img
-                    src={usLogo}
+                    src="${US_LOGO_URL}"
                     alt="U.S. Ski & Snowboard"
                     width="90"
                     height="90"
