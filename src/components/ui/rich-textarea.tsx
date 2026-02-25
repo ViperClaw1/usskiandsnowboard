@@ -229,9 +229,9 @@ const Ico = (p: React.SVGProps<SVGSVGElement>) => (
 
 const Icons = {
   Bold: () => (
-    <svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13">
-      <path d="M4 2h5a3 3 0 0 1 0 6H4V2zm0 6h5.5a3.5 3.5 0 0 1 0 7H4V8z" />
-    </svg>
+    <p>
+      <strong>B</strong>
+    </p>
   ),
   Italic: () => (
     <svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13">
