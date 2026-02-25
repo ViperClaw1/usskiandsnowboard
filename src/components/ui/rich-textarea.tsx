@@ -81,7 +81,6 @@ const STYLES = `
 /* ── Editable area ── */
 .rt-area {
   min-height: 140px;
-  max-height: 400px;
   overflow-y: auto;
   padding: 10px 12px;
   outline: none;
@@ -137,6 +136,50 @@ const STYLES = `
   overflow-x: auto;
   font-family: ui-monospace, monospace;
   font-size: 0.82em;
+}
+
+/* ── Resize handle ── */
+.rt-resize-wrap {
+  position: relative;
+}
+.rt-resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 3px;
+  border-bottom-right-radius: var(--rt-radius);
+  /* Subtle grip dots */
+  background-image:
+    radial-gradient(circle, var(--rt-muted) 1px, transparent 1px),
+    radial-gradient(circle, var(--rt-muted) 1px, transparent 1px),
+    radial-gradient(circle, var(--rt-muted) 1px, transparent 1px),
+    radial-gradient(circle, var(--rt-muted) 1px, transparent 1px),
+    radial-gradient(circle, var(--rt-muted) 1px, transparent 1px),
+    radial-gradient(circle, var(--rt-muted) 1px, transparent 1px);
+  background-size: 4px 4px;
+  background-position:
+    8px 8px, 4px 8px, 8px 4px,
+    8px 12px, 4px 12px, 12px 8px;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.rt-resize-handle:hover,
+.rt-resize-wrap.rt-resizing .rt-resize-handle {
+  opacity: 1;
+}
+/* While dragging: no text selection, show resize cursor globally */
+.rt-resizing,
+.rt-resizing * {
+  user-select: none !important;
+  cursor: nwse-resize !important;
 }
 
 /* ── Popover overlay ── */
@@ -392,10 +435,14 @@ export interface RichTextareaProps extends Omit<React.HTMLAttributes<HTMLDivElem
 export const RichTextarea = React.forwardRef<HTMLDivElement, RichTextareaProps>(
   ({ value, defaultValue, placeholder = "Write something…", onChange, className, ...props }, ref) => {
     const editorRef = React.useRef<HTMLDivElement>(null);
+    const wrapRef = React.useRef<HTMLDivElement>(null);
     const savedRange = React.useRef<Range | null>(null);
     const [active, setActive] = React.useState<Set<string>>(new Set());
     const [popover, setPopover] = React.useState<"link" | "html" | null>(null);
+    const [editorHeight, setEditorHeight] = React.useState<number | null>(null);
+    const [isResizing, setIsResizing] = React.useState(false);
     const stylesInjected = React.useRef(false);
+    const dragStart = React.useRef<{ y: number; h: number } | null>(null);
 
     // Forward ref
     React.useImperativeHandle(ref, () => editorRef.current!);
@@ -460,6 +507,31 @@ export const RichTextarea = React.forwardRef<HTMLDivElement, RichTextareaProps>(
       }
     };
 
+    // ── Resize drag ──
+    const onResizeMouseDown = (e: React.MouseEvent) => {
+      e.preventDefault();
+      const currentH = editorRef.current?.getBoundingClientRect().height ?? 140;
+      dragStart.current = { y: e.clientY, h: currentH };
+      setIsResizing(true);
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!dragStart.current) return;
+        const delta = ev.clientY - dragStart.current.y;
+        const next = Math.max(80, dragStart.current.h + delta);
+        setEditorHeight(next);
+      };
+
+      const onMouseUp = () => {
+        dragStart.current = null;
+        setIsResizing(false);
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    };
+
     // ── Toolbar button ──
     const Btn = ({
       id,
@@ -507,7 +579,7 @@ export const RichTextarea = React.forwardRef<HTMLDivElement, RichTextareaProps>(
         {popover === "link" && <LinkPopover onConfirm={handleLinkConfirm} onCancel={() => setPopover(null)} />}
         {popover === "html" && <HTMLPopover onConfirm={handleHTMLConfirm} onCancel={() => setPopover(null)} />}
 
-        <div className="rt-wrapper">
+        <div className={cn("rt-wrapper rt-resize-wrap", isResizing && "rt-resizing")} ref={wrapRef}>
           {/* ── Toolbar ── */}
           <div className="rt-toolbar" onMouseDown={(e) => e.preventDefault()}>
             {/* Inline formatting */}
@@ -591,11 +663,15 @@ export const RichTextarea = React.forwardRef<HTMLDivElement, RichTextareaProps>(
             contentEditable
             suppressContentEditableWarning
             data-placeholder={placeholder}
+            style={editorHeight !== null ? { height: editorHeight, maxHeight: "none" } : undefined}
             onInput={emit}
             onKeyUp={syncActive}
             onMouseUp={syncActive}
             onSelect={syncActive}
           />
+
+          {/* ── Resize handle ── */}
+          <div className="rt-resize-handle" onMouseDown={onResizeMouseDown} title="Drag to resize" />
         </div>
       </div>
     );
