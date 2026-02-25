@@ -7,27 +7,9 @@ import { Label } from "@/components/ui/label";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +35,10 @@ const CATEGORIES = [
 ];
 
 const generateSlug = (title: string) =>
-  title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
 const estimateReadingTime = (text: string) =>
   Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, "").split(/\s+/).length / 200));
@@ -101,15 +86,14 @@ export const TrainingArticleManager = () => {
   const [authorPreview, setAuthorPreview] = useState<string | null>(null);
 
   const fetchArticles = useCallback(async () => {
-    const { data } = await supabase
-      .from("training_articles")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data } = await supabase.from("training_articles").select("*").order("created_at", { ascending: false });
     if (data) setArticles(data as Article[]);
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchArticles(); }, [fetchArticles]);
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -142,9 +126,7 @@ export const TrainingArticleManager = () => {
   const uploadFile = async (file: File, path: string) => {
     const ext = file.name.split(".").pop();
     const filePath = `${user?.id}/${path}.${ext}`;
-    const { error } = await supabase.storage
-      .from("training-images")
-      .upload(filePath, file, { upsert: true });
+    const { error } = await supabase.storage.from("training-images").upload(filePath, file, { upsert: true });
     if (error) throw error;
     const { data } = supabase.storage.from("training-images").getPublicUrl(filePath);
     return data.publicUrl;
@@ -190,16 +172,11 @@ export const TrainingArticleManager = () => {
       };
 
       if (editingId) {
-        const { error } = await supabase
-          .from("training_articles")
-          .update(record)
-          .eq("id", editingId);
+        const { error } = await supabase.from("training_articles").update(record).eq("id", editingId);
         if (error) throw error;
         toast.success("Article updated");
       } else {
-        const { error } = await supabase
-          .from("training_articles")
-          .insert({ id: articleId, ...record });
+        const { error } = await supabase.from("training_articles").insert({ id: articleId, ...record });
         if (error) throw error;
         toast.success("Article created");
       }
@@ -257,9 +234,7 @@ export const TrainingArticleManager = () => {
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading…</div>
         ) : articles.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            No articles yet. Create your first one!
-          </div>
+          <div className="py-8 text-center text-muted-foreground">No articles yet. Create your first one!</div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -282,9 +257,7 @@ export const TrainingArticleManager = () => {
                         {a.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}
-                    </TableCell>
+                    <TableCell>{a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
@@ -356,14 +329,15 @@ export const TrainingArticleManager = () => {
             </div>
             <div>
               <Label>Category</Label>
-              <Select
-                value={form.category}
-                onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
-              >
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+              <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -373,7 +347,7 @@ export const TrainingArticleManager = () => {
               <RichTextarea
                 value={form.body}
                 onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-                placeholder="<p>Your article content…</p>"
+                placeholder="Your article content…"
                 className="min-h-[200px]"
               />
             </div>
@@ -418,15 +392,10 @@ export const TrainingArticleManager = () => {
                   }
                 }}
               />
-              {heroPreview && (
-                <img src={heroPreview} alt="Hero" className="h-32 w-full rounded-lg object-cover mt-2" />
-              )}
+              {heroPreview && <img src={heroPreview} alt="Hero" className="h-32 w-full rounded-lg object-cover mt-2" />}
             </div>
             <div className="flex items-center gap-3">
-              <Switch
-                checked={form.isPublished}
-                onCheckedChange={(v) => setForm((f) => ({ ...f, isPublished: v }))}
-              />
+              <Switch checked={form.isPublished} onCheckedChange={(v) => setForm((f) => ({ ...f, isPublished: v }))} />
               <Label>{form.isPublished ? "Published" : "Draft"}</Label>
             </div>
             <Button onClick={handleSave} disabled={saving} className="w-full">
@@ -447,7 +416,10 @@ export const TrainingArticleManager = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
