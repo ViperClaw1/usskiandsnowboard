@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -105,6 +105,9 @@ const Employers = () => {
   // ==============================
   const isLoading = authLoading || employersLoading;
 
+  /** Stable employer list reference — prevents re-renders from reconstructing card props */
+  const employerList = useMemo(() => employers, [employers]);
+
   // ==============================
   // Render
   // ==============================
@@ -148,7 +151,7 @@ const Employers = () => {
 
             <section className="py-8 sm:py-12 relative">
               <div className="container mx-auto px-4 max-w-7xl">
-                {employers.length === 0 ? (
+                {employerList.length === 0 ? (
                   <EmptyState
                     icon={Building2}
                     title="No Featured Partners Yet"
@@ -161,7 +164,7 @@ const Employers = () => {
                     {/* Blurred card grid — aria-hidden so screen readers skip */}
                     <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                        {employers.map((employer) => (
+                        {employerList.map((employer) => (
                           <Card key={employer.id} className="w-full">
                             <CardHeader className="pb-3">
                               <div className="flex items-center gap-3">

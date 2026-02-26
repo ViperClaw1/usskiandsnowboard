@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,6 +108,17 @@ const Athletes = () => {
   // ==============================
   const isLoading = authLoading || athletesLoading;
 
+  /** Stable sliced skills list per athlete — avoids re-slicing on unrelated re-renders */
+  const athletesWithSlicedSkills = useMemo(
+    () =>
+      athletes.map((a) => ({
+        ...a,
+        skillsPreview: a.skills?.slice(0, 3) ?? [],
+        extraSkills: Math.max(0, (a.skills?.length ?? 0) - 3),
+      })),
+    [athletes]
+  );
+
   // ==============================
   // Render
   // ==============================
@@ -149,7 +160,7 @@ const Athletes = () => {
 
             <section className="py-8 sm:py-12 relative">
               <div className="container mx-auto px-4 max-w-7xl">
-                {athletes.length === 0 ? (
+                {athletesWithSlicedSkills.length === 0 ? (
                   <EmptyState
                     icon={Users}
                     title="No Featured Athletes Yet"
@@ -162,7 +173,7 @@ const Athletes = () => {
                     {/* Blurred card grid — aria-hidden so screen readers skip */}
                     <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                        {athletes.map((athlete) => (
+                        {athletesWithSlicedSkills.map((athlete) => (
                           <Card key={athlete.id} className="w-full">
                             <CardHeader className="pb-3">
                               <div className="flex items-center gap-3">
@@ -196,16 +207,16 @@ const Athletes = () => {
                                   {athlete.bio}
                                 </p>
                               )}
-                              {athlete.skills && athlete.skills.length > 0 && (
+                              {athlete.skillsPreview.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
-                                  {athlete.skills.slice(0, 3).map((skill, index) => (
+                                  {athlete.skillsPreview.map((skill, index) => (
                                     <Badge key={index} variant="secondary" className="text-xs">
                                       {skill}
                                     </Badge>
                                   ))}
-                                  {athlete.skills.length > 3 && (
+                                  {athlete.extraSkills > 0 && (
                                     <Badge variant="outline" className="text-xs">
-                                      +{athlete.skills.length - 3} more
+                                      +{athlete.extraSkills} more
                                     </Badge>
                                   )}
                                 </div>
