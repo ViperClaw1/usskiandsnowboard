@@ -1,3 +1,7 @@
+// ==============================
+// Imports
+// ==============================
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -24,43 +28,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, EyeOff, FileText } from "lucide-react";
 import { format } from "date-fns";
+import { TrainingArticle } from "@/types/training";
+import { ARTICLE_CATEGORIES } from "@/constants/training";
 
-const CATEGORIES = [
-  "Career Development",
-  "Mental Performance",
-  "Financial Literacy",
-  "Life After Sport",
-  "Leadership",
-  "Networking",
-];
+// ==============================
+// Utility Functions
+// ==============================
 
+/** Converts an article title into a URL-safe slug */
 const generateSlug = (title: string) =>
   title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+/** Estimates reading time in minutes from HTML body content */
 const estimateReadingTime = (text: string) =>
   Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, "").split(/\s+/).length / 200));
 
-interface Article {
-  id: string;
+// ==============================
+// Types / Interfaces
+// ==============================
+
+/** Form state for create/edit dialog */
+interface ArticleForm {
   title: string;
-  slug: string;
-  subtitle: string | null;
+  subtitle: string;
   body: string;
-  category: string | null;
-  hero_image_url: string | null;
-  author_name: string | null;
-  author_image_url: string | null;
-  status: string;
-  reading_time_minutes: number | null;
-  published_at: string | null;
-  created_at: string;
-  created_by: string;
+  category: string;
+  author_name: string;
+  slug: string;
+  isPublished: boolean;
 }
 
-const EMPTY_FORM = {
+// ==============================
+// Constants
+// ==============================
+
+const EMPTY_FORM: ArticleForm = {
   title: "",
   subtitle: "",
   body: "",
@@ -70,24 +75,39 @@ const EMPTY_FORM = {
   isPublished: false,
 };
 
+// ==============================
+// Component Definition
+// Smart component — manages full CRUD for training articles.
+// Handles file uploads, status toggling, and delete confirmation.
+// ==============================
+
 export const TrainingArticleManager = () => {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const { user } = useAuth();
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<TrainingArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState<ArticleForm>(EMPTY_FORM);
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [authorFile, setAuthorFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [authorPreview, setAuthorPreview] = useState<string | null>(null);
 
+  // ==============================
+  // Effects — Data Fetching
+  // ==============================
+
   const fetchArticles = useCallback(async () => {
-    const { data } = await supabase.from("training_articles").select("*").order("created_at", { ascending: false });
-    if (data) setArticles(data as Article[]);
+    const { data } = await supabase
+      .from("training_articles")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setArticles(data as TrainingArticle[]);
     setLoading(false);
   }, []);
 
@@ -95,6 +115,11 @@ export const TrainingArticleManager = () => {
     fetchArticles();
   }, [fetchArticles]);
 
+  // ==============================
+  // Event Handlers — Dialog
+  // ==============================
+
+  /** Opens the dialog in "create" mode with a blank form */
   const openCreate = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -105,7 +130,8 @@ export const TrainingArticleManager = () => {
     setDialogOpen(true);
   };
 
-  const openEdit = (a: Article) => {
+  /** Opens the dialog in "edit" mode pre-populated with the article's data */
+  const openEdit = (a: TrainingArticle) => {
     setEditingId(a.id);
     setForm({
       title: a.title,
@@ -123,14 +149,26 @@ export const TrainingArticleManager = () => {
     setDialogOpen(true);
   };
 
-  const uploadFile = async (file: File, path: string) => {
+  // ==============================
+  // Event Handlers — File Upload
+  // Uploads an image to Supabase storage and returns its public URL
+  // ==============================
+
+  const uploadFile = async (file: File, path: string): Promise<string> => {
     const ext = file.name.split(".").pop();
     const filePath = `${user?.id}/${path}.${ext}`;
-    const { error } = await supabase.storage.from("training-images").upload(filePath, file, { upsert: true });
+    const { error } = await supabase.storage
+      .from("training-images")
+      .upload(filePath, file, { upsert: true });
     if (error) throw error;
     const { data } = supabase.storage.from("training-images").getPublicUrl(filePath);
     return data.publicUrl;
   };
+
+  // ==============================
+  // Event Handlers — Save Article
+  // Handles both create and update, including optional image uploads
+  // ==============================
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.body.trim()) {
@@ -143,15 +181,10 @@ export const TrainingArticleManager = () => {
     try {
       let heroUrl = heroPreview;
       let authorUrl = authorPreview;
-
       const articleId = editingId || crypto.randomUUID();
 
-      if (heroFile) {
-        heroUrl = await uploadFile(heroFile, `articles/${articleId}/hero`);
-      }
-      if (authorFile) {
-        authorUrl = await uploadFile(authorFile, `authors/${articleId}`);
-      }
+      if (heroFile) heroUrl = await uploadFile(heroFile, `articles/${articleId}/hero`);
+      if (authorFile) authorUrl = await uploadFile(authorFile, `authors/${articleId}`);
 
       const slug = form.slug.trim() || generateSlug(form.title);
       const readingTime = estimateReadingTime(form.body);
@@ -176,7 +209,9 @@ export const TrainingArticleManager = () => {
         if (error) throw error;
         toast.success("Article updated");
       } else {
-        const { error } = await supabase.from("training_articles").insert({ id: articleId, ...record });
+        const { error } = await supabase
+          .from("training_articles")
+          .insert({ id: articleId, ...record });
         if (error) throw error;
         toast.success("Article created");
       }
@@ -190,7 +225,11 @@ export const TrainingArticleManager = () => {
     }
   };
 
-  const togglePublish = async (a: Article) => {
+  // ==============================
+  // Event Handlers — Publish Toggle
+  // ==============================
+
+  const togglePublish = async (a: TrainingArticle) => {
     const newStatus = a.status === "published" ? "draft" : "published";
     const { error } = await supabase
       .from("training_articles")
@@ -199,6 +238,7 @@ export const TrainingArticleManager = () => {
         published_at: newStatus === "published" ? new Date().toISOString() : null,
       })
       .eq("id", a.id);
+
     if (error) {
       toast.error("Failed to update status");
     } else {
@@ -206,6 +246,10 @@ export const TrainingArticleManager = () => {
       fetchArticles();
     }
   };
+
+  // ==============================
+  // Event Handlers — Delete Article
+  // ==============================
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -219,6 +263,10 @@ export const TrainingArticleManager = () => {
     setDeleteId(null);
   };
 
+  // ==============================
+  // Render
+  // ==============================
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -230,11 +278,14 @@ export const TrainingArticleManager = () => {
           <Plus className="h-4 w-4 mr-1" /> New Article
         </Button>
       </CardHeader>
+
       <CardContent>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading…</div>
         ) : articles.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">No articles yet. Create your first one!</div>
+          <div className="py-8 text-center text-muted-foreground">
+            No articles yet. Create your first one!
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -253,11 +304,16 @@ export const TrainingArticleManager = () => {
                     <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
                     <TableCell>{a.category || "—"}</TableCell>
                     <TableCell>
-                      <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
+                      <Badge
+                        variant={a.status === "published" ? "default" : "secondary"}
+                        className="text-xs"
+                      >
                         {a.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}</TableCell>
+                    <TableCell>
+                      {a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
@@ -269,7 +325,11 @@ export const TrainingArticleManager = () => {
                           onClick={() => togglePublish(a)}
                           title={a.status === "published" ? "Unpublish" : "Publish"}
                         >
-                          {a.status === "published" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {a.status === "published" ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           size="icon"
@@ -290,7 +350,7 @@ export const TrainingArticleManager = () => {
         )}
       </CardContent>
 
-      {/* Create/Edit Dialog */}
+      {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -301,13 +361,13 @@ export const TrainingArticleManager = () => {
               <Label>Title *</Label>
               <Input
                 value={form.title}
-                onChange={(e) => {
+                onChange={(e) =>
                   setForm((f) => ({
                     ...f,
                     title: e.target.value,
                     slug: editingId ? f.slug : generateSlug(e.target.value),
-                  }));
-                }}
+                  }))
+                }
                 placeholder="Article title"
               />
             </div>
@@ -329,12 +389,15 @@ export const TrainingArticleManager = () => {
             </div>
             <div>
               <Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
+              <Select
+                value={form.category}
+                onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => (
+                  {ARTICLE_CATEGORIES.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
@@ -373,7 +436,11 @@ export const TrainingArticleManager = () => {
                 }}
               />
               {authorPreview && (
-                <img src={authorPreview} alt="Author" className="h-12 w-12 rounded-full object-cover mt-2" />
+                <img
+                  src={authorPreview}
+                  alt="Author"
+                  className="h-12 w-12 rounded-full object-cover mt-2"
+                />
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 If no image is uploaded, the U.S. Ski &amp; Snowboard logo is used as fallback.
@@ -392,10 +459,19 @@ export const TrainingArticleManager = () => {
                   }
                 }}
               />
-              {heroPreview && <img src={heroPreview} alt="Hero" className="h-32 w-full rounded-lg object-cover mt-2" />}
+              {heroPreview && (
+                <img
+                  src={heroPreview}
+                  alt="Hero"
+                  className="h-32 w-full rounded-lg object-cover mt-2"
+                />
+              )}
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={form.isPublished} onCheckedChange={(v) => setForm((f) => ({ ...f, isPublished: v }))} />
+              <Switch
+                checked={form.isPublished}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, isPublished: v }))}
+              />
               <Label>{form.isPublished ? "Published" : "Draft"}</Label>
             </div>
             <Button onClick={handleSave} disabled={saving} className="w-full">
@@ -405,7 +481,7 @@ export const TrainingArticleManager = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

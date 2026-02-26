@@ -1,3 +1,7 @@
+// ==============================
+// Imports
+// ==============================
+
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,37 +10,29 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import usLogo from "@/assets/us-logo-new.png";
+import { TrainingArticle } from "@/types/training";
+import { getCategoryColor } from "@/constants/training";
 
-interface Article {
-  id: string;
-  title: string;
-  slug: string;
-  subtitle: string | null;
-  body: string;
-  category: string | null;
-  hero_image_url: string | null;
-  author_name: string | null;
-  author_image_url: string | null;
-  reading_time_minutes: number | null;
-  published_at: string | null;
-}
+// ==============================
+// Component Definition
+// Smart component — fetches a single article by slug.
+// Delegates category color logic to shared getCategoryColor helper.
+// ==============================
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "Career Development": "bg-secondary/10 text-secondary",
-  "Mental Performance": "bg-primary/10 text-primary",
-  "Financial Literacy": "bg-emerald-100 text-emerald-700",
-  "Life After Sport": "bg-amber-100 text-amber-700",
-  "Leadership": "bg-violet-100 text-violet-700",
-  "Networking": "bg-sky-100 text-sky-700",
-};
-
-const TrainingArticle = () => {
+const TrainingArticlePage = () => {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const { slug } = useParams<{ slug: string }>();
-  const [article, setArticle] = useState<Article | null>(null);
+  const [article, setArticle] = useState<TrainingArticle | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ==============================
+  // Effects — Data Fetching
+  // Fetches the published article matching the URL slug
+  // ==============================
   useEffect(() => {
-    const fetch = async () => {
+    const fetchArticle = async () => {
       if (!slug) return;
       const { data } = await supabase
         .from("training_articles")
@@ -44,12 +40,15 @@ const TrainingArticle = () => {
         .eq("slug", slug)
         .eq("status", "published")
         .maybeSingle();
-      if (data) setArticle(data as Article);
+      if (data) setArticle(data as TrainingArticle);
       setLoading(false);
     };
-    fetch();
+    fetchArticle();
   }, [slug]);
 
+  // ==============================
+  // Render — Loading State
+  // ==============================
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -58,6 +57,9 @@ const TrainingArticle = () => {
     );
   }
 
+  // ==============================
+  // Render — Not Found State
+  // ==============================
   if (!article) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
@@ -69,11 +71,17 @@ const TrainingArticle = () => {
     );
   }
 
-  const catColor = CATEGORY_COLORS[article.category || ""] || "bg-muted text-muted-foreground";
+  // ==============================
+  // Derived Values
+  // ==============================
+  const catColor = getCategoryColor(article.category).bg;
 
+  // ==============================
+  // Render — Article
+  // ==============================
   return (
     <div className="min-h-screen bg-background">
-      {/* Back link */}
+      {/* Back navigation */}
       <div className="container mx-auto px-4 pt-6">
         <Link
           to="/training"
@@ -99,7 +107,7 @@ const TrainingArticle = () => {
 
       {/* Article content */}
       <article className="container mx-auto px-4 py-8 max-w-3xl">
-        {/* Meta row */}
+        {/* Meta row — category badge, reading time, publish date */}
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
           {article.category && (
             <Badge className={`${catColor} border-0 text-xs font-semibold uppercase tracking-wide`}>
@@ -130,10 +138,13 @@ const TrainingArticle = () => {
           <p className="text-lg text-muted-foreground italic mb-6">{article.subtitle}</p>
         )}
 
-        {/* Author */}
+        {/* Author row */}
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-border">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={article.author_image_url || usLogo} alt={article.author_name || "Author"} />
+            <AvatarImage
+              src={article.author_image_url || usLogo}
+              alt={article.author_name || "Author"}
+            />
             <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
               {(article.author_name || "US")[0]}
             </AvatarFallback>
@@ -143,7 +154,7 @@ const TrainingArticle = () => {
           </span>
         </div>
 
-        {/* Body */}
+        {/* Article body — rendered as HTML from rich text editor */}
         <div
           className="prose prose-lg max-w-none text-foreground
             prose-headings:font-bold prose-headings:text-foreground
@@ -160,4 +171,4 @@ const TrainingArticle = () => {
   );
 };
 
-export default TrainingArticle;
+export default TrainingArticlePage;

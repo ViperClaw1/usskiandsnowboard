@@ -1,50 +1,44 @@
+// ==============================
+// Imports
+// ==============================
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Clock, User } from "lucide-react";
 import { format } from "date-fns";
+import { TrainingArticle } from "@/types/training";
+import { TRAINING_CATEGORIES, getCategoryColor } from "@/constants/training";
 
-const TRAINING_CATEGORIES = [
-  "All Topics",
-  "Career Development",
-  "Mental Performance",
-  "Financial Literacy",
-  "Life After Sport",
-  "Leadership",
-  "Networking",
-];
+// ==============================
+// Utility Functions
+// ==============================
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  "Career Development": { bg: "bg-secondary/10 text-secondary", text: "text-secondary" },
-  "Mental Performance": { bg: "bg-primary/10 text-primary", text: "text-primary" },
-  "Financial Literacy": { bg: "bg-emerald-100 text-emerald-700", text: "text-emerald-700" },
-  "Life After Sport": { bg: "bg-amber-100 text-amber-700", text: "text-amber-700" },
-  "Leadership": { bg: "bg-violet-100 text-violet-700", text: "text-violet-700" },
-  "Networking": { bg: "bg-sky-100 text-sky-700", text: "text-sky-700" },
+/** Strips HTML tags and truncates to 160 chars for article card excerpts */
+const getExcerpt = (body: string): string => {
+  const text = body.replace(/<[^>]*>/g, "");
+  return text.length > 160 ? text.slice(0, 160) + "…" : text;
 };
 
-interface TrainingArticle {
-  id: string;
-  title: string;
-  slug: string;
-  subtitle: string | null;
-  body: string;
-  category: string | null;
-  hero_image_url: string | null;
-  author_name: string | null;
-  author_image_url: string | null;
-  status: string;
-  reading_time_minutes: number | null;
-  published_at: string | null;
-  created_at: string;
-}
+// ==============================
+// Component Definition
+// Smart component — fetches published training articles and handles
+// category filtering. All UI is inline (single-purpose page).
+// ==============================
 
 const Training = () => {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const [articles, setArticles] = useState<TrainingArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All Topics");
 
+  // ==============================
+  // Effects — Data Fetching
+  // Fetches all published articles on mount, ordered by publish date desc
+  // ==============================
   useEffect(() => {
     const fetchArticles = async () => {
       const { data, error } = await supabase
@@ -52,24 +46,24 @@ const Training = () => {
         .select("*")
         .eq("status", "published")
         .order("published_at", { ascending: false });
-
       if (!error && data) setArticles(data as TrainingArticle[]);
       setLoading(false);
     };
     fetchArticles();
   }, []);
 
-  const filtered = activeCategory === "All Topics"
-    ? articles
-    : articles.filter((a) => a.category === activeCategory);
+  // ==============================
+  // Derived Values
+  // Filter articles by active category ("All Topics" shows everything)
+  // ==============================
+  const filtered =
+    activeCategory === "All Topics"
+      ? articles
+      : articles.filter((a) => a.category === activeCategory);
 
-  const getExcerpt = (body: string) => {
-    const text = body.replace(/<[^>]*>/g, "");
-    return text.length > 160 ? text.slice(0, 160) + "…" : text;
-  };
-
-  const getCategoryColor = (cat: string | null) =>
-    CATEGORY_COLORS[cat || ""] || { bg: "bg-muted text-muted-foreground", text: "text-muted-foreground" };
+  // ==============================
+  // Render
+  // ==============================
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,16 +78,17 @@ const Training = () => {
             Resources to Help You Thrive Beyond the Mountain
           </h1>
           <p className="mt-4 text-primary-foreground/80 text-lg max-w-2xl mx-auto">
-            Practical guides, expert insights, and career resources — published by U.S. Ski &amp; Snowboard's Training &amp; Development team.
+            Practical guides, expert insights, and career resources — published by U.S. Ski &amp;
+            Snowboard's Training &amp; Development team.
           </p>
         </div>
-        {/* Curved bottom */}
+        {/* Curved bottom edge */}
         <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 60" preserveAspectRatio="none">
           <path d="M0,60 L0,20 Q720,0 1440,20 L1440,60 Z" fill="hsl(var(--background))" />
         </svg>
       </section>
 
-      {/* Category Filter */}
+      {/* Category Filter Bar */}
       <div className="container mx-auto px-4 pt-8 pb-4">
         <div className="flex flex-wrap gap-2 justify-center">
           {TRAINING_CATEGORIES.map((cat) => (
@@ -115,6 +110,7 @@ const Training = () => {
       {/* Articles Grid */}
       <main className="container mx-auto px-4 py-8">
         {loading ? (
+          // Skeleton placeholders while fetching
           <div className="grid md:grid-cols-2 gap-8">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-80 rounded-xl bg-muted animate-pulse" />
@@ -134,7 +130,7 @@ const Training = () => {
                   to={`/training/${article.slug}`}
                   className="group block rounded-xl overflow-hidden border border-border bg-card shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* Image */}
+                  {/* Article hero image */}
                   <div className="relative h-52 bg-primary/10 overflow-hidden">
                     {article.hero_image_url ? (
                       <img
@@ -156,7 +152,7 @@ const Training = () => {
                     )}
                   </div>
 
-                  {/* Content */}
+                  {/* Article metadata + title */}
                   <div className="p-5 flex flex-col gap-3">
                     <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {article.title}

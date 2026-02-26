@@ -1,3 +1,7 @@
+// ==============================
+// Imports
+// ==============================
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,9 +13,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { User } from "@supabase/supabase-js";
-
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
+
+// ==============================
+// Types / Interfaces
+// ==============================
 
 interface AthleteProfile {
   id: string;
@@ -22,16 +30,14 @@ interface AthleteProfile {
   skills: string[] | null;
   availability: string | null;
   profile_views: number;
-  profiles: {
-    full_name: string;
-  } | null;
+  profiles: { full_name: string } | null;
 }
 
-// ---------------------------------------------------------------------------
-// A single unified skeleton that mirrors the real unauthenticated page layout
-// exactly — same nav always rendered above, same hero section, same card grid
-// — so there is no structural shift when real content replaces it.
-// ---------------------------------------------------------------------------
+// ==============================
+// Skeleton Component
+// Mirrors the unauthenticated page layout exactly to prevent layout shift
+// ==============================
+
 const PageSkeleton = () => (
   <>
     <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
@@ -40,7 +46,6 @@ const PageSkeleton = () => (
         <Skeleton className="h-5 sm:h-6 w-96 max-w-full mx-auto" />
       </div>
     </section>
-
     <section className="py-8 sm:py-12">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -53,96 +58,67 @@ const PageSkeleton = () => (
   </>
 );
 
+// ==============================
+// Component Definition
+// Smart component — fetches athletes for the public preview and delegates
+// the authenticated directory view to AthleteDirectory.
+// Auth state comes from AuthContext (useAuth) instead of inline listeners.
+// ==============================
+
 const Athletes = () => {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { role: userRole } = useUserRole(user?.id);
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
-  // Track both fetches with a single "ready" flag so we only render once both
-  // the auth state AND the athlete list are known.
-  const [authLoading, setAuthLoading] = useState(true);
   const [athletesLoading, setAthletesLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
 
+  // ==============================
+  // Effects — Data Fetching
+  // Fetch top 3 public athletes for the unauthenticated preview (blurred cards)
+  // ==============================
   useEffect(() => {
-    // Kick off the athlete fetch immediately in parallel with the auth check
-    // so we don't waterfall. Authenticated users get AthleteDirectory anyway,
-    // so this data is only shown to unauthenticated visitors.
+    const loadAthletes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("athlete_profiles")
+          .select(
+            `id, user_id, photo_url, sport_discipline, bio, skills, availability, profile_views,
+             profiles!inner(full_name)`
+          )
+          .eq("is_public", true)
+          .order("profile_views", { ascending: false })
+          .limit(3);
+        if (error) throw error;
+        setAthletes(data || []);
+      } catch (error) {
+        console.error("Error loading athletes:", error);
+      } finally {
+        setAthletesLoading(false);
+      }
+    };
     loadAthletes();
-
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      if (user) {
-        loadUserRole(user.id);
-      }
-      setAuthLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserRole(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
-  const loadUserRole = async (userId: string) => {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).single();
-    if (data) setUserRole(data.role);
-  };
-
-  const loadAthletes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("athlete_profiles")
-        .select(
-          `
-          id,
-          user_id,
-          photo_url,
-          sport_discipline,
-          bio,
-          skills,
-          availability,
-          profile_views,
-          profiles!inner(full_name)
-        `,
-        )
-        .eq("is_public", true)
-        .order("profile_views", { ascending: false })
-        .limit(3);
-
-      if (error) throw error;
-      setAthletes(data || []);
-    } catch (error) {
-      console.error("Error loading athletes:", error);
-    } finally {
-      setAthletesLoading(false);
-    }
-  };
-
-  const handleAthleteClick = () => navigate("/auth?type=employer");
-
-  // Wait until BOTH auth and athlete data are resolved before rendering.
-  // This prevents the double-render jump (skeleton → wrong view → right view).
+  // ==============================
+  // Derived Values
+  // Both auth state and athlete data must resolve before rendering to avoid flicker
+  // ==============================
   const isLoading = authLoading || athletesLoading;
 
-  return (
-    // Always render the nav so its height is established from the very first
-    // paint — no height pop when auth resolves.
-    <div className="min-h-screen bg-background">
-      
+  // ==============================
+  // Render
+  // ==============================
 
-      {/* Wrap the swapping content in a container that fades in once ready */}
+  return (
+    <div className="min-h-screen bg-background">
       <main className={`transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}>
         {isLoading ? (
-          // Invisible placeholder that keeps the page height stable while loading.
           <PageSkeleton />
         ) : user ? (
-          /* ── Authenticated view ── */
+          /* ── Authenticated view: full directory ── */
           <div className="container mx-auto px-4 py-8">
             <div className="mb-6">
               <h1 className="text-3xl font-bold">Athlete Directory</h1>
@@ -151,19 +127,19 @@ const Athletes = () => {
               )}
               {userRole === "employer" && (
                 <p className="text-muted-foreground mt-2">
-                  View U.S. Ski & Snowboard athletes exploring their next chapter
+                  View U.S. Ski &amp; Snowboard athletes exploring their next chapter
                 </p>
               )}
             </div>
             <AthleteDirectory />
           </div>
         ) : (
-          /* ── Public / unauthenticated view ── */
+          /* ── Public / unauthenticated view: blurred preview + lock overlay ── */
           <>
             <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
               <div className="container mx-auto px-4 text-center">
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
-                  U.S. Ski & Snowboard Athletes
+                  U.S. Ski &amp; Snowboard Athletes
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                   Discover talented athletes ready for their next career opportunity
@@ -183,7 +159,7 @@ const Athletes = () => {
                   />
                 ) : (
                   <>
-                    {/* Blurred card grid — pointer-events disabled intentionally */}
+                    {/* Blurred card grid — aria-hidden so screen readers skip */}
                     <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
                         {athletes.map((athlete) => (
@@ -207,14 +183,18 @@ const Athletes = () => {
                                     {athlete.profiles?.full_name || "Athlete"}
                                   </CardTitle>
                                   {athlete.sport_discipline && (
-                                    <p className="text-sm text-muted-foreground truncate">{athlete.sport_discipline}</p>
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {athlete.sport_discipline}
+                                    </p>
                                   )}
                                 </div>
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-3">
                               {athlete.bio && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {athlete.bio}
+                                </p>
                               )}
                               {athlete.skills && athlete.skills.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
@@ -244,7 +224,7 @@ const Athletes = () => {
                       </div>
                     </div>
 
-                    {/* Lock overlay — positioned over the blurred grid */}
+                    {/* Sign-in lock overlay */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Card className="max-w-md mx-4 shadow-xl">
                         <CardContent className="pt-6 text-center space-y-4">
