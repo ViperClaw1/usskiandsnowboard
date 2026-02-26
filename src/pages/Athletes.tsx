@@ -35,7 +35,7 @@ interface AthleteProfile {
 
 // ==============================
 // Skeleton Component
-// Mirrors the unauthenticated page layout exactly to prevent layout shift
+// Visible immediately — no opacity wrapper suppressing it
 // ==============================
 
 const PageSkeleton = () => (
@@ -60,25 +60,15 @@ const PageSkeleton = () => (
 
 // ==============================
 // Component Definition
-// Smart component — fetches athletes for the public preview and delegates
-// the authenticated directory view to AthleteDirectory.
-// Auth state comes from AuthContext (useAuth) instead of inline listeners.
 // ==============================
 
 const Athletes = () => {
-  // ==============================
-  // State & Hooks
-  // ==============================
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { role: userRole } = useUserRole(user?.id);
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
   const [athletesLoading, setAthletesLoading] = useState(true);
 
-  // ==============================
-  // Effects — Data Fetching
-  // Fetch top 3 public athletes for the unauthenticated preview (blurred cards)
-  // ==============================
   useEffect(() => {
     const loadAthletes = async () => {
       try {
@@ -86,7 +76,7 @@ const Athletes = () => {
           .from("athlete_profiles")
           .select(
             `id, user_id, photo_url, sport_discipline, bio, skills, availability, profile_views,
-             profiles!inner(full_name)`
+             profiles!inner(full_name)`,
           )
           .eq("is_public", true)
           .order("profile_views", { ascending: false })
@@ -104,20 +94,33 @@ const Athletes = () => {
 
   // ==============================
   // Derived Values
-  // Both auth state and athlete data must resolve before rendering to avoid flicker
+  // FIX: Show skeleton immediately and independently.
+  // Don't block on athletesLoading for the auth-gated view —
+  // athletes are only needed for the public preview.
   // ==============================
-  const isLoading = authLoading || athletesLoading;
+  const isLoading = authLoading;
+  const showPublicPreviewLoading = athletesLoading;
 
   // ==============================
   // Render
+  // FIX: Skeleton is now always visible (no opacity-0 wrapper).
+  // Real content fades in after loading resolves.
   // ==============================
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main>
+          <PageSkeleton />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <main className={`transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}>
-        {isLoading ? (
-          <PageSkeleton />
-        ) : user ? (
+      <main className="animate-in fade-in duration-300">
+        {user ? (
           /* ── Authenticated view: full directory ── */
           <div className="container mx-auto px-4 py-8">
             <div className="mb-6">
@@ -134,7 +137,7 @@ const Athletes = () => {
             <AthleteDirectory />
           </div>
         ) : (
-          /* ── Public / unauthenticated view: blurred preview + lock overlay ── */
+          /* ── Public / unauthenticated view ── */
           <>
             <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
               <div className="container mx-auto px-4 text-center">
@@ -147,9 +150,16 @@ const Athletes = () => {
               </div>
             </section>
 
-            <section className="py-8 sm:py-12 relative">
+            <section className="py-8 sm:py-12">
               <div className="container mx-auto px-4 max-w-7xl">
-                {athletes.length === 0 ? (
+                {/* FIX: Show card skeletons while athletes are still fetching */}
+                {showPublicPreviewLoading ? (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <ProfileCardSkeleton />
+                    <ProfileCardSkeleton />
+                    <ProfileCardSkeleton />
+                  </div>
+                ) : athletes.length === 0 ? (
                   <EmptyState
                     icon={Users}
                     title="No Featured Athletes Yet"
@@ -158,10 +168,11 @@ const Athletes = () => {
                     onAction={() => navigate("/auth")}
                   />
                 ) : (
-                  <>
-                    {/* Blurred card grid — aria-hidden so screen readers skip */}
+                  /* FIX: Overlay wrapper is relative + min-height so the lock
+                     card always centers correctly regardless of grid height   */
+                  <div className="relative min-h-[400px]">
                     <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
-                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {athletes.map((athlete) => (
                           <Card key={athlete.id} className="w-full">
                             <CardHeader className="pb-3">
@@ -183,18 +194,14 @@ const Athletes = () => {
                                     {athlete.profiles?.full_name || "Athlete"}
                                   </CardTitle>
                                   {athlete.sport_discipline && (
-                                    <p className="text-sm text-muted-foreground truncate">
-                                      {athlete.sport_discipline}
-                                    </p>
+                                    <p className="text-sm text-muted-foreground truncate">{athlete.sport_discipline}</p>
                                   )}
                                 </div>
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-3">
                               {athlete.bio && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                  {athlete.bio}
-                                </p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>
                               )}
                               {athlete.skills && athlete.skills.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
@@ -224,7 +231,7 @@ const Athletes = () => {
                       </div>
                     </div>
 
-                    {/* Sign-in lock overlay */}
+                    {/* FIX: overlay uses flex on the relative parent via absolute inset */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Card className="max-w-md mx-4 shadow-xl">
                         <CardContent className="pt-6 text-center space-y-4">
@@ -239,7 +246,7 @@ const Athletes = () => {
                         </CardContent>
                       </Card>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             </section>
