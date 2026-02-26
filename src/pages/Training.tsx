@@ -125,10 +125,10 @@ const Training = () => {
                 <Link
                   key={article.id}
                   to={`/training/${article.slug}`}
-                  className="group block rounded-xl overflow-hidden border border-border bg-card shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 hover:-translate-y-1"
+                  className="group flex flex-col rounded-xl overflow-hidden border border-border bg-card shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* Article hero image */}
-                  <div className="relative h-52 bg-primary/10 overflow-hidden">
+                  <div className="relative h-52 bg-primary/10 overflow-hidden shrink-0">
                     {article.hero_image_url ? (
                       <img
                         src={article.hero_image_url}
@@ -150,12 +150,12 @@ const Training = () => {
                   </div>
 
                   {/* Article metadata + title */}
-                  <div className="p-5 flex flex-col gap-3">
+                  <div className="p-5 flex flex-col flex-1 gap-3">
                     <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {article.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{getExcerpt(article.body)}</p>
-                    <div className="flex items-center justify-between mt-auto pt-2 text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{getExcerpt(article.body)}</p>
+                    <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5" />
                         <span>{article.author_name || "U.S. Ski & Snowboard"}</span>
