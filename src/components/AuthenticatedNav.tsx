@@ -1,31 +1,29 @@
-import { Link, useNavigate } from "react-router-dom";
+// ==============================
+// Imports
+// ==============================
+
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
-import { useCallback } from "react";
-import { toast } from "sonner";
-import { Settings } from "lucide-react";
+import { useSignOut } from "@/hooks/useSignOut";
+import { NAV_ITEMS } from "@/constants/nav";
+
+// ==============================
+// Component Definition
+// Authenticated sticky header. Sign-out logic delegated to useSignOut hook.
+// ==============================
 
 export const AuthenticatedNav = () => {
-  const navigate = useNavigate();
+  // ==============================
+  // Hooks
+  // ==============================
+  const { signOut } = useSignOut();
 
-  const handleSignOut = useCallback(async () => {
-    try {
-      await supabase.auth.signOut({ scope: "local" });
-      localStorage.clear();
-      sessionStorage.clear();
-      toast.success("Signed out successfully");
-    } catch (e) {
-      console.error("Sign out exception:", e);
-      // Still clear storage and navigate even on error
-      localStorage.clear();
-      sessionStorage.clear();
-      toast.success("Signed out successfully");
-    }
-    navigate("/");
-  }, [navigate]);
+  // ==============================
+  // Render
+  // ==============================
 
   return (
     <header
@@ -38,40 +36,28 @@ export const AuthenticatedNav = () => {
       }}
     >
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+        {/* Logo */}
         <Link to="/" className="cursor-pointer">
-          <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" />
+          <img
+            src={usLogo}
+            alt="U.S. Ski & Snowboard"
+            className="h-16 sm:h-20 hover:opacity-80 transition-opacity"
+          />
         </Link>
+
+        {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-          <Link
-            to="/athletes"
-            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-          >
-            Athletes
-          </Link>
-          <Link
-            to="/employers"
-            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-          >
-            Partners
-          </Link>
-          <Link
-            to="/schedule"
-            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-          >
-            Schedule
-          </Link>
-          <Link
-            to="/news"
-            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-          >
-            News
-          </Link>
-          <Link
-            to="/training"
-            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-          >
-            Training
-          </Link>
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {/* Authenticated CTAs */}
           <Link to="/dashboard">
             <Button size="sm" className="lg:h-10 bg-red-600 hover:bg-red-700">
               Dashboard
@@ -83,15 +69,12 @@ export const AuthenticatedNav = () => {
           >
             Settings
           </Link>
-          {/* <Link to="/settings">
-            <Button size="icon" variant="ghost" className="text-white hover:text-white/80 hover:bg-white/10">
-              <Settings className="h-5 w-5" />
-            </Button>
-          </Link> */}
-          <Button size="sm" variant="outline" className="lg:h-10" onClick={handleSignOut}>
+          <Button size="sm" variant="outline" className="lg:h-10" onClick={signOut}>
             Sign Out
           </Button>
         </nav>
+
+        {/* Mobile hamburger menu */}
         <MobileNav />
       </div>
     </header>

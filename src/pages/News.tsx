@@ -1,16 +1,35 @@
+// ==============================
+// Imports
+// ==============================
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Newspaper, Loader2, ExternalLink } from "lucide-react";
-import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { MobileNav } from "@/components/MobileNav";
 import { useAuth } from "@/components/auth/AuthContext";
+import { PublicNav } from "@/components/layout/PublicNav";
+import { PageFooter } from "@/components/layout/PageFooter";
+
+// ==============================
+// Component Definition
+// News page. Smart component — fetches articles.
+// Conditionally renders PublicNav for unauthenticated visitors (authenticated
+// users get the nav from AppLayout/AuthenticatedNav).
+// ==============================
 
 const News = () => {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const { user } = useAuth();
+
+  // ==============================
+  // Data Fetching — News Articles
+  // Ordered by date, limited to 20 most recent articles
+  // ==============================
   const { data: articles, isLoading } = useQuery({
     queryKey: ["news-articles"],
     queryFn: async () => {
@@ -19,78 +38,35 @@ const News = () => {
         .select("*")
         .order("date", { ascending: false, nullsFirst: false })
         .limit(20);
-
       if (error) throw error;
       return data;
     },
   });
 
+  // ==============================
+  // Render
+  // ==============================
+
   return (
     <div className="min-h-screen bg-background">
-      {!user && (
-        <header
-          className="border-b sticky top-0 z-50"
-          style={{
-            backgroundImage: `url(${mountainHeaderBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundColor: "#1e3a5f",
-          }}
-        >
-          <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-            <Link to="/">
-              <img
-                src={usLogo}
-                alt="U.S. Ski & Snowboard"
-                className="h-16 sm:h-20 hover:opacity-80 transition-opacity"
-              />
-            </Link>
-            <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-              <Link
-                to="/athletes"
-                className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-              >
-                Athletes
-              </Link>
-              <Link
-                to="/employers"
-                className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-              >
-                Partners
-              </Link>
-              <Link
-                to="/schedule"
-                className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-              >
-                Schedule
-              </Link>
-              <Link
-                to="/news"
-                className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-              >
-                News
-              </Link>
-              <Link to="/auth">
-                <Button size="sm" className="lg:h-10">
-                  Sign In
-                </Button>
-              </Link>
-            </nav>
-            <MobileNav />
-          </div>
-        </header>
-      )}
+      {/* Show public nav only for unauthenticated visitors */}
+      {!user && <PublicNav />}
 
       <main>
+        {/* Page hero */}
         <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Latest News</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
+              Latest News
+            </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-              Stay updated on success stories, platform updates, and career insights for U.S. Ski & Snowboard athletes.
+              Stay updated on success stories, platform updates, and career insights for U.S. Ski
+              &amp; Snowboard athletes.
             </p>
           </div>
         </section>
 
+        {/* Articles grid */}
         <section className="py-8 sm:py-12">
           <div className="container mx-auto px-4">
             {isLoading ? (
@@ -152,7 +128,7 @@ const News = () => {
                       rel="noopener noreferrer"
                       className="flex items-center gap-2"
                     >
-                      More News at U.S. Ski & Snowboard
+                      More News at U.S. Ski &amp; Snowboard
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </Button>
@@ -172,7 +148,7 @@ const News = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2"
                       >
-                        Visit U.S. Ski & Snowboard
+                        Visit U.S. Ski &amp; Snowboard
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     </Button>
@@ -184,11 +160,8 @@ const News = () => {
         </section>
       </main>
 
-      <footer className="border-t bg-card py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p className="text-xs">&copy; 2025 U.S. Ski & Snowboard. All rights reserved.</p>
-        </div>
-      </footer>
+      {/* Shared page footer */}
+      <PageFooter />
     </div>
   );
 };
