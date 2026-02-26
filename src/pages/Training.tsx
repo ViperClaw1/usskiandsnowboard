@@ -150,12 +150,12 @@ const Training = () => {
                   </div>
 
                   {/* Article metadata + title */}
-                  <div className="p-5 flex flex-col gap-3 h-full">
+                  <div className="p-5 flex flex-col gap-3">
                     <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {article.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{getExcerpt(article.body)}</p>
-                    <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground line-clamp-2">{getExcerpt(article.body)}</p>
+                    <div className="flex items-center justify-between mt-auto pt-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5" />
                         <span>{article.author_name || "U.S. Ski & Snowboard"}</span>
