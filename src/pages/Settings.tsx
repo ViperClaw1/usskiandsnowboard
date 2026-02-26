@@ -1,4 +1,8 @@
-import { useState, useEffect } from "react";
+// ==============================
+// Imports
+// ==============================
+
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,19 +14,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Phone } from "lucide-react";
 
+// ==============================
+// Types / Interfaces
+// ==============================
+
 interface NotificationPreferences {
   email_new_requests: boolean;
   email_accepted_connections: boolean;
   email_profile_views: boolean;
   email_new_accounts: boolean;
   email_connections_declined: boolean;
-  digest_frequency: 'instant' | 'daily' | 'weekly' | 'off';
+  digest_frequency: "instant" | "daily" | "weekly" | "off";
   sms_notifications_enabled: boolean;
 }
 
+// ==============================
+// Utilities
+// Phone formatting helpers — defined outside component to prevent recreation
+// ==============================
+
 const formatPhone = (digits: string): string => {
-  const d = digits.replace(/\D/g, '').slice(0, 11);
-  if (d.length === 0) return '';
+  const d = digits.replace(/\D/g, "").slice(0, 11);
+  if (d.length === 0) return "";
   if (d.length <= 1) return `+${d}`;
   if (d.length <= 4) return `+${d[0]} (${d.slice(1)}`;
   if (d.length <= 7) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4)}`;
@@ -30,19 +43,26 @@ const formatPhone = (digits: string): string => {
   return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9)}`;
 };
 
-const unformatPhone = (value: string): string => value.replace(/\D/g, '');
+const unformatPhone = (value: string): string => value.replace(/\D/g, "");
 
 const validatePhone = (digits: string): string => {
-  if (digits.length === 0) return 'Phone number is required';
-  if (digits.length !== 11) return 'Please enter a valid US phone number';
-  return '';
+  if (digits.length === 0) return "Phone number is required";
+  if (digits.length !== 11) return "Please enter a valid US phone number";
+  return "";
 };
 
+// ==============================
+// Component Definition
+// Smart component — loads and persists notification + SMS preferences.
+// ==============================
+
 export default function Settings() {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState("");
@@ -52,46 +72,48 @@ export default function Settings() {
     email_profile_views: false,
     email_new_accounts: false,
     email_connections_declined: false,
-    digest_frequency: 'instant',
-    sms_notifications_enabled: false
+    digest_frequency: "instant",
+    sms_notifications_enabled: false,
   });
 
+  // ==============================
+  // Derived Values
+  // ==============================
+  const rawDigits = unformatPhone(phoneNumber);
+  const isPhoneValid = rawDigits.length === 11;
+
+  // ==============================
+  // Effects — Data Loading
+  // ==============================
   useEffect(() => {
     loadPreferences();
   }, []);
+
+  // ==============================
+  // Handlers — Data Loading
+  // ==============================
 
   const loadPreferences = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if user is admin
-      const { data: roleData } = await supabase.
-      from('user_roles').
-      select('role').
-      eq('user_id', user.id).
-      eq('role', 'admin').
-      maybeSingle();
-
-      setIsAdmin(!!roleData);
-
-      // Load user phone number
-      const { data: profileData } = await supabase.
-      from('profiles').
-      select('phone').
-      eq('id', user.id).
-      single();
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("id", user.id)
+        .single();
 
       if (profileData?.phone) {
         const digits = unformatPhone(profileData.phone);
         setPhoneNumber(formatPhone(digits));
       }
 
-      const { data, error } = await supabase.
-      from('notification_preferences').
-      select('*').
-      eq('user_id', user.id).
-      maybeSingle();
+      const { data, error } = await supabase
+        .from("notification_preferences")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -102,74 +124,75 @@ export default function Settings() {
           email_profile_views: data.email_profile_views,
           email_new_accounts: data.email_new_accounts,
           email_connections_declined: data.email_connections_declined,
-          digest_frequency: data.digest_frequency as 'instant' | 'daily' | 'weekly' | 'off',
-          sms_notifications_enabled: data.sms_notifications_enabled
+          digest_frequency: data.digest_frequency as "instant" | "daily" | "weekly" | "off",
+          sms_notifications_enabled: data.sms_notifications_enabled,
         });
       } else {
-        // Create default preferences if none exist
         await createDefaultPreferences(user.id);
       }
     } catch (error) {
-      console.error('Error loading preferences:', error);
-      toast.error('Failed to load notification preferences');
+      console.error("Error loading preferences:", error);
+      toast.error("Failed to load notification preferences");
     } finally {
       setLoading(false);
     }
   };
 
   const createDefaultPreferences = async (userId: string) => {
-    const { error } = await supabase.
-    from('notification_preferences').
-    insert({ user_id: userId });
-
-    if (error) {
-      console.error('Error creating default preferences:', error);
-    }
+    const { error } = await supabase
+      .from("notification_preferences")
+      .insert({ user_id: userId });
+    if (error) console.error("Error creating default preferences:", error);
   };
 
-  const savePreferences = async (updates: Partial<NotificationPreferences>) => {
-    setSaving(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  // ==============================
+  // Handlers — Preferences
+  // ==============================
 
-      const newPreferences = { ...preferences, ...updates };
-      setPreferences(newPreferences);
+  const savePreferences = useCallback(
+    async (updates: Partial<NotificationPreferences>) => {
+      setSaving(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      const { error } = await supabase.
-      from('notification_preferences').
-      update({
-        email_new_requests: newPreferences.email_new_requests,
-        email_accepted_connections: newPreferences.email_accepted_connections,
-        email_profile_views: newPreferences.email_profile_views,
-        email_new_accounts: newPreferences.email_new_accounts,
-        email_connections_declined: newPreferences.email_connections_declined,
-        digest_frequency: newPreferences.digest_frequency,
-        sms_notifications_enabled: newPreferences.sms_notifications_enabled
-      }).
-      eq('user_id', user.id);
+        const newPreferences = { ...preferences, ...updates };
+        setPreferences(newPreferences);
 
-      if (error) throw error;
+        const { error } = await supabase
+          .from("notification_preferences")
+          .update({
+            email_new_requests: newPreferences.email_new_requests,
+            email_accepted_connections: newPreferences.email_accepted_connections,
+            email_profile_views: newPreferences.email_profile_views,
+            email_new_accounts: newPreferences.email_new_accounts,
+            email_connections_declined: newPreferences.email_connections_declined,
+            digest_frequency: newPreferences.digest_frequency,
+            sms_notifications_enabled: newPreferences.sms_notifications_enabled,
+          })
+          .eq("user_id", user.id);
 
-      toast.success('Notification preferences updated');
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-      toast.error('Failed to save preferences');
-    } finally {
-      setSaving(false);
-    }
-  };
+        if (error) throw error;
+        toast.success("Notification preferences updated");
+      } catch (error) {
+        console.error("Error saving preferences:", error);
+        toast.error("Failed to save preferences");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [preferences]
+  );
 
-  const rawDigits = unformatPhone(phoneNumber);
-  const isPhoneValid = rawDigits.length === 11;
+  // ==============================
+  // Handlers — Phone Number
+  // ==============================
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const digits = unformatPhone(e.target.value);
     const formatted = formatPhone(digits);
     setPhoneNumber(formatted);
-    if (phoneTouched) {
-      setPhoneError(validatePhone(digits));
-    }
+    if (phoneTouched) setPhoneError(validatePhone(digits));
   };
 
   const handlePhoneBlur = () => {
@@ -179,36 +202,41 @@ export default function Settings() {
 
   const savePhoneNumber = async () => {
     if (!isPhoneValid) return;
-
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const e164 = `+${rawDigits}`;
-      const { error } = await supabase.
-      from('profiles').
-      update({ phone: e164 }).
-      eq('id', user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ phone: e164 })
+        .eq("id", user.id);
 
       if (error) throw error;
-
-      toast.success('Phone number saved');
+      toast.success("Phone number saved");
     } catch (error) {
-      console.error('Error saving phone number:', error);
-      toast.error('Failed to save phone number');
+      console.error("Error saving phone number:", error);
+      toast.error("Failed to save phone number");
     } finally {
       setSaving(false);
     }
   };
 
+  // ==============================
+  // Render — Loading Guard
+  // ==============================
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>);
-
+      </div>
+    );
   }
+
+  // ==============================
+  // Render
+  // ==============================
 
   return (
     <div className="container max-w-4xl py-8 animate-fade-in">
@@ -233,7 +261,7 @@ export default function Settings() {
           {/* Email Toggles */}
           <div className="space-y-4">
             <h3 className="font-medium text-sm">Notifications:</h3>
-            
+
             <div className="flex items-center justify-between">
               <Label htmlFor="email_new_requests" className="flex flex-col gap-1 cursor-pointer">
                 <span>New connection requests</span>
@@ -245,8 +273,8 @@ export default function Settings() {
                 id="email_new_requests"
                 checked={preferences.email_new_requests}
                 onCheckedChange={(checked) => savePreferences({ email_new_requests: checked })}
-                disabled={saving} />
-
+                disabled={saving}
+              />
             </div>
 
             <div className="flex items-center justify-between">
@@ -260,8 +288,8 @@ export default function Settings() {
                 id="email_accepted_connections"
                 checked={preferences.email_accepted_connections}
                 onCheckedChange={(checked) => savePreferences({ email_accepted_connections: checked })}
-                disabled={saving} />
-
+                disabled={saving}
+              />
             </div>
 
             <div className="flex items-center justify-between">
@@ -275,8 +303,8 @@ export default function Settings() {
                 id="email_new_accounts"
                 checked={preferences.email_new_accounts}
                 onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
-                disabled={saving} />
-
+                disabled={saving}
+              />
             </div>
 
             <div className="flex items-center justify-between">
@@ -290,66 +318,56 @@ export default function Settings() {
                 id="email_connections_declined"
                 checked={preferences.email_connections_declined}
                 onCheckedChange={(checked) => savePreferences({ email_connections_declined: checked })}
-                disabled={saving} />
-
+                disabled={saving}
+              />
             </div>
           </div>
 
           {/* Digest Frequency */}
           <div className="space-y-4 pt-4 border-t">
             <h3 className="font-medium text-sm">Email frequency:</h3>
-            
             <RadioGroup
               value={preferences.digest_frequency}
-              onValueChange={(value) => savePreferences({ digest_frequency: value as 'instant' | 'daily' | 'weekly' | 'off' })}
+              onValueChange={(value) =>
+                savePreferences({ digest_frequency: value as "instant" | "daily" | "weekly" | "off" })
+              }
               disabled={saving}
-              className="space-y-3">
-
+              className="space-y-3"
+            >
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="instant" id="instant" />
                 <Label htmlFor="instant" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Instant</span>
-                  <span className="text-sm text-muted-foreground">
-                    Send emails as notifications happen
-                  </span>
+                  <span className="text-sm text-muted-foreground">Send emails as notifications happen</span>
                 </Label>
               </div>
-
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="daily" id="daily" />
                 <Label htmlFor="daily" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Daily summary</span>
-                   <span className="text-sm text-muted-foreground">
-                    Receive a daily summary at 9:00 AM UTC
-                  </span>
+                  <span className="text-sm text-muted-foreground">Receive a daily summary at 9:00 AM UTC</span>
                 </Label>
               </div>
-
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="weekly" id="weekly" />
                 <Label htmlFor="weekly" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Weekly summary</span>
-                   <span className="text-sm text-muted-foreground">
-                    Receive a weekly summary on Monday at 9:00 AM UTC
-                  </span>
+                  <span className="text-sm text-muted-foreground">Receive a weekly summary on Monday at 9:00 AM UTC</span>
                 </Label>
               </div>
-
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="off" id="off" />
                 <Label htmlFor="off" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Off</span>
-                  <span className="text-sm text-muted-foreground">
-                    Don't send any email notifications (in-app only)
-                  </span>
+                  <span className="text-sm text-muted-foreground">Don't send any email notifications (in-app only)</span>
                 </Label>
               </div>
             </RadioGroup>
           </div>
 
+          {/* SMS Notifications */}
           <div className="pt-6 border-t space-y-4">
             <h3 className="font-medium text-sm">SMS Notifications:</h3>
-            
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
@@ -363,16 +381,16 @@ export default function Settings() {
                       value={phoneNumber}
                       onChange={handlePhoneChange}
                       onBlur={handlePhoneBlur}
-                      className={`pl-10 ${phoneTouched && phoneError ? 'border-destructive' : ''}`} />
-
+                      className={`pl-10 ${phoneTouched && phoneError ? "border-destructive" : ""}`}
+                    />
                   </div>
                   <Button onClick={savePhoneNumber} disabled={saving || !isPhoneValid}>
                     Save
                   </Button>
                 </div>
-                {phoneTouched && phoneError &&
-                <p className="text-sm text-destructive">{phoneError}</p>
-                }
+                {phoneTouched && phoneError && (
+                  <p className="text-sm text-destructive">{phoneError}</p>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -394,8 +412,8 @@ export default function Settings() {
                     }
                     savePreferences({ sms_notifications_enabled: checked });
                   }}
-                  disabled={saving || !phoneNumber} />
-
+                  disabled={saving || !phoneNumber}
+                />
               </div>
             </div>
           </div>
@@ -407,6 +425,6 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
-    </div>);
-
+    </div>
+  );
 }
