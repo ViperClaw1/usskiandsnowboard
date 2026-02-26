@@ -2,6 +2,7 @@
 // Imports
 // ==============================
 
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,20 @@ import { JoinLegacySection } from "@/components/home/JoinLegacySection";
 import { PageFooter } from "@/components/layout/PageFooter";
 
 // ==============================
+// Query Function
+// Extracted outside the component — stable reference, not recreated per render.
+// ==============================
+const fetchFeaturedNews = async () => {
+  const { data, error } = await supabase
+    .from("news_articles")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(3);
+  if (error) throw error;
+  return data;
+};
+
+// ==============================
 // Component Definition
 // Authenticated home page. Smart component — fetches user role and news articles.
 // Delegates all repeated presentational blocks to shared components.
@@ -30,26 +45,41 @@ const Home = () => {
 
   // ==============================
   // Data Fetching — User Role
-  // Used to personalize the hero headline for athletes vs employers
+  // Cached globally — shared with Athletes/Employers pages for the same userId.
   // ==============================
   const { role: userRole } = useUserRole(user?.id);
 
   // ==============================
   // Data Fetching — Featured News
-  // Fetches the 3 most recent news articles for the home page preview
+  // Fetches the 3 most recent news articles; cached for 5 min via QueryClient defaults.
   // ==============================
   const { data: articles, isLoading } = useQuery({
     queryKey: ["featured-news"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("news_articles")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(3);
-      if (error) throw error;
-      return data;
-    },
+    queryFn:  fetchFeaturedNews,
   });
+
+  // ==============================
+  // Derived Values — Memoized Style Objects
+  // Prevents new object references from being created on every render tick,
+  // which would cause child elements to re-paint unnecessarily.
+  // ==============================
+  const heroStyle = useMemo(
+    () => ({
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroImage})`,
+      backgroundSize: "cover" as const,
+      backgroundPosition: "center" as const,
+    }),
+    [] // heroImage is a static import — safe to memoize with empty deps
+  );
+
+  const newsSectionStyle = useMemo(
+    () => ({
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url(${newsSectionBg})`,
+      backgroundSize: "cover" as const,
+      backgroundPosition: "center" as const,
+    }),
+    [] // newsSectionBg is a static import — safe to memoize with empty deps
+  );
 
   // ==============================
   // Render
@@ -61,11 +91,7 @@ const Home = () => {
         {/* Hero Section — personalized headline based on user role */}
         <section
           className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+          style={heroStyle}
         >
           <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-fade-in">
@@ -127,11 +153,7 @@ const Home = () => {
         {/* Featured News Section */}
         <section
           className="py-12 sm:py-16 lg:py-20 relative"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url(${newsSectionBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+          style={newsSectionStyle}
         >
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex items-center justify-between mb-8 sm:mb-12">

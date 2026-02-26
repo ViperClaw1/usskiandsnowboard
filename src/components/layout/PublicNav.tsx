@@ -2,8 +2,10 @@
 // PublicNav — Presentational Component
 // Renders the unauthenticated header with logo, nav links, and mobile nav.
 // Used on Index, News, Schedule, and Employers pages for guests.
+// Wrapped in React.memo — pure component with no props, safe to skip re-renders.
 // ==============================
 
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/MobileNav";
@@ -16,7 +18,7 @@ import { NAV_ITEMS } from "@/constants/nav";
 // ==============================
 
 /** Sticky public header — no auth required. Shows logo + nav links + Sign In CTA. */
-export const PublicNav = () => (
+export const PublicNav = memo(() => (
   <header
     className="sticky top-0 z-50"
     style={{
@@ -56,4 +58,6 @@ export const PublicNav = () => (
       <MobileNav />
     </div>
   </header>
-);
+));
+
+PublicNav.displayName = "PublicNav";
