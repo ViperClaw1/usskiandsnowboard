@@ -56,10 +56,7 @@ const Training = () => {
   // Derived Values
   // Filter articles by active category ("All Topics" shows everything)
   // ==============================
-  const filtered =
-    activeCategory === "All Topics"
-      ? articles
-      : articles.filter((a) => a.category === activeCategory);
+  const filtered = activeCategory === "All Topics" ? articles : articles.filter((a) => a.category === activeCategory);
 
   // ==============================
   // Render
@@ -78,8 +75,8 @@ const Training = () => {
             Resources to Help You Thrive Beyond the Mountain
           </h1>
           <p className="mt-4 text-primary-foreground/80 text-lg max-w-2xl mx-auto">
-            Practical guides, expert insights, and career resources — published by U.S. Ski &amp;
-            Snowboard's Training &amp; Development team.
+            Practical guides, expert insights, and career resources — published by U.S. Ski &amp; Snowboard's Training
+            &amp; Development team.
           </p>
         </div>
         {/* Curved bottom edge */}
@@ -157,10 +154,8 @@ const Training = () => {
                     <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {article.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground line-clamp-2 flex-1">
-                      {getExcerpt(article.body)}
-                    </p>
-                    <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground>
+                    <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{getExcerpt(article.body)}</p>
+                    <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5" />
                         <span>{article.author_name || "U.S. Ski & Snowboard"}</span>
