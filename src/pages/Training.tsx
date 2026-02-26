@@ -2,8 +2,9 @@
 // Imports
 // ==============================
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Clock, User } from "lucide-react";
@@ -22,41 +23,53 @@ const getExcerpt = (body: string): string => {
 };
 
 // ==============================
+// Query Function
+// Extracted outside the component so the reference is stable across renders.
+// ==============================
+const fetchPublishedArticles = async (): Promise<TrainingArticle[]> => {
+  const { data, error } = await supabase
+    .from("training_articles")
+    .select("*")
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as TrainingArticle[];
+};
+
+// ==============================
 // Component Definition
-// Smart component — fetches published training articles and handles
-// category filtering. All UI is inline (single-purpose page).
+// Smart component — fetches published training articles via useQuery (cached)
+// and handles category filtering. Memoizes derived filtered list.
 // ==============================
 
 const Training = () => {
   // ==============================
   // State & Hooks
   // ==============================
-  const [articles, setArticles] = useState<TrainingArticle[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All Topics");
 
   // ==============================
-  // Effects — Data Fetching
-  // Fetches all published articles on mount, ordered by publish date desc
+  // Data Fetching
+  // useQuery caches the article list for 5 min — repeat visits render instantly
+  // while a background revalidation runs silently.
   // ==============================
-  useEffect(() => {
-    const fetchArticles = async () => {
-      const { data, error } = await supabase
-        .from("training_articles")
-        .select("*")
-        .eq("status", "published")
-        .order("published_at", { ascending: false });
-      if (!error && data) setArticles(data as TrainingArticle[]);
-      setLoading(false);
-    };
-    fetchArticles();
-  }, []);
+  const { data: articles = [], isLoading: loading } = useQuery({
+    queryKey: ["training-articles"],
+    queryFn:  fetchPublishedArticles,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // ==============================
   // Derived Values
-  // Filter articles by active category ("All Topics" shows everything)
+  // Memoized so category-switching does not re-filter the full list unnecessarily.
   // ==============================
-  const filtered = activeCategory === "All Topics" ? articles : articles.filter((a) => a.category === activeCategory);
+  const filtered = useMemo(
+    () =>
+      activeCategory === "All Topics"
+        ? articles
+        : articles.filter((a) => a.category === activeCategory),
+    [articles, activeCategory]
+  );
 
   // ==============================
   // Render
@@ -107,7 +120,7 @@ const Training = () => {
       {/* Articles Grid */}
       <main className="container mx-auto px-4 py-8">
         {loading ? (
-          // Skeleton placeholders while fetching
+          // Skeleton placeholders while fetching on first visit
           <div className="grid md:grid-cols-2 gap-8">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-80 rounded-xl bg-muted animate-pulse" />

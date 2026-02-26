@@ -2,8 +2,8 @@
 // Imports
 // ==============================
 
-import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -14,8 +14,23 @@ import { TrainingArticle } from "@/types/training";
 import { getCategoryColor } from "@/constants/training";
 
 // ==============================
+// Query Function
+// Extracted outside the component — stable reference, no closure capture needed.
+// ==============================
+const fetchArticleBySlug = async (slug: string): Promise<TrainingArticle | null> => {
+  const { data } = await supabase
+    .from("training_articles")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+  return data ? (data as TrainingArticle) : null;
+};
+
+// ==============================
 // Component Definition
-// Smart component — fetches a single article by slug.
+// Smart component — fetches a single article by slug via useQuery.
+// Result cached per-slug for 5 min — navigating back to a read article is instant.
 // Delegates category color logic to shared getCategoryColor helper.
 // ==============================
 
@@ -24,30 +39,21 @@ const TrainingArticlePage = () => {
   // State & Hooks
   // ==============================
   const { slug } = useParams<{ slug: string }>();
-  const [article, setArticle] = useState<TrainingArticle | null>(null);
-  const [loading, setLoading] = useState(true);
 
   // ==============================
-  // Effects — Data Fetching
-  // Fetches the published article matching the URL slug
+  // Data Fetching
+  // useQuery caches the article body per slug — repeat visits render instantly.
   // ==============================
-  useEffect(() => {
-    const fetchArticle = async () => {
-      if (!slug) return;
-      const { data } = await supabase
-        .from("training_articles")
-        .select("*")
-        .eq("slug", slug)
-        .eq("status", "published")
-        .maybeSingle();
-      if (data) setArticle(data as TrainingArticle);
-      setLoading(false);
-    };
-    fetchArticle();
-  }, [slug]);
+  const { data: article, isLoading: loading } = useQuery({
+    queryKey:  ["training-article", slug],
+    queryFn:   () => fetchArticleBySlug(slug!),
+    enabled:   !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // ==============================
   // Render — Loading State
+  // Only shown on first visit; repeat visits hydrate instantly from cache.
   // ==============================
   if (loading) {
     return (

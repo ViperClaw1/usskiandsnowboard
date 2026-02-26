@@ -2,12 +2,14 @@
 // HowItWorksSection — Presentational Component
 // Renders the 3-card "How It Works" grid shared by Index and Home pages.
 // Pure UI — no data fetching, no state.
+// Wrapped in React.memo — no props, always renders identically.
 // ==============================
 
+import { memo } from "react";
 import { Users, Briefcase, TrendingUp } from "lucide-react";
 
 /** Three-card explainer grid shown on both the marketing landing and the auth home. */
-export const HowItWorksSection = () => (
+export const HowItWorksSection = memo(() => (
   <section className="pt-6 pb-10 bg-muted">
     <div className="container mx-auto px-4">
       <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-foreground">
@@ -53,4 +55,6 @@ export const HowItWorksSection = () => (
       </div>
     </div>
   </section>
-);
+));
+
+HowItWorksSection.displayName = "HowItWorksSection";
