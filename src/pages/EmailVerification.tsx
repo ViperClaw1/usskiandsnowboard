@@ -1,7 +1,3 @@
-// ==============================
-// Imports
-// ==============================
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,29 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// ==============================
-// Component Definition
-// Static confirmation screen shown after sign-up.
-// Allows the user to resend the verification email.
-// ==============================
-
 export default function EmailVerification() {
-  // ==============================
-  // State & Hooks
-  // ==============================
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // ==============================
-  // Handlers
-  // ==============================
-
   const handleResendEmail = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-
+    
     if (!user?.email) {
       toast({
         title: "Error",
@@ -44,7 +27,7 @@ export default function EmailVerification() {
     }
 
     const { error } = await supabase.auth.resend({
-      type: "signup",
+      type: 'signup',
       email: user.email,
     });
 
@@ -65,10 +48,6 @@ export default function EmailVerification() {
     }
   };
 
-  // ==============================
-  // Render
-  // ==============================
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <Card className="w-full max-w-md">
@@ -88,7 +67,7 @@ export default function EmailVerification() {
               <p className="text-sm">Verification email resent!</p>
             </div>
           )}
-
+          
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground text-center">
               Didn't receive the email?

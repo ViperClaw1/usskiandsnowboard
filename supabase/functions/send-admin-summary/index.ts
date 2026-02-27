@@ -1,7 +1,5 @@
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
-const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +24,10 @@ Deno.serve(async (req) => {
     const isMonday = today.getUTCDay() === 1;
 
     // 1. Get admin users with daily/weekly digest preferences
-    const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+    const { data: adminRoles } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
 
     if (!adminRoles?.length) {
       return new Response(JSON.stringify({ message: "No admins found" }), {
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
 
     // Filter: daily always, weekly only on Monday
     const recipients = prefs.filter(
-      (p: any) => p.digest_frequency === "daily" || (p.digest_frequency === "weekly" && isMonday),
+      (p: any) => p.digest_frequency === "daily" || (p.digest_frequency === "weekly" && isMonday)
     );
 
     if (!recipients.length) {
@@ -63,16 +64,23 @@ Deno.serve(async (req) => {
     }
 
     // 2. Fetch all dashboard data
-    const [statsRes, signupsRes, connectionsRes, sportRes, industryRes, topAthletesRes, topEmployersRes] =
-      await Promise.all([
-        supabase.from("admin_analytics_summary").select("*").single(),
-        supabase.from("user_signups_by_day").select("*").order("signup_date", { ascending: false }).limit(7),
-        supabase.from("connections_by_day").select("*").order("request_date", { ascending: false }).limit(7),
-        supabase.from("athletes_by_sport").select("*"),
-        supabase.from("employers_by_industry").select("*"),
-        supabase.from("top_athlete_profiles").select("*").limit(5),
-        supabase.from("top_employer_profiles").select("*").limit(5),
-      ]);
+    const [
+      statsRes,
+      signupsRes,
+      connectionsRes,
+      sportRes,
+      industryRes,
+      topAthletesRes,
+      topEmployersRes,
+    ] = await Promise.all([
+      supabase.from("admin_analytics_summary").select("*").single(),
+      supabase.from("user_signups_by_day").select("*").order("signup_date", { ascending: false }).limit(7),
+      supabase.from("connections_by_day").select("*").order("request_date", { ascending: false }).limit(7),
+      supabase.from("athletes_by_sport").select("*"),
+      supabase.from("employers_by_industry").select("*"),
+      supabase.from("top_athlete_profiles").select("*").limit(5),
+      supabase.from("top_employer_profiles").select("*").limit(5),
+    ]);
 
     const stats = statsRes.data || {};
     const signups = (signupsRes.data || []).reverse();
@@ -97,26 +105,19 @@ Deno.serve(async (req) => {
       .in("user_id", recentUserIds);
 
     const roleMap: Record<string, string> = {};
-    (recentRoles || []).forEach((r: any) => {
-      roleMap[r.user_id] = r.role;
-    });
+    (recentRoles || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
 
     // 4. Get admin emails
     const { data: adminProfiles } = await supabase
       .from("profiles")
       .select("id, email, full_name")
-      .in(
-        "id",
-        recipients.map((r: any) => r.user_id),
-      );
+      .in("id", recipients.map((r: any) => r.user_id));
 
     const recipientMap: Record<string, any> = {};
-    (adminProfiles || []).forEach((p: any) => {
-      recipientMap[p.id] = p;
-    });
+    (adminProfiles || []).forEach((p: any) => { recipientMap[p.id] = p; });
 
     // 5. Build HTML email
-    const frequencyLabel = (freq: string) => (freq === "daily" ? "Daily" : "Weekly");
+    const frequencyLabel = (freq: string) => freq === "daily" ? "Daily" : "Weekly";
 
     const buildEmail = (freq: string) => {
       const cellStyle = `padding: 16px; text-align: center; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;`;
@@ -135,32 +136,9 @@ Deno.serve(async (req) => {
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <!-- Header -->
     <tr>
-      <td style="
-          padding: 50px 30px 40px;
-          text-align: center;
-          background-image: url('${MOUNTAIN_BG_URL}');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          position: relative;"
-        >
-        <!-- Dark overlay for readability -->
-        <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
-        <!-- Logo -->
-        <div style="position: relative; z-index: 1; margin-bottom: 16px;">
-            <img
-              src="${US_LOGO_URL}"
-              alt="U.S. Ski & Snowboard"
-              width="90"
-              height="90"
-              style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
-            />
-          </div>
-          <!-- Heading -->
-          <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-            >${frequencyLabel(freq)} Analytics Summary
-          </h1>
-          <p style="position: relative; z-index: 1; margin: 8px 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">${today.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+      <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #0066cc 0%, #004999 100%);">
+        <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">${frequencyLabel(freq)} Analytics Summary</h1>
+        <p style="margin: 8px 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </td>
     </tr>
 
@@ -218,16 +196,12 @@ Deno.serve(async (req) => {
             <th style="${thStyle}">Employers</th>
             <th style="${thStyle}">Total</th>
           </tr>
-          ${signups
-            .map(
-              (s: any, i: number) => `<tr>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.signup_date || "-"}</td>
+          ${signups.map((s: any, i: number) => `<tr>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.signup_date || '-'}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.athlete_signups || 0}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.employer_signups || 0}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.signups || 0}</td>
-          </tr>`,
-            )
-            .join("")}
+          </tr>`).join('')}
         </table>
       </td>
     </tr>
@@ -244,17 +218,13 @@ Deno.serve(async (req) => {
             <th style="${thStyle}">Pending</th>
             <th style="${thStyle}">Rejected</th>
           </tr>
-          ${connections
-            .map(
-              (c: any, i: number) => `<tr>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${c.request_date || "-"}</td>
+          ${connections.map((c: any, i: number) => `<tr>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${c.request_date || '-'}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${c.total_requests || 0}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${c.accepted || 0}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${c.pending || 0}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${c.rejected || 0}</td>
-          </tr>`,
-            )
-            .join("")}
+          </tr>`).join('')}
         </table>
       </td>
     </tr>
@@ -268,14 +238,10 @@ Deno.serve(async (req) => {
             <th style="${thStyle}">Sport / Discipline</th>
             <th style="${thStyle}">Count</th>
           </tr>
-          ${sports
-            .map(
-              (s: any, i: number) => `<tr>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.sport_discipline || "Not specified"}</td>
+          ${sports.map((s: any, i: number) => `<tr>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.sport_discipline || 'Not specified'}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${s.count || 0}</td>
-          </tr>`,
-            )
-            .join("")}
+          </tr>`).join('')}
         </table>
       </td>
     </tr>
@@ -289,14 +255,10 @@ Deno.serve(async (req) => {
             <th style="${thStyle}">Industry</th>
             <th style="${thStyle}">Count</th>
           </tr>
-          ${industries
-            .map(
-              (ind: any, i: number) => `<tr>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${ind.industry || "Not specified"}</td>
+          ${industries.map((ind: any, i: number) => `<tr>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${ind.industry || 'Not specified'}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${ind.count || 0}</td>
-          </tr>`,
-            )
-            .join("")}
+          </tr>`).join('')}
         </table>
       </td>
     </tr>
@@ -312,16 +274,12 @@ Deno.serve(async (req) => {
             <th style="${thStyle}">Views</th>
             <th style="${thStyle}">Complete</th>
           </tr>
-          ${topAthletes
-            .map(
-              (a: any, i: number) => `<tr>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${a.full_name || "-"}</td>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${a.sport_discipline || "-"}</td>
+          ${topAthletes.map((a: any, i: number) => `<tr>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${a.full_name || '-'}</td>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${a.sport_discipline || '-'}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${a.profile_views || 0}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${a.profile_completeness || 0}%</td>
-          </tr>`,
-            )
-            .join("")}
+          </tr>`).join('')}
         </table>
       </td>
     </tr>
@@ -337,16 +295,12 @@ Deno.serve(async (req) => {
             <th style="${thStyle}">Views</th>
             <th style="${thStyle}">Complete</th>
           </tr>
-          ${topEmployers
-            .map(
-              (e: any, i: number) => `<tr>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${e.company_name || "-"}</td>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${e.industry || "-"}</td>
+          ${topEmployers.map((e: any, i: number) => `<tr>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${e.company_name || '-'}</td>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${e.industry || '-'}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${e.profile_views || 0}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${e.profile_completeness || 0}%</td>
-          </tr>`,
-            )
-            .join("")}
+          </tr>`).join('')}
         </table>
       </td>
     </tr>
@@ -362,16 +316,12 @@ Deno.serve(async (req) => {
             <th style="${thStyle}">Role</th>
             <th style="${thStyle}">Joined</th>
           </tr>
-          ${(recentProfiles || [])
-            .map(
-              (p: any, i: number) => `<tr>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${p.full_name || "-"}</td>
+          ${(recentProfiles || []).map((p: any, i: number) => `<tr>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${p.full_name || '-'}</td>
             <td style="${i % 2 ? tdAltStyle : tdStyle}">${p.email}</td>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${roleMap[p.id] || "-"}</td>
-            <td style="${i % 2 ? tdAltStyle : tdStyle}">${new Date(p.created_at).toLocaleDateString("en-US")}</td>
-          </tr>`,
-            )
-            .join("")}
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${roleMap[p.id] || '-'}</td>
+            <td style="${i % 2 ? tdAltStyle : tdStyle}">${new Date(p.created_at).toLocaleDateString('en-US')}</td>
+          </tr>`).join('')}
         </table>
       </td>
     </tr>

@@ -1,7 +1,3 @@
-// ==============================
-// Imports
-// ==============================
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,11 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sparkles, ClipboardEdit } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-// ==============================
-// Constants — Welcome Content
-// Copy shown in the post-invite welcome popup, keyed by user role
-// ==============================
 
 const athleteWelcome = {
   header: "Welcome to Athlete Connection",
@@ -62,16 +53,7 @@ Athlete Connection exists to bridge the gap between elite sport and long-term pr
 To get started, complete your profile so athletes can understand your background, industry expertise, and how you're willing to engage.`,
 };
 
-// ==============================
-// Component Definition
-// Smart component — owns auth state, role resolution, and welcome flow.
-// Delegates rendering to role-specific dashboard components.
-// ==============================
-
 const Dashboard = () => {
-  // ==============================
-  // State & Hooks
-  // ==============================
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -83,16 +65,11 @@ const Dashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingManualProfile, setPendingManualProfile] = useState(false);
 
-  // ==============================
-  // Effects — Auth State
-  // Subscribes to auth changes and redirects unauthenticated visitors to "/"
-  // ==============================
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (!session?.user && event === "SIGNED_OUT") {
         navigate("/");
       }
@@ -101,6 +78,7 @@ const Dashboard = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (!session?.user) {
         navigate("/");
       } else {
@@ -111,10 +89,7 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // ==============================
-  // Effects — Pending AI Profile Flag
-  // Triggers the welcome popup if the user was invited and redirected here
-  // ==============================
+  // Check for pending AI profile flag after role is loaded
   useEffect(() => {
     if (role && role !== "admin" && user) {
       if (localStorage.getItem("pending_ai_profile") === "true") {
@@ -124,12 +99,9 @@ const Dashboard = () => {
     }
   }, [role, user]);
 
-  // ==============================
-  // Event Handlers — Role Loading
-  // Fetches role with retry logic; prioritizes admin if multiple roles exist
-  // ==============================
   const loadUserRole = async (userId: string, retryCount = 0) => {
     const MAX_RETRIES = 3;
+    
     try {
       const { data, error } = await supabase
         .from("user_roles")
@@ -138,12 +110,14 @@ const Dashboard = () => {
         .order("role", { ascending: false });
 
       if (error) throw error;
-
+      
+      // Prioritize admin role if present, otherwise take the first role
       let userRole = null;
       if (data && data.length > 0) {
-        const adminRole = data.find((r) => r.role === "admin");
+        const adminRole = data.find(r => r.role === 'admin');
         userRole = adminRole ? adminRole.role : data[0].role;
       }
+      
       setRole(userRole);
     } catch (error) {
       if (retryCount < MAX_RETRIES) {
@@ -152,22 +126,32 @@ const Dashboard = () => {
         console.error("Error loading role after retries:", error);
       }
     } finally {
-      if (retryCount === 0) setLoading(false);
+      if (retryCount === 0) {
+        setLoading(false);
+      }
     }
   };
 
-  // ==============================
-  // Derived Values — Dashboard Renderer
-  // Selects the correct role-specific dashboard component
-  // ==============================
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  if (!user || !session) {
+    return null;
+  }
+
+  if (!role) {
+    return <RoleSelection userId={user.id} onRoleSet={(newRole) => setRole(newRole)} />;
+  }
+
   const renderDashboard = () => {
     switch (role) {
       case "athlete":
         return (
           <AthleteDashboard
             key={refreshKey}
-            user={user!}
-            onProfileUpdated={() => setRefreshKey((k) => k + 1)}
+            user={user}
+            onProfileUpdated={() => setRefreshKey(k => k + 1)}
             openProfileDialog={pendingManualProfile}
             onProfileDialogOpened={() => setPendingManualProfile(false)}
           />
@@ -176,36 +160,24 @@ const Dashboard = () => {
         return (
           <EmployerDashboard
             key={refreshKey}
-            user={user!}
-            onProfileUpdated={() => setRefreshKey((k) => k + 1)}
+            user={user}
+            onProfileUpdated={() => setRefreshKey(k => k + 1)}
             openProfileDialog={pendingManualProfile}
             onProfileDialogOpened={() => setPendingManualProfile(false)}
           />
         );
       case "admin":
-        return <AdminDashboard user={user!} />;
+        return <AdminDashboard user={user} />;
       default:
-        return <RoleSelection userId={user!.id} onRoleSet={(newRole) => setRole(newRole)} />;
+        return <RoleSelection userId={user.id} onRoleSet={(newRole) => setRole(newRole)} />;
     }
   };
 
-  // ==============================
-  // Render — Loading / Unauthenticated Guards
-  // ==============================
-  if (loading) return <LoadingSpinner fullScreen />;
-  if (!user || !session) return null;
-  if (!role) {
-    return <RoleSelection userId={user.id} onRoleSet={(newRole) => setRole(newRole)} />;
-  }
-
-  // ==============================
-  // Render — Dashboard + Welcome Dialogs
-  // ==============================
   return (
     <ErrorBoundary>
       {renderDashboard()}
 
-      {/* Welcome popup shown to invited/new users after first sign-in */}
+      {/* Welcome popup for invited users */}
       <Dialog
         open={showWelcomePopup}
         onOpenChange={(open) => {
@@ -214,40 +186,35 @@ const Dashboard = () => {
         }}
       >
         <DialogContent className="sm:max-w-lg">
-          {welcomeStep === "welcome" ? (
-            (() => {
-              const content = role === "employer" ? partnerWelcome : athleteWelcome;
-              return (
-                <>
-                  <DialogHeader>
-                    <DialogTitle className="text-xl">{content.header}</DialogTitle>
-                  </DialogHeader>
-                  <ScrollArea className="max-h-[60vh] pr-3">
-                    <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-                      <p className="whitespace-pre-line">{content.body}</p>
-                      <ul className="space-y-2 pl-1">
-                        {content.bullets.map((b, i) => (
-                          <li key={i} className="flex gap-2">
-                            <span className="text-primary font-bold mt-0.5">•</span>
-                            <span>
-                              <strong>{b.split(" ").slice(0, 1).join(" ")}</strong>{" "}
-                              {b.split(" ").slice(1).join(" ")}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="whitespace-pre-line">{content.outro}</p>
-                    </div>
-                  </ScrollArea>
-                  <div className="pt-2">
-                    <Button className="w-full" onClick={() => setWelcomeStep("choose")}>
-                      Complete Your Profile
-                    </Button>
+          {welcomeStep === "welcome" ? (() => {
+            const content = role === "employer" ? partnerWelcome : athleteWelcome;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-xl">{content.header}</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[60vh] pr-3">
+                  <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                    <p className="whitespace-pre-line">{content.body}</p>
+                    <ul className="space-y-2 pl-1">
+                      {content.bullets.map((b, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="text-primary font-bold mt-0.5">•</span>
+                          <span><strong>{b.split(" ").slice(0, 1).join(" ")}</strong> {b.split(" ").slice(1).join(" ")}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="whitespace-pre-line">{content.outro}</p>
                   </div>
-                </>
-              );
-            })()
-          ) : (
+                </ScrollArea>
+                <div className="pt-2">
+                  <Button className="w-full" onClick={() => setWelcomeStep("choose")}>
+                    Complete Your Profile
+                  </Button>
+                </div>
+              </>
+            );
+          })() : (
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
@@ -286,24 +253,19 @@ const Dashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* AI Profile Populator — hidden trigger element auto-clicked when activated */}
+      {/* Render AIProfilePopulator when user chooses to proceed - auto-click trigger */}
       {showAIPopulator && (role === "athlete" || role === "employer") && (
         <div className="hidden">
-          <div
-            ref={(el) => {
-              if (el) {
-                const btn = el.querySelector("button");
-                if (btn) setTimeout(() => btn.click(), 100);
-              }
-            }}
-          >
+          <div ref={(el) => {
+            if (el) {
+              const btn = el.querySelector("button");
+              if (btn) setTimeout(() => btn.click(), 100);
+            }
+          }}>
             <AIProfilePopulator
               role={role as "athlete" | "employer"}
               userId={user.id}
-              onComplete={() => {
-                setShowAIPopulator(false);
-                setRefreshKey((k) => k + 1);
-              }}
+              onComplete={() => { setShowAIPopulator(false); setRefreshKey(k => k + 1); }}
             />
           </div>
         </div>

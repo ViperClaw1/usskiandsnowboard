@@ -1,20 +1,7 @@
-// ==============================
-// Imports
-// ==============================
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-// ==============================
-// Component Definition
-// Fully static privacy policy page. No data fetching or auth checks.
-// ==============================
-
 const Privacy = () => {
-  // ==============================
-  // Render
-  // ==============================
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -27,7 +14,7 @@ const Privacy = () => {
 
       <main className="container mx-auto px-4 py-12 max-w-4xl">
         <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
-
+        
         <section className="space-y-6 text-muted-foreground">
           <div>
             <h2 className="text-2xl font-semibold text-foreground mb-3">Information We Collect</h2>

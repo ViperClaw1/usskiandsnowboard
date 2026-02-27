@@ -1,79 +1,75 @@
-// ==============================
-// Imports
-// ==============================
-
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Clock, User } from "lucide-react";
 import { format } from "date-fns";
-import { TrainingArticle } from "@/types/training";
-import { TRAINING_CATEGORIES, getCategoryColor } from "@/constants/training";
 
-// ==============================
-// Utility Functions
-// ==============================
+const TRAINING_CATEGORIES = [
+  "All Topics",
+  "Career Development",
+  "Mental Performance",
+  "Financial Literacy",
+  "Life After Sport",
+  "Leadership",
+  "Networking",
+];
 
-/** Strips HTML tags and truncates to 160 chars for article card excerpts */
-const getExcerpt = (body: string): string => {
-  const text = body.replace(/<[^>]*>/g, "");
-  return text.length > 160 ? text.slice(0, 160) + "…" : text;
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+  "Career Development": { bg: "bg-secondary/10 text-secondary", text: "text-secondary" },
+  "Mental Performance": { bg: "bg-primary/10 text-primary", text: "text-primary" },
+  "Financial Literacy": { bg: "bg-emerald-100 text-emerald-700", text: "text-emerald-700" },
+  "Life After Sport": { bg: "bg-amber-100 text-amber-700", text: "text-amber-700" },
+  "Leadership": { bg: "bg-violet-100 text-violet-700", text: "text-violet-700" },
+  "Networking": { bg: "bg-sky-100 text-sky-700", text: "text-sky-700" },
 };
 
-// ==============================
-// Query Function
-// Extracted outside the component so the reference is stable across renders.
-// ==============================
-const fetchPublishedArticles = async (): Promise<TrainingArticle[]> => {
-  const { data, error } = await supabase
-    .from("training_articles")
-    .select("*")
-    .eq("status", "published")
-    .order("published_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as TrainingArticle[];
-};
-
-// ==============================
-// Component Definition
-// Smart component — fetches published training articles via useQuery (cached)
-// and handles category filtering. Memoizes derived filtered list.
-// ==============================
+interface TrainingArticle {
+  id: string;
+  title: string;
+  slug: string;
+  subtitle: string | null;
+  body: string;
+  category: string | null;
+  hero_image_url: string | null;
+  author_name: string | null;
+  author_image_url: string | null;
+  status: string;
+  reading_time_minutes: number | null;
+  published_at: string | null;
+  created_at: string;
+}
 
 const Training = () => {
-  // ==============================
-  // State & Hooks
-  // ==============================
+  const [articles, setArticles] = useState<TrainingArticle[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All Topics");
 
-  // ==============================
-  // Data Fetching
-  // useQuery caches the article list for 5 min — repeat visits render instantly
-  // while a background revalidation runs silently.
-  // ==============================
-  const { data: articles = [], isLoading: loading } = useQuery({
-    queryKey: ["training-articles"],
-    queryFn:  fetchPublishedArticles,
-    staleTime: 5 * 60 * 1000,
-  });
+  useEffect(() => {
+    const fetchArticles = async () => {
+      const { data, error } = await supabase
+        .from("training_articles")
+        .select("*")
+        .eq("status", "published")
+        .order("published_at", { ascending: false });
 
-  // ==============================
-  // Derived Values
-  // Memoized so category-switching does not re-filter the full list unnecessarily.
-  // ==============================
-  const filtered = useMemo(
-    () =>
-      activeCategory === "All Topics"
-        ? articles
-        : articles.filter((a) => a.category === activeCategory),
-    [articles, activeCategory]
-  );
+      if (!error && data) setArticles(data as TrainingArticle[]);
+      setLoading(false);
+    };
+    fetchArticles();
+  }, []);
 
-  // ==============================
-  // Render
-  // ==============================
+  const filtered = activeCategory === "All Topics"
+    ? articles
+    : articles.filter((a) => a.category === activeCategory);
+
+  const getExcerpt = (body: string) => {
+    const text = body.replace(/<[^>]*>/g, "");
+    return text.length > 160 ? text.slice(0, 160) + "…" : text;
+  };
+
+  const getCategoryColor = (cat: string | null) =>
+    CATEGORY_COLORS[cat || ""] || { bg: "bg-muted text-muted-foreground", text: "text-muted-foreground" };
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,17 +84,16 @@ const Training = () => {
             Resources to Help You Thrive Beyond the Mountain
           </h1>
           <p className="mt-4 text-primary-foreground/80 text-lg max-w-2xl mx-auto">
-            Practical guides, expert insights, and career resources — published by U.S. Ski &amp; Snowboard's Training
-            &amp; Development team.
+            Practical guides, expert insights, and career resources — published by U.S. Ski &amp; Snowboard's Training &amp; Development team.
           </p>
         </div>
-        {/* Curved bottom edge */}
+        {/* Curved bottom */}
         <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 60" preserveAspectRatio="none">
           <path d="M0,60 L0,20 Q720,0 1440,20 L1440,60 Z" fill="hsl(var(--background))" />
         </svg>
       </section>
 
-      {/* Category Filter Bar */}
+      {/* Category Filter */}
       <div className="container mx-auto px-4 pt-8 pb-4">
         <div className="flex flex-wrap gap-2 justify-center">
           {TRAINING_CATEGORIES.map((cat) => (
@@ -120,7 +115,6 @@ const Training = () => {
       {/* Articles Grid */}
       <main className="container mx-auto px-4 py-8">
         {loading ? (
-          // Skeleton placeholders while fetching on first visit
           <div className="grid md:grid-cols-2 gap-8">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-80 rounded-xl bg-muted animate-pulse" />
@@ -138,10 +132,10 @@ const Training = () => {
                 <Link
                   key={article.id}
                   to={`/training/${article.slug}`}
-                  className="group flex flex-col rounded-xl overflow-hidden border border-border bg-card shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 hover:-translate-y-1"
+                  className="group block rounded-xl overflow-hidden border border-border bg-card shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-hover)] transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* Article hero image */}
-                  <div className="relative h-52 bg-primary/10 overflow-hidden shrink-0">
+                  {/* Image */}
+                  <div className="relative h-52 bg-primary/10 overflow-hidden">
                     {article.hero_image_url ? (
                       <img
                         src={article.hero_image_url}
@@ -162,13 +156,15 @@ const Training = () => {
                     )}
                   </div>
 
-                  {/* Article metadata + title */}
-                  <div className="p-5 flex flex-col flex-1 gap-3">
+                  {/* Content */}
+                  <div className="p-5 flex flex-col gap-3">
                     <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {article.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{getExcerpt(article.body)}</p>
-                    <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {getExcerpt(article.body)}
+                    </p>
+                    <div className="flex items-center justify-between mt-auto pt-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5" />
                         <span>{article.author_name || "U.S. Ski & Snowboard"}</span>

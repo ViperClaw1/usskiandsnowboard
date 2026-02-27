@@ -1,7 +1,3 @@
-// ==============================
-// Imports
-// ==============================
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -11,9 +7,27 @@ import { Label } from "@/components/ui/label";
 import { RichTextarea } from "@/components/ui/rich-textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,44 +42,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, EyeOff, FileText } from "lucide-react";
 import { format } from "date-fns";
-import { TrainingArticle } from "@/types/training";
-import { ARTICLE_CATEGORIES } from "@/constants/training";
 
-// ==============================
-// Utility Functions
-// ==============================
+const CATEGORIES = [
+  "Career Development",
+  "Mental Performance",
+  "Financial Literacy",
+  "Life After Sport",
+  "Leadership",
+  "Networking",
+];
 
-/** Converts an article title into a URL-safe slug */
 const generateSlug = (title: string) =>
-  title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+  title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-/** Estimates reading time in minutes from HTML body content */
 const estimateReadingTime = (text: string) =>
   Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, "").split(/\s+/).length / 200));
 
-// ==============================
-// Types / Interfaces
-// ==============================
-
-/** Form state for create/edit dialog */
-interface ArticleForm {
+interface Article {
+  id: string;
   title: string;
-  subtitle: string;
-  body: string;
-  category: string;
-  author_name: string;
   slug: string;
-  isPublished: boolean;
+  subtitle: string | null;
+  body: string;
+  category: string | null;
+  hero_image_url: string | null;
+  author_name: string | null;
+  author_image_url: string | null;
+  status: string;
+  reading_time_minutes: number | null;
+  published_at: string | null;
+  created_at: string;
+  created_by: string;
 }
 
-// ==============================
-// Constants
-// ==============================
-
-const EMPTY_FORM: ArticleForm = {
+const EMPTY_FORM = {
   title: "",
   subtitle: "",
   body: "",
@@ -75,51 +85,32 @@ const EMPTY_FORM: ArticleForm = {
   isPublished: false,
 };
 
-// ==============================
-// Component Definition
-// Smart component — manages full CRUD for training articles.
-// Handles file uploads, status toggling, and delete confirmation.
-// ==============================
-
 export const TrainingArticleManager = () => {
-  // ==============================
-  // State & Hooks
-  // ==============================
   const { user } = useAuth();
-  const [articles, setArticles] = useState<TrainingArticle[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<ArticleForm>(EMPTY_FORM);
+
+  const [form, setForm] = useState(EMPTY_FORM);
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [authorFile, setAuthorFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [authorPreview, setAuthorPreview] = useState<string | null>(null);
-
-  // ==============================
-  // Effects — Data Fetching
-  // ==============================
 
   const fetchArticles = useCallback(async () => {
     const { data } = await supabase
       .from("training_articles")
       .select("*")
       .order("created_at", { ascending: false });
-    if (data) setArticles(data as TrainingArticle[]);
+    if (data) setArticles(data as Article[]);
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
+  useEffect(() => { fetchArticles(); }, [fetchArticles]);
 
-  // ==============================
-  // Event Handlers — Dialog
-  // ==============================
-
-  /** Opens the dialog in "create" mode with a blank form */
   const openCreate = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -130,8 +121,7 @@ export const TrainingArticleManager = () => {
     setDialogOpen(true);
   };
 
-  /** Opens the dialog in "edit" mode pre-populated with the article's data */
-  const openEdit = (a: TrainingArticle) => {
+  const openEdit = (a: Article) => {
     setEditingId(a.id);
     setForm({
       title: a.title,
@@ -149,12 +139,7 @@ export const TrainingArticleManager = () => {
     setDialogOpen(true);
   };
 
-  // ==============================
-  // Event Handlers — File Upload
-  // Uploads an image to Supabase storage and returns its public URL
-  // ==============================
-
-  const uploadFile = async (file: File, path: string): Promise<string> => {
+  const uploadFile = async (file: File, path: string) => {
     const ext = file.name.split(".").pop();
     const filePath = `${user?.id}/${path}.${ext}`;
     const { error } = await supabase.storage
@@ -164,11 +149,6 @@ export const TrainingArticleManager = () => {
     const { data } = supabase.storage.from("training-images").getPublicUrl(filePath);
     return data.publicUrl;
   };
-
-  // ==============================
-  // Event Handlers — Save Article
-  // Handles both create and update, including optional image uploads
-  // ==============================
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.body.trim()) {
@@ -181,10 +161,15 @@ export const TrainingArticleManager = () => {
     try {
       let heroUrl = heroPreview;
       let authorUrl = authorPreview;
+
       const articleId = editingId || crypto.randomUUID();
 
-      if (heroFile) heroUrl = await uploadFile(heroFile, `articles/${articleId}/hero`);
-      if (authorFile) authorUrl = await uploadFile(authorFile, `authors/${articleId}`);
+      if (heroFile) {
+        heroUrl = await uploadFile(heroFile, `articles/${articleId}/hero`);
+      }
+      if (authorFile) {
+        authorUrl = await uploadFile(authorFile, `authors/${articleId}`);
+      }
 
       const slug = form.slug.trim() || generateSlug(form.title);
       const readingTime = estimateReadingTime(form.body);
@@ -205,7 +190,10 @@ export const TrainingArticleManager = () => {
       };
 
       if (editingId) {
-        const { error } = await supabase.from("training_articles").update(record).eq("id", editingId);
+        const { error } = await supabase
+          .from("training_articles")
+          .update(record)
+          .eq("id", editingId);
         if (error) throw error;
         toast.success("Article updated");
       } else {
@@ -225,11 +213,7 @@ export const TrainingArticleManager = () => {
     }
   };
 
-  // ==============================
-  // Event Handlers — Publish Toggle
-  // ==============================
-
-  const togglePublish = async (a: TrainingArticle) => {
+  const togglePublish = async (a: Article) => {
     const newStatus = a.status === "published" ? "draft" : "published";
     const { error } = await supabase
       .from("training_articles")
@@ -238,7 +222,6 @@ export const TrainingArticleManager = () => {
         published_at: newStatus === "published" ? new Date().toISOString() : null,
       })
       .eq("id", a.id);
-
     if (error) {
       toast.error("Failed to update status");
     } else {
@@ -246,10 +229,6 @@ export const TrainingArticleManager = () => {
       fetchArticles();
     }
   };
-
-  // ==============================
-  // Event Handlers — Delete Article
-  // ==============================
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -263,10 +242,6 @@ export const TrainingArticleManager = () => {
     setDeleteId(null);
   };
 
-  // ==============================
-  // Render
-  // ==============================
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -278,7 +253,6 @@ export const TrainingArticleManager = () => {
           <Plus className="h-4 w-4 mr-1" /> New Article
         </Button>
       </CardHeader>
-
       <CardContent>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading…</div>
@@ -304,10 +278,7 @@ export const TrainingArticleManager = () => {
                     <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
                     <TableCell>{a.category || "—"}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={a.status === "published" ? "default" : "secondary"}
-                        className="text-xs"
-                      >
+                      <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
                         {a.status}
                       </Badge>
                     </TableCell>
@@ -325,11 +296,7 @@ export const TrainingArticleManager = () => {
                           onClick={() => togglePublish(a)}
                           title={a.status === "published" ? "Unpublish" : "Publish"}
                         >
-                          {a.status === "published" ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
+                          {a.status === "published" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                         <Button
                           size="icon"
@@ -350,7 +317,7 @@ export const TrainingArticleManager = () => {
         )}
       </CardContent>
 
-      {/* Create / Edit Dialog */}
+      {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -361,13 +328,13 @@ export const TrainingArticleManager = () => {
               <Label>Title *</Label>
               <Input
                 value={form.title}
-                onChange={(e) =>
+                onChange={(e) => {
                   setForm((f) => ({
                     ...f,
                     title: e.target.value,
                     slug: editingId ? f.slug : generateSlug(e.target.value),
-                  }))
-                }
+                  }));
+                }}
                 placeholder="Article title"
               />
             </div>
@@ -393,14 +360,10 @@ export const TrainingArticleManager = () => {
                 value={form.category}
                 onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
-                  {ARTICLE_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -410,7 +373,7 @@ export const TrainingArticleManager = () => {
               <RichTextarea
                 value={form.body}
                 onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-                placeholder="Your article content…"
+                placeholder="<p>Your article content…</p>"
                 className="min-h-[200px]"
               />
             </div>
@@ -436,11 +399,7 @@ export const TrainingArticleManager = () => {
                 }}
               />
               {authorPreview && (
-                <img
-                  src={authorPreview}
-                  alt="Author"
-                  className="h-12 w-12 rounded-full object-cover mt-2"
-                />
+                <img src={authorPreview} alt="Author" className="h-12 w-12 rounded-full object-cover mt-2" />
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 If no image is uploaded, the U.S. Ski &amp; Snowboard logo is used as fallback.
@@ -460,11 +419,7 @@ export const TrainingArticleManager = () => {
                 }}
               />
               {heroPreview && (
-                <img
-                  src={heroPreview}
-                  alt="Hero"
-                  className="h-32 w-full rounded-lg object-cover mt-2"
-                />
+                <img src={heroPreview} alt="Hero" className="h-32 w-full rounded-lg object-cover mt-2" />
               )}
             </div>
             <div className="flex items-center gap-3">
@@ -481,7 +436,7 @@ export const TrainingArticleManager = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -492,10 +447,7 @@ export const TrainingArticleManager = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

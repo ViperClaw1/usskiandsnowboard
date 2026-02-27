@@ -1,7 +1,3 @@
-// ==============================
-// Imports
-// ==============================
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,36 +10,18 @@ import { Loader2, Eye, EyeOff, ArrowLeft, CheckCircle2, XCircle } from "lucide-r
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 
-// ==============================
-// Constants
-// Password strength rules — defined outside component to prevent recreation
-// ==============================
-
 const passwordRules = [
   { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
   { label: "At least one number", test: (p: string) => /\d/.test(p) },
-  {
-    label: "At least one special character",
-    test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p),
-  },
+  { label: "At least one special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p) },
 ];
 
-// ==============================
-// Component Definition
-// Handles the password-reset step after the user clicks a reset/invite link.
-// Verifies the OTP token before showing the form.
-// ==============================
-
 const ResetPassword = () => {
-  // ==============================
-  // State & Hooks
-  // ==============================
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isInvited = searchParams.get("invited") === "true";
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
   const [password, setPassword] = useState("");
@@ -53,9 +31,6 @@ const ResetPassword = () => {
   const [validToken, setValidToken] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // ==============================
-  // Derived Values
-  // ==============================
   const markTouched = (field: string) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
 
@@ -63,12 +38,9 @@ const ResetPassword = () => {
   const passwordsMatch = password === confirmPassword;
   const isFormValid = allPasswordRulesPass && passwordsMatch && confirmPassword !== "";
 
-  // ==============================
-  // Effects — Token Verification
-  // Verifies the reset token before allowing the password form to render
-  // ==============================
   useEffect(() => {
     const verifySession = async () => {
+      // If we have a token_hash param (from invitation email), verify it client-side
       if (tokenHash && type === "recovery") {
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
@@ -82,6 +54,7 @@ const ResetPassword = () => {
           setValidToken(true);
         }
       } else {
+        // Standard flow: check if we already have a recovery session (from Supabase redirect)
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setValidToken(true);
@@ -95,17 +68,17 @@ const ResetPassword = () => {
     verifySession();
   }, [navigate, tokenHash, type]);
 
-  // ==============================
-  // Handlers
-  // ==============================
-
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
 
     setLoading(true);
+
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
       if (error) throw error;
 
       toast.success("Password updated successfully!");
@@ -122,14 +95,9 @@ const ResetPassword = () => {
     }
   };
 
-  // ==============================
-  // Render — Guard
-  // ==============================
-  if (!validToken || verifying) return null;
-
-  // ==============================
-  // Render
-  // ==============================
+  if (!validToken || verifying) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
@@ -140,15 +108,16 @@ const ResetPassword = () => {
             <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
         </div>
-
+        
         <Card className="shadow-elegant">
           <CardHeader>
             <CardTitle>Set New Password</CardTitle>
-            <CardDescription>Enter your new password below</CardDescription>
+            <CardDescription>
+              Enter your new password below
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleResetPassword} className="space-y-4">
-              {/* New password field */}
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
                 <div className="relative">
@@ -186,17 +155,13 @@ const ResetPassword = () => {
                           ) : (
                             <XCircle className="h-4 w-4 text-destructive" />
                           )}
-                          <span className={passes ? "text-green-600" : "text-muted-foreground"}>
-                            {rule.label}
-                          </span>
+                          <span className={passes ? "text-green-600" : "text-muted-foreground"}>{rule.label}</span>
                         </li>
                       );
                     })}
                   </ul>
                 )}
               </div>
-
-              {/* Confirm password field */}
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm New Password</Label>
                 <div className="relative">
@@ -227,7 +192,6 @@ const ResetPassword = () => {
                   <p className="text-sm text-destructive">Passwords do not match.</p>
                 )}
               </div>
-
               <Button type="submit" className="w-full" disabled={loading || !isFormValid}>
                 {loading ? (
                   <>
