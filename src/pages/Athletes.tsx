@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -68,6 +68,8 @@ const PageSkeleton = () => (
 // fetched once and served from cache on subsequent visits until stale.
 // ==============================
 
+const ATHLETES_QUERY_KEY = ["public-athletes-preview"];
+
 const Athletes = () => {
   // ==============================
   // State & Hooks
@@ -75,16 +77,21 @@ const Athletes = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { role: userRole } = useUserRole(user?.id);
+  const queryClient = useQueryClient();
 
   // ==============================
   // Data Fetching — Public Athlete Preview
   // Fetches top 3 public athletes for the unauthenticated blurred-card preview.
-  // React Query caches the result under the "public-athletes-preview" key so
-  // navigating away and back does NOT trigger a new network request (until the
-  // cache becomes stale per the configured staleTime).
+  //
+  // initialData reads whatever is already sitting in the QueryClient cache
+  // synchronously before this render commits. On the very first visit the cache
+  // is empty so initialData is undefined and isLoading behaves normally. On
+  // every subsequent visit the cache already holds the athlete list, so
+  // initialData is populated immediately and isLoading is false from the first
+  // render — no intermediate opacity-0 / skeleton flash.
   // ==============================
   const { data: athletes = [], isLoading: athletesLoading } = useQuery<AthleteProfile[]>({
-    queryKey: ["public-athletes-preview"],
+    queryKey: ATHLETES_QUERY_KEY,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("athlete_profiles")
@@ -98,14 +105,20 @@ const Athletes = () => {
       if (error) throw error;
       return data ?? [];
     },
-    // Keep data fresh for 5 minutes — consistent with typical React Query defaults
-    // and avoids unnecessary re-fetches on every route visit.
+    // Serve cached data synchronously on repeated mounts — eliminates the
+    // isLoading:true → isLoading:false re-render cycle entirely on repeat visits.
+    initialData: () => queryClient.getQueryData<AthleteProfile[]>(ATHLETES_QUERY_KEY),
+    // Keep data fresh for 5 minutes before allowing a background re-fetch.
     staleTime: 5 * 60 * 1000,
   });
 
   // ==============================
   // Derived Values
-  // Both auth state and athlete data must resolve before rendering to avoid flicker
+  // authLoading is only ever true on the very first app load (AuthProvider
+  // resolves from the Supabase local cache synchronously on repeat visits).
+  // athletesLoading is only ever true on the very first visit (initialData
+  // populates from cache on all subsequent mounts).
+  // Together, isLoading is false from the first render on all repeat visits.
   // ==============================
   const isLoading = authLoading || athletesLoading;
 
