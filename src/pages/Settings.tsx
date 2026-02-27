@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Phone } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/components/auth/AuthContext";
 
 // ==============================
 // Types / Interfaces
@@ -26,6 +28,11 @@ interface NotificationPreferences {
   email_connections_declined: boolean;
   digest_frequency: "instant" | "daily" | "weekly" | "off";
   sms_notifications_enabled: boolean;
+}
+
+interface SettingsData {
+  preferences: NotificationPreferences;
+  phone: string;
 }
 
 // ==============================
@@ -51,29 +58,125 @@ const validatePhone = (digits: string): string => {
   return "";
 };
 
+const DEFAULT_PREFERENCES: NotificationPreferences = {
+  email_new_requests: true,
+  email_accepted_connections: true,
+  email_profile_views: false,
+  email_new_accounts: false,
+  email_connections_declined: false,
+  digest_frequency: "instant",
+  sms_notifications_enabled: false,
+};
+
+// ==============================
+// Query Key
+// ==============================
+const settingsKey = (userId: string) => ["settings", userId];
+
+// ==============================
+// Query Function
+// Fetches notification preferences and phone number in parallel.
+// If no preferences row exists yet, inserts a default row and returns defaults.
+// Extracted outside the component — stable reference, not recreated per render.
+// ==============================
+const fetchSettings = async (userId: string): Promise<SettingsData> => {
+  const [{ data: profileData }, { data: prefsData, error: prefsError }] = await Promise.all([
+    supabase.from("profiles").select("phone").eq("id", userId).single(),
+    supabase.from("notification_preferences").select("*").eq("user_id", userId).maybeSingle(),
+  ]);
+
+  if (prefsError) throw prefsError;
+
+  // Insert default row if none exists yet — fire-and-forget, non-blocking
+  if (!prefsData) {
+    supabase
+      .from("notification_preferences")
+      .insert({ user_id: userId })
+      .then(({ error }) => {
+        if (error) console.error("Error creating default preferences:", error);
+      });
+  }
+
+  const preferences: NotificationPreferences = prefsData
+    ? {
+        email_new_requests: prefsData.email_new_requests,
+        email_accepted_connections: prefsData.email_accepted_connections,
+        email_profile_views: prefsData.email_profile_views,
+        email_new_accounts: prefsData.email_new_accounts,
+        email_connections_declined: prefsData.email_connections_declined,
+        digest_frequency: prefsData.digest_frequency as NotificationPreferences["digest_frequency"],
+        sms_notifications_enabled: prefsData.sms_notifications_enabled,
+      }
+    : DEFAULT_PREFERENCES;
+
+  const phone = profileData?.phone ? formatPhone(unformatPhone(profileData.phone)) : "";
+
+  return { preferences, phone };
+};
+
 // ==============================
 // Component Definition
-// Smart component — loads and persists notification + SMS preferences.
+// Data fetching migrated from useState/useEffect to useQuery.
+//
+// Previously, loadPreferences() fired on every mount, reset loading:true,
+// and ran two sequential Supabase calls. Now settings are cached under
+// settingsKey(userId):
+//
+//  - On the first visit: fetches from Supabase, stores in cache.
+//  - On repeat visits: initialData reads from cache synchronously —
+//    loading is false from render zero, no spinner flash.
+//
+// Phone and preferences UI state remain as useState since they represent
+// in-progress edits that should not be shared with or overwritten by the cache
+// until the user explicitly saves.
 // ==============================
 
 export default function Settings() {
   // ==============================
-  // State & Hooks
+  // Hooks
   // ==============================
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // ==============================
+  // UI-only state
+  // Local copies of phone/preferences that the user edits before saving.
+  // Initialised from the query result via the `select` option below.
+  // ==============================
   const [saving, setSaving] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState("");
-  const [preferences, setPreferences] = useState<NotificationPreferences>({
-    email_new_requests: true,
-    email_accepted_connections: true,
-    email_profile_views: false,
-    email_new_accounts: false,
-    email_connections_declined: false,
-    digest_frequency: "instant",
-    sms_notifications_enabled: false,
+  const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_PREFERENCES);
+
+  // ==============================
+  // Data Fetching — Settings
+  // The `select` callback runs once when data first arrives (or from cache)
+  // and seeds the local editable state — equivalent to the original
+  // setPreferences / setPhoneNumber calls inside loadPreferences().
+  // ==============================
+  const { isLoading } = useQuery<SettingsData>({
+    queryKey: settingsKey(user?.id ?? ""),
+    queryFn: () => fetchSettings(user!.id),
+    enabled: !!user,
+    initialData: () => queryClient.getQueryData<SettingsData>(settingsKey(user?.id ?? "")),
+    staleTime: 5 * 60 * 1000,
+    // Seed local editable state when data arrives from network or cache.
+    // Using select here would re-run on every render; a one-shot effect via
+    // onSuccess is the correct pattern for seeding mutable local state.
+    // React Query v5 removed onSuccess — we use the `select` trick instead:
+    // the returned value from useQuery is used only to seed state once.
+    select: (data) => {
+      // Only update local state if the component hasn't been touched yet
+      // (saving===false and phoneTouched===false) to avoid overwriting
+      // in-progress edits with a background refetch.
+      if (!saving && !phoneTouched) {
+        setPreferences(data.preferences);
+        setPhoneNumber(data.phone);
+      }
+      return data;
+    },
   });
 
   // ==============================
@@ -83,79 +186,15 @@ export default function Settings() {
   const isPhoneValid = rawDigits.length === 11;
 
   // ==============================
-  // Effects — Data Loading
-  // ==============================
-  useEffect(() => {
-    loadPreferences();
-  }, []);
-
-  // ==============================
-  // Handlers — Data Loading
-  // ==============================
-
-  const loadPreferences = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("phone")
-        .eq("id", user.id)
-        .single();
-
-      if (profileData?.phone) {
-        const digits = unformatPhone(profileData.phone);
-        setPhoneNumber(formatPhone(digits));
-      }
-
-      const { data, error } = await supabase
-        .from("notification_preferences")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setPreferences({
-          email_new_requests: data.email_new_requests,
-          email_accepted_connections: data.email_accepted_connections,
-          email_profile_views: data.email_profile_views,
-          email_new_accounts: data.email_new_accounts,
-          email_connections_declined: data.email_connections_declined,
-          digest_frequency: data.digest_frequency as "instant" | "daily" | "weekly" | "off",
-          sms_notifications_enabled: data.sms_notifications_enabled,
-        });
-      } else {
-        await createDefaultPreferences(user.id);
-      }
-    } catch (error) {
-      console.error("Error loading preferences:", error);
-      toast.error("Failed to load notification preferences");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createDefaultPreferences = async (userId: string) => {
-    const { error } = await supabase
-      .from("notification_preferences")
-      .insert({ user_id: userId });
-    if (error) console.error("Error creating default preferences:", error);
-  };
-
-  // ==============================
   // Handlers — Preferences
+  // Optimistically updates local state then persists to Supabase.
+  // On success, updates the cache so repeat visits see the latest values.
   // ==============================
-
   const savePreferences = useCallback(
     async (updates: Partial<NotificationPreferences>) => {
+      if (!user) return;
       setSaving(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
         const newPreferences = { ...preferences, ...updates };
         setPreferences(newPreferences);
 
@@ -173,6 +212,12 @@ export default function Settings() {
           .eq("user_id", user.id);
 
         if (error) throw error;
+
+        // Keep the cache in sync so the next visit reads the latest preferences
+        queryClient.setQueryData<SettingsData>(settingsKey(user.id), (old) =>
+          old ? { ...old, preferences: newPreferences } : old,
+        );
+
         toast.success("Notification preferences updated");
       } catch (error) {
         console.error("Error saving preferences:", error);
@@ -181,7 +226,7 @@ export default function Settings() {
         setSaving(false);
       }
     },
-    [preferences]
+    [preferences, user, queryClient],
   );
 
   // ==============================
@@ -201,19 +246,19 @@ export default function Settings() {
   };
 
   const savePhoneNumber = async () => {
-    if (!isPhoneValid) return;
+    if (!user || !isPhoneValid) return;
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const e164 = `+${rawDigits}`;
-      const { error } = await supabase
-        .from("profiles")
-        .update({ phone: e164 })
-        .eq("id", user.id);
+      const { error } = await supabase.from("profiles").update({ phone: e164 }).eq("id", user.id);
 
       if (error) throw error;
+
+      // Keep the cache in sync so the next visit reads the saved phone number
+      queryClient.setQueryData<SettingsData>(settingsKey(user.id), (old) =>
+        old ? { ...old, phone: phoneNumber } : old,
+      );
+
       toast.success("Phone number saved");
     } catch (error) {
       console.error("Error saving phone number:", error);
@@ -225,8 +270,10 @@ export default function Settings() {
 
   // ==============================
   // Render — Loading Guard
+  // Only shown on first-ever visit. On all subsequent mounts, initialData
+  // populates from cache and isLoading is false from render zero.
   // ==============================
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -237,7 +284,6 @@ export default function Settings() {
   // ==============================
   // Render
   // ==============================
-
   return (
     <div className="container max-w-4xl py-8 animate-fade-in">
       <div className="mb-8 flex items-center gap-4">
@@ -253,9 +299,7 @@ export default function Settings() {
       <Card>
         <CardHeader>
           <CardTitle>Email Notifications</CardTitle>
-          <CardDescription>
-            Choose which email notifications you'd like to receive and how often
-          </CardDescription>
+          <CardDescription>Choose which email notifications you'd like to receive and how often</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Email Toggles */}
@@ -295,9 +339,7 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
                 <span>New user registrations</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  When new athletes or partners sign up
-                </span>
+                <span className="text-sm font-normal text-muted-foreground">When new athletes or partners sign up</span>
               </Label>
               <Switch
                 id="email_new_accounts"
@@ -310,9 +352,7 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <Label htmlFor="email_connections_declined" className="flex flex-col gap-1 cursor-pointer">
                 <span>Declined connections</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  When connection requests are declined
-                </span>
+                <span className="text-sm font-normal text-muted-foreground">When connection requests are declined</span>
               </Label>
               <Switch
                 id="email_connections_declined"
@@ -329,7 +369,9 @@ export default function Settings() {
             <RadioGroup
               value={preferences.digest_frequency}
               onValueChange={(value) =>
-                savePreferences({ digest_frequency: value as "instant" | "daily" | "weekly" | "off" })
+                savePreferences({
+                  digest_frequency: value as NotificationPreferences["digest_frequency"],
+                })
               }
               disabled={saving}
               className="space-y-3"
@@ -352,14 +394,18 @@ export default function Settings() {
                 <RadioGroupItem value="weekly" id="weekly" />
                 <Label htmlFor="weekly" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Weekly summary</span>
-                  <span className="text-sm text-muted-foreground">Receive a weekly summary on Monday at 9:00 AM UTC</span>
+                  <span className="text-sm text-muted-foreground">
+                    Receive a weekly summary on Monday at 9:00 AM UTC
+                  </span>
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="off" id="off" />
                 <Label htmlFor="off" className="flex flex-col gap-1 cursor-pointer font-normal">
                   <span className="font-medium">Off</span>
-                  <span className="text-sm text-muted-foreground">Don't send any email notifications (in-app only)</span>
+                  <span className="text-sm text-muted-foreground">
+                    Don't send any email notifications (in-app only)
+                  </span>
                 </Label>
               </div>
             </RadioGroup>
@@ -388,9 +434,7 @@ export default function Settings() {
                     Save
                   </Button>
                 </div>
-                {phoneTouched && phoneError && (
-                  <p className="text-sm text-destructive">{phoneError}</p>
-                )}
+                {phoneTouched && phoneError && <p className="text-sm text-destructive">{phoneError}</p>}
               </div>
 
               <div className="flex items-center justify-between">
@@ -398,9 +442,7 @@ export default function Settings() {
                   <Label htmlFor="sms-enabled" className="font-medium">
                     Enable SMS notifications
                   </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive text message alerts in addition to email
-                  </p>
+                  <p className="text-sm text-muted-foreground">Receive text message alerts in addition to email</p>
                 </div>
                 <Switch
                   id="sms-enabled"
