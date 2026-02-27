@@ -38,7 +38,15 @@ const Schedule = () => (
       <section className="flex-1 py-6 sm:py-8">
         <div className="container mx-auto px-4">
           <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant">
-            <img src={scheduleImage} alt="2025-26 Season Schedule" className="w-full h-auto" />
+            <img
+              src={scheduleImage}
+              alt="2025-26 Season Schedule"
+              className="w-full h-auto"
+              width={1200}
+              height={900}
+              loading="eager"
+              decoding="async"
+            />
           </div>
         </div>
       </section>
