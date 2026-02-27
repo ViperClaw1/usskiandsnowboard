@@ -5,7 +5,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
 import RoleSelection from "@/components/dashboard/RoleSelection";
 import AthleteDashboard from "@/components/dashboard/AthleteDashboard";
 import EmployerDashboard from "@/components/dashboard/EmployerDashboard";
@@ -13,16 +12,12 @@ import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ClipboardEdit } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ==============================
 // Constants — Welcome Content
@@ -63,9 +58,38 @@ To get started, complete your profile so athletes can understand your background
 };
 
 // ==============================
+// Query Key
+// ==============================
+const dashboardRoleKey = (userId: string) => ["dashboard-role", userId];
+
+// ==============================
+// Query Function
+// Extracted outside the component — stable reference, not recreated per render.
+// Retry logic is delegated to useQuery's built-in retry option below, so this
+// function is kept pure: throw on error, return null when no role is assigned yet.
+// ==============================
+const fetchDashboardRole = async (userId: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .order("role", { ascending: false });
+
+  if (error) throw error;
+
+  if (!data || data.length === 0) return null;
+
+  // Prioritize admin if the user holds multiple roles
+  const adminRole = data.find((r) => r.role === "admin");
+  return adminRole ? adminRole.role : data[0].role;
+};
+
+// ==============================
 // Component Definition
-// Smart component — owns auth state, role resolution, and welcome flow.
-// Delegates rendering to role-specific dashboard components.
+// Auth state delegated to AuthContext — no local onAuthStateChange or getSession.
+// Role fetching uses useQuery with retry so the role is cached across navigations
+// and does not re-fetch on every Dashboard mount.
+// Welcome popup and UI-only state remain as useState — they are not server data.
 // ==============================
 
 const Dashboard = () => {
@@ -73,10 +97,15 @@ const Dashboard = () => {
   // State & Hooks
   // ==============================
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Auth comes from context — already resolved from local cache on repeat visits,
+  // no redundant getSession() or onAuthStateChange subscription here.
+  const { user, session, loading: authLoading } = useAuth();
+
+  // ==============================
+  // UI-only state
+  // ==============================
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeStep, setWelcomeStep] = useState<"welcome" | "choose">("welcome");
   const [showAIPopulator, setShowAIPopulator] = useState(false);
@@ -84,36 +113,40 @@ const Dashboard = () => {
   const [pendingManualProfile, setPendingManualProfile] = useState(false);
 
   // ==============================
-  // Effects — Auth State
-  // Subscribes to auth changes and redirects unauthenticated visitors to "/"
+  // Data Fetching — User Role
+  // Cached by userId so navigating away and back does not re-fetch the role.
+  // useQuery's built-in retry replaces the manual setTimeout retry loop.
+  // initialData reads from the QueryClient cache synchronously on repeated
+  // mounts — roleLoading is false from render zero on repeat visits.
+  // Only enabled once we have a confirmed authenticated user.
+  // ==============================
+  const { data: role = null, isLoading: roleLoading } = useQuery<string | null>({
+    queryKey: dashboardRoleKey(user?.id ?? ""),
+    queryFn: () => fetchDashboardRole(user!.id),
+    enabled: !!user && !authLoading,
+    initialData: () => (user ? queryClient.getQueryData<string | null>(dashboardRoleKey(user.id)) : undefined),
+    staleTime: 5 * 60 * 1000,
+    // Replaces the manual setTimeout retry loop — retries up to 3 times with
+    // exponential backoff (1s, 2s, 4s) handled automatically by React Query.
+    retry: 3,
+    retryDelay: (attempt) => 1000 * (attempt + 1),
+  });
+
+  // ==============================
+  // Effects — Redirect Unauthenticated Users
+  // Replaces the navigate("/") calls that were scattered across two async
+  // callbacks inside the old getSession / onAuthStateChange handlers.
   // ==============================
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (!session?.user && event === "SIGNED_OUT") {
-        navigate("/");
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (!session?.user) {
-        navigate("/");
-      } else {
-        loadUserRole(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!authLoading && !user) {
+      navigate("/");
+    }
+  }, [authLoading, user, navigate]);
 
   // ==============================
-  // Effects — Pending AI Profile Flag
-  // Triggers the welcome popup if the user was invited and redirected here
+  // Effects — Welcome Popup
+  // Triggers the welcome popup if the user was invited and redirected here.
+  // Depends on role + user — unchanged from original.
   // ==============================
   useEffect(() => {
     if (role && role !== "admin" && user) {
@@ -123,38 +156,6 @@ const Dashboard = () => {
       }
     }
   }, [role, user]);
-
-  // ==============================
-  // Event Handlers — Role Loading
-  // Fetches role with retry logic; prioritizes admin if multiple roles exist
-  // ==============================
-  const loadUserRole = async (userId: string, retryCount = 0) => {
-    const MAX_RETRIES = 3;
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .order("role", { ascending: false });
-
-      if (error) throw error;
-
-      let userRole = null;
-      if (data && data.length > 0) {
-        const adminRole = data.find((r) => r.role === "admin");
-        userRole = adminRole ? adminRole.role : data[0].role;
-      }
-      setRole(userRole);
-    } catch (error) {
-      if (retryCount < MAX_RETRIES) {
-        setTimeout(() => loadUserRole(userId, retryCount + 1), 1000 * (retryCount + 1));
-      } else {
-        console.error("Error loading role after retries:", error);
-      }
-    } finally {
-      if (retryCount === 0) setLoading(false);
-    }
-  };
 
   // ==============================
   // Derived Values — Dashboard Renderer
@@ -185,17 +186,31 @@ const Dashboard = () => {
       case "admin":
         return <AdminDashboard user={user!} />;
       default:
-        return <RoleSelection userId={user!.id} onRoleSet={(newRole) => setRole(newRole)} />;
+        return (
+          <RoleSelection
+            userId={user!.id}
+            onRoleSet={() => queryClient.invalidateQueries({ queryKey: dashboardRoleKey(user!.id) })}
+          />
+        );
     }
   };
 
   // ==============================
   // Render — Loading / Unauthenticated Guards
+  // authLoading is only true on first-ever app load (resolves from Supabase
+  // local cache synchronously on repeat visits).
+  // roleLoading is only true on first-ever Dashboard visit (initialData
+  // populates from cache on all subsequent mounts).
   // ==============================
-  if (loading) return <LoadingSpinner fullScreen />;
+  if (authLoading || roleLoading) return <LoadingSpinner fullScreen />;
   if (!user || !session) return null;
   if (!role) {
-    return <RoleSelection userId={user.id} onRoleSet={(newRole) => setRole(newRole)} />;
+    return (
+      <RoleSelection
+        userId={user.id}
+        onRoleSet={() => queryClient.invalidateQueries({ queryKey: dashboardRoleKey(user.id) })}
+      />
+    );
   }
 
   // ==============================
@@ -230,8 +245,7 @@ const Dashboard = () => {
                           <li key={i} className="flex gap-2">
                             <span className="text-primary font-bold mt-0.5">•</span>
                             <span>
-                              <strong>{b.split(" ").slice(0, 1).join(" ")}</strong>{" "}
-                              {b.split(" ").slice(1).join(" ")}
+                              <strong>{b.split(" ").slice(0, 1).join(" ")}</strong> {b.split(" ").slice(1).join(" ")}
                             </span>
                           </li>
                         ))}
@@ -254,9 +268,7 @@ const Dashboard = () => {
                   <Sparkles className="h-5 w-5 text-primary" />
                   How would you like to complete your profile?
                 </DialogTitle>
-                <DialogDescription>
-                  Choose AI to auto-fill from a URL, or complete it manually.
-                </DialogDescription>
+                <DialogDescription>Choose AI to auto-fill from a URL, or complete it manually.</DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-3 pt-2">
                 <Button
