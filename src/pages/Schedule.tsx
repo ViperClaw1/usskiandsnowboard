@@ -1,72 +1,52 @@
 // ==============================
 // Imports
 // ==============================
-
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import scheduleImage from "@/assets/schedule-image.png";
-import { useAuth } from "@/components/auth/AuthContext";
-import { PublicNav } from "@/components/layout/PublicNav";
 import { PageFooter } from "@/components/layout/PageFooter";
 
 // ==============================
 // Component Definition
-// Schedule page. Conditionally renders PublicNav for unauthenticated visitors.
-// Purely presentational content — no data fetching.
+// Schedule page. Purely presentational — no data fetching, no auth dependency.
+// AuthenticatedNav is rendered by AppLayout for authenticated users.
+// PublicNav is rendered by AppLayout (or Index) for unauthenticated visitors.
+// This component does not need to know about auth state at all.
 // ==============================
-
-const Schedule = () => {
-  // ==============================
-  // State & Hooks
-  // ==============================
-  const { user } = useAuth();
-
-  // ==============================
-  // Render
-  // ==============================
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Show public nav only for unauthenticated visitors */}
-      {!user && <PublicNav />}
-
-      <main className="flex-1 flex flex-col">
-        {/* Page header with download CTA */}
-        <section className="py-6 sm:py-8 bg-gradient-to-b from-background to-muted">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
-                  2025-26 Season Schedule
-                </h1>
-                <p className="text-base sm:text-lg text-muted-foreground">
-                  Where to see U.S. Ski &amp; Snowboard events
-                </p>
-              </div>
-              <a href={`${import.meta.env.BASE_URL}schedule.pdf`} download>
-                <Button size="lg" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Download PDF
-                </Button>
-              </a>
+const Schedule = () => (
+  <div className="min-h-screen bg-background flex flex-col">
+    <main className="flex-1 flex flex-col">
+      {/* Page header with download CTA */}
+      <section className="py-6 sm:py-8 bg-gradient-to-b from-background to-muted">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">2025-26 Season Schedule</h1>
+              <p className="text-base sm:text-lg text-muted-foreground">Where to see U.S. Ski &amp; Snowboard events</p>
             </div>
+            <a href={`${import.meta.env.BASE_URL}schedule.pdf`} download>
+              <Button size="lg" className="gap-2">
+                <Download className="h-4 w-4" />
+                Download PDF
+              </Button>
+            </a>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Schedule image */}
-        <section className="flex-1 py-6 sm:py-8">
-          <div className="container mx-auto px-4">
-            <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant">
-              <img src={scheduleImage} alt="2025-26 Season Schedule" className="w-full h-auto" />
-            </div>
+      {/* Schedule image */}
+      <section className="flex-1 py-6 sm:py-8">
+        <div className="container mx-auto px-4">
+          <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant">
+            <img src={scheduleImage} alt="2025-26 Season Schedule" className="w-full h-auto" />
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+    </main>
 
-      {/* Shared page footer */}
-      <PageFooter />
-    </div>
-  );
-};
+    {/* Shared page footer */}
+    <PageFooter />
+  </div>
+);
 
 export default Schedule;
