@@ -1,346 +1,264 @@
-// ==============================
-// Imports
-// ==============================
 import { useState, useMemo, useRef } from "react";
 import { useSwipeable } from "react-swipeable";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw } from "lucide-react";
+import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ==============================
 // Types / Interfaces
 // ==============================
 
-interface AthleteProfile {
-  id: string;
-  user_id: string;
-  email: string | null;
-  bio: string | null;
-  sport_discipline: string | null;
-  skills: string[] | null;
-  photo_url: string | null;
-  availability: string | null;
-  career_interests: string[] | null;
-  geographic_preferences: string[] | null;
-  professional_highlights: string | null;
-  years_of_membership: number | null;
-  instagram_url: string | null;
-  profile_views: number | null;
-  sponsors: string[] | null;
-  profiles: {
-    full_name: string | null;
-  };
-  lifestyle_photos?: string[];
-}
-
-interface Education {
-  id: string;
-  school: string;
-  degree: string | null;
-  graduation_year: number | null;
-}
-
-interface Experience {
-  id: string;
-  title: string;
-  organization: string | null;
-  description: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  is_current: boolean | null;
-}
-
-interface Certification {
-  id: string;
-  name: string;
-  issuer: string | null;
-  issue_date: string | null;
-}
-
 interface EmployerProfile {
   id: string;
-  individual_roles: Array<{ title: string; type: string; url: string; location: string }>;
+  user_id: string;
+  company_name: string;
+  industry: string | null;
+  company_size: string | null;
+  hq_location: string | null;
+  opportunities_offered: string | null;
+  contact_person: string | null;
+  contact_title: string | null;
+  contact_email: string | null;
+  logo_url: string | null;
+  about: string | null;
+  connection_to_ussa: string | null;
+  website: string | null;
+  linkedin_url: string | null;
+  job_board_url: string | null;
+  individual_roles: Array<{ title: string; type: string; url: string; location: string }> | null;
+}
+
+interface AthleteProfile {
+  id: string;
 }
 
 // ==============================
 // Query Keys
-// Defined as constants so initialData lookups always reference the exact same
-// key as the query that populated the cache — no risk of key typo cache misses.
 // ==============================
-const DIRECTORY_ATHLETES_KEY = ["athlete-directory-list"];
-const EMPLOYER_PROFILE_KEY = ["athlete-directory-employer-profile"];
+const DIRECTORY_EMPLOYERS_KEY = ["employer-directory-list"];
+const ATHLETE_PROFILE_KEY = ["employer-directory-athlete-profile"];
 
 // ==============================
 // Query Functions
 // Extracted outside the component — stable references, not recreated per render.
 // ==============================
 
-const fetchDirectoryAthletes = async (): Promise<AthleteProfile[]> => {
-  const { data, error } = await supabase
-    .from("athlete_profiles")
-    .select(`*, profiles(full_name)`)
-    .eq("is_public", true);
-
+const fetchDirectoryEmployers = async (): Promise<EmployerProfile[]> => {
+  const { data, error } = await supabase.from("employer_profiles").select("*");
   if (error) throw error;
-
-  // Load lifestyle photos for each athlete in parallel
-  const athletesWithPhotos = await Promise.all(
-    (data || []).map(async (athlete) => {
-      try {
-        const { data: photoFiles } = await supabase.storage
-          .from("athlete-photos")
-          .list(`${athlete.user_id}/lifestyle`, {
-            limit: 5,
-            sortBy: { column: "created_at", order: "desc" },
-          });
-
-        if (photoFiles && photoFiles.length > 0) {
-          const photoUrls = photoFiles.map((file) => {
-            const { data: urlData } = supabase.storage
-              .from("athlete-photos")
-              .getPublicUrl(`${athlete.user_id}/lifestyle/${file.name}`);
-            return urlData.publicUrl;
-          });
-          return { ...athlete, lifestyle_photos: photoUrls };
-        }
-        return { ...athlete, lifestyle_photos: [] };
-      } catch {
-        return { ...athlete, lifestyle_photos: [] };
-      }
-    }),
-  );
-
-  return athletesWithPhotos;
+  return (data as unknown as EmployerProfile[]) ?? [];
 };
 
-const fetchEmployerProfile = async (): Promise<EmployerProfile | null> => {
+const fetchAthleteProfile = async (): Promise<AthleteProfile | null> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
-    .from("employer_profiles")
-    .select("id, individual_roles")
-    .eq("user_id", user.id)
-    .single();
+  const { data } = await supabase.from("athlete_profiles").select("id").eq("user_id", user.id).single();
 
-  if (!data) return null;
-  return {
-    id: data.id,
-    individual_roles: (data.individual_roles as Array<{ title: string; type: string; url: string; location: string }>) ?? [],
-  };
+  return data ?? null;
 };
 
-const fetchExistingRequests = async (employerId: string): Promise<Set<string>> => {
+const fetchExistingRequests = async (athleteId: string): Promise<Set<string>> => {
   const { data, error } = await supabase
     .from("connection_requests")
-    .select("athlete_id")
-    .eq("employer_id", employerId)
+    .select("employer_id")
+    .eq("athlete_id", athleteId)
     .in("status", ["pending", "accepted"]);
 
   if (error) throw error;
-  return new Set(data?.map((r) => r.athlete_id) || []);
+  return new Set(data?.map((r) => r.employer_id) || []);
 };
+
+// ==============================
+// Static Data
+// ==============================
+const industryOptions = [
+  "Technology & Software",
+  "Finance & Banking",
+  "Healthcare & Medical",
+  "Retail & E-commerce",
+  "Manufacturing",
+  "Construction & Real Estate",
+  "Education & Training",
+  "Hospitality & Tourism",
+  "Transportation & Logistics",
+  "Media & Entertainment",
+  "Consulting & Professional Services",
+  "Energy & Utilities",
+  "Telecommunications",
+  "Automotive",
+  "Aerospace & Defense",
+  "Agriculture & Farming",
+  "Biotechnology & Pharmaceuticals",
+  "Consumer Goods",
+  "Fashion & Apparel",
+  "Food & Beverage",
+  "Insurance",
+  "Legal Services",
+  "Marketing & Advertising",
+  "Mining & Metals",
+  "Non-Profit & Social Services",
+  "Publishing",
+  "Sports & Recreation",
+  "Government & Public Sector",
+  "Environmental Services",
+  "Other",
+];
 
 // ==============================
 // Component Definition
 // Data fetching migrated from useState/useEffect to useQuery throughout.
 //
-// Previously, three separate useEffect calls (athletes, employer profile,
+// Previously, three separate useEffect calls (employers, athlete profile,
 // existing requests) all fired on every mount, resetting to loading:true each
 // time and showing the Loader2 spinner. Now all three are cached by React Query:
 //
-//  - DIRECTORY_ATHLETES_KEY  — full athlete list + lifestyle photos (expensive)
-//  - EMPLOYER_PROFILE_KEY    — employer id + roles
-//  - ["existing-requests", employerId] — set of already-contacted athlete ids
+//  - DIRECTORY_EMPLOYERS_KEY  — full employer list
+//  - ATHLETE_PROFILE_KEY      — athlete id for the current user
+//  - ["existing-employer-requests", athleteId] — set of already-contacted employer ids
 //
 // On repeat visits, initialData populates synchronously from the QueryClient
 // cache so loading is false from the very first render — no spinner, no flash.
 // ==============================
 
-const AthleteDirectory = () => {
+const EmployerDirectory = () => {
   const queryClient = useQueryClient();
 
   // ==============================
   // UI-only state — not data fetching concerns
   // ==============================
-  const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfile | null>(null);
+  const [selectedEmployer, setSelectedEmployer] = useState<EmployerProfile | null>(null);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [opportunityType, setOpportunityType] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
-  const [athleteEducation, setAthleteEducation] = useState<Education[]>([]);
-  const [athleteExperience, setAthleteExperience] = useState<Experience[]>([]);
-  const [athleteCertifications, setAthleteCertifications] = useState<Certification[]>([]);
-  const [athletePhotos, setAthletePhotos] = useState<string[]>([]);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterCompanySize, setFilterCompanySize] = useState<string>("all");
+  const [filterLocation, setFilterLocation] = useState<string>("all");
+  const [filterIndustry, setFilterIndustry] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [filterSport, setFilterSport] = useState<string>("all");
-  const [filterAvailability, setFilterAvailability] = useState<string>("all");
-  const [filterSkills, setFilterSkills] = useState<string>("");
-  const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
 
   // ==============================
-  // Data Fetching — Athletes
-  // Cached under DIRECTORY_ATHLETES_KEY. The expensive Promise.all photo fetch
-  // only runs once; every subsequent mount reads from cache via initialData.
+  // Data Fetching — Employers
+  // Cached under DIRECTORY_EMPLOYERS_KEY. Only fetched once; every subsequent
+  // mount reads from cache via initialData — no loading flash.
   // ==============================
   const {
-    data: athletes = [],
-    isLoading: athletesLoading,
-    refetch: refetchAthletes,
-  } = useQuery<AthleteProfile[]>({
-    queryKey: DIRECTORY_ATHLETES_KEY,
-    queryFn: fetchDirectoryAthletes,
-    initialData: () => queryClient.getQueryData<AthleteProfile[]>(DIRECTORY_ATHLETES_KEY),
+    data: employers = [],
+    isLoading: employersLoading,
+    refetch: refetchEmployers,
+  } = useQuery<EmployerProfile[]>({
+    queryKey: DIRECTORY_EMPLOYERS_KEY,
+    queryFn: fetchDirectoryEmployers,
+    initialData: () => queryClient.getQueryData<EmployerProfile[]>(DIRECTORY_EMPLOYERS_KEY),
     staleTime: 5 * 60 * 1000,
   });
 
   // ==============================
-  // Data Fetching — Employer Profile
-  // Cached separately so athlete list re-fetching never blocks employer data
-  // and vice versa. Previously both lived in the same useEffect which meant
-  // a change in employerProfileId would re-trigger loadAthletes() — a bug.
+  // Data Fetching — Athlete Profile
+  // Cached separately from employers — resolving the athlete id never
+  // causes the employer list to re-fetch (previously coupled via useEffect).
   // ==============================
-  const { data: employerProfile } = useQuery<EmployerProfile | null>({
-    queryKey: EMPLOYER_PROFILE_KEY,
-    queryFn: fetchEmployerProfile,
-    initialData: () => queryClient.getQueryData<EmployerProfile | null>(EMPLOYER_PROFILE_KEY),
+  const { data: athleteProfile } = useQuery<AthleteProfile | null>({
+    queryKey: ATHLETE_PROFILE_KEY,
+    queryFn: fetchAthleteProfile,
+    initialData: () => queryClient.getQueryData<AthleteProfile | null>(ATHLETE_PROFILE_KEY),
     staleTime: 5 * 60 * 1000,
   });
 
-  const employerProfileId = employerProfile?.id ?? null;
-  const employerRoles = employerProfile?.individual_roles ?? [];
+  const athleteProfileId = athleteProfile?.id ?? null;
 
   // ==============================
   // Data Fetching — Existing Connection Requests
-  // Keyed by employerId so the cache entry is correctly scoped per employer.
-  // Only enabled once employerProfileId is known.
+  // Keyed by athleteId so the cache entry is correctly scoped per athlete.
+  // Only enabled once athleteProfileId is known.
   // ==============================
-  const { data: existingRequestsSet = new Set<string>(), refetch: refetchRequests } = useQuery<Set<string>>({
-    queryKey: ["existing-requests", employerProfileId],
-    queryFn: () => fetchExistingRequests(employerProfileId!),
-    enabled: !!employerProfileId,
-    initialData: () => queryClient.getQueryData<Set<string>>(["existing-requests", employerProfileId]),
+  const { data: existingRequests = new Set<string>() } = useQuery<Set<string>>({
+    queryKey: ["existing-employer-requests", athleteProfileId],
+    queryFn: () => fetchExistingRequests(athleteProfileId!),
+    enabled: !!athleteProfileId,
+    initialData: () => queryClient.getQueryData<Set<string>>(["existing-employer-requests", athleteProfileId]),
     staleTime: 2 * 60 * 1000,
   });
 
-  // Wrap in a stable reference so renders that only change other state don't
-  // reconstruct it — existingRequests is used in multiple render paths below.
-  const existingRequests = existingRequestsSet;
+  // ==============================
+  // Derived Values — Filter Options
+  // ==============================
+  const uniqueCompanySizes = useMemo(
+    () => [...new Set(employers.map((e) => e.company_size).filter(Boolean))],
+    [employers],
+  );
+
+  const uniqueLocations = useMemo(() => [...new Set(employers.map((e) => e.hq_location).filter(Boolean))], [employers]);
 
   // ==============================
-  // Derived Values — Filtered Athletes
+  // Derived Values — Filtered Employers
   // ==============================
-  const filteredAthletes = useMemo(() => {
-    let result = athletes;
+  const filteredEmployers = useMemo(() => {
+    return employers.filter((employer) => {
+      if (filterCompanySize !== "all" && employer.company_size !== filterCompanySize) return false;
+      if (filterLocation !== "all" && employer.hq_location !== filterLocation) return false;
+      if (filterIndustry !== "all" && employer.industry !== filterIndustry) return false;
 
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      result = result.filter((athlete) => {
+      if (searchTerm.trim()) {
+        const search = searchTerm.toLowerCase();
         const searchableFields = [
-          athlete.profiles.full_name,
-          athlete.sport_discipline,
-          athlete.bio,
-          athlete.professional_highlights,
-          athlete.availability,
-          ...(athlete.skills || []),
-          ...(athlete.career_interests || []),
+          employer.company_name,
+          employer.industry,
+          employer.about,
+          employer.opportunities_offered,
+          employer.contact_person,
         ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
-        return searchableFields.includes(search);
-      });
-    }
+        if (!searchableFields.includes(search)) return false;
+      }
 
-    if (filterSport && filterSport !== "all") {
-      result = result.filter((a) => a.sport_discipline === filterSport);
-    }
-    if (filterAvailability && filterAvailability !== "all") {
-      result = result.filter((a) => a.availability === filterAvailability);
-    }
-    if (filterSkills) {
-      result = result.filter((a) => a.skills?.some((s) => s.toLowerCase().includes(filterSkills.toLowerCase())));
-    }
-    if (filterCareerInterests) {
-      result = result.filter((a) =>
-        a.career_interests?.some((i) => i.toLowerCase().includes(filterCareerInterests.toLowerCase())),
-      );
-    }
-
-    return result;
-  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
+      return true;
+    });
+  }, [employers, filterCompanySize, filterLocation, filterIndustry, searchTerm]);
 
   // ==============================
   // Handlers
   // ==============================
 
-  const loadAthleteDetails = async (athleteId: string, userId: string) => {
-    try {
-      const [{ data: education }, { data: experience }, { data: certifications }, { data: photoFiles }] =
-        await Promise.all([
-          supabase
-            .from("education")
-            .select("*")
-            .eq("athlete_id", athleteId)
-            .order("graduation_year", { ascending: false }),
-          supabase.from("experience").select("*").eq("athlete_id", athleteId).order("start_date", { ascending: false }),
-          supabase
-            .from("certifications")
-            .select("*")
-            .eq("athlete_id", athleteId)
-            .order("issue_date", { ascending: false }),
-          supabase.storage.from("athlete-photos").list(`${userId}/lifestyle`, {
-            limit: 100,
-            sortBy: { column: "created_at", order: "desc" },
-          }),
-        ]);
-
-      setAthleteEducation(education || []);
-      setAthleteExperience(experience || []);
-      setAthleteCertifications(certifications || []);
-
-      if (photoFiles && photoFiles.length > 0) {
-        const photoUrls = photoFiles.map((file) => {
-          const { data: urlData } = supabase.storage
-            .from("athlete-photos")
-            .getPublicUrl(`${userId}/lifestyle/${file.name}`);
-          return urlData.publicUrl;
-        });
-        setAthletePhotos(photoUrls);
-        setCurrentPhotoIndex(0);
-      } else {
-        setAthletePhotos([]);
-      }
-    } catch (error) {
-      console.error("Error loading athlete details:", error);
-    }
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterCompanySize("all");
+    setFilterLocation("all");
+    setFilterIndustry("all");
   };
 
-  const handleSendRequest = async () => {
-    if (!employerProfileId || !selectedAthlete) {
-      toast.error("Unable to send request");
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetchEmployers();
+    setIsRefreshing(false);
+    setPullDistance(0);
+  };
+
+  const handleSendRequest = async (employerId: string) => {
+    if (!athleteProfileId) {
+      toast.error("Please complete your athlete profile first");
       return;
     }
-    if (existingRequests.has(selectedAthlete.id)) {
-      toast.error("You have already sent a request to this athlete");
+    if (existingRequests.has(employerId)) {
+      toast.error("You have already sent a request to this partner");
       return;
     }
     if (!requestMessage.trim()) {
@@ -361,8 +279,8 @@ const AthleteDirectory = () => {
       const { data: insertedRequest, error } = await supabase
         .from("connection_requests")
         .insert({
-          athlete_id: selectedAthlete.id,
-          employer_id: employerProfileId,
+          athlete_id: athleteProfileId,
+          employer_id: employerId,
           message: requestMessage,
           opportunity_type: opportunityType || null,
           status: "pending",
@@ -387,40 +305,15 @@ const AthleteDirectory = () => {
       setRequestMessage("");
       setOpportunityType("");
       setShowRequestDialog(false);
-      setSelectedAthlete(null);
+      setSelectedEmployer(null);
 
       // Invalidate the requests cache so the updated set is reflected immediately
-      queryClient.invalidateQueries({ queryKey: ["existing-requests", employerProfileId] });
+      queryClient.invalidateQueries({ queryKey: ["existing-employer-requests", athleteProfileId] });
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
     } finally {
       setSendingRequest(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refetchAthletes();
-    setIsRefreshing(false);
-    setPullDistance(0);
-  };
-
-  const handleShareProfile = async (athlete: AthleteProfile) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${athlete.profiles.full_name || "Athlete"} - U.S. Ski & Snowboard`,
-          text: `Check out ${athlete.profiles.full_name || "this athlete"}'s profile`,
-          url: window.location.href,
-        });
-        toast.success("Profile shared successfully!");
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") console.error("Error sharing:", error);
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard!");
     }
   };
 
@@ -439,38 +332,144 @@ const AthleteDirectory = () => {
     trackTouch: true,
   });
 
-  const photoSwipeHandlers = useSwipeable({
-    onSwipedLeft: () => {
-      if (athletePhotos.length > 1) {
-        setCurrentPhotoIndex((prev) => (prev === athletePhotos.length - 1 ? 0 : prev + 1));
-      }
-    },
-    onSwipedRight: () => {
-      if (athletePhotos.length > 1) {
-        setCurrentPhotoIndex((prev) => (prev === 0 ? athletePhotos.length - 1 : prev - 1));
-      }
-    },
-    trackMouse: false,
-    trackTouch: true,
-  });
-
   // ==============================
-  // Render — Loading State
-  // Only shown on first-ever visit. On all subsequent mounts, initialData
-  // populates from cache and athletesLoading is false from render zero.
+  // Render — Loading / Empty States
+  // Spinner only shown on first-ever visit. On all subsequent mounts,
+  // initialData populates from cache and employersLoading is false from
+  // render zero.
   // ==============================
-  if (athletesLoading) {
+  if (employersLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  if (athletes.length === 0) {
+  if (employers.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">No athletes found in the directory.</p>
+      <div className="text-center p-8">
+        <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+        <p className="text-muted-foreground">No partners found</p>
+      </div>
+    );
+  }
+
+  // ==============================
+  // Shared UI fragments
+  // ==============================
+  const pullRefreshIndicator = pullDistance > 0 && (
+    <div
+      className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 bg-primary/10 transition-all duration-200 z-50"
+      style={{ transform: `translateY(${pullDistance - 100}px)` }}
+    >
+      <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+      <span className="ml-2 text-sm">{isRefreshing ? "Refreshing..." : "Pull to refresh"}</span>
+    </div>
+  );
+
+  const searchBar = (
+    <div className="mb-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search by company, industry, opportunities..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9 pr-9"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm("")}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const filterPanel = (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-card rounded-lg border">
+      <div>
+        <Label htmlFor="filter-size" className="text-sm font-medium mb-2 block">
+          Company Size
+        </Label>
+        <Select value={filterCompanySize} onValueChange={setFilterCompanySize}>
+          <SelectTrigger id="filter-size" className="w-full min-w-[200px]">
+            <SelectValue placeholder="All Sizes" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="bg-popover z-50">
+            <SelectItem value="all">All Sizes</SelectItem>
+            {uniqueCompanySizes.map((size) => (
+              <SelectItem key={size} value={size!}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="filter-location" className="text-sm font-medium mb-2 block">
+          Location
+        </Label>
+        <Select value={filterLocation} onValueChange={setFilterLocation}>
+          <SelectTrigger id="filter-location" className="w-full min-w-[200px]">
+            <SelectValue placeholder="All Locations" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="bg-popover z-50">
+            <SelectItem value="all">All Locations</SelectItem>
+            {uniqueLocations.map((location) => (
+              <SelectItem key={location} value={location!}>
+                <span className="truncate block max-w-[350px]" title={location!}>
+                  {location}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="filter-industry" className="text-sm font-medium mb-2 block">
+          Industry
+        </Label>
+        <Select value={filterIndustry} onValueChange={setFilterIndustry}>
+          <SelectTrigger id="filter-industry" className="w-full min-w-[200px]">
+            <SelectValue placeholder="All Industries" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="bg-popover z-50">
+            <SelectItem value="all">All Industries</SelectItem>
+            {industryOptions.map((industry) => (
+              <SelectItem key={industry} value={industry}>
+                {industry}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  // ==============================
+  // Render — No Results After Filtering
+  // ==============================
+  if (filteredEmployers.length === 0) {
+    return (
+      <div ref={scrollContainerRef} {...pullHandlers} className="relative">
+        {pullRefreshIndicator}
+        {searchBar}
+        {filterPanel}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-muted-foreground">No partners match your filters</p>
+          <Button variant="outline" size="sm" onClick={clearFilters}>
+            <FilterX className="h-4 w-4 mr-2" />
+            Clear Filters
+          </Button>
+        </div>
       </div>
     );
   }
@@ -480,472 +479,261 @@ const AthleteDirectory = () => {
   // ==============================
   return (
     <div ref={scrollContainerRef} {...pullHandlers} className="relative">
-      {/* Pull to refresh indicator */}
-      {pullDistance > 0 && (
-        <div
-          className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 bg-primary/10 transition-all duration-200"
-          style={{ transform: `translateY(${pullDistance - 100}px)` }}
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          <span className="ml-2 text-sm">{isRefreshing ? "Refreshing..." : "Pull to refresh"}</span>
-        </div>
-      )}
+      {pullRefreshIndicator}
+      {searchBar}
+      {filterPanel}
 
-      {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search by name, sport, skills, interests..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-9"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Select value={filterSport} onValueChange={setFilterSport}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by Sport" />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">All Sports</SelectItem>
-              {Array.from(new Set(athletes.map((a) => a.sport_discipline).filter(Boolean))).map((sport) => (
-                <SelectItem key={sport} value={sport!}>
-                  {sport}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterAvailability} onValueChange={setFilterAvailability}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by Availability" />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">All Availability</SelectItem>
-              {Array.from(new Set(athletes.map((a) => a.availability).filter(Boolean))).map((avail) => (
-                <SelectItem key={avail} value={avail!}>
-                  {avail}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="text"
-            placeholder="Filter by Skill..."
-            value={filterSkills}
-            onChange={(e) => setFilterSkills(e.target.value)}
-          />
-          <Input
-            type="text"
-            placeholder="Filter by Interest..."
-            value={filterCareerInterests}
-            onChange={(e) => setFilterCareerInterests(e.target.value)}
-          />
-        </div>
-
-        {(filterSport !== "all" ||
-          filterAvailability !== "all" ||
-          filterSkills ||
-          filterCareerInterests ||
-          searchTerm) && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Showing {filteredAthletes.length} of {athletes.length} athletes
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchTerm("");
-                setFilterSport("all");
-                setFilterAvailability("all");
-                setFilterSkills("");
-                setFilterCareerInterests("");
-              }}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Clear Filters
-            </Button>
-          </div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredEmployers.length} of {employers.length} partners
+        </p>
+        {(searchTerm || filterCompanySize !== "all" || filterLocation !== "all" || filterIndustry !== "all") && (
+          <Button variant="outline" size="sm" onClick={clearFilters}>
+            <FilterX className="h-4 w-4 mr-2" />
+            Clear All
+          </Button>
         )}
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAthletes.map((athlete) => (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredEmployers.map((employer) => (
           <Card
-            key={athlete.id}
+            key={employer.id}
             className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50"
-            onClick={async () => {
-              setSelectedAthlete(athlete);
-              try {
-                await supabase
-                  .from("athlete_profiles")
-                  .update({ profile_views: (athlete.profile_views || 0) + 1 })
-                  .eq("id", athlete.id);
-              } catch (error) {
-                console.error("Error tracking view:", error);
-              }
-              loadAthleteDetails(athlete.id, athlete.user_id);
-            }}
+            onClick={() => setSelectedEmployer(employer)}
           >
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage
-                    src={athlete.photo_url ?? undefined}
-                    alt={athlete.profiles.full_name ?? "Athlete"}
-                    className="object-cover"
-                  />
-                  <AvatarFallback>
-                    {athlete.profiles.full_name
-                      ? athlete.profiles.full_name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                      : "AT"}
-                  </AvatarFallback>
+                  {employer.logo_url ? (
+                    <img
+                      src={employer.logo_url}
+                      alt={`${employer.company_name} logo`}
+                      className="h-full w-full object-contain p-2"
+                    />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-12 w-12 text-primary" />
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="text-center w-full">
-                  <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {athlete.years_of_membership
-                      ? `${athlete.years_of_membership} years U.S. Ski & Snowboard`
-                      : "\u00A0"}
-                  </p>
+                  <CardTitle className="text-lg">{employer.company_name}</CardTitle>
+                  {employer.industry && <p className="text-sm text-muted-foreground">{employer.industry}</p>}
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio || "No bio provided"}</p>
-              </div>
-              <div className="min-h-[2.5rem]">
-                <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {athlete.professional_highlights || "Not specified"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 min-h-[1.5rem]">
-                <p className="text-xs font-semibold text-foreground">Availability:</p>
-                {athlete.availability ? (
+              {employer.about && <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>}
+              <div className="flex flex-wrap gap-2">
+                {employer.company_size && (
                   <Badge variant="outline" className="text-xs">
-                    {athlete.availability}
+                    {employer.company_size}
                   </Badge>
-                ) : (
-                  <span className="text-xs text-muted-foreground">Not specified</span>
+                )}
+                {employer.hq_location && (
+                  <Badge variant="outline" className="text-xs">
+                    {employer.hq_location}
+                  </Badge>
                 )}
               </div>
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Interests</p>
-                {athlete.career_interests && athlete.career_interests.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {athlete.career_interests.slice(0, 2).map((interest, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {interest}
-                      </Badge>
-                    ))}
-                    {athlete.career_interests.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{athlete.career_interests.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not specified</p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
-                {athlete.skills && athlete.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {athlete.skills.slice(0, 3).map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                    {athlete.skills.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{athlete.skills.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not specified</p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Location Preferences</p>
-                {athlete.geographic_preferences && athlete.geographic_preferences.length > 0 ? (
-                  <p className="text-xs text-muted-foreground line-clamp-1">
-                    {athlete.geographic_preferences.slice(0, 2).join(", ")}
-                    {athlete.geographic_preferences.length > 2 && ` +${athlete.geographic_preferences.length - 2} more`}
-                  </p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not specified</p>
-                )}
-              </div>
+              {employer.website && (
+                <div className="flex items-center gap-2">
+                  <LinkIcon className="h-3 w-3 text-muted-foreground" />
+                  <a
+                    href={employer.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline truncate"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {employer.website.replace(/^https?:\/\//, "")}
+                  </a>
+                </div>
+              )}
+              {employer.contact_person && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Contact</p>
+                  <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
+                  {employer.contact_title && <p className="text-xs text-muted-foreground">{employer.contact_title}</p>}
+                </div>
+              )}
+              <Button
+                className="w-full"
+                disabled={existingRequests.has(employer.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedEmployer(employer);
+                  setShowRequestDialog(true);
+                }}
+              >
+                {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
+              </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Athlete Detail Dialog */}
-      {selectedAthlete && (
-        <Dialog
-          open={!!selectedAthlete && !showRequestDialog}
-          onOpenChange={(open) => {
-            if (!open && !showRequestDialog) setSelectedAthlete(null);
-          }}
-        >
+      {/* Partner Details Dialog */}
+      {selectedEmployer && !showRequestDialog && (
+        <Dialog open={!!selectedEmployer} onOpenChange={(open) => !open && setSelectedEmployer(null)}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
+              <DialogTitle>{selectedEmployer.company_name}</DialogTitle>
             </DialogHeader>
 
-            <Tabs defaultValue="profile" className="w-full">
+            <Tabs defaultValue="profile" className="mt-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="portfolio">Athlete Content</TabsTrigger>
+                <TabsTrigger value="positions">Featured Positions</TabsTrigger>
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6 mt-6">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
-                    <AvatarFallback>
-                      {selectedAthlete.profiles.full_name
-                        ? selectedAthlete.profiles.full_name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()
-                        : "AT"}
-                    </AvatarFallback>
+                    {selectedEmployer.logo_url ? (
+                      <img
+                        src={selectedEmployer.logo_url}
+                        alt={`${selectedEmployer.company_name} logo`}
+                        className="h-full w-full object-contain p-2"
+                      />
+                    ) : (
+                      <AvatarFallback>
+                        <Building2 className="h-12 w-12 text-primary" />
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
-                    {selectedAthlete.sport_discipline && (
-                      <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
+                    <h3 className="font-semibold">{selectedEmployer.company_name}</h3>
+                    {selectedEmployer.industry && (
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.industry}</p>
                     )}
                   </div>
                 </div>
 
-                {[
-                  { label: "Bio", value: selectedAthlete.bio },
-                  { label: "Professional Highlights", value: selectedAthlete.professional_highlights },
-                  { label: "Availability", value: selectedAthlete.availability },
-                  { label: "Email", value: selectedAthlete.email },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <h4 className="font-medium mb-2">{label}</h4>
-                    <p className="text-sm text-muted-foreground">{value || "Not specified"}</p>
+                {selectedEmployer.about && (
+                  <div>
+                    <h4 className="font-medium mb-2">About our company</h4>
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.about}</p>
                   </div>
-                ))}
+                )}
 
-                <div>
-                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedAthlete.years_of_membership
-                      ? `${selectedAthlete.years_of_membership} years`
-                      : "Not specified"}
-                  </p>
-                </div>
+                {selectedEmployer.connection_to_ussa && (
+                  <div>
+                    <h4 className="font-medium mb-2">What's our connection to US Ski & Snowboard</h4>
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.connection_to_ussa}</p>
+                  </div>
+                )}
 
-                <div>
-                  <h4 className="font-medium mb-2">Instagram</h4>
-                  {selectedAthlete.instagram_url ? (
-                    <a
-                      href={selectedAthlete.instagram_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline flex items-center gap-2"
-                    >
-                      <Instagram className="h-4 w-4" /> View Profile
-                    </a>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedEmployer.company_size && (
+                    <div>
+                      <p className="text-sm font-medium">Company Size</p>
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.company_size}</p>
+                    </div>
+                  )}
+                  {selectedEmployer.hq_location && (
+                    <div>
+                      <p className="text-sm font-medium">Location</p>
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.hq_location}</p>
+                    </div>
                   )}
                 </div>
 
-                {[
-                  { label: "Sponsors", items: selectedAthlete.sponsors },
-                  { label: "Skills", items: selectedAthlete.skills },
-                  { label: "Career Interests", items: selectedAthlete.career_interests },
-                ].map(({ label, items }) => (
-                  <div key={label}>
-                    <h4 className="font-medium mb-2">{label}</h4>
-                    {items && items.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {items.map((item, i) => (
-                          <Badge key={i} variant="secondary">
-                            {item}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Not specified</p>
+                {selectedEmployer.contact_person && (
+                  <div>
+                    <h4 className="font-medium mb-2">Contact Person</h4>
+                    <p className="text-sm">{selectedEmployer.contact_person}</p>
+                    {selectedEmployer.contact_title && (
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.contact_title}</p>
+                    )}
+                    {selectedEmployer.contact_email && (
+                      <p className="text-sm text-muted-foreground">{selectedEmployer.contact_email}</p>
                     )}
                   </div>
-                ))}
+                )}
 
-                <div>
-                  <h4 className="font-medium mb-2">Geographic Preferences</h4>
-                  {selectedAthlete.geographic_preferences?.length ? (
-                    <p className="text-sm text-muted-foreground">{selectedAthlete.geographic_preferences.join(", ")}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
+                <div className="flex gap-2">
+                  {selectedEmployer.website && (
+                    <Button variant="outline" asChild className="flex-1">
+                      <a href={selectedEmployer.website} target="_blank" rel="noopener noreferrer">
+                        <LinkIcon className="mr-2 h-4 w-4" />
+                        Website
+                      </a>
+                    </Button>
                   )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Education</h4>
-                  {athleteEducation.length > 0 ? (
-                    <div className="space-y-3">
-                      {athleteEducation.map((edu) => (
-                        <div key={edu.id} className="border-l-2 border-primary/20 pl-3">
-                          <p className="font-medium text-sm">{edu.school}</p>
-                          {edu.degree && <p className="text-sm text-muted-foreground">{edu.degree}</p>}
-                          {edu.graduation_year && (
-                            <p className="text-xs text-muted-foreground">Graduated {edu.graduation_year}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Experience</h4>
-                  {athleteExperience.length > 0 ? (
-                    <div className="space-y-3">
-                      {athleteExperience.map((exp) => (
-                        <div key={exp.id} className="border-l-2 border-primary/20 pl-3">
-                          <p className="font-medium text-sm">{exp.title}</p>
-                          {exp.organization && <p className="text-sm text-muted-foreground">{exp.organization}</p>}
-                          {exp.description && <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {exp.start_date &&
-                              new Date(exp.start_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                            {" - "}
-                            {exp.is_current
-                              ? "Present"
-                              : exp.end_date
-                                ? new Date(exp.end_date).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    year: "numeric",
-                                  })
-                                : "Present"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Certifications</h4>
-                  {athleteCertifications.length > 0 ? (
-                    <div className="space-y-2">
-                      {athleteCertifications.map((cert) => (
-                        <div key={cert.id} className="border-l-2 border-primary/20 pl-3">
-                          <p className="font-medium text-sm">{cert.name}</p>
-                          {cert.issuer && <p className="text-sm text-muted-foreground">{cert.issuer}</p>}
-                          {cert.issue_date && (
-                            <p className="text-xs text-muted-foreground">
-                              Issued{" "}
-                              {new Date(cert.issue_date).toLocaleDateString("en-US", {
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
+                  {selectedEmployer.linkedin_url && (
+                    <Button variant="outline" asChild className="flex-1">
+                      <a href={selectedEmployer.linkedin_url} target="_blank" rel="noopener noreferrer">
+                        LinkedIn
+                      </a>
+                    </Button>
                   )}
                 </div>
 
                 <Button
                   onClick={() => setShowRequestDialog(true)}
                   className="w-full"
-                  disabled={existingRequests.has(selectedAthlete.id)}
+                  disabled={existingRequests.has(selectedEmployer.id)}
                 >
-                  {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
+                  {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
                 </Button>
               </TabsContent>
 
-              <TabsContent value="portfolio" className="mt-6">
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-medium mb-2">Lifestyle Photos</h4>
-                    {athletePhotos.length > 0 ? (
-                      <div className="relative touch-pan-y" {...photoSwipeHandlers}>
-                        <img
-                          src={athletePhotos[currentPhotoIndex]}
-                          alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
-                          className="w-full h-64 object-cover rounded-lg select-none"
-                          draggable={false}
-                        />
-                        {athletePhotos.length > 1 && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentPhotoIndex((p) => (p === 0 ? athletePhotos.length - 1 : p - 1));
-                              }}
-                            >
-                              <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentPhotoIndex((p) => (p === athletePhotos.length - 1 ? 0 : p + 1));
-                              }}
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
-                              {currentPhotoIndex + 1} / {athletePhotos.length}
+              <TabsContent value="positions" className="mt-6">
+                {selectedEmployer.individual_roles?.length || selectedEmployer.job_board_url ? (
+                  <div className="space-y-4">
+                    <h4 className="font-medium mb-4">Featured Positions</h4>
+                    {selectedEmployer.individual_roles?.map((role, index) => (
+                      <Card key={index}>
+                        <CardContent className="pt-6">
+                          <div className="space-y-2">
+                            <h5 className="font-semibold">{role.title}</h5>
+                            <div className="flex flex-wrap gap-2">
+                              {role.type && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {role.type}
+                                </Badge>
+                              )}
+                              {role.location && (
+                                <Badge variant="outline" className="text-xs">
+                                  {role.location}
+                                </Badge>
+                              )}
                             </div>
-                            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground md:hidden">
-                              Swipe to navigate
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Not specified</p>
+                            {role.url && (
+                              <Button variant="outline" size="sm" asChild className="mt-2">
+                                <a href={role.url} target="_blank" rel="noopener noreferrer">
+                                  <LinkIcon className="mr-2 h-3 w-3" />
+                                  View Details
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {selectedEmployer.job_board_url && (
+                      <Button variant="outline" asChild className="w-full">
+                        <a href={selectedEmployer.job_board_url} target="_blank" rel="noopener noreferrer">
+                          <LinkIcon className="mr-2 h-4 w-4" />
+                          View All Positions on Job Board
+                        </a>
+                      </Button>
                     )}
+                    <Button
+                      onClick={() => setShowRequestDialog(true)}
+                      className="w-full mt-4"
+                      disabled={existingRequests.has(selectedEmployer.id)}
+                    >
+                      {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
+                    </Button>
                   </div>
-                  <AthletePortfolioView athleteId={selectedAthlete.id} />
-                </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No featured positions available at this time.</p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </DialogContent>
@@ -953,7 +741,7 @@ const AthleteDirectory = () => {
       )}
 
       {/* Connection Request Dialog */}
-      {selectedAthlete && showRequestDialog && (
+      {selectedEmployer && showRequestDialog && (
         <Dialog
           open={showRequestDialog}
           onOpenChange={(open) => {
@@ -967,19 +755,19 @@ const AthleteDirectory = () => {
           <DialogContent className="max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Request Connection</DialogTitle>
-              <DialogDescription>Send a connection request to this athlete</DialogDescription>
+              <DialogDescription>Send a connection request to {selectedEmployer.company_name}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div>
                 <Label htmlFor="opportunity-type">Opportunity Type (Optional)</Label>
                 <Select value={opportunityType} onValueChange={setOpportunityType}>
-                  <SelectTrigger id="opportunity-type" className="mt-2">
+                  <SelectTrigger id="opportunity-type" className="w-full min-w-[200px]">
                     <SelectValue placeholder="Select opportunity type" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
                     <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                    {employerRoles
-                      .filter((role) => role.title?.trim())
+                    {selectedEmployer.individual_roles
+                      ?.filter((role) => role.title?.trim())
                       .map((role, index) => (
                         <SelectItem key={index} value={role.title}>
                           {role.title}
@@ -993,7 +781,7 @@ const AthleteDirectory = () => {
                 <Label htmlFor="message">Message *</Label>
                 <Textarea
                   id="message"
-                  placeholder="Introduce your company and explain the opportunity..."
+                  placeholder="Introduce yourself and explain why you'd like to connect..."
                   value={requestMessage}
                   onChange={(e) => setRequestMessage(e.target.value)}
                   className="mt-2 min-h-[100px]"
@@ -1002,7 +790,7 @@ const AthleteDirectory = () => {
             </div>
             <div className="pt-4 border-t">
               <Button
-                onClick={handleSendRequest}
+                onClick={() => handleSendRequest(selectedEmployer.id)}
                 disabled={sendingRequest || !requestMessage.trim()}
                 className="w-full"
               >
@@ -1023,4 +811,4 @@ const AthleteDirectory = () => {
   );
 };
 
-export default AthleteDirectory;
+export default EmployerDirectory;
