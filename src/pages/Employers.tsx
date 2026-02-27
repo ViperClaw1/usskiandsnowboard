@@ -2,12 +2,13 @@
 // Imports
 // ==============================
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -30,6 +31,13 @@ interface EmployerProfile {
   opportunities_offered: string | null;
   profile_views: number;
 }
+
+// ==============================
+// Query Key
+// Defined as a constant so the initialData lookup references the exact same
+// key as the query that populated the cache — no risk of a typo cache miss.
+// ==============================
+const EMPLOYERS_PREVIEW_KEY = ["public-employers-preview"];
 
 // ==============================
 // Skeleton Component
@@ -61,6 +69,8 @@ const PageSkeleton = () => (
 // Smart component — fetches employers for the public preview and delegates
 // the authenticated directory view to EmployerDirectory.
 // Auth state comes from AuthContext (useAuth) instead of inline listeners.
+// Data fetching uses React Query for automatic caching — the employer list is
+// fetched once and served from cache on subsequent visits until stale.
 // ==============================
 
 const Employers = () => {
@@ -70,38 +80,47 @@ const Employers = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { role: userRole } = useUserRole(user?.id);
-  const [employers, setEmployers] = useState<EmployerProfile[]>([]);
-  const [employersLoading, setEmployersLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // ==============================
-  // Effects — Data Fetching
-  // Fetch top 3 employers for the unauthenticated preview (blurred cards)
+  // Data Fetching — Public Employer Preview
+  // Fetches top 3 employers for the unauthenticated blurred-card preview.
+  //
+  // initialData reads whatever is already sitting in the QueryClient cache
+  // synchronously before this render commits. On the very first visit the cache
+  // is empty so initialData is undefined and isLoading behaves normally. On
+  // every subsequent visit the cache already holds the employer list, so
+  // initialData is populated immediately and isLoading is false from the first
+  // render — no intermediate opacity-0 / skeleton flash.
   // ==============================
-  useEffect(() => {
-    const loadEmployers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("employer_profiles")
-          .select(
-            `id, user_id, company_name, industry, logo_url, about,
-             connection_to_ussa, opportunities_offered, profile_views`
-          )
-          .order("profile_views", { ascending: false })
-          .limit(3);
-        if (error) throw error;
-        setEmployers(data || []);
-      } catch (error) {
-        console.error("Error loading employers:", error);
-      } finally {
-        setEmployersLoading(false);
-      }
-    };
-    loadEmployers();
-  }, []);
+  const { data: employers = [], isLoading: employersLoading } = useQuery<EmployerProfile[]>({
+    queryKey: EMPLOYERS_PREVIEW_KEY,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employer_profiles")
+        .select(
+          `id, user_id, company_name, industry, logo_url, about,
+           connection_to_ussa, opportunities_offered, profile_views`,
+        )
+        .order("profile_views", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return data ?? [];
+    },
+    // Serve cached data synchronously on repeated mounts — eliminates the
+    // isLoading:true → isLoading:false re-render cycle entirely on repeat visits.
+    initialData: () => queryClient.getQueryData<EmployerProfile[]>(EMPLOYERS_PREVIEW_KEY),
+    // Keep data fresh for 5 minutes before allowing a background re-fetch.
+    staleTime: 5 * 60 * 1000,
+  });
 
   // ==============================
   // Derived Values
-  // Both auth state and employer data must resolve before rendering to avoid flicker
+  // authLoading is only ever true on the very first app load (AuthProvider
+  // resolves from the Supabase local cache synchronously on repeat visits).
+  // employersLoading is only ever true on the very first visit (initialData
+  // populates from cache on all subsequent mounts).
+  // Together, isLoading is false from the first render on all repeat visits.
   // ==============================
   const isLoading = authLoading || employersLoading;
 
@@ -140,9 +159,7 @@ const Employers = () => {
           <>
             <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
               <div className="container mx-auto px-4 text-center">
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
-                  Partner Organizations
-                </h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Partner Organizations</h1>
                 <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                   Companies partnering with talented U.S. Ski &amp; Snowboard athletes
                 </p>
@@ -182,22 +199,16 @@ const Employers = () => {
                                   </div>
                                 )}
                                 <div className="flex-1 min-w-0">
-                                  <CardTitle className="text-lg truncate">
-                                    {employer.company_name}
-                                  </CardTitle>
+                                  <CardTitle className="text-lg truncate">{employer.company_name}</CardTitle>
                                   {employer.industry && (
-                                    <p className="text-sm text-muted-foreground truncate">
-                                      {employer.industry}
-                                    </p>
+                                    <p className="text-sm text-muted-foreground truncate">{employer.industry}</p>
                                   )}
                                 </div>
                               </div>
                             </CardHeader>
                             {employer.about && (
                               <CardContent>
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                  {employer.about}
-                                </p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{employer.about}</p>
                               </CardContent>
                             )}
                           </Card>
