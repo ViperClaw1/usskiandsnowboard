@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -22,6 +22,11 @@ import {
 } from "lucide-react";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+// ==============================
+// Types / Interfaces
+// ==============================
 
 interface Connection {
   id: string;
@@ -62,57 +67,170 @@ interface ConnectionStats {
   rejected: number;
 }
 
+interface DashboardData {
+  profile: EmployerProfile | null;
+  connectionStats: ConnectionStats;
+  connections: Connection[];
+  featuredAthletes: AthleteProfile[];
+}
+
 interface PartnerLandingPageProps {
   user: User;
   onNavigate: (view: string) => void;
   onProfileUpdated?: () => void;
 }
 
+// ==============================
+// Query Keys
+// ==============================
+const partnerDashboardKey = (userId: string) => ["partner-landing-dashboard", userId];
+const partnerFeaturedAthletesKey = ["partner-landing-featured-athletes"];
+
+// ==============================
+// Query Functions
+// Extracted outside the component — stable references, not recreated per render.
+//
+// Dashboard data (profile + connections) is fetched together since connection
+// stats depend on the employer profile id — they are a single logical unit.
+//
+// Featured athletes are independent of the employer and cached separately so
+// invalidating employer data never causes athletes to re-fetch and vice versa.
+// ==============================
+
+const fetchPartnerDashboard = async (userId: string): Promise<DashboardData> => {
+  const { data: profileData } = await supabase
+    .from("employer_profiles")
+    .select("id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered")
+    .eq("user_id", userId)
+    .single();
+
+  if (!profileData) {
+    return {
+      profile: null,
+      connectionStats: { pending: 0, accepted: 0, rejected: 0 },
+      connections: [],
+      featuredAthletes: [],
+    };
+  }
+
+  // All three connection queries fire in parallel once we have the profile id
+  const [{ data: allConnections }, { data: acceptedConnections }] = await Promise.all([
+    supabase.from("connection_requests").select("status").eq("employer_id", profileData.id),
+    supabase
+      .from("connection_requests")
+      .select("id, athlete_id, athlete_profiles(photo_url, sport_discipline, profiles(full_name))")
+      .eq("employer_id", profileData.id)
+      .eq("status", "accepted"),
+  ]);
+
+  const connectionStats: ConnectionStats = {
+    pending: allConnections?.filter((c) => c.status === "pending").length ?? 0,
+    accepted: allConnections?.filter((c) => c.status === "accepted").length ?? 0,
+    rejected: allConnections?.filter((c) => c.status === "rejected").length ?? 0,
+  };
+
+  return {
+    profile: profileData,
+    connectionStats,
+    connections: (acceptedConnections as Connection[]) ?? [],
+    featuredAthletes: [],
+  };
+};
+
+const fetchFeaturedAthletes = async (): Promise<AthleteProfile[]> => {
+  const { data } = await supabase
+    .from("athlete_profiles")
+    .select("id, photo_url, sport_discipline, skills, availability, profiles(full_name)")
+    .eq("is_public", true)
+    .order("profile_views", { ascending: false })
+    .limit(4);
+
+  return (data as AthleteProfile[]) ?? [];
+};
+
+// ==============================
+// Component Definition
+// All data fetching migrated from a single monolithic useEffect + useState
+// to two independent useQuery calls:
+//
+//  - partnerDashboardKey(userId)   — profile + connection stats + connections
+//  - partnerFeaturedAthletesKey    — featured athlete previews (user-agnostic)
+//
+// On repeat visits, initialData reads from the QueryClient cache synchronously
+// so loading is false from the very first render — no full-screen spinner flash.
+//
+// The real-time Supabase channel subscriptions are preserved but now call
+// queryClient.invalidateQueries instead of the imperative loadDashboardData(),
+// keeping the cache as the single source of truth.
+// ==============================
+
 export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: PartnerLandingPageProps) => {
-  const [profile, setProfile] = useState<EmployerProfile | null>(null);
-  const [connectionStats, setConnectionStats] = useState<ConnectionStats>({
-    pending: 0,
-    accepted: 0,
-    rejected: 0,
-  });
-  const [featuredAthletes, setFeaturedAthletes] = useState<AthleteProfile[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const { getText } = useDashboardTextOverrides("employer");
 
-  useEffect(() => {
-    loadDashboardData();
+  // ==============================
+  // Data Fetching — Dashboard (profile + connections)
+  // ==============================
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardData>({
+    queryKey: partnerDashboardKey(user.id),
+    queryFn: () => fetchPartnerDashboard(user.id),
+    initialData: () => queryClient.getQueryData<DashboardData>(partnerDashboardKey(user.id)),
+    staleTime: 5 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => 1000 * (attempt + 1),
+  });
 
-    // Set up real-time subscriptions
+  // ==============================
+  // Data Fetching — Featured Athletes
+  // User-agnostic — cached globally, not per employer.
+  // ==============================
+  const { data: featuredAthletes = [], isLoading: athletesLoading } = useQuery<AthleteProfile[]>({
+    queryKey: partnerFeaturedAthletesKey,
+    queryFn: fetchFeaturedAthletes,
+    initialData: () => queryClient.getQueryData<AthleteProfile[]>(partnerFeaturedAthletesKey),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // ==============================
+  // Derived Values
+  // ==============================
+  const profile = dashboardData?.profile ?? null;
+  const connectionStats = dashboardData?.connectionStats ?? { pending: 0, accepted: 0, rejected: 0 };
+  const connections = dashboardData?.connections ?? [];
+
+  // ==============================
+  // Effects — Real-time Subscriptions
+  // Preserved from original. Now invalidate the cache instead of calling
+  // loadDashboardData() directly — keeps the cache as source of truth.
+  // ==============================
+  useEffect(() => {
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
+
     const connectionsChannel = supabase
-      .channel('employer-connections')
+      .channel("employer-connections")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'connection_requests',
+          event: "*",
+          schema: "public",
+          table: "connection_requests",
           filter: profile?.id ? `employer_id=eq.${profile.id}` : undefined,
         },
-        () => {
-          loadDashboardData();
-        }
+        invalidate,
       )
       .subscribe();
 
     const profileChannel = supabase
-      .channel('employer-profile-updates')
+      .channel("employer-profile-updates")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'employer_profiles',
+          event: "UPDATE",
+          schema: "public",
+          table: "employer_profiles",
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
-          loadDashboardData();
-        }
+        invalidate,
       )
       .subscribe();
 
@@ -120,67 +238,23 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
       supabase.removeChannel(connectionsChannel);
       supabase.removeChannel(profileChannel);
     };
-  }, [user.id, profile?.id]);
+  }, [user.id, profile?.id, queryClient]);
 
-  const loadDashboardData = async () => {
-    try {
-      // Load employer profile
-      const { data: profileData } = await supabase
-        .from("employer_profiles")
-        .select("id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profileData) {
-        setProfile(profileData);
-
-        // Load connection stats
-        const { data: connections } = await supabase
-          .from("connection_requests")
-          .select("status")
-          .eq("employer_id", profileData.id);
-
-        if (connections) {
-          setConnectionStats({
-            pending: connections.filter((c) => c.status === "pending").length,
-            accepted: connections.filter((c) => c.status === "accepted").length,
-            rejected: connections.filter((c) => c.status === "rejected").length,
-          });
-        }
-
-        // Load accepted connections
-        const { data: acceptedConnections } = await supabase
-          .from("connection_requests")
-          .select("id, athlete_id, athlete_profiles(photo_url, sport_discipline, profiles(full_name))")
-          .eq("employer_id", profileData.id)
-          .eq("status", "accepted");
-
-        if (acceptedConnections) setConnections(acceptedConnections);
-      }
-
-      // Load featured athletes
-      const { data: athletes } = await supabase
-        .from("athlete_profiles")
-        .select("id, photo_url, sport_discipline, skills, availability, profiles(full_name)")
-        .eq("is_public", true)
-        .order("profile_views", { ascending: false })
-        .limit(4);
-
-      if (athletes) setFeaturedAthletes(athletes);
-    } catch (error) {
-      // Error handled silently - will retry on next mount
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  // ==============================
+  // Render — Loading Guard
+  // Only shown on first-ever visit. On all subsequent mounts, initialData
+  // populates from cache and loading is false from render zero.
+  // ==============================
+  if (dashboardLoading || athletesLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
-  const completeness = profile?.profile_completeness || 0;
-  const profileViewsThisMonth = profile?.profile_views || 0;
+  const completeness = profile?.profile_completeness ?? 0;
+  const profileViewsThisMonth = profile?.profile_views ?? 0;
 
+  // ==============================
+  // Render — Main
+  // ==============================
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Hero Section */}
@@ -190,9 +264,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
             <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
               <AvatarImage src={profile?.logo_url || ""} />
               <AvatarFallback>
-                {profile?.company_name
-                  ? profile.company_name.substring(0, 2).toUpperCase()
-                  : "CO"}
+                {profile?.company_name ? profile.company_name.substring(0, 2).toUpperCase() : "CO"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -210,22 +282,23 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                 <CardContent className="pt-6">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{getText("hero.profile_complete_label", "Profile Complete")}</span>
+                      <span className="text-muted-foreground">
+                        {getText("hero.profile_complete_label", "Profile Complete")}
+                      </span>
                       <span className="font-semibold">{completeness}%</span>
                     </div>
                     <Progress value={completeness} className="h-2" />
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0 h-auto"
-                      onClick={() => onNavigate("profile")}
-                    >
-                      {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
+                    <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                      {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                      <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
                     <AIProfilePopulator
                       role="employer"
                       userId={user.id}
-                      onComplete={() => { loadDashboardData(); onProfileUpdated?.(); }}
+                      onComplete={() => {
+                        queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
+                        onProfileUpdated?.();
+                      }}
                     />
                   </div>
                 </CardContent>
@@ -251,29 +324,31 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-muted-foreground">{getText("connection_activity.pending", "Pending")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.pending", "Pending")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.pending}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-muted-foreground">{getText("connection_activity.accepted", "Accepted")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.accepted", "Accepted")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.accepted}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-muted-foreground">{getText("connection_activity.declined", "Declined")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.declined", "Declined")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.rejected}</span>
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full mt-2"
-                  onClick={() => onNavigate("connections")}
-                >
+                <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("connections")}>
                   {getText("connection_activity.button", "Manage Connections")}
                 </Button>
               </div>
@@ -293,24 +368,26 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{getText("profile_performance.views_label", "Profile Views")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("profile_performance.views_label", "Profile Views")}
+                    </span>
                   </div>
                   <span className="text-4xl font-bold">{profileViewsThisMonth}</span>
-                  <p className="text-xs text-muted-foreground mt-1">{getText("profile_performance.views_subtitle", "All time")}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {getText("profile_performance.views_subtitle", "All time")}
+                  </p>
                 </div>
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">{getText("profile_performance.completeness_label", "Completeness")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("profile_performance.completeness_label", "Completeness")}
+                    </span>
                     <span className="text-sm font-semibold">{completeness}%</span>
                   </div>
                   <Progress value={completeness} className="h-2" />
                 </div>
                 {completeness < 100 && (
-                  <Button
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={() => onNavigate("profile")}
-                  >
+                  <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("profile")}>
                     {getText("profile_performance.button", "Improve Profile")}
                   </Button>
                 )}
@@ -328,43 +405,23 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("directory")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("directory")}>
                   <Users className="mr-2 h-4 w-4" />
                   {getText("quick_actions.browse_directory", "Browse Athlete Directory")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("opportunities")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("opportunities")}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   {getText("quick_actions.manage_opportunities", "Manage Opportunities")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("profile")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("profile")}>
                   <UserCircle className="mr-2 h-4 w-4" />
                   {getText("quick_actions.update_profile", "Update Company Profile")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("connections")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("connections")}>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   {getText("quick_actions.view_connections", "View My Connections")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("preview")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("preview")}>
                   <Eye className="mr-2 h-4 w-4" />
                   {getText("quick_actions.preview_profile", "Preview My Profile")}
                 </Button>
@@ -458,9 +515,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold text-sm">
-                          {athlete.profiles?.full_name || "Athlete"}
-                        </p>
+                        <p className="font-semibold text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
                         {athlete.sport_discipline && (
                           <Badge variant="secondary" className="mt-2 text-xs">
                             {athlete.sport_discipline}
