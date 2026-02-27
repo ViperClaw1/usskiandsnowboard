@@ -137,7 +137,14 @@ const fetchEmployerProfile = async (): Promise<EmployerProfile | null> => {
     .eq("user_id", user.id)
     .single();
 
-  return data ?? null;
+  if (!data) return null;
+
+  // Supabase returns individual_roles as Json — cast to the known runtime shape
+  // at the boundary so the rest of the component works with typed data.
+  return {
+    id: data.id,
+    individual_roles: (data.individual_roles as EmployerProfile["individual_roles"]) ?? [],
+  };
 };
 
 const fetchExistingRequests = async (employerId: string): Promise<Set<string>> => {
