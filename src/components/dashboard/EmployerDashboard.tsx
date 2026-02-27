@@ -17,6 +17,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 // ==============================
 // Types
 // ==============================
+
+type EmployerProfileData = Awaited<ReturnType<typeof fetchEmployerProfile>>;
+
 interface EmployerDashboardProps {
   user: User;
   isAdminView?: boolean;
@@ -82,12 +85,12 @@ const EmployerDashboard = ({
   // Skipped entirely in admin view (isAdminView flag) — mirrors the original
   // early-return inside loadProfile().
   // ==============================
-  const { data: profile = null, isLoading: loading } = useQuery({
+  const { data: profile = null, isLoading: loading } = useQuery<EmployerProfileData>({
     queryKey: employerProfileKey(user.id),
     queryFn: () => fetchEmployerProfile(user.id),
     enabled: !isAdminView,
     // Serve cached profile synchronously on repeated mounts — no loading flash.
-    initialData: () => queryClient.getQueryData(employerProfileKey(user.id)),
+    initialData: () => queryClient.getQueryData<EmployerProfileData>(employerProfileKey(user.id)),
     staleTime: 5 * 60 * 1000,
     // Replaces the manual setTimeout retry loop.
     retry: 3,
