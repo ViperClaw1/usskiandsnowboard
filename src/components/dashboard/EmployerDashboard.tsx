@@ -10,10 +10,13 @@ import OpportunitiesForm from "@/components/employer/OpportunitiesForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
-
 import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+// ==============================
+// Types
+// ==============================
 interface EmployerDashboardProps {
   user: User;
   isAdminView?: boolean;
@@ -22,63 +25,110 @@ interface EmployerDashboardProps {
   onProfileDialogOpened?: () => void;
 }
 
-const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated, openProfileDialog, onProfileDialogOpened }: EmployerDashboardProps) => {
+// ==============================
+// Query Key
+// Scoped by userId so different users never share a cache entry.
+// ==============================
+const employerProfileKey = (userId: string) => ["employer-dashboard-profile", userId];
+
+// ==============================
+// Query Function
+// Extracted outside the component — stable reference, not recreated per render.
+// Returns null when no profile exists yet (maybeSingle never throws on 0 rows).
+// ==============================
+const fetchEmployerProfile = async (userId: string) => {
+  const { data, error } = await supabase.from("employer_profiles").select("*").eq("user_id", userId).maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
+};
+
+// ==============================
+// Component Definition
+// Profile fetching migrated from useState/useEffect to useQuery.
+//
+// Previously, loadProfile() fired on every mount (via useEffect([user.id])),
+// reset loading:true each time, and used a hand-rolled setTimeout retry loop.
+// Now the profile is cached by userId under employerProfileKey:
+//
+//  - On the first visit: fetches from Supabase, stores in cache.
+//  - On repeat visits: initialData reads from cache synchronously —
+//    loading is false from render zero, no spinner flash.
+//  - Retry logic: delegated to useQuery's built-in retry/retryDelay,
+//    replacing the manual setTimeout recursion.
+//
+// UI-only state (currentView, dialog visibility) stays as useState —
+// these are not server data concerns.
+// ==============================
+
+const EmployerDashboard = ({
+  user,
+  isAdminView = false,
+  onProfileUpdated,
+  openProfileDialog,
+  onProfileDialogOpened,
+}: EmployerDashboardProps) => {
+  const queryClient = useQueryClient();
+
+  // ==============================
+  // UI-only state
+  // ==============================
   const [currentView, setCurrentView] = useState<string>("home");
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showOpportunitiesDialog, setShowOpportunitiesDialog] = useState(false);
 
-  useEffect(() => {
-    loadProfile();
-  }, [user.id]);
+  // ==============================
+  // Data Fetching — Employer Profile
+  // Skipped entirely in admin view (isAdminView flag) — mirrors the original
+  // early-return inside loadProfile().
+  // ==============================
+  const { data: profile = null, isLoading: loading } = useQuery({
+    queryKey: employerProfileKey(user.id),
+    queryFn: () => fetchEmployerProfile(user.id),
+    enabled: !isAdminView,
+    // Serve cached profile synchronously on repeated mounts — no loading flash.
+    initialData: () => queryClient.getQueryData(employerProfileKey(user.id)),
+    staleTime: 5 * 60 * 1000,
+    // Replaces the manual setTimeout retry loop.
+    retry: 3,
+    retryDelay: (attempt) => 1000 * (attempt + 1),
+    // Surface fetch errors via toast, consistent with original behaviour.
+    throwOnError: false,
+    meta: {
+      onError: () => toast.error("Failed to load profile. Please refresh the page."),
+    },
+  });
 
-  // Open profile dialog when triggered from parent (e.g. "Complete Manually")
+  // ==============================
+  // Effects — Open Profile Dialog from Parent
+  // Triggered when Dashboard passes openProfileDialog=true after "Complete
+  // Manually" is chosen in the welcome popup. Not a data concern — stays as
+  // useEffect.
+  // ==============================
   useEffect(() => {
     if (openProfileDialog) {
       setShowProfileDialog(true);
       onProfileDialogOpened?.();
     }
-  }, [openProfileDialog]);
+  }, [openProfileDialog, onProfileDialogOpened]);
 
-  const loadProfile = async (retryCount = 0) => {
-    if (isAdminView) {
-      setLoading(false);
-      return;
-    }
-    const MAX_RETRIES = 3;
-    
-    try {
-      const { data, error } = await supabase
-        .from("employer_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error: any) {
-      if (retryCount < MAX_RETRIES) {
-        setTimeout(() => loadProfile(retryCount + 1), 1000 * (retryCount + 1));
-      } else {
-        toast.error("Failed to load profile. Please refresh the page.");
-      }
-    } finally {
-      if (retryCount === 0) {
-        setLoading(false);
-      }
-    }
-  };
+  // ==============================
+  // Handlers
+  // After a successful profile save, invalidate the cache so useQuery
+  // re-fetches the latest data — replacing the direct loadProfile() calls.
+  // ==============================
+  const invalidateProfile = () => queryClient.invalidateQueries({ queryKey: employerProfileKey(user.id) });
 
   const handleProfileComplete = () => {
     setShowProfileDialog(false);
-    loadProfile();
+    invalidateProfile();
+    onProfileUpdated?.();
     toast.success("Profile updated successfully!");
   };
 
   const handleOpportunitiesComplete = () => {
     setShowOpportunitiesDialog(false);
-    loadProfile();
+    invalidateProfile();
     toast.success("Opportunities updated successfully!");
   };
 
@@ -92,13 +142,21 @@ const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated, openPr
     }
   };
 
+  // ==============================
+  // Render
+  // ==============================
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      
-
       <main>
         {currentView === "home" ? (
-          <PartnerLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={() => { loadProfile(); onProfileUpdated?.(); }} />
+          <PartnerLandingPage
+            user={user}
+            onNavigate={handleNavigate}
+            onProfileUpdated={() => {
+              invalidateProfile();
+              onProfileUpdated?.();
+            }}
+          />
         ) : currentView === "directory" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
@@ -154,7 +212,9 @@ const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated, openPr
               <DialogHeader>
                 <DialogTitle>{profile ? "Edit Your Company Profile" : "Complete Your Company Profile"}</DialogTitle>
                 <DialogDescription>
-                  {profile ? "Update your company information and opportunities" : "Share information about your company and the opportunities you offer"}
+                  {profile
+                    ? "Update your company information and opportunities"
+                    : "Share information about your company and the opportunities you offer"}
                 </DialogDescription>
               </DialogHeader>
               {profile ? (
@@ -169,9 +229,7 @@ const EmployerDashboard = ({ user, isAdminView = false, onProfileUpdated, openPr
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
               <DialogHeader>
                 <DialogTitle>Manage Opportunities</DialogTitle>
-                <DialogDescription>
-                  Update the career opportunities your company offers to athletes
-                </DialogDescription>
+                <DialogDescription>Update the career opportunities your company offers to athletes</DialogDescription>
               </DialogHeader>
               <OpportunitiesForm userId={user.id} onSuccess={handleOpportunitiesComplete} />
             </DialogContent>
