@@ -1,6 +1,8 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+// ==============================
+// Imports
+// ==============================
+import { useState, useMemo, useRef } from "react";
 import { useSwipeable } from "react-swipeable";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +17,11 @@ import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, Refre
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+// ==============================
+// Types / Interfaces
+// ==============================
 
 interface AthleteProfile {
   id: string;
@@ -62,16 +69,112 @@ interface Certification {
   issue_date: string | null;
 }
 
+interface EmployerProfile {
+  id: string;
+  individual_roles: Array<{ title: string; type: string; url: string; location: string }>;
+}
+
+// ==============================
+// Query Keys
+// Defined as constants so initialData lookups always reference the exact same
+// key as the query that populated the cache — no risk of key typo cache misses.
+// ==============================
+const DIRECTORY_ATHLETES_KEY = ["athlete-directory-list"];
+const EMPLOYER_PROFILE_KEY = ["athlete-directory-employer-profile"];
+
+// ==============================
+// Query Functions
+// Extracted outside the component — stable references, not recreated per render.
+// ==============================
+
+const fetchDirectoryAthletes = async (): Promise<AthleteProfile[]> => {
+  const { data, error } = await supabase
+    .from("athlete_profiles")
+    .select(`*, profiles(full_name)`)
+    .eq("is_public", true);
+
+  if (error) throw error;
+
+  // Load lifestyle photos for each athlete in parallel
+  const athletesWithPhotos = await Promise.all(
+    (data || []).map(async (athlete) => {
+      try {
+        const { data: photoFiles } = await supabase.storage
+          .from("athlete-photos")
+          .list(`${athlete.user_id}/lifestyle`, {
+            limit: 5,
+            sortBy: { column: "created_at", order: "desc" },
+          });
+
+        if (photoFiles && photoFiles.length > 0) {
+          const photoUrls = photoFiles.map((file) => {
+            const { data: urlData } = supabase.storage
+              .from("athlete-photos")
+              .getPublicUrl(`${athlete.user_id}/lifestyle/${file.name}`);
+            return urlData.publicUrl;
+          });
+          return { ...athlete, lifestyle_photos: photoUrls };
+        }
+        return { ...athlete, lifestyle_photos: [] };
+      } catch {
+        return { ...athlete, lifestyle_photos: [] };
+      }
+    }),
+  );
+
+  return athletesWithPhotos;
+};
+
+const fetchEmployerProfile = async (): Promise<EmployerProfile | null> => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("employer_profiles")
+    .select("id, individual_roles")
+    .eq("user_id", user.id)
+    .single();
+
+  return data ?? null;
+};
+
+const fetchExistingRequests = async (employerId: string): Promise<Set<string>> => {
+  const { data, error } = await supabase
+    .from("connection_requests")
+    .select("athlete_id")
+    .eq("employer_id", employerId)
+    .in("status", ["pending", "accepted"]);
+
+  if (error) throw error;
+  return new Set(data?.map((r) => r.athlete_id) || []);
+};
+
+// ==============================
+// Component Definition
+// Data fetching migrated from useState/useEffect to useQuery throughout.
+//
+// Previously, three separate useEffect calls (athletes, employer profile,
+// existing requests) all fired on every mount, resetting to loading:true each
+// time and showing the Loader2 spinner. Now all three are cached by React Query:
+//
+//  - DIRECTORY_ATHLETES_KEY  — full athlete list + lifestyle photos (expensive)
+//  - EMPLOYER_PROFILE_KEY    — employer id + roles
+//  - ["existing-requests", employerId] — set of already-contacted athlete ids
+//
+// On repeat visits, initialData populates synchronously from the QueryClient
+// cache so loading is false from the very first render — no spinner, no flash.
+// ==============================
+
 const AthleteDirectory = () => {
-  const navigate = useNavigate();
-  const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // ==============================
+  // UI-only state — not data fetching concerns
+  // ==============================
   const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfile | null>(null);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
-  const [employerProfileId, setEmployerProfileId] = useState<string | null>(null);
-  const [employerRoles, setEmployerRoles] = useState<
-    Array<{ title: string; type: string; url: string; location: string }>
-  >([]);
   const [requestMessage, setRequestMessage] = useState("");
   const [opportunityType, setOpportunityType] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
@@ -88,164 +191,127 @@ const AthleteDirectory = () => {
   const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterSkills, setFilterSkills] = useState<string>("");
   const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
-  const [existingRequests, setExistingRequests] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    loadAthletes();
-    loadEmployerProfile();
+  // ==============================
+  // Data Fetching — Athletes
+  // Cached under DIRECTORY_ATHLETES_KEY. The expensive Promise.all photo fetch
+  // only runs once; every subsequent mount reads from cache via initialData.
+  // ==============================
+  const {
+    data: athletes = [],
+    isLoading: athletesLoading,
+    refetch: refetchAthletes,
+  } = useQuery<AthleteProfile[]>({
+    queryKey: DIRECTORY_ATHLETES_KEY,
+    queryFn: fetchDirectoryAthletes,
+    initialData: () => queryClient.getQueryData<AthleteProfile[]>(DIRECTORY_ATHLETES_KEY),
+    staleTime: 5 * 60 * 1000,
+  });
 
-    // Set up real-time subscription for connection requests
-    const channel = supabase
-      .channel("employer_connection_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "connection_requests",
-        },
-        () => {
-          // Reload existing requests when any change happens
-          if (employerProfileId) {
-            loadExistingRequests(employerProfileId);
-          }
-        },
-      )
-      .subscribe();
+  // ==============================
+  // Data Fetching — Employer Profile
+  // Cached separately so athlete list re-fetching never blocks employer data
+  // and vice versa. Previously both lived in the same useEffect which meant
+  // a change in employerProfileId would re-trigger loadAthletes() — a bug.
+  // ==============================
+  const { data: employerProfile } = useQuery<EmployerProfile | null>({
+    queryKey: EMPLOYER_PROFILE_KEY,
+    queryFn: fetchEmployerProfile,
+    initialData: () => queryClient.getQueryData<EmployerProfile | null>(EMPLOYER_PROFILE_KEY),
+    staleTime: 5 * 60 * 1000,
+  });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [employerProfileId]);
+  const employerProfileId = employerProfile?.id ?? null;
+  const employerRoles = employerProfile?.individual_roles ?? [];
 
-  const loadEmployerProfile = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+  // ==============================
+  // Data Fetching — Existing Connection Requests
+  // Keyed by employerId so the cache entry is correctly scoped per employer.
+  // Only enabled once employerProfileId is known.
+  // ==============================
+  const { data: existingRequestsSet = new Set<string>(), refetch: refetchRequests } = useQuery<Set<string>>({
+    queryKey: ["existing-requests", employerProfileId],
+    queryFn: () => fetchExistingRequests(employerProfileId!),
+    enabled: !!employerProfileId,
+    initialData: () => queryClient.getQueryData<Set<string>>(["existing-requests", employerProfileId]),
+    staleTime: 2 * 60 * 1000,
+  });
 
-    const { data } = await supabase
-      .from("employer_profiles")
-      .select("id, individual_roles")
-      .eq("user_id", user.id)
-      .single();
+  // Wrap in a stable reference so renders that only change other state don't
+  // reconstruct it — existingRequests is used in multiple render paths below.
+  const existingRequests = existingRequestsSet;
 
-    if (data) {
-      setEmployerProfileId(data.id);
-      setEmployerRoles(
-        (data.individual_roles as Array<{ title: string; type: string; url: string; location: string }>) || [],
+  // ==============================
+  // Derived Values — Filtered Athletes
+  // ==============================
+  const filteredAthletes = useMemo(() => {
+    let result = athletes;
+
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter((athlete) => {
+        const searchableFields = [
+          athlete.profiles.full_name,
+          athlete.sport_discipline,
+          athlete.bio,
+          athlete.professional_highlights,
+          athlete.availability,
+          ...(athlete.skills || []),
+          ...(athlete.career_interests || []),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return searchableFields.includes(search);
+      });
+    }
+
+    if (filterSport && filterSport !== "all") {
+      result = result.filter((a) => a.sport_discipline === filterSport);
+    }
+    if (filterAvailability && filterAvailability !== "all") {
+      result = result.filter((a) => a.availability === filterAvailability);
+    }
+    if (filterSkills) {
+      result = result.filter((a) => a.skills?.some((s) => s.toLowerCase().includes(filterSkills.toLowerCase())));
+    }
+    if (filterCareerInterests) {
+      result = result.filter((a) =>
+        a.career_interests?.some((i) => i.toLowerCase().includes(filterCareerInterests.toLowerCase())),
       );
-      loadExistingRequests(data.id);
     }
-  };
 
-  const loadExistingRequests = async (employerId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("connection_requests")
-        .select("athlete_id, status")
-        .eq("employer_id", employerId)
-        .in("status", ["pending", "accepted"]); // Only count active requests
+    return result;
+  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
 
-      if (error) throw error;
-
-      const requestedAthleteIds = new Set(data?.map((r) => r.athlete_id) || []);
-      setExistingRequests(requestedAthleteIds);
-    } catch (error) {
-      console.error("Error loading existing requests:", error);
-    }
-  };
-
-  const loadAthletes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("athlete_profiles")
-        .select(
-          `
-          *,
-          profiles(full_name)
-        `,
-        )
-        .eq("is_public", true);
-
-      if (error) {
-        console.error("Error loading athletes:", error);
-        throw error;
-      }
-
-      // Load lifestyle photos for each athlete
-      const athletesWithPhotos = await Promise.all(
-        (data || []).map(async (athlete) => {
-          try {
-            const { data: photoFiles } = await supabase.storage
-              .from("athlete-photos")
-              .list(`${athlete.user_id}/lifestyle`, {
-                limit: 5,
-                sortBy: { column: "created_at", order: "desc" },
-              });
-
-            if (photoFiles && photoFiles.length > 0) {
-              const photoUrls = photoFiles.map((file) => {
-                const { data: urlData } = supabase.storage
-                  .from("athlete-photos")
-                  .getPublicUrl(`${athlete.user_id}/lifestyle/${file.name}`);
-                return urlData.publicUrl;
-              });
-              console.log(`Loaded ${photoUrls.length} photos for athlete ${athlete.user_id}`);
-              return { ...athlete, lifestyle_photos: photoUrls };
-            }
-            console.log(`No photos found for athlete ${athlete.user_id}`);
-            return { ...athlete, lifestyle_photos: [] };
-          } catch (error) {
-            console.error(`Error loading photos for athlete ${athlete.user_id}:`, error);
-            return { ...athlete, lifestyle_photos: [] };
-          }
-        }),
-      );
-
-      console.log("Athletes with photos:", athletesWithPhotos);
-      setAthletes(athletesWithPhotos);
-    } catch (error) {
-      console.error("Error loading athletes:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ==============================
+  // Handlers
+  // ==============================
 
   const loadAthleteDetails = async (athleteId: string, userId: string) => {
     try {
-      // Load education
-      const { data: education } = await supabase
-        .from("education")
-        .select("*")
-        .eq("athlete_id", athleteId)
-        .order("graduation_year", { ascending: false });
+      const [{ data: education }, { data: experience }, { data: certifications }, { data: photoFiles }] =
+        await Promise.all([
+          supabase
+            .from("education")
+            .select("*")
+            .eq("athlete_id", athleteId)
+            .order("graduation_year", { ascending: false }),
+          supabase.from("experience").select("*").eq("athlete_id", athleteId).order("start_date", { ascending: false }),
+          supabase
+            .from("certifications")
+            .select("*")
+            .eq("athlete_id", athleteId)
+            .order("issue_date", { ascending: false }),
+          supabase.storage.from("athlete-photos").list(`${userId}/lifestyle`, {
+            limit: 100,
+            sortBy: { column: "created_at", order: "desc" },
+          }),
+        ]);
 
       setAthleteEducation(education || []);
-
-      // Load experience
-      const { data: experience } = await supabase
-        .from("experience")
-        .select("*")
-        .eq("athlete_id", athleteId)
-        .order("start_date", { ascending: false });
-
       setAthleteExperience(experience || []);
-
-      // Load certifications
-      const { data: certifications } = await supabase
-        .from("certifications")
-        .select("*")
-        .eq("athlete_id", athleteId)
-        .order("issue_date", { ascending: false });
-
       setAthleteCertifications(certifications || []);
-
-      // Load photos
-      const { data: photoFiles } = await supabase.storage.from("athlete-photos").list(`${userId}/lifestyle`, {
-        limit: 100,
-        sortBy: { column: "created_at", order: "desc" },
-      });
 
       if (photoFiles && photoFiles.length > 0) {
         const photoUrls = photoFiles.map((file) => {
@@ -269,12 +335,10 @@ const AthleteDirectory = () => {
       toast.error("Unable to send request");
       return;
     }
-
     if (existingRequests.has(selectedAthlete.id)) {
       toast.error("You have already sent a request to this athlete");
       return;
     }
-
     if (!requestMessage.trim()) {
       toast.error("Please include a message with your request");
       return;
@@ -305,18 +369,13 @@ const AthleteDirectory = () => {
 
       if (error) throw error;
 
-      // Send notification separately - don't let notification failures block success
       if (insertedRequest?.id) {
         try {
           await supabase.functions.invoke("send-connection-notification", {
-            body: {
-              notification_type: "new_request",
-              request_id: insertedRequest.id,
-            },
+            body: { notification_type: "new_request", request_id: insertedRequest.id },
           });
         } catch (notificationError) {
           console.error("Error sending notification:", notificationError);
-          // Non-fatal: request was saved, just notification failed
         }
       }
 
@@ -326,8 +385,8 @@ const AthleteDirectory = () => {
       setShowRequestDialog(false);
       setSelectedAthlete(null);
 
-      // Add to existing requests
-      setExistingRequests((prev) => new Set([...prev, selectedAthlete.id]));
+      // Invalidate the requests cache so the updated set is reflected immediately
+      queryClient.invalidateQueries({ queryKey: ["existing-requests", employerProfileId] });
     } catch (error) {
       console.error("Error sending request:", error);
       toast.error("Failed to send connection request");
@@ -336,76 +395,39 @@ const AthleteDirectory = () => {
     }
   };
 
-  // Filter athletes based on search term and filters
-  const filteredAthletes = useMemo(() => {
-    let result = athletes;
-
-    // Text search filter
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      result = result.filter((athlete) => {
-        const searchableFields = [
-          athlete.profiles.full_name,
-          athlete.sport_discipline,
-          athlete.bio,
-          athlete.professional_highlights,
-          athlete.availability,
-          ...(athlete.skills || []),
-          ...(athlete.career_interests || []),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return searchableFields.includes(search);
-      });
-    }
-
-    // Sport filter
-    if (filterSport && filterSport !== "all") {
-      result = result.filter((athlete) => athlete.sport_discipline === filterSport);
-    }
-
-    // Availability filter
-    if (filterAvailability && filterAvailability !== "all") {
-      result = result.filter((athlete) => athlete.availability === filterAvailability);
-    }
-
-    // Skills filter
-    if (filterSkills) {
-      result = result.filter((athlete) =>
-        athlete.skills?.some((skill) => skill.toLowerCase().includes(filterSkills.toLowerCase())),
-      );
-    }
-
-    // Career interests filter
-    if (filterCareerInterests) {
-      result = result.filter((athlete) =>
-        athlete.career_interests?.some((interest) =>
-          interest.toLowerCase().includes(filterCareerInterests.toLowerCase()),
-        ),
-      );
-    }
-
-    return result;
-  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
-
-  // Pull to refresh functionality
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadAthletes();
+    await refetchAthletes();
     setIsRefreshing(false);
     setPullDistance(0);
   };
 
+  const handleShareProfile = async (athlete: AthleteProfile) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${athlete.profiles.full_name || "Athlete"} - U.S. Ski & Snowboard`,
+          text: `Check out ${athlete.profiles.full_name || "this athlete"}'s profile`,
+          url: window.location.href,
+        });
+        toast.success("Profile shared successfully!");
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") console.error("Error sharing:", error);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+
   const pullHandlers = useSwipeable({
     onSwipedDown: (eventData) => {
-      if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0 && eventData.deltaY > 100) {
+      if (scrollContainerRef.current?.scrollTop === 0 && eventData.deltaY > 100) {
         handleRefresh();
       }
     },
     onSwiping: (eventData) => {
-      if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0 && eventData.deltaY > 0) {
+      if (scrollContainerRef.current?.scrollTop === 0 && eventData.deltaY > 0) {
         setPullDistance(Math.min(eventData.deltaY, 100));
       }
     },
@@ -413,29 +435,6 @@ const AthleteDirectory = () => {
     trackTouch: true,
   });
 
-  // Share profile functionality
-  const handleShareProfile = async (athlete: AthleteProfile) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${athlete.profiles.full_name || "Athlete"} - U.S. Ski & Snowboard`,
-          text: `Check out ${athlete.profiles.full_name || "this athlete"}'s profile: ${athlete.bio || athlete.sport_discipline || "Athlete profile"}`,
-          url: window.location.href,
-        });
-        toast.success("Profile shared successfully!");
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          console.error("Error sharing:", error);
-        }
-      }
-    } else {
-      // Fallback: copy link to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard!");
-    }
-  };
-
-  // Swipe handlers for photo gallery
   const photoSwipeHandlers = useSwipeable({
     onSwipedLeft: () => {
       if (athletePhotos.length > 1) {
@@ -451,7 +450,12 @@ const AthleteDirectory = () => {
     trackTouch: true,
   });
 
-  if (loading) {
+  // ==============================
+  // Render — Loading State
+  // Only shown on first-ever visit. On all subsequent mounts, initialData
+  // populates from cache and athletesLoading is false from render zero.
+  // ==============================
+  if (athletesLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -467,6 +471,9 @@ const AthleteDirectory = () => {
     );
   }
 
+  // ==============================
+  // Render — Main
+  // ==============================
   return (
     <div ref={scrollContainerRef} {...pullHandlers} className="relative">
       {/* Pull to refresh indicator */}
@@ -482,7 +489,6 @@ const AthleteDirectory = () => {
 
       {/* Search and Filters */}
       <div className="mb-6 space-y-4">
-        {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -502,7 +508,6 @@ const AthleteDirectory = () => {
           )}
         </div>
 
-        {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <Select value={filterSport} onValueChange={setFilterSport}>
             <SelectTrigger>
@@ -538,7 +543,6 @@ const AthleteDirectory = () => {
             value={filterSkills}
             onChange={(e) => setFilterSkills(e.target.value)}
           />
-
           <Input
             type="text"
             placeholder="Filter by Interest..."
@@ -547,8 +551,11 @@ const AthleteDirectory = () => {
           />
         </div>
 
-        {/* Clear Filters Button */}
-        {(filterSport || filterAvailability || filterSkills || filterCareerInterests || searchTerm) && (
+        {(filterSport !== "all" ||
+          filterAvailability !== "all" ||
+          filterSkills ||
+          filterCareerInterests ||
+          searchTerm) && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Showing {filteredAthletes.length} of {athletes.length} athletes
@@ -558,8 +565,8 @@ const AthleteDirectory = () => {
               size="sm"
               onClick={() => {
                 setSearchTerm("");
-                setFilterSport("");
-                setFilterAvailability("");
+                setFilterSport("all");
+                setFilterAvailability("all");
                 setFilterSkills("");
                 setFilterCareerInterests("");
               }}
@@ -578,7 +585,6 @@ const AthleteDirectory = () => {
             className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50"
             onClick={async () => {
               setSelectedAthlete(athlete);
-              // Increment view count
               try {
                 await supabase
                   .from("athlete_profiles")
@@ -587,7 +593,6 @@ const AthleteDirectory = () => {
               } catch (error) {
                 console.error("Error tracking view:", error);
               }
-              // Load additional details
               loadAthleteDetails(athlete.id, athlete.user_id);
             }}
           >
@@ -625,14 +630,12 @@ const AthleteDirectory = () => {
                 <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
                 <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio || "No bio provided"}</p>
               </div>
-
               <div className="min-h-[2.5rem]">
                 <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
                 <p className="text-sm text-muted-foreground line-clamp-2">
                   {athlete.professional_highlights || "Not specified"}
                 </p>
               </div>
-
               <div className="flex items-center gap-2 min-h-[1.5rem]">
                 <p className="text-xs font-semibold text-foreground">Availability:</p>
                 {athlete.availability ? (
@@ -643,7 +646,6 @@ const AthleteDirectory = () => {
                   <span className="text-xs text-muted-foreground">Not specified</span>
                 )}
               </div>
-
               <div>
                 <p className="text-xs font-semibold text-foreground mb-1">Interests</p>
                 {athlete.career_interests && athlete.career_interests.length > 0 ? (
@@ -663,7 +665,6 @@ const AthleteDirectory = () => {
                   <p className="text-xs text-muted-foreground">Not specified</p>
                 )}
               </div>
-
               <div>
                 <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
                 {athlete.skills && athlete.skills.length > 0 ? (
@@ -683,7 +684,6 @@ const AthleteDirectory = () => {
                   <p className="text-xs text-muted-foreground">Not specified</p>
                 )}
               </div>
-
               <div>
                 <p className="text-xs font-semibold text-foreground mb-1">Location Preferences</p>
                 {athlete.geographic_preferences && athlete.geographic_preferences.length > 0 ? (
@@ -700,13 +700,12 @@ const AthleteDirectory = () => {
         ))}
       </div>
 
+      {/* Athlete Detail Dialog */}
       {selectedAthlete && (
         <Dialog
           open={!!selectedAthlete && !showRequestDialog}
           onOpenChange={(open) => {
-            if (!open && !showRequestDialog) {
-              setSelectedAthlete(null);
-            }
+            if (!open && !showRequestDialog) setSelectedAthlete(null);
           }}
         >
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -742,17 +741,17 @@ const AthleteDirectory = () => {
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="font-medium mb-2">Bio</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.bio || "Not specified"}</p>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Professional Highlights</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedAthlete.professional_highlights || "Not specified"}
-                  </p>
-                </div>
+                {[
+                  { label: "Bio", value: selectedAthlete.bio },
+                  { label: "Professional Highlights", value: selectedAthlete.professional_highlights },
+                  { label: "Availability", value: selectedAthlete.availability },
+                  { label: "Email", value: selectedAthlete.email },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <h4 className="font-medium mb-2">{label}</h4>
+                    <p className="text-sm text-muted-foreground">{value || "Not specified"}</p>
+                  </div>
+                ))}
 
                 <div>
                   <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
@@ -764,16 +763,6 @@ const AthleteDirectory = () => {
                 </div>
 
                 <div>
-                  <h4 className="font-medium mb-2">Availability</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.availability || "Not specified"}</p>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Email</h4>
-                  <p className="text-sm text-muted-foreground">{selectedAthlete.email || "Not specified"}</p>
-                </div>
-
-                <div>
                   <h4 className="font-medium mb-2">Instagram</h4>
                   {selectedAthlete.instagram_url ? (
                     <a
@@ -782,62 +771,37 @@ const AthleteDirectory = () => {
                       rel="noopener noreferrer"
                       className="text-sm text-primary hover:underline flex items-center gap-2"
                     >
-                      <Instagram className="h-4 w-4" />
-                      View Profile
+                      <Instagram className="h-4 w-4" /> View Profile
                     </a>
                   ) : (
                     <p className="text-sm text-muted-foreground">Not specified</p>
                   )}
                 </div>
 
-                <div>
-                  <h4 className="font-medium mb-2">Sponsors</h4>
-                  {selectedAthlete.sponsors && selectedAthlete.sponsors.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedAthlete.sponsors.map((sponsor, index) => (
-                        <Badge key={index} variant="outline">
-                          {sponsor}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Skills</h4>
-                  {selectedAthlete.skills && selectedAthlete.skills.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedAthlete.skills.map((skill, index) => (
-                        <Badge key={index} variant="secondary">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Career Interests</h4>
-                  {selectedAthlete.career_interests && selectedAthlete.career_interests.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedAthlete.career_interests.map((interest, index) => (
-                        <Badge key={index} variant="outline">
-                          {interest}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
+                {[
+                  { label: "Sponsors", items: selectedAthlete.sponsors },
+                  { label: "Skills", items: selectedAthlete.skills },
+                  { label: "Career Interests", items: selectedAthlete.career_interests },
+                ].map(({ label, items }) => (
+                  <div key={label}>
+                    <h4 className="font-medium mb-2">{label}</h4>
+                    {items && items.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {items.map((item, i) => (
+                          <Badge key={i} variant="secondary">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Not specified</p>
+                    )}
+                  </div>
+                ))}
 
                 <div>
                   <h4 className="font-medium mb-2">Geographic Preferences</h4>
-                  {selectedAthlete.geographic_preferences && selectedAthlete.geographic_preferences.length > 0 ? (
+                  {selectedAthlete.geographic_preferences?.length ? (
                     <p className="text-sm text-muted-foreground">{selectedAthlete.geographic_preferences.join(", ")}</p>
                   ) : (
                     <p className="text-sm text-muted-foreground">Not specified</p>
@@ -918,17 +882,13 @@ const AthleteDirectory = () => {
                   )}
                 </div>
 
-                <div>
-                  <Button
-                    onClick={() => {
-                      setShowRequestDialog(true);
-                    }}
-                    className="w-full"
-                    disabled={existingRequests.has(selectedAthlete.id)}
-                  >
-                    {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setShowRequestDialog(true)}
+                  className="w-full"
+                  disabled={existingRequests.has(selectedAthlete.id)}
+                >
+                  {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
+                </Button>
               </TabsContent>
 
               <TabsContent value="portfolio" className="mt-6">
@@ -951,7 +911,7 @@ const AthleteDirectory = () => {
                               className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setCurrentPhotoIndex((prev) => (prev === 0 ? athletePhotos.length - 1 : prev - 1));
+                                setCurrentPhotoIndex((p) => (p === 0 ? athletePhotos.length - 1 : p - 1));
                               }}
                             >
                               <ChevronLeft className="h-4 w-4" />
@@ -962,7 +922,7 @@ const AthleteDirectory = () => {
                               className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setCurrentPhotoIndex((prev) => (prev === athletePhotos.length - 1 ? 0 : prev + 1));
+                                setCurrentPhotoIndex((p) => (p === athletePhotos.length - 1 ? 0 : p + 1));
                               }}
                             >
                               <ChevronRight className="h-4 w-4" />
@@ -980,7 +940,6 @@ const AthleteDirectory = () => {
                       <p className="text-sm text-muted-foreground">Not specified</p>
                     )}
                   </div>
-
                   <AthletePortfolioView athleteId={selectedAthlete.id} />
                 </div>
               </TabsContent>
@@ -989,6 +948,7 @@ const AthleteDirectory = () => {
         </Dialog>
       )}
 
+      {/* Connection Request Dialog */}
       {selectedAthlete && showRequestDialog && (
         <Dialog
           open={showRequestDialog}
@@ -1015,7 +975,7 @@ const AthleteDirectory = () => {
                   <SelectContent className="bg-popover z-50">
                     <SelectItem value="General Inquiry">General Inquiry</SelectItem>
                     {employerRoles
-                      .filter((role) => role.title && role.title.trim())
+                      .filter((role) => role.title?.trim())
                       .map((role, index) => (
                         <SelectItem key={index} value={role.title}>
                           {role.title}
