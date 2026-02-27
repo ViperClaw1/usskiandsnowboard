@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -156,28 +156,22 @@ export default function Settings() {
   // and seeds the local editable state — equivalent to the original
   // setPreferences / setPhoneNumber calls inside loadPreferences().
   // ==============================
-  const { isLoading } = useQuery<SettingsData>({
+  const { data: settingsData, isLoading } = useQuery<SettingsData>({
     queryKey: settingsKey(user?.id ?? ""),
     queryFn: () => fetchSettings(user!.id),
     enabled: !!user,
     initialData: () => queryClient.getQueryData<SettingsData>(settingsKey(user?.id ?? "")),
     staleTime: 5 * 60 * 1000,
-    // Seed local editable state when data arrives from network or cache.
-    // Using select here would re-run on every render; a one-shot effect via
-    // onSuccess is the correct pattern for seeding mutable local state.
-    // React Query v5 removed onSuccess — we use the `select` trick instead:
-    // the returned value from useQuery is used only to seed state once.
-    select: (data) => {
-      // Only update local state if the component hasn't been touched yet
-      // (saving===false and phoneTouched===false) to avoid overwriting
-      // in-progress edits with a background refetch.
-      if (!saving && !phoneTouched) {
-        setPreferences(data.preferences);
-        setPhoneNumber(data.phone);
-      }
-      return data;
-    },
   });
+
+  // Seed local editable state when data first arrives from network or cache.
+  // The saving/phoneTouched guards prevent overwriting in-progress edits
+  // if a background refetch lands while the user is mid-edit.
+  useEffect(() => {
+    if (!settingsData || saving || phoneTouched) return;
+    setPreferences(settingsData.preferences);
+    setPhoneNumber(settingsData.phone);
+  }, [settingsData]);
 
   // ==============================
   // Derived Values
