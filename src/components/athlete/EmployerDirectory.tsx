@@ -137,7 +137,11 @@ const fetchEmployerProfile = async (): Promise<EmployerProfile | null> => {
     .eq("user_id", user.id)
     .single();
 
-  return data ?? null;
+  if (!data) return null;
+  return {
+    id: data.id,
+    individual_roles: (data.individual_roles as Array<{ title: string; type: string; url: string; location: string }>) ?? [],
+  };
 };
 
 const fetchExistingRequests = async (employerId: string): Promise<Set<string>> => {
