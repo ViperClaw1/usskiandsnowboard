@@ -1,28 +1,24 @@
 // ==============================
-// Imports
+// PublicNav — Presentational Component
+// Renders the unauthenticated header with logo, nav links, and mobile nav.
+// Used on Index, News, Schedule, and Employers pages for guests.
+// Wrapped in React.memo — pure component with no props, safe to skip re-renders.
 // ==============================
 
 import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { MobileNav } from "@/components/MobileNav";
 import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
-import { MobileNav } from "@/components/MobileNav";
-import { useSignOut } from "@/hooks/useSignOut";
 import { NAV_ITEMS } from "@/constants/nav";
 
 // ==============================
 // Component Definition
-// Authenticated sticky header. Sign-out logic delegated to useSignOut hook.
-// Wrapped in React.memo — no props, safe to skip re-renders across route changes.
 // ==============================
 
-export const AuthenticatedNav = memo(() => {
-  // ==============================
-  // Hooks
-  // ==============================
-  const { signOut } = useSignOut();
-
+/** Sticky public header — no auth required. Shows logo + nav links + Sign In CTA. */
+export const PublicNav = memo(() => {
   // ==============================
   // Derived Values — Stable style object
   // Extracted with useMemo to prevent recreating the object on every render tick
@@ -45,7 +41,7 @@ export const AuthenticatedNav = memo(() => {
     <header className="sticky top-0 z-50" style={headerStyle}>
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="cursor-pointer">
+        <Link to="/">
           <img
             src={usLogo}
             alt="U.S. Ski & Snowboard"
@@ -64,22 +60,9 @@ export const AuthenticatedNav = memo(() => {
               {item.label}
             </Link>
           ))}
-
-          {/* Authenticated CTAs */}
-          <Link to="/dashboard">
-            <Button size="sm" className="lg:h-10 bg-red-600 hover:bg-red-700">
-              Dashboard
-            </Button>
+          <Link to="/auth">
+            <Button size="sm" className="lg:h-10">Sign In</Button>
           </Link>
-          <Link
-            to="/settings"
-            className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-          >
-            Settings
-          </Link>
-          <Button size="sm" variant="outline" className="lg:h-10" onClick={signOut}>
-            Sign Out
-          </Button>
         </nav>
 
         {/* Mobile hamburger menu */}
@@ -89,4 +72,4 @@ export const AuthenticatedNav = memo(() => {
   );
 });
 
-AuthenticatedNav.displayName = "AuthenticatedNav";
+PublicNav.displayName = "PublicNav";

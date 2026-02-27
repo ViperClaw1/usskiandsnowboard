@@ -1,45 +1,43 @@
+// ==============================
+// Imports
+// ==============================
+
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useSignOut } from "@/hooks/useSignOut";
+import { NAV_ITEMS } from "@/constants/nav";
+
+// ==============================
+// Component Definition
+// Presentational mobile navigation sheet.
+// Sign-out logic is delegated to the useSignOut hook — no Supabase calls here.
+// ==============================
 
 export const MobileNav = () => {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
+  const { signOut } = useSignOut();
 
-  const navItems = [
-    { to: "/athletes", label: "Athletes" },
-    { to: "/employers", label: "Partners" },
-    { to: "/schedule", label: "Schedule" },
-    { to: "/news", label: "News" },
-    { to: "/training", label: "Training" },
-  ];
+  // ==============================
+  // Event Handlers
+  // ==============================
 
+  /** Close the sheet then sign out */
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-      localStorage.clear();
-      sessionStorage.clear();
-      toast.success("Signed out successfully");
-    } catch (e) {
-      console.error("Sign out exception:", e);
-      // Still clear storage and navigate even on error
-      localStorage.clear();
-      sessionStorage.clear();
-      toast.success("Signed out successfully");
-    }
     setOpen(false);
-    navigate("/");
+    await signOut();
   };
+
+  // ==============================
+  // Render
+  // ==============================
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -48,12 +46,10 @@ export const MobileNav = () => {
           <Menu className="h-6 w-6 text-foreground" />
         </Button>
       </SheetTrigger>
-      <SheetContent 
-        side="right" 
-        className="w-[280px] sm:w-[320px] animate-slide-in-right"
-      >
+      <SheetContent side="right" className="w-[280px] sm:w-[320px] animate-slide-in-right">
         <nav className="flex flex-col gap-2 mt-8">
-          {navItems.map((item) => (
+          {/* Primary nav links */}
+          {NAV_ITEMS.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -68,6 +64,8 @@ export const MobileNav = () => {
               {item.label}
             </Link>
           ))}
+
+          {/* Action buttons */}
           <Link to="/dashboard" onClick={() => setOpen(false)} className="mt-4">
             <Button className="w-full">Dashboard</Button>
           </Link>

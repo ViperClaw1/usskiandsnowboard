@@ -1,3 +1,7 @@
+// ==============================
+// Imports
+// ==============================
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +14,11 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 
+// ==============================
+// Utilities
+// Standalone validators — defined outside the component to avoid recreation on each render
+// ==============================
+
 const validateEmail = (value: string): string => {
   if (!value.trim()) return "Email is required";
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,12 +26,25 @@ const validateEmail = (value: string): string => {
   return "";
 };
 
+// ==============================
+// Component Definition
+// Handles the "forgot password" request flow.
+// One-shot mutation — no caching needed.
+// ==============================
+
 const ForgotPassword = () => {
+  // ==============================
+  // State & Hooks
+  // ==============================
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [emailError, setEmailError] = useState("");
+
+  // ==============================
+  // Handlers
+  // ==============================
 
   const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +69,10 @@ const ForgotPassword = () => {
     }
   };
 
+  // ==============================
+  // Render
+  // ==============================
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
       <div className="w-full max-w-md">
@@ -56,7 +82,7 @@ const ForgotPassword = () => {
             <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 hover:opacity-80 transition-opacity hidden md:block" />
           </Link>
         </div>
-        
+
         <Card className="shadow-elegant">
           <CardHeader>
             <CardTitle>Reset Password</CardTitle>
@@ -69,7 +95,7 @@ const ForgotPassword = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
                   <p className="text-sm text-green-800 dark:text-green-200">
-                    We've sent a password reset link to <strong>{email}</strong>. 
+                    We've sent a password reset link to <strong>{email}</strong>.
                     Click the link in the email to reset your password.
                   </p>
                 </div>
@@ -99,14 +125,18 @@ const ForgotPassword = () => {
                       setEmailTouched(true);
                       setEmailError(validateEmail(email));
                     }}
-                    className={emailTouched && emailError ? 'border-destructive' : ''}
+                    className={emailTouched && emailError ? "border-destructive" : ""}
                     required
                   />
                   {emailTouched && emailError && (
                     <p className="text-sm text-destructive">{emailError}</p>
                   )}
                 </div>
-                <Button type="submit" className="w-full" disabled={loading || emailTouched && !!emailError || !email.trim()}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loading || (emailTouched && !!emailError) || !email.trim()}
+                >
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

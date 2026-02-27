@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-// import usLogo from "@/assets/us-logo-new.png";
+const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
+const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -205,8 +206,31 @@ serve(async (req) => {
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
           <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <tr>
-              <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #0066cc 0%, #004999 100%);">
-                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">Welcome to U.S. Ski & Snowboard!</h1>
+              <td style="
+                padding: 50px 30px 40px;
+                text-align: center;
+                background-image: url('${MOUNTAIN_BG_URL}');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                position: relative;
+              ">
+                <!-- Dark overlay for readability -->
+                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
+                <!-- Logo -->
+                <div style="position: relative; z-index: 1; margin-bottom: 16px;">
+                  <img
+                    src="${US_LOGO_URL}"
+                    alt="U.S. Ski & Snowboard"
+                    width="90"
+                    height="90"
+                    style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
+                  />
+                </div>
+                <!-- Heading -->
+                <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+                  Welcome to U.S. Ski &amp; Snowboard!
+                </h1>
               </td>
             </tr>
             <tr>

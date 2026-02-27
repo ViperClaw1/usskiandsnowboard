@@ -1,15 +1,34 @@
+// ==============================
+// Imports
+// ==============================
+
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 
+// ==============================
+// Component Definition
+// Static 404 page. Logs the attempted route and sets the document title.
+// ==============================
+
 const NotFound = () => {
+  // ==============================
+  // Hooks
+  // ==============================
   const location = useLocation();
 
+  // ==============================
+  // Effects
+  // ==============================
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
     document.title = "404 - Page Not Found | U.S. Ski & Snowboard";
   }, [location.pathname]);
+
+  // ==============================
+  // Render
+  // ==============================
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
