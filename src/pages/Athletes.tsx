@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -63,6 +64,8 @@ const PageSkeleton = () => (
 // Smart component — fetches athletes for the public preview and delegates
 // the authenticated directory view to AthleteDirectory.
 // Auth state comes from AuthContext (useAuth) instead of inline listeners.
+// Data fetching uses React Query for automatic caching — the athlete list is
+// fetched once and served from cache on subsequent visits until stale.
 // ==============================
 
 const Athletes = () => {
@@ -72,35 +75,33 @@ const Athletes = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { role: userRole } = useUserRole(user?.id);
-  const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
-  const [athletesLoading, setAthletesLoading] = useState(true);
 
   // ==============================
-  // Effects — Data Fetching
-  // Fetch top 3 public athletes for the unauthenticated preview (blurred cards)
+  // Data Fetching — Public Athlete Preview
+  // Fetches top 3 public athletes for the unauthenticated blurred-card preview.
+  // React Query caches the result under the "public-athletes-preview" key so
+  // navigating away and back does NOT trigger a new network request (until the
+  // cache becomes stale per the configured staleTime).
   // ==============================
-  useEffect(() => {
-    const loadAthletes = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("athlete_profiles")
-          .select(
-            `id, user_id, photo_url, sport_discipline, bio, skills, availability, profile_views,
-             profiles!inner(full_name)`
-          )
-          .eq("is_public", true)
-          .order("profile_views", { ascending: false })
-          .limit(3);
-        if (error) throw error;
-        setAthletes(data || []);
-      } catch (error) {
-        console.error("Error loading athletes:", error);
-      } finally {
-        setAthletesLoading(false);
-      }
-    };
-    loadAthletes();
-  }, []);
+  const { data: athletes = [], isLoading: athletesLoading } = useQuery<AthleteProfile[]>({
+    queryKey: ["public-athletes-preview"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("athlete_profiles")
+        .select(
+          `id, user_id, photo_url, sport_discipline, bio, skills, availability, profile_views,
+           profiles!inner(full_name)`,
+        )
+        .eq("is_public", true)
+        .order("profile_views", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return data ?? [];
+    },
+    // Keep data fresh for 5 minutes — consistent with typical React Query defaults
+    // and avoids unnecessary re-fetches on every route visit.
+    staleTime: 5 * 60 * 1000,
+  });
 
   // ==============================
   // Derived Values
@@ -116,7 +117,7 @@ const Athletes = () => {
         skillsPreview: a.skills?.slice(0, 3) ?? [],
         extraSkills: Math.max(0, (a.skills?.length ?? 0) - 3),
       })),
-    [athletes]
+    [athletes],
   );
 
   // ==============================
@@ -194,18 +195,14 @@ const Athletes = () => {
                                     {athlete.profiles?.full_name || "Athlete"}
                                   </CardTitle>
                                   {athlete.sport_discipline && (
-                                    <p className="text-sm text-muted-foreground truncate">
-                                      {athlete.sport_discipline}
-                                    </p>
+                                    <p className="text-sm text-muted-foreground truncate">{athlete.sport_discipline}</p>
                                   )}
                                 </div>
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-3">
                               {athlete.bio && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                  {athlete.bio}
-                                </p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>
                               )}
                               {athlete.skillsPreview.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
