@@ -26,6 +26,8 @@ export const MobileNav = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { signOut } = useSignOut();
+  const { user } = useAuth();
+  const { role } = useUserRole(user?.id);
 
   // ==============================
   // Event Handlers
