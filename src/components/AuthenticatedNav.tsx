@@ -59,7 +59,7 @@ export const AuthenticatedNav = memo(() => {
 
         {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter(item => !item.allowedRoles || (role && item.allowedRoles.includes(role as any))).map((item) => (
             <Link
               key={item.to}
               to={item.to}
