@@ -145,77 +145,77 @@ async function shouldSendEmail(
 function newRequestEmailHtml(companyName: string, athleteName: string, request: any, supabaseUrl: string): string {
   return `
     <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
-  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-      <tr>
-        <td style="
-          padding: 50px 30px 40px;
-          text-align: center;
-          background-image: url('${MOUNTAIN_BG_URL}');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          position: relative;
-        ">
-          <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
-          <div style="position: relative; z-index: 1; margin-bottom: 16px;">
-            <img
-              src="${US_LOGO_URL}"
-              alt="U.S. Ski & Snowboard"
-              width="90"
-              height="90"
-              style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
-            />
-          </div>
-          <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-            New Connection Request
-          </h1>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding: 40px 30px;">
-          <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${companyName}</strong>,</p>
-          <p style="margin: 0 0 30px; font-size: 16px;">
-            You have received a new connection request from <strong>${athleteName}</strong>!
-          </p>
-          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
-            <tr>
-              <td style="padding: 20px;">
-                <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Athlete Profile</p>
-                <p style="margin: 0 0 8px; font-size: 15px;"><strong>Name:</strong> ${athleteName}</p>
-                ${request.athlete_profiles.sport_discipline ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
-                ${request.athlete_profiles.bio ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
-                ${request.message ? `<p style="margin: 0; font-size: 15px;"><strong>Message:</strong> ${request.message}</p>` : ""}
-              </td>
-            </tr>
-          </table>
-          <p style="margin: 0 0 30px; font-size: 16px;">
-            Log in to your dashboard to review this request and connect with ${athleteName}.
-          </p>
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td align="center">
-                <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Request</a>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
-          <p style="margin: 0; font-size: 12px; color: #999;">
-            U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
-          </p>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="
+              padding: 50px 30px 40px;
+              text-align: center;
+              background-image: url('${MOUNTAIN_BG_URL}');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              position: relative;
+            ">
+              <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
+              <div style="position: relative; z-index: 1; margin-bottom: 16px;">
+                <img
+                  src="${US_LOGO_URL}"
+                  alt="U.S. Ski & Snowboard"
+                  width="90"
+                  height="90"
+                  style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
+                />
+              </div>
+              <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+                New Connection Request
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${companyName}</strong>,</p>
+              <p style="margin: 0 0 30px; font-size: 16px;">
+                You have received a new connection request from <strong>${athleteName}</strong>!
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Athlete Profile</p>
+                    <p style="margin: 0 0 8px; font-size: 15px;"><strong>Name:</strong> ${athleteName}</p>
+                    ${request.athlete_profiles.sport_discipline ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
+                    ${request.athlete_profiles.bio ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
+                    ${request.message ? `<p style="margin: 0; font-size: 15px;"><strong>Message:</strong> ${request.message}</p>` : ""}
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 30px; font-size: 16px;">
+                Log in to your dashboard to review this request and connect with ${athleteName}.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Request</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
+              <p style="margin: 0; font-size: 12px; color: #999;">
+                U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
+              </p>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>`;
 }
 
 function acceptedAthleteEmailHtml(
@@ -229,35 +229,73 @@ function acceptedAthleteEmailHtml(
     <!DOCTYPE html>
     <html>
       <head>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
-          .profile-info { background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .profile-info h3 { margin-top: 0; color: #10b981; }
-          .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-        </style>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>🎉 Connection Accepted!</h1></div>
-          <div class="content">
-            <p>Great news, ${athleteName}!</p>
-            <p><strong>${companyName}</strong> has accepted your connection request.</p>
-            <div class="profile-info">
-              <h3>Partner Contact Information</h3>
-              <p><strong>Company:</strong> ${companyName}</p>
-              ${request.employer_profiles.industry ? `<p><strong>Industry:</strong> ${request.employer_profiles.industry}</p>` : ""}
-              ${employerEmail ? `<p><strong>Email:</strong> ${employerEmail}</p>` : ""}
-              ${request.employer_profiles.about ? `<p><strong>About:</strong> ${request.employer_profiles.about}</p>` : ""}
-            </div>
-            <p>You can now reach out directly to start exploring opportunities together!</p>
-            <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" class="button">View Dashboard</a>
-          </div>
-          <div class="footer"><p>This is an automated notification from US Ski & Snowboard Career Platform</p></div>
-        </div>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="
+              padding: 50px 30px 40px;
+              text-align: center;
+              background-image: url('${MOUNTAIN_BG_URL}');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              position: relative;
+            ">
+              <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
+              <div style="position: relative; z-index: 1; margin-bottom: 16px;">
+                <img
+                  src="${US_LOGO_URL}"
+                  alt="U.S. Ski & Snowboard"
+                  width="90"
+                  height="90"
+                  style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
+                />
+              </div>
+              <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+                🎉 Connection Accepted!
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px; font-size: 16px;">Great news, ${athleteName}!</p>
+              <p style="margin: 0 0 30px; font-size: 16px;">
+                <strong>${companyName}</strong> has accepted your connection request.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Partner Contact Information</p>
+                    <p style="margin: 0 0 8px; font-size: 15px;"><strong>Company:</strong> ${companyName}</p>
+                    ${request.employer_profiles.industry ? `<p><strong>Industry:</strong> ${request.employer_profiles.industry}</p>` : ""}
+    				${employerEmail ? `<p><strong>Email:</strong> ${employerEmail}</p>` : ""}
+    				${request.employer_profiles.about ? `<p><strong>About:</strong> ${request.employer_profiles.about}</p>` : ""}
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 30px; font-size: 16px;">
+                You can now reach out directly to start exploring opportunities together!
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Dashboard</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
+              <p style="margin: 0; font-size: 12px; color: #999;">
+                This is an automated notification from US Ski & Snowboard Career Platform
+              </p>
+            </td>
+          </tr>
+        </table>
       </body>
     </html>`;
 }
@@ -273,35 +311,73 @@ function acceptedEmployerEmailHtml(
     <!DOCTYPE html>
     <html>
       <head>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
-          .contact-info { background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981; }
-          .contact-info h3 { margin-top: 0; color: #059669; }
-          .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-        </style>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>🎉 Connection Confirmed!</h1></div>
-          <div class="content">
-            <p>Hello ${companyName},</p>
-            <p>You've successfully connected with <strong>${athleteName}</strong>!</p>
-            <div class="contact-info">
-              <h3>Athlete Contact Information</h3>
-              <p><strong>Name:</strong> ${athleteName}</p>
-              ${request.athlete_profiles.sport_discipline ? `<p><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
-              ${athleteEmail ? `<p><strong>Email:</strong> ${athleteEmail}</p>` : ""}
-              ${request.athlete_profiles.bio ? `<p><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
-            </div>
-            <p>You can now reach out directly to discuss opportunities!</p>
-            <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" class="button">View Dashboard</a>
-          </div>
-          <div class="footer"><p>This is an automated notification from US Ski & Snowboard Career Platform</p></div>
-        </div>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="
+              padding: 50px 30px 40px;
+              text-align: center;
+              background-image: url('${MOUNTAIN_BG_URL}');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              position: relative;
+            ">
+              <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
+              <div style="position: relative; z-index: 1; margin-bottom: 16px;">
+                <img
+                  src="${US_LOGO_URL}"
+                  alt="U.S. Ski & Snowboard"
+                  width="90"
+                  height="90"
+                  style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
+                />
+              </div>
+              <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+                🎉 Connection Confirmed!
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px; font-size: 16px;">Hello ${companyName},</p>
+              <p style="margin: 0 0 30px; font-size: 16px;">
+                You've successfully connected with <strong>${athleteName}</strong>!
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Athlete Contact Information</p>
+                    <p style="margin: 0 0 8px; font-size: 15px;"><strong>Name:</strong> ${athleteName}</p>
+                    ${request.athlete_profiles.sport_discipline ? `<p><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
+    				${athleteEmail ? `<p><strong>Email:</strong> ${athleteEmail}</p>` : ""}
+    				${request.athlete_profiles.bio ? `<p><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 30px; font-size: 16px;">
+                You can now reach out directly to discuss opportunities!
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Dashboard</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
+              <p style="margin: 0; font-size: 12px; color: #999;">
+                This is an automated notification from US Ski & Snowboard Career Platform
+              </p>
+            </td>
+          </tr>
+        </table>
       </body>
     </html>`;
 }
@@ -311,30 +387,67 @@ function declinedEmailHtml(recipientName: string, otherPartyName: string, supaba
     <!DOCTYPE html>
     <html>
       <head>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
-          .info-box { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-        </style>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>Connection Request Update</h1></div>
-          <div class="content">
-            <p>Hello ${recipientName},</p>
-            <p>Unfortunately, <strong>${otherPartyName}</strong> has declined your connection request at this time.</p>
-            <div class="info-box">
-              <p>Don't be discouraged! There are many other opportunities on the platform.</p>
-              <p>Keep building your profile and exploring connections that align with your goals.</p>
-            </div>
-            <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" class="button">Continue Exploring</a>
-          </div>
-          <div class="footer"><p>This is an automated notification from US Ski & Snowboard Career Platform</p></div>
-        </div>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="
+              padding: 50px 30px 40px;
+              text-align: center;
+              background-image: url('${MOUNTAIN_BG_URL}');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              position: relative;
+            ">
+              <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
+              <div style="position: relative; z-index: 1; margin-bottom: 16px;">
+                <img
+                  src="${US_LOGO_URL}"
+                  alt="U.S. Ski & Snowboard"
+                  width="90"
+                  height="90"
+                  style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
+                />
+              </div>
+              <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+                Connection Request Update
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${recipientName}</strong>,</p>
+              <p style="margin: 0 0 30px; font-size: 16px;">
+                Unfortunately, <strong>${otherPartyName}</strong> has declined your connection request at this time.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 12px; font-size: 15px;">Don't be discouraged! There are many other opportunities on the platform.</p>
+                    <p style="margin: 0; font-size: 15px;">Keep building your profile and exploring connections that align with your goals.</p>
+                  </td>
+                </tr>
+              </table>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Continue Exploring</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
+              <p style="margin: 0; font-size: 12px; color: #999;">
+                U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
+              </p>
+            </td>
+          </tr>
+        </table>
       </body>
     </html>`;
 }
