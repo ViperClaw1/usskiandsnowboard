@@ -10,6 +10,8 @@ import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
 import { useSignOut } from "@/hooks/useSignOut";
 import { NAV_ITEMS } from "@/constants/nav";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // ==============================
 // Component Definition
