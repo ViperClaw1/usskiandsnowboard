@@ -53,7 +53,7 @@ export const MobileNav = () => {
       <SheetContent side="right" className="w-[280px] sm:w-[320px] animate-slide-in-right">
         <nav className="flex flex-col gap-2 mt-8">
           {/* Primary nav links */}
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter(item => !item.allowedRoles || (role && item.allowedRoles.includes(role as any))).map((item) => (
             <Link
               key={item.to}
               to={item.to}
