@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
-const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
+import { emailTemplate, sendEmail, sleep } from "../_shared/email-template.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const FROM = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +17,71 @@ interface AdminNotificationRequest {
   request_id?: string;
 }
 
+// === Email body builders ===
+
+function newAccountBody(fullName: string, email: string, role: string): string {
+  return `
+    <p style="margin: 0 0 30px; font-size: 16px;">A new user has registered on the U.S. Ski &amp; Snowboard platform:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Name:</strong> ${fullName || "N/A"}</p>
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Email:</strong> ${email || "N/A"}</p>
+          <p style="margin: 0; font-size: 15px;"><strong>Role:</strong> ${role || "N/A"}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0; font-size: 16px;">You can view all users in the admin dashboard.</p>`;
+}
+
+function newConnectionRequestBody(athleteName: string, sport: string, companyName: string, date: string): string {
+  return `
+    <p style="margin: 0 0 30px; font-size: 16px;">A new connection request has been made:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Athlete:</strong> ${athleteName}</p>
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Sport:</strong> ${sport}</p>
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Partner:</strong> ${companyName}</p>
+          <p style="margin: 0; font-size: 15px;"><strong>Date:</strong> ${date}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0; font-size: 16px;">You can view all connection requests in the admin dashboard.</p>`;
+}
+
+function connectionAcceptedBody(athleteName: string, companyName: string, date: string): string {
+  return `
+    <p style="margin: 0 0 30px; font-size: 16px;">A connection has been established:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Athlete:</strong> ${athleteName}</p>
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Partner:</strong> ${companyName}</p>
+          <p style="margin: 0; font-size: 15px;"><strong>Date:</strong> ${date}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0; font-size: 16px;">You can view all connections in the admin dashboard.</p>`;
+}
+
+function connectionDeclinedBody(athleteName: string, companyName: string, date: string): string {
+  return `
+    <p style="margin: 0 0 30px; font-size: 16px;">A connection request has been declined:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Athlete:</strong> ${athleteName}</p>
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Partner:</strong> ${companyName}</p>
+          <p style="margin: 0; font-size: 15px;"><strong>Date:</strong> ${date}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0; font-size: 16px;">You can view all connections in the admin dashboard.</p>`;
+}
+
+// === Handler ===
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,14 +89,15 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { notification_type, user_id, request_id }: AdminNotificationRequest = await req.json();
-
     console.log("Processing admin notification:", { notification_type, user_id, request_id });
 
-    const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
 
-    // Get all admin users with email notifications enabled for this type
+    // Get all admin users
     const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-
     if (!adminRoles || adminRoles.length === 0) {
       console.log("No admin users found");
       return new Response(JSON.stringify({ message: "No admin users" }), {
@@ -42,23 +108,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     const adminUserIds = adminRoles.map((r) => r.user_id);
 
-    // Get admin notification preferences based on notification type
+    // Determine which preference column to check
     let preferenceColumn: string;
     switch (notification_type) {
-      case "new_account":
-        preferenceColumn = "email_new_accounts";
-        break;
-      case "connection_declined":
-        preferenceColumn = "email_connections_declined";
-        break;
-      case "new_connection_request":
-        preferenceColumn = "email_new_requests";
-        break;
-      case "connection_accepted":
-        preferenceColumn = "email_accepted_connections";
-        break;
-      default:
-        preferenceColumn = "email_new_requests";
+      case "new_account":           preferenceColumn = "email_new_accounts"; break;
+      case "connection_declined":   preferenceColumn = "email_connections_declined"; break;
+      case "new_connection_request": preferenceColumn = "email_new_requests"; break;
+      case "connection_accepted":   preferenceColumn = "email_accepted_connections"; break;
+      default:                      preferenceColumn = "email_new_requests";
     }
 
     const { data: preferences } = await supabase
@@ -76,8 +133,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const subscribedAdminIds = preferences.map((p) => p.user_id);
-
-    // Get admin emails
     const { data: adminProfiles } = await supabase
       .from("profiles")
       .select("email, full_name")
@@ -91,297 +146,88 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Build email subject + HTML
     let emailSubject = "";
     let emailHtml = "";
 
     if (notification_type === "new_account" && user_id) {
-      // Get new user details
-      const { data: newUserProfile } = await supabase
-        .from("profiles")
-        .select("email, full_name")
-        .eq("id", user_id)
-        .single();
-
-      const { data: userRole } = await supabase.from("user_roles").select("role").eq("user_id", user_id).single();
-
+      const { data: profile } = await supabase.from("profiles").select("email, full_name").eq("id", user_id).single();
+      const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user_id).single();
       emailSubject = "New User Registration - US Ski & Snowboard";
-      emailHtml = `
-        <h2>New User Registration</h2>
-        <p>A new user has registered on the US Ski & Snowboard platform:</p>
-        <ul>
-          <li><strong>Name:</strong> ${newUserProfile?.full_name || "N/A"}</li>
-          <li><strong>Email:</strong> ${newUserProfile?.email || "N/A"}</li>
-          <li><strong>Role:</strong> ${userRole?.role || "N/A"}</li>
-        </ul>
-        <p>You can view all users in the admin dashboard.</p>
-      `;
+      emailHtml = emailTemplate(
+        "New User Registration",
+        newAccountBody(profile?.full_name ?? "N/A", profile?.email ?? "N/A", roleData?.role ?? "N/A"),
+      );
+
     } else if (notification_type === "new_connection_request" && request_id) {
-      // Get connection request details
-      const { data: request } = await supabase
+      const { data: req_ } = await supabase
         .from("connection_requests")
-        .select(
-          `
-          *,
-          athlete:athlete_profiles!inner(user_id, sport_discipline),
-          employer:employer_profiles!inner(user_id, company_name)
-        `,
-        )
+        .select(`*, athlete:athlete_profiles!inner(user_id, sport_discipline), employer:employer_profiles!inner(user_id, company_name)`)
         .eq("id", request_id)
         .single();
-
-      if (request) {
-        const { data: athleteProfile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", request.athlete.user_id)
-          .single();
-
+      if (req_) {
+        const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", req_.athlete.user_id).single();
         emailSubject = "New Connection Request - US Ski & Snowboard";
-        emailHtml = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <tr>
-                  <td style="
-                    padding: 50px 30px 40px;
-                    text-align: center;
-                    background-image: url('${MOUNTAIN_BG_URL}');
-                    background-size: cover;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    position: relative;
-                  ">
-                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
-                    <div style="position: relative; z-index: 1; margin-bottom: 16px;">
-                      <img
-                        src="${US_LOGO_URL}"
-                        alt="U.S. Ski & Snowboard"
-                        width="90"
-                        height="90"
-                        style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
-                      />
-                    </div>
-                    <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-                      New Connection Request
-                    </h1>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 40px 30px;">
-                    <p style="margin: 0 0 30px; font-size: 16px;">A new connection request has been made:</p>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
-                      <tr>
-                        <td style="padding: 20px;">
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Athlete:</strong> ${athleteProfile?.full_name || "N/A"}</p>
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Sport:</strong> ${request.athlete.sport_discipline || "N/A"}</p>
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Partner:</strong> ${request.employer.company_name || "N/A"}</p>
-                          <p style="margin: 0; font-size: 15px;"><strong>Date:</strong> ${new Date(request.created_at).toLocaleDateString()}</p>
-                        </td>
-                      </tr>
-                    </table>
-                    <p style="margin: 0; font-size: 16px;">You can view all connection requests in the admin dashboard.</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
-                    <p style="margin: 0; font-size: 12px; color: #999;">
-                      U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </body>
-          </html>
-        `;
+        emailHtml = emailTemplate(
+          "New Connection Request",
+          newConnectionRequestBody(
+            ap?.full_name ?? "N/A",
+            req_.athlete.sport_discipline ?? "N/A",
+            req_.employer.company_name ?? "N/A",
+            new Date(req_.created_at).toLocaleDateString(),
+          ),
+        );
       }
+
     } else if (notification_type === "connection_accepted" && request_id) {
-      // Get connection request details
-      const { data: request } = await supabase
+      const { data: req_ } = await supabase
         .from("connection_requests")
-        .select(
-          `
-          *,
-          athlete:athlete_profiles!inner(user_id),
-          employer:employer_profiles!inner(user_id, company_name)
-        `,
-        )
+        .select(`*, athlete:athlete_profiles!inner(user_id), employer:employer_profiles!inner(user_id, company_name)`)
         .eq("id", request_id)
         .single();
-
-      if (request) {
-        const { data: athleteProfile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", request.athlete.user_id)
-          .single();
-
+      if (req_) {
+        const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", req_.athlete.user_id).single();
         emailSubject = "Connection Accepted - US Ski & Snowboard";
-        emailHtml = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <tr>
-                  <td style="
-                    padding: 50px 30px 40px;
-                    text-align: center;
-                    background-image: url('${MOUNTAIN_BG_URL}');
-                    background-size: cover;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    position: relative;
-                  ">
-                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
-                    <div style="position: relative; z-index: 1; margin-bottom: 16px;">
-                      <img
-                        src="${US_LOGO_URL}"
-                        alt="U.S. Ski & Snowboard"
-                        width="90"
-                        height="90"
-                        style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
-                      />
-                    </div>
-                    <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-                      Connection Accepted
-                    </h1>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 40px 30px;">
-                    <p style="margin: 0 0 30px; font-size: 16px;">A connection has been established:</p>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
-                      <tr>
-                        <td style="padding: 20px;">
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Athlete:</strong> ${athleteProfile?.full_name || "N/A"}</p>
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Partner:</strong> ${request.employer.company_name || "N/A"}</p>
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Date:</strong> ${new Date(request.updated_at).toLocaleDateString()}</p>
-                        </td>
-                      </tr>
-                    </table>
-                    <p style="margin: 0; font-size: 16px;">You can view all connections in the admin dashboard.</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
-                    <p style="margin: 0; font-size: 12px; color: #999;">
-                      U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </body>
-          </html>
-        `;
+        emailHtml = emailTemplate(
+          "Connection Accepted",
+          connectionAcceptedBody(
+            ap?.full_name ?? "N/A",
+            req_.employer.company_name ?? "N/A",
+            new Date(req_.updated_at).toLocaleDateString(),
+          ),
+        );
       }
+
     } else if (notification_type === "connection_declined" && request_id) {
-      // Get connection request details
-      const { data: request } = await supabase
+      const { data: req_ } = await supabase
         .from("connection_requests")
-        .select(
-          `
-          *,
-          athlete:athlete_profiles!inner(user_id),
-          employer:employer_profiles!inner(user_id, company_name)
-        `,
-        )
+        .select(`*, athlete:athlete_profiles!inner(user_id), employer:employer_profiles!inner(user_id, company_name)`)
         .eq("id", request_id)
         .single();
-
-      if (request) {
-        const { data: athleteProfile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", request.athlete.user_id)
-          .single();
-
+      if (req_) {
+        const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", req_.athlete.user_id).single();
         emailSubject = "Connection Request Declined - US Ski & Snowboard";
-        emailHtml = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <tr>
-                  <td style="
-                    padding: 50px 30px 40px;
-                    text-align: center;
-                    background-image: url('${MOUNTAIN_BG_URL}');
-                    background-size: cover;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    position: relative;
-                  ">
-                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
-                    <div style="position: relative; z-index: 1; margin-bottom: 16px;">
-                      <img
-                        src="${US_LOGO_URL}"
-                        alt="U.S. Ski & Snowboard"
-                        width="90"
-                        height="90"
-                        style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
-                      />
-                    </div>
-                    <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-                      Connection Request Declined
-                    </h1>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 40px 30px;">
-                    <p style="margin: 0 0 30px; font-size: 16px;">A connection request has been declined:</p>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
-                      <tr>
-                        <td style="padding: 20px;">
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Athlete:</strong> ${athleteProfile?.full_name || "N/A"}</p>
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Partner:</strong> ${request.employer.company_name || "N/A"}</p>
-                          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Date:</strong> ${new Date(request.updated_at).toLocaleDateString()}</p>
-                        </td>
-                      </tr>
-                    </table>
-                    <p style="margin: 0; font-size: 16px;">You can view all connections in the admin dashboard.</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
-                    <p style="margin: 0; font-size: 12px; color: #999;">
-                      U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </body>
-          </html>
-        `;
+        emailHtml = emailTemplate(
+          "Connection Request Declined",
+          connectionDeclinedBody(
+            ap?.full_name ?? "N/A",
+            req_.employer.company_name ?? "N/A",
+            new Date(req_.updated_at).toLocaleDateString(),
+          ),
+        );
       }
     }
 
-    // Send emails to all subscribed admins
-    const emailPromises = adminProfiles.map((admin) =>
-      resend.emails.send({
-        from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
-        to: [admin.email],
-        subject: emailSubject,
-        html: emailHtml,
-      }),
-    );
+    // === Sequential send with 600 ms gap to stay under the 2 req/s Resend limit ===
+    let sent = 0;
+    for (const admin of adminProfiles) {
+      if (sent > 0) await sleep(600);
+      await sendEmail(resend, { from: FROM, to: [admin.email], subject: emailSubject, html: emailHtml });
+      sent++;
+    }
 
-    await Promise.all(emailPromises);
-
-    console.log(`Sent ${adminProfiles.length} admin notification emails`);
-
-    return new Response(JSON.stringify({ success: true, count: adminProfiles.length }), {
+    console.log(`Sent ${sent} admin notification emails`);
+    return new Response(JSON.stringify({ success: true, count: sent }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
