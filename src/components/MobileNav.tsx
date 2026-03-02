@@ -3,13 +3,15 @@
 // ==============================
 
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useSignOut } from "@/hooks/useSignOut";
 import { NAV_ITEMS } from "@/constants/nav";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // ==============================
 // Component Definition
@@ -24,6 +26,8 @@ export const MobileNav = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { signOut } = useSignOut();
+  const { user } = useAuth();
+  const { role } = useUserRole(user?.id);
 
   // ==============================
   // Event Handlers
@@ -49,7 +53,7 @@ export const MobileNav = () => {
       <SheetContent side="right" className="w-[280px] sm:w-[320px] animate-slide-in-right">
         <nav className="flex flex-col gap-2 mt-8">
           {/* Primary nav links */}
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter(item => !item.allowedRoles || (role && item.allowedRoles.includes(role as any))).map((item) => (
             <Link
               key={item.to}
               to={item.to}

@@ -10,6 +10,8 @@ import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { MobileNav } from "@/components/MobileNav";
 import { useSignOut } from "@/hooks/useSignOut";
 import { NAV_ITEMS } from "@/constants/nav";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // ==============================
 // Component Definition
@@ -22,6 +24,8 @@ export const AuthenticatedNav = memo(() => {
   // Hooks
   // ==============================
   const { signOut } = useSignOut();
+  const { user } = useAuth();
+  const { role } = useUserRole(user?.id);
 
   // ==============================
   // Derived Values — Stable style object
@@ -55,7 +59,7 @@ export const AuthenticatedNav = memo(() => {
 
         {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter(item => !item.allowedRoles || (role && item.allowedRoles.includes(role as any))).map((item) => (
             <Link
               key={item.to}
               to={item.to}
