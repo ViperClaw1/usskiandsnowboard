@@ -451,7 +451,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       <div>
                         <p className="font-semibold text-sm">{partner.company_name}</p>
                         {partner.industry && (
-                          <Badge variant="primary" className="mt-2 text-xs">
+                          <Badge variant="default" className="mt-2 text-xs">
                             {partner.industry}
                           </Badge>
                         )}
