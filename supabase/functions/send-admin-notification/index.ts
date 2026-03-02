@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
+const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
