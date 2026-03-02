@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
           </div>
           <!-- Heading -->
           <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-            >${frequencyLabel(freq)} Analytics Summary
+            ${frequencyLabel(freq)} Analytics Summary
           </h1>
           <p style="position: relative; z-index: 1; margin: 8px 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">${today.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
       </td>
