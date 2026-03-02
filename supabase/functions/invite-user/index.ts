@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
-const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
+import { emailTemplate, sendEmail } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +9,7 @@ const corsHeaders = {
 };
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
+const FROM = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -20,113 +20,73 @@ serve(async (req) => {
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      },
+      { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
-    // Verify the request is from an admin
+    // Verify caller
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
+    if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) throw new Error("Unauthorized");
 
-    if (authError || !user) {
-      throw new Error("Unauthorized");
-    }
-
-    // Check if user is admin
+    // Check admin role
     const { data: roleData, error: roleError } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .eq("role", "admin")
       .single();
-
-    if (roleError || !roleData) {
-      throw new Error("Only admins can invite users");
-    }
+    if (roleError || !roleData) throw new Error("Only admins can invite users");
 
     const { email, firstName, lastName, role } = await req.json();
-
-    if (!email || !role) {
-      throw new Error("Email and role are required");
-    }
+    if (!email || !role) throw new Error("Email and role are required");
 
     console.log("Creating user:", email, "with role:", role);
 
     // Check if user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const existingUser = existingUsers?.users.find((u) => u.email === email);
-
     let userId: string;
 
     if (existingUser) {
       console.log("User already exists, resending invitation:", existingUser.id);
       userId = existingUser.id;
 
-      // Update user metadata if provided
       if (firstName || lastName) {
         await supabaseAdmin.auth.admin.updateUserById(userId, {
           user_metadata: {
             first_name: firstName || existingUser.user_metadata?.first_name || "",
             last_name: lastName || existingUser.user_metadata?.last_name || "",
-            full_name:
-              `${firstName || existingUser.user_metadata?.first_name || ""} ${lastName || existingUser.user_metadata?.last_name || ""}`.trim(),
+            full_name: `${firstName || existingUser.user_metadata?.first_name || ""} ${lastName || existingUser.user_metadata?.last_name || ""}`.trim(),
           },
         });
       }
 
-      // Update profile if exists
       const { data: existingProfile } = await supabaseAdmin.from("profiles").select("id").eq("id", userId).single();
-
       if (existingProfile) {
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            first_name: firstName || null,
-            last_name: lastName || null,
-            full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
-          })
-          .eq("id", userId);
+        await supabaseAdmin.from("profiles").update({
+          first_name: firstName || null,
+          last_name: lastName || null,
+          full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
+        }).eq("id", userId);
       } else {
-        // Create profile if it doesn't exist
         await supabaseAdmin.from("profiles").insert({
-          id: userId,
-          email: email,
+          id: userId, email,
           first_name: firstName || null,
           last_name: lastName || null,
           full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
         });
       }
 
-      // Check if role exists, if not create it
       const { data: existingRole } = await supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", role)
-        .single();
-
+        .from("user_roles").select("role").eq("user_id", userId).eq("role", role).single();
       if (!existingRole) {
-        await supabaseAdmin.from("user_roles").insert({
-          user_id: userId,
-          role: role,
-        });
+        await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
       }
     } else {
-      // Create new user
       const tempPassword = crypto.randomUUID().slice(0, 16);
-
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password: tempPassword,
@@ -137,169 +97,71 @@ serve(async (req) => {
           full_name: `${firstName || ""} ${lastName || ""}`.trim(),
         },
       });
-
-      if (createError) {
-        console.error("Error creating user:", createError);
-        throw createError;
-      }
+      if (createError) { console.error("Error creating user:", createError); throw createError; }
 
       console.log("User created successfully:", newUser.user.id);
       userId = newUser.user.id;
 
-      // Create or update profile (handle_new_user trigger may have already created it)
       const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
-        {
-          id: userId,
-          email: email,
-          first_name: firstName || null,
-          last_name: lastName || null,
-          full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
-        },
+        { id: userId, email, first_name: firstName || null, last_name: lastName || null, full_name: `${firstName || ""} ${lastName || ""}`.trim() || null },
         { onConflict: "id" },
       );
+      if (profileError) { await supabaseAdmin.auth.admin.deleteUser(userId); throw profileError; }
 
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-        await supabaseAdmin.auth.admin.deleteUser(userId);
-        throw profileError;
-      }
-
-      // Assign role
-      const { error: roleAssignError } = await supabaseAdmin.from("user_roles").insert({
-        user_id: userId,
-        role: role,
-      });
-
-      if (roleAssignError) {
-        console.error("Error assigning role:", roleAssignError);
-        await supabaseAdmin.auth.admin.deleteUser(userId);
-        throw roleAssignError;
-      }
+      const { error: roleAssignError } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
+      if (roleAssignError) { await supabaseAdmin.auth.admin.deleteUser(userId); throw roleAssignError; }
     }
 
-    // Generate password reset link
+    // Generate password-set link
     const appUrl = "https://usskiandsnowboard.lovable.app";
+    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email });
+    if (resetError) { console.error("Error generating reset link:", resetError); throw resetError; }
 
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email: email,
-    });
-
-    if (resetError) {
-      console.error("Error generating reset link:", resetError);
-      throw resetError;
-    }
-
-    // Construct direct link to our app with token_hash (bypasses Supabase redirect allowlist)
     const directLink = `${appUrl}/reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
-
     console.log("Sending invitation email to:", email);
 
-    // Send invitation email
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <tr>
-              <td style="
-                padding: 50px 30px 40px;
-                text-align: center;
-                background-image: url('${MOUNTAIN_BG_URL}');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                position: relative;
-              ">
-                <!-- Dark overlay for readability -->
-                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
-                <!-- Logo -->
-                <div style="position: relative; z-index: 1; margin-bottom: 16px;">
-                  <img
-                    src="${US_LOGO_URL}"
-                    alt="U.S. Ski & Snowboard"
-                    width="90"
-                    height="90"
-                    style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
-                  />
-                </div>
-                <!-- Heading -->
-                <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-                  Welcome to U.S. Ski &amp; Snowboard!
-                </h1>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 40px 30px;">
-                <p style="margin: 0 0 20px; font-size: 16px;">
-                  You've been invited to join the U.S. Ski & Snowboard platform as a <strong>${role}</strong>.
-                </p>
-                <p style="margin: 0 0 30px; font-size: 16px;">
-                  To get started, please set your password by clicking the button below:
-                </p>
-                <table width="100%" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td align="center">
-                      <a href="${directLink}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Set Your Password</a>
-                    </td>
-                  </tr>
-                </table>
-                <p style="margin: 30px 0 10px; font-size: 14px; color: #666;">
-                  Or copy and paste this link into your browser:
-                </p>
-                <p style="margin: 0 0 30px; padding: 15px; background-color: #f4f4f4; border-radius: 5px; font-size: 12px; word-break: break-all; color: #333;">
-                  ${directLink}
-                </p>
-                <p style="margin: 0 0 10px; font-size: 14px; color: #666;">
-                  Your login email is: <strong>${email}</strong>
-                </p>
-                <p style="margin: 0; font-size: 14px; color: #999;">
-                  This link will expire in 24 hours.
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
-                <p style="margin: 0; font-size: 12px; color: #999;">
-                  U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
-                </p>
-              </td>
-            </tr>
-          </table>
-        </body>
-      </html>
-    `;
+    const bodyHtml = `
+      <p style="margin: 0 0 20px; font-size: 16px;">
+        You've been invited to join the U.S. Ski &amp; Snowboard platform as a <strong>${role}</strong>.
+      </p>
+      <p style="margin: 0 0 30px; font-size: 16px;">
+        To get started, please set your password by clicking the button below:
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="center">
+            <a href="${directLink}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Set Your Password</a>
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 30px 0 10px; font-size: 14px; color: #666;">
+        Or copy and paste this link into your browser:
+      </p>
+      <p style="margin: 0 0 30px; padding: 15px; background-color: #f4f4f4; border-radius: 5px; font-size: 12px; word-break: break-all; color: #333;">
+        ${directLink}
+      </p>
+      <p style="margin: 0 0 10px; font-size: 14px; color: #666;">
+        Your login email is: <strong>${email}</strong>
+      </p>
+      <p style="margin: 0; font-size: 14px; color: #999;">This link will expire in 24 hours.</p>`;
 
-    const { error: emailError } = await resend.emails.send({
-      from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
-      to: [email],
-      subject: "Welcome to U.S. Ski & Snowboard - Set Your Password",
-      html,
-    });
-
-    if (emailError) {
-      console.error("Error sending email:", emailError);
-      // Don't fail the request if email fails
+    try {
+      await sendEmail(resend, {
+        from: FROM,
+        to: [email],
+        subject: "Welcome to U.S. Ski & Snowboard - Set Your Password",
+        html: emailTemplate("Welcome to U.S. Ski & Snowboard!", bodyHtml),
+      });
+      console.log("Invitation email sent successfully");
+    } catch (emailErr) {
+      console.error("Error sending email:", emailErr);
       return new Response(
-        JSON.stringify({
-          success: true,
-          user: user,
-          emailError: "User created but email failed to send",
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        JSON.stringify({ success: true, user, emailError: "User created but email failed to send" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    console.log("Invitation email sent successfully");
-
-    return new Response(JSON.stringify({ success: true, user: user }), {
+    return new Response(JSON.stringify({ success: true, user }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
