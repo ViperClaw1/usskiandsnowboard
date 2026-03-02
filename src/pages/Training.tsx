@@ -55,7 +55,7 @@ const Training = () => {
   // ==============================
   const { data: articles = [], isLoading: loading } = useQuery({
     queryKey: ["training-articles"],
-    queryFn:  fetchPublishedArticles,
+    queryFn: fetchPublishedArticles,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -64,11 +64,8 @@ const Training = () => {
   // Memoized so category-switching does not re-filter the full list unnecessarily.
   // ==============================
   const filtered = useMemo(
-    () =>
-      activeCategory === "All Topics"
-        ? articles
-        : articles.filter((a) => a.category === activeCategory),
-    [articles, activeCategory]
+    () => (activeCategory === "All Topics" ? articles : articles.filter((a) => a.category === activeCategory)),
+    [articles, activeCategory],
   );
 
   // ==============================
@@ -81,9 +78,9 @@ const Training = () => {
       <section className="relative bg-primary text-primary-foreground overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-glow opacity-90" />
         <div className="relative container mx-auto px-4 py-16 md:py-24 text-center">
-          <Badge className="mb-6 bg-secondary/20 text-secondary-foreground border-secondary/30 hover:bg-secondary/30 text-xs tracking-widest uppercase font-semibold px-4 py-1.5">
+          {/* <Badge className="mb-6 bg-secondary/20 text-secondary-foreground border-secondary/30 hover:bg-secondary/30 text-xs tracking-widest uppercase font-semibold px-4 py-1.5">
             Training &amp; Development
-          </Badge>
+          </Badge> */}
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight max-w-3xl mx-auto leading-tight">
             Resources to Help You Thrive Beyond the Mountain
           </h1>
