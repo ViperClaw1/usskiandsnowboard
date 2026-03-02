@@ -6,6 +6,8 @@
 export interface NavItem {
   to: string;
   label: string;
+  /** If set, only users with one of these roles will see this link. Undefined = visible to all. */
+  allowedRoles?: Array<"athlete" | "employer" | "admin">;
 }
 
 /** Primary nav links shown in both mobile and desktop headers */
@@ -14,5 +16,5 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/employers", label: "Partners" },
   { to: "/schedule", label: "Schedule" },
   { to: "/news", label: "News" },
-  { to: "/training", label: "Training" },
+  { to: "/training", label: "Training", allowedRoles: ["athlete", "admin"] },
 ];
