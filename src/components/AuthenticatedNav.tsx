@@ -24,6 +24,8 @@ export const AuthenticatedNav = memo(() => {
   // Hooks
   // ==============================
   const { signOut } = useSignOut();
+  const { user } = useAuth();
+  const { role } = useUserRole(user?.id);
 
   // ==============================
   // Derived Values — Stable style object
