@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+const MOUNTAIN_BG_URL = "https://usskiandsnowboard.lovable.app/email/mountain-header-bg.png";
+const US_LOGO_URL = "https://usskiandsnowboard.lovable.app/email/us-logo-new.png";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -30,21 +32,18 @@ async function sendTwilioSMS(toPhone: string, message: string): Promise<void> {
 
   try {
     const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Basic ${auth}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          From: TWILIO_PHONE_NUMBER,
-          To: toPhone,
-          Body: message,
-        }),
-      }
-    );
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        From: TWILIO_PHONE_NUMBER,
+        To: toPhone,
+        Body: message,
+      }),
+    });
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -61,7 +60,7 @@ async function sendTwilioSMS(toPhone: string, message: string): Promise<void> {
 // Check if user has SMS enabled and has a phone number
 async function shouldSendSMS(
   supabase: ReturnType<typeof createClient>,
-  userId: string
+  userId: string,
 ): Promise<{ send: boolean; phone: string | null }> {
   // Check notification preferences
   const { data: prefs } = await supabase
@@ -75,11 +74,7 @@ async function shouldSendSMS(
   }
 
   // Get phone number from profiles
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("phone")
-    .eq("id", userId)
-    .maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("phone").eq("id", userId).maybeSingle();
 
   if (!profile?.phone) {
     console.log("SMS enabled but no phone number on file for user", userId);
@@ -96,7 +91,7 @@ async function notifyAdmins(notificationType: string, requestId: string) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseServiceKey}`,
+        Authorization: `Bearer ${supabaseServiceKey}`,
       },
       body: JSON.stringify({
         notification_type: notificationType,
@@ -113,7 +108,7 @@ async function notifyAdmins(notificationType: string, requestId: string) {
 async function shouldSendEmail(
   supabase: ReturnType<typeof createClient>,
   userId: string,
-  notificationType: string
+  notificationType: string,
 ): Promise<boolean> {
   const { data: prefs } = await supabase
     .from("notification_preferences")
@@ -150,42 +145,86 @@ async function shouldSendEmail(
 function newRequestEmailHtml(companyName: string, athleteName: string, request: any, supabaseUrl: string): string {
   return `
     <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
-          .profile-info { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .profile-info h3 { margin-top: 0; color: #667eea; }
-          .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>New Connection Request</h1></div>
-          <div class="content">
-            <p>Hello ${companyName},</p>
-            <p>You have received a new connection request from <strong>${athleteName}</strong>!</p>
-            <div class="profile-info">
-              <h3>Athlete Profile</h3>
-              <p><strong>Name:</strong> ${athleteName}</p>
-              ${request.athlete_profiles.sport_discipline ? `<p><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
-              ${request.athlete_profiles.bio ? `<p><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
-              ${request.message ? `<p><strong>Message:</strong> ${request.message}</p>` : ""}
-            </div>
-            <p>Log in to your dashboard to review this request and connect with ${athleteName}.</p>
-            <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/dashboard" class="button">Review Request</a>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <tr>
+        <td style="
+          padding: 50px 30px 40px;
+          text-align: center;
+          background-image: url('${MOUNTAIN_BG_URL}');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          position: relative;
+        ">
+          <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
+          <div style="position: relative; z-index: 1; margin-bottom: 16px;">
+            <img
+              src="${US_LOGO_URL}"
+              alt="U.S. Ski & Snowboard"
+              width="90"
+              height="90"
+              style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
+            />
           </div>
-          <div class="footer"><p>This is an automated notification from US Ski & Snowboard Career Platform</p></div>
-        </div>
-      </body>
-    </html>`;
+          <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+            New Connection Request
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 40px 30px;">
+          <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${companyName}</strong>,</p>
+          <p style="margin: 0 0 30px; font-size: 16px;">
+            You have received a new connection request from <strong>${athleteName}</strong>!
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+            <tr>
+              <td style="padding: 20px;">
+                <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Athlete Profile</p>
+                <p style="margin: 0 0 8px; font-size: 15px;"><strong>Name:</strong> ${athleteName}</p>
+                ${request.athlete_profiles.sport_discipline ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
+                ${request.athlete_profiles.bio ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
+                ${request.message ? `<p style="margin: 0; font-size: 15px;"><strong>Message:</strong> ${request.message}</p>` : ""}
+              </td>
+            </tr>
+          </table>
+          <p style="margin: 0 0 30px; font-size: 16px;">
+            Log in to your dashboard to review this request and connect with ${athleteName}.
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td align="center">
+                <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Request</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 30px; text-align: center; background-color: #f8f8f8; border-top: 1px solid #eee;">
+          <p style="margin: 0; font-size: 12px; color: #999;">
+            U.S. Ski & Snowboard - Connecting Athletes with Career Opportunities
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
 }
 
-function acceptedAthleteEmailHtml(athleteName: string, companyName: string, request: any, employerEmail: string, supabaseUrl: string): string {
+function acceptedAthleteEmailHtml(
+  athleteName: string,
+  companyName: string,
+  request: any,
+  employerEmail: string,
+  supabaseUrl: string,
+): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -195,8 +234,8 @@ function acceptedAthleteEmailHtml(athleteName: string, companyName: string, requ
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
           .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
-          .contact-info { background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981; }
-          .contact-info h3 { margin-top: 0; color: #059669; }
+          .profile-info { background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .profile-info h3 { margin-top: 0; color: #10b981; }
           .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
           .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
         </style>
@@ -207,7 +246,7 @@ function acceptedAthleteEmailHtml(athleteName: string, companyName: string, requ
           <div class="content">
             <p>Great news, ${athleteName}!</p>
             <p><strong>${companyName}</strong> has accepted your connection request.</p>
-            <div class="contact-info">
+            <div class="profile-info">
               <h3>Partner Contact Information</h3>
               <p><strong>Company:</strong> ${companyName}</p>
               ${request.employer_profiles.industry ? `<p><strong>Industry:</strong> ${request.employer_profiles.industry}</p>` : ""}
@@ -215,7 +254,7 @@ function acceptedAthleteEmailHtml(athleteName: string, companyName: string, requ
               ${request.employer_profiles.about ? `<p><strong>About:</strong> ${request.employer_profiles.about}</p>` : ""}
             </div>
             <p>You can now reach out directly to start exploring opportunities together!</p>
-            <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/dashboard" class="button">View Dashboard</a>
+            <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" class="button">View Dashboard</a>
           </div>
           <div class="footer"><p>This is an automated notification from US Ski & Snowboard Career Platform</p></div>
         </div>
@@ -223,7 +262,13 @@ function acceptedAthleteEmailHtml(athleteName: string, companyName: string, requ
     </html>`;
 }
 
-function acceptedEmployerEmailHtml(companyName: string, athleteName: string, request: any, athleteEmail: string, supabaseUrl: string): string {
+function acceptedEmployerEmailHtml(
+  companyName: string,
+  athleteName: string,
+  request: any,
+  athleteEmail: string,
+  supabaseUrl: string,
+): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -253,7 +298,7 @@ function acceptedEmployerEmailHtml(companyName: string, athleteName: string, req
               ${request.athlete_profiles.bio ? `<p><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
             </div>
             <p>You can now reach out directly to discuss opportunities!</p>
-            <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/dashboard" class="button">View Dashboard</a>
+            <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" class="button">View Dashboard</a>
           </div>
           <div class="footer"><p>This is an automated notification from US Ski & Snowboard Career Platform</p></div>
         </div>
@@ -286,7 +331,7 @@ function declinedEmailHtml(recipientName: string, otherPartyName: string, supaba
               <p>Don't be discouraged! There are many other opportunities on the platform.</p>
               <p>Keep building your profile and exploring connections that align with your goals.</p>
             </div>
-            <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/dashboard" class="button">Continue Exploring</a>
+            <a href="${supabaseUrl.replace(".supabase.co", ".lovable.app")}/dashboard" class="button">Continue Exploring</a>
           </div>
           <div class="footer"><p>This is an automated notification from US Ski & Snowboard Career Platform</p></div>
         </div>
@@ -308,7 +353,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch the connection request with all related data
     const { data: request, error: requestError } = await supabase
       .from("connection_requests")
-      .select(`
+      .select(
+        `
         *,
         athlete_profiles (
           email, sport_discipline, bio, user_id, phone,
@@ -318,7 +364,8 @@ const handler = async (req: Request): Promise<Response> => {
           company_name, industry, about, contact_email, user_id, phone,
           profiles (full_name)
         )
-      `)
+      `,
+      )
       .eq("id", request_id)
       .single();
 
@@ -354,16 +401,17 @@ const handler = async (req: Request): Promise<Response> => {
         if (smsCheck.send && smsCheck.phone) {
           await sendTwilioSMS(
             smsCheck.phone,
-            `US Ski & Snowboard: New connection request from ${athleteName}. Log in to review.`
+            `US Ski & Snowboard: New connection request from ${athleteName}. Log in to review.`,
           );
         }
       }
 
       await notifyAdmins("new_connection_request", request_id);
-
     } else if (notification_type === "request_accepted") {
       const sendToAthlete = athleteUserId ? await shouldSendEmail(supabase, athleteUserId, "request_accepted") : true;
-      const sendToEmployer = employerUserId ? await shouldSendEmail(supabase, employerUserId, "request_accepted") : true;
+      const sendToEmployer = employerUserId
+        ? await shouldSendEmail(supabase, employerUserId, "request_accepted")
+        : true;
 
       if (sendToAthlete && athleteEmail) {
         await resend.emails.send({
@@ -391,7 +439,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (smsCheck.send && smsCheck.phone) {
           await sendTwilioSMS(
             smsCheck.phone,
-            `US Ski & Snowboard: ${companyName} accepted your connection request! Check your dashboard.`
+            `US Ski & Snowboard: ${companyName} accepted your connection request! Check your dashboard.`,
           );
         }
       }
@@ -400,13 +448,12 @@ const handler = async (req: Request): Promise<Response> => {
         if (smsCheck.send && smsCheck.phone) {
           await sendTwilioSMS(
             smsCheck.phone,
-            `US Ski & Snowboard: You're now connected with ${athleteName}. View details on your dashboard.`
+            `US Ski & Snowboard: You're now connected with ${athleteName}. View details on your dashboard.`,
           );
         }
       }
 
       await notifyAdmins("connection_accepted", request_id);
-
     } else if (notification_type === "request_declined") {
       const initiatorUserId = request.initiated_by_user_id;
       let recipientEmail: string | null = null;
@@ -442,7 +489,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (smsCheck.send && smsCheck.phone) {
           await sendTwilioSMS(
             smsCheck.phone,
-            `US Ski & Snowboard: ${otherPartyName} declined your connection request. Keep exploring!`
+            `US Ski & Snowboard: ${otherPartyName} declined your connection request. Keep exploring!`,
           );
         }
       }
@@ -450,16 +497,16 @@ const handler = async (req: Request): Promise<Response> => {
       await notifyAdmins("connection_declined", request_id);
     }
 
-    return new Response(
-      JSON.stringify({ success: true, notification_type }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ success: true, notification_type }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   } catch (error: any) {
     console.error("Error in send-connection-notification:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 
