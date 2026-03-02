@@ -97,18 +97,18 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
 
     // Set up real-time subscription for connection updates
     const channel = supabase
-      .channel('athlete-connections')
+      .channel("athlete-connections")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'connection_requests',
+          event: "*",
+          schema: "public",
+          table: "connection_requests",
           filter: profile?.id ? `athlete_id=eq.${profile.id}` : undefined,
         },
         () => {
           loadDashboardData();
-        }
+        },
       )
       .subscribe();
 
@@ -185,7 +185,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               <AvatarImage src={profile?.photo_url || ""} />
               <AvatarFallback>
                 {profile?.profiles?.full_name
-                  ? profile.profiles.full_name.split(" ").map((n) => n[0]).join("")
+                  ? profile.profiles.full_name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
                   : "AT"}
               </AvatarFallback>
             </Avatar>
@@ -194,9 +197,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 Welcome back, {profile?.profiles?.full_name?.split(" ")[0] || "Athlete"}
               </h1>
               {profile?.sport_discipline && (
-                <p className="text-lg text-muted-foreground">
-                  {profile.sport_discipline} Athlete
-                </p>
+                <p className="text-lg text-muted-foreground">{profile.sport_discipline} Athlete</p>
               )}
             </div>
             {completeness < 100 && (
@@ -204,22 +205,23 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <CardContent className="pt-6">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{getText("hero.profile_complete_label", "Profile Complete")}</span>
+                      <span className="text-muted-foreground">
+                        {getText("hero.profile_complete_label", "Profile Complete")}
+                      </span>
                       <span className="font-semibold">{completeness}%</span>
                     </div>
                     <Progress value={completeness} className="h-2" />
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0 h-auto"
-                      onClick={() => onNavigate("profile")}
-                    >
-                      {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
+                    <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                      {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                      <ArrowRight className="ml-1 h-3 w-3" />
                     </Button>
                     <AIProfilePopulator
                       role="athlete"
                       userId={user.id}
-                      onComplete={() => { loadDashboardData(); onProfileUpdated?.(); }}
+                      onComplete={() => {
+                        loadDashboardData();
+                        onProfileUpdated?.();
+                      }}
                     />
                   </div>
                 </CardContent>
@@ -245,29 +247,31 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-muted-foreground">{getText("connection_activity.pending", "Pending")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.pending", "Pending")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.pending}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-muted-foreground">{getText("connection_activity.accepted", "Accepted")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.accepted", "Accepted")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.accepted}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-muted-foreground">{getText("connection_activity.declined", "Declined")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.declined", "Declined")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.rejected}</span>
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full mt-2"
-                  onClick={() => onNavigate("connections")}
-                >
+                <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("connections")}>
                   {getText("connection_activity.button", "Manage Connections")}
                 </Button>
               </div>
@@ -287,24 +291,26 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{getText("profile_performance.views_label", "Profile Views")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("profile_performance.views_label", "Profile Views")}
+                    </span>
                   </div>
                   <span className="text-4xl font-bold">{profileViewsThisMonth}</span>
-                  <p className="text-xs text-muted-foreground mt-1">{getText("profile_performance.views_subtitle", "All time")}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {getText("profile_performance.views_subtitle", "All time")}
+                  </p>
                 </div>
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">{getText("profile_performance.completeness_label", "Completeness")}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("profile_performance.completeness_label", "Completeness")}
+                    </span>
                     <span className="text-sm font-semibold">{completeness}%</span>
                   </div>
                   <Progress value={completeness} className="h-2" />
                 </div>
                 {completeness < 100 && (
-                  <Button
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={() => onNavigate("profile")}
-                  >
+                  <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("profile")}>
                     {getText("profile_performance.button", "Improve Profile")}
                   </Button>
                 )}
@@ -322,44 +328,25 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("directory")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("directory")}>
                   <Users className="mr-2 h-4 w-4" />
                   {getText("quick_actions.browse_directory", "Browse Partner Directory")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("profile")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("profile")}>
                   <UserCircle className="mr-2 h-4 w-4" />
                   {getText("quick_actions.update_profile", "Update Profile")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("portfolio")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("portfolio")}>
                   <Video className="mr-2 h-4 w-4" />
                   {getText("quick_actions.manage_content", "Manage Content")}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => onNavigate("connections")}
-                >
+                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("connections")}>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   {getText("quick_actions.view_connections", "View Connections")}
                 </Button>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start"
-                    >
+                    <Button variant="outline" className="w-full justify-start">
                       <EyeIcon className="mr-2 h-4 w-4" />
                       {getText("quick_actions.preview_profile", "Preview Profile")}
                     </Button>
@@ -423,7 +410,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                         <div>
                           <p className="font-semibold text-sm">{connection.employer_profiles.company_name}</p>
                           {connection.employer_profiles.industry && (
-                            <Badge variant="secondary" className="mt-2 text-xs">
+                            <Badge variant="primary" className="mt-2 text-xs">
                               {connection.employer_profiles.industry}
                             </Badge>
                           )}
@@ -459,14 +446,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                     <div className="flex flex-col items-center text-center space-y-3">
                       <Avatar className="h-16 w-16">
                         <AvatarImage src={partner.logo_url || ""} />
-                        <AvatarFallback>
-                          {partner.company_name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
+                        <AvatarFallback>{partner.company_name.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-semibold text-sm">{partner.company_name}</p>
                         {partner.industry && (
-                          <Badge variant="secondary" className="mt-2 text-xs">
+                          <Badge variant="primary" className="mt-2 text-xs">
                             {partner.industry}
                           </Badge>
                         )}
