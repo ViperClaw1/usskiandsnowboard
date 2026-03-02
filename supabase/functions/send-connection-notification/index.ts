@@ -289,9 +289,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Rate limit guard: 600 ms between the two acceptance emails
-      if (sendToAthlete && athleteEmail && sendToEmployer && employerEmail) {
-        await sleep(600);
-      }
+      // Always sleep between consecutive sends to stay under the 2 req/s Resend limit,
+      // even if one of the two emails is skipped (concurrent invocations share the quota).
+      await sleep(1000);
 
       if (sendToEmployer && employerEmail) {
         await sendEmail(resend, {
