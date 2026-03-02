@@ -410,7 +410,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                         <div>
                           <p className="font-semibold text-sm">{connection.employer_profiles.company_name}</p>
                           {connection.employer_profiles.industry && (
-                           <Badge variant="default" className="mt-2 text-xs">
+                            <Badge variant="outline" className="mt-2 text-xs">
                               {connection.employer_profiles.industry}
                             </Badge>
                           )}
@@ -451,7 +451,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       <div>
                         <p className="font-semibold text-sm">{partner.company_name}</p>
                         {partner.industry && (
-                          <Badge variant="default" className="mt-2 text-xs">
+                          <Badge variant="outline" className="mt-2 text-xs">
                             {partner.industry}
                           </Badge>
                         )}
