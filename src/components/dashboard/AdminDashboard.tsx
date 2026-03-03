@@ -87,6 +87,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Training</span>
             </TabsTrigger>
+            <TabsTrigger value="waitlist" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Waitlist</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics" className="space-y-6 mt-6">
