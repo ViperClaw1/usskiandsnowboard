@@ -246,20 +246,21 @@ const Auth = () => {
           profile_data: cleanProfileData,
         },
       });
-      if (error) {
-        // Parse 409 conflicts into user-friendly redirects
-        const msg: string = error.message || "";
-        if (msg.includes("already pending")) {
+      // supabase.functions.invoke puts non-2xx bodies in `data` when context is set,
+      // but for edge functions returning JSON errors, check both error.message and data.error
+      const errMsg: string = (data as any)?.error || error?.message || "";
+      if (error || errMsg) {
+        if (errMsg.includes("already pending") || errMsg.includes("pending review")) {
           toast.info("You already have a pending application. We'll be in touch!");
           navigate("/waitlist");
           return;
         }
-        if (msg.includes("approved account")) {
+        if (errMsg.includes("approved account") || errMsg.includes("already has an approved")) {
           toast.info("You already have an account. Please sign in.");
           setStep("sign-in");
           return;
         }
-        throw error;
+        throw new Error(errMsg || "Failed to submit application.");
       }
       navigate("/waitlist");
     } catch (error: any) {
