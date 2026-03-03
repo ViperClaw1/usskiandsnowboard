@@ -235,16 +235,32 @@ const Auth = () => {
 
   const handleRequestAccess = async (additionalProfileData: Record<string, any>) => {
     setWaitlistSubmitting(true);
+    // Strip password from profile_data — it should never be persisted
+    const { password: _pw, ...cleanProfileData } = additionalProfileData;
     try {
-      const { error } = await supabase.functions.invoke("submit-waitlist-application", {
+      const { error, data } = await supabase.functions.invoke("submit-waitlist-application", {
         body: {
           email: profileData.email,
           full_name: profileData.full_name,
           user_type: profileData.user_type,
-          profile_data: { ...additionalProfileData, password },
+          profile_data: cleanProfileData,
         },
       });
-      if (error) throw error;
+      if (error) {
+        // Parse 409 conflicts into user-friendly redirects
+        const msg: string = error.message || "";
+        if (msg.includes("already pending")) {
+          toast.info("You already have a pending application. We'll be in touch!");
+          navigate("/waitlist");
+          return;
+        }
+        if (msg.includes("approved account")) {
+          toast.info("You already have an account. Please sign in.");
+          setStep("sign-in");
+          return;
+        }
+        throw error;
+      }
       navigate("/waitlist");
     } catch (error: any) {
       toast.error(error.message || "Failed to submit application. Please try again.");
