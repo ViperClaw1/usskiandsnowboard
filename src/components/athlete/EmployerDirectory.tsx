@@ -71,15 +71,15 @@ const fetchAthleteProfile = async (): Promise<AthleteProfile | null> => {
   return data ?? null;
 };
 
-const fetchExistingRequests = async (athleteId: string): Promise<Set<string>> => {
+const fetchExistingRequests = async (athleteId: string): Promise<Map<string, string>> => {
   const { data, error } = await supabase
     .from("connection_requests")
-    .select("employer_id")
+    .select("employer_id, status")
     .eq("athlete_id", athleteId)
     .in("status", ["pending", "accepted"]);
 
   if (error) throw error;
-  return new Set(data?.map((r) => r.employer_id) || []);
+  return new Map(data?.map((r) => [r.employer_id, r.status ?? "pending"]) || []);
 };
 
 // ==============================
@@ -188,11 +188,11 @@ const EmployerDirectory = () => {
   // Keyed by athleteId so the cache entry is correctly scoped per athlete.
   // Only enabled once athleteProfileId is known.
   // ==============================
-  const { data: existingRequests = new Set<string>() } = useQuery<Set<string>>({
+  const { data: existingRequests = new Map<string, string>() } = useQuery<Map<string, string>>({
     queryKey: ["existing-employer-requests", athleteProfileId],
     queryFn: () => fetchExistingRequests(athleteProfileId!),
     enabled: !!athleteProfileId,
-    initialData: () => queryClient.getQueryData<Set<string>>(["existing-employer-requests", athleteProfileId]),
+    initialData: () => queryClient.getQueryData<Map<string, string>>(["existing-employer-requests", athleteProfileId]),
     staleTime: 2 * 60 * 1000,
   });
 
@@ -565,6 +565,7 @@ const EmployerDirectory = () => {
 
               <Button
                 className="w-full"
+                variant={existingRequests.get(employer.id) === "accepted" ? "default" : "outline"}
                 disabled={existingRequests.has(employer.id)}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -572,7 +573,11 @@ const EmployerDirectory = () => {
                   setShowRequestDialog(true);
                 }}
               >
-                {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
+                {existingRequests.get(employer.id) === "accepted"
+                  ? "✓ Connected"
+                  : existingRequests.get(employer.id) === "pending"
+                  ? "Request Sent"
+                  : "Request Connection"}
               </Button>
             </CardContent>
           </Card>
@@ -679,9 +684,14 @@ const EmployerDirectory = () => {
                 <Button
                   onClick={() => setShowRequestDialog(true)}
                   className="w-full"
+                  variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
                   disabled={existingRequests.has(selectedEmployer.id)}
                 >
-                  {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
+                  {existingRequests.get(selectedEmployer.id) === "accepted"
+                    ? "✓ Connected"
+                    : existingRequests.get(selectedEmployer.id) === "pending"
+                    ? "Request Sent"
+                    : "Request Connection"}
                 </Button>
               </TabsContent>
 
@@ -729,9 +739,14 @@ const EmployerDirectory = () => {
                     <Button
                       onClick={() => setShowRequestDialog(true)}
                       className="w-full mt-4"
+                      variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
                       disabled={existingRequests.has(selectedEmployer.id)}
                     >
-                      {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
+                      {existingRequests.get(selectedEmployer.id) === "accepted"
+                        ? "✓ Connected"
+                        : existingRequests.get(selectedEmployer.id) === "pending"
+                        ? "Request Sent"
+                        : "Request Connection"}
                     </Button>
                   </div>
                 ) : (
