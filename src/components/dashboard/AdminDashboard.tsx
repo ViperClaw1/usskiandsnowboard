@@ -149,6 +149,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <TabsContent value="training" className="mt-6">
             <TrainingArticleManager />
           </TabsContent>
+
+          <TabsContent value="waitlist" className="mt-6">
+            <WaitlistManager />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
