@@ -13,61 +13,51 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 
 // ==============================
 // Utilities
-// Auth error mapping — defined outside component to prevent recreation
 // ==============================
 
 const mapAuthError = (message: string): string => {
   const lower = message.toLowerCase();
-  if (lower.includes("invalid login credentials")) {
-    return "Incorrect email or password. Please try again.";
-  }
-  if (lower.includes("user already registered")) {
-    return "An account with this email already exists.";
-  }
-  if (lower.includes("email not confirmed")) {
-    return "EMAIL_NOT_CONFIRMED";
-  }
-  if (lower.includes("signup requires a valid password")) {
-    return "Please enter a valid password.";
-  }
+  if (lower.includes("invalid login credentials")) return "Incorrect email or password. Please try again.";
+  if (lower.includes("user already registered")) return "An account with this email already exists.";
+  if (lower.includes("email not confirmed")) return "EMAIL_NOT_CONFIRMED";
+  if (lower.includes("signup requires a valid password")) return "Please enter a valid password.";
   return message;
 };
-
-// ==============================
-// Constants
-// Password strength rules — defined outside component to prevent recreation
-// ==============================
 
 const passwordRules = [
   { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
   { label: "At least one number", test: (p: string) => /\d/.test(p) },
-  {
-    label: "At least one special character",
-    test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p),
-  },
+  { label: "At least one special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p) },
 ];
 
 // ==============================
-// Component Definition
-// Sign-in / sign-up page. One-shot auth mutations — no caching needed.
-// Redirects authenticated users to /dashboard via onAuthStateChange.
+// Types
+// Step machine: landing → invite-code | signup-no-code → profile-data → (submit to waitlist)
+// OR:           landing → invite-code (confirmed) → signup (normal flow with invite code)
+// OR:           landing → sign-in
+// ==============================
+type AuthStep = "landing" | "sign-in" | "invite-code" | "signup-with-code" | "signup-no-code" | "profile-data";
+
+// ==============================
+// Component
 // ==============================
 
 const Auth = () => {
-  // ==============================
-  // State & Hooks
-  // ==============================
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get("type");
   const initialType = typeParam === "athlete" || typeParam === "employer" ? typeParam : null;
 
+  // ---- Step machine ----
+  const [step, setStep] = useState<AuthStep>("landing");
+
+  // ---- Shared form state ----
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,50 +66,39 @@ const Auth = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [userType, setUserType] = useState<"athlete" | "employer">(initialType || "athlete");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [formError, setFormError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // ==============================
-  // Derived Values
-  // ==============================
-  const markTouched = (field: string) =>
-    setTouched((prev) => ({ ...prev, [field]: true }));
+  // ---- Invite code step ----
+  const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [inviteCodeError, setInviteCodeError] = useState("");
+  const [inviteCodeTouched, setInviteCodeTouched] = useState(false);
 
+  // ---- Profile data (waitlist) ----
+  const [profileData, setProfileData] = useState<Record<string, any>>({});
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+
+  // ==============================
+  // Derived
+  // ==============================
+  const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-  const allPasswordRulesPass = passwordRules.every((rule) => rule.test(password));
+  const allPasswordRulesPass = passwordRules.every((r) => r.test(password));
   const passwordsMatch = password === confirmPassword;
+
+  const isSignUp = step === "signup-with-code" || step === "signup-no-code";
 
   const fieldErrors = {
     fullName: isSignUp && touched.fullName && !fullName.trim() ? "Full name is required." : "",
-    email:
-      touched.email && !email.trim()
-        ? "Email is required."
-        : touched.email && !isValidEmail(email)
-        ? "Please enter a valid email address."
-        : "",
+    email: touched.email && !email.trim() ? "Email is required." : touched.email && !isValidEmail(email) ? "Please enter a valid email address." : "",
     password: touched.password && !password ? "Password is required." : "",
-    confirmPassword:
-      isSignUp && touched.confirmPassword && !confirmPassword
-        ? "Please confirm your password."
-        : isSignUp && touched.confirmPassword && !passwordsMatch
-        ? "Passwords do not match."
-        : "",
-    inviteCode:
-      isSignUp && touched.inviteCode && !inviteCode.trim() ? "Invite code is required." : "",
+    confirmPassword: isSignUp && touched.confirmPassword && !confirmPassword ? "Please confirm your password." : isSignUp && touched.confirmPassword && !passwordsMatch ? "Passwords do not match." : "",
+    inviteCode: step === "signup-with-code" && touched.inviteCode && !inviteCode.trim() ? "Invite code is required." : "",
   };
 
-  const isSignUpFormValid =
-    fullName.trim() !== "" &&
-    email.trim() !== "" &&
-    isValidEmail(email) &&
-    allPasswordRulesPass &&
-    passwordsMatch &&
-    confirmPassword !== "" &&
-    inviteCode.trim() !== "";
-
+  const isSignUpFormValid = fullName.trim() !== "" && email.trim() !== "" && isValidEmail(email) && allPasswordRulesPass && passwordsMatch && confirmPassword !== "" && (step === "signup-no-code" || inviteCode.trim() !== "");
   const isSignInFormValid = email.trim() !== "" && password !== "";
   const isSubmitDisabled = loading || (isSignUp ? !isSignUpFormValid : !isSignInFormValid);
 
@@ -127,34 +106,19 @@ const Auth = () => {
   // Effects
   // ==============================
 
-  // Clear form error when user types or switches mode
-  useEffect(() => {
-    setFormError("");
-  }, [email, password, confirmPassword, fullName, inviteCode, isSignUp]);
+  useEffect(() => { setFormError(""); }, [email, password, confirmPassword, fullName, inviteCode, step]);
+  useEffect(() => { setTouched({}); }, [step]);
 
-  // Reset touched state when switching modes
-  useEffect(() => {
-    setTouched({});
-  }, [isSignUp]);
-
-  // Resend cooldown countdown timer
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const interval = setInterval(() => {
-      setResendCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setResendCooldown((prev) => { if (prev <= 1) { clearInterval(interval); return 0; } return prev - 1; });
     }, 1000);
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
-  // Redirect already-authenticated users straight to dashboard
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session?.user) navigate("/dashboard");
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -178,26 +142,30 @@ const Auth = () => {
     }
   };
 
+  const handleInviteCodeConfirm = () => {
+    setInviteCodeTouched(true);
+    if (!inviteCodeInput.trim()) { setInviteCodeError("Please enter your invite code."); return; }
+    if (inviteCodeInput.trim().toUpperCase() !== "GOBIG25") { setInviteCodeError("Invalid invite code. Please check and try again."); return; }
+    setInviteCodeError("");
+    setInviteCode(inviteCodeInput.trim().toUpperCase());
+    setStep("signup-with-code");
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
-
-    if (!allPasswordRulesPass) {
-      setFormError("Please meet all password requirements.");
-      return;
-    }
-    if (!passwordsMatch) {
-      setFormError("Passwords do not match.");
-      return;
-    }
+    if (!allPasswordRulesPass) { setFormError("Please meet all password requirements."); return; }
+    if (!passwordsMatch) { setFormError("Passwords do not match."); return; }
 
     setLoading(true);
     try {
-      const validInviteCode = "GOBIG25";
-      if (inviteCode.trim().toLowerCase() !== validInviteCode.toLowerCase()) {
-        setFormError("Invalid invite code.");
-        setLoading(false);
-        return;
+      if (step === "signup-with-code") {
+        const validInviteCode = "GOBIG25";
+        if (inviteCode.trim().toLowerCase() !== validInviteCode.toLowerCase()) {
+          setFormError("Invalid invite code.");
+          setLoading(false);
+          return;
+        }
       }
 
       const { data, error } = await supabase.auth.signUp({
@@ -210,8 +178,6 @@ const Auth = () => {
       });
 
       if (error) throw error;
-
-      // Detect duplicate email (Supabase returns a user with empty identities)
       if (data.user?.identities?.length === 0) {
         setFormError("An account with this email already exists. Try signing in instead.");
         setLoading(false);
@@ -220,25 +186,29 @@ const Auth = () => {
 
       toast.success("Account created! Please check your email to verify your account.");
       navigate("/email-verification");
-
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setFullName("");
-      setInviteCode("");
+      setEmail(""); setPassword(""); setConfirmPassword(""); setFullName(""); setInviteCode("");
     } catch (error: any) {
-      const mapped = mapAuthError(error.message || "Failed to create account");
-      setFormError(mapped);
+      setFormError(mapAuthError(error.message || "Failed to create account"));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Step 3 → 4: collect form data and advance to profile-data step (no account created yet)
+  const handleNextStep = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+    if (!allPasswordRulesPass) { setFormError("Please meet all password requirements."); return; }
+    if (!passwordsMatch) { setFormError("Passwords do not match."); return; }
+    // Store basic info for waitlist submission
+    setProfileData({ full_name: fullName, email, user_type: userType });
+    setStep("profile-data");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -254,9 +224,7 @@ const Auth = () => {
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     setOauthLoading(provider);
     try {
-      const { error } = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
-      });
+      const { error } = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
       if (error) throw error;
     } catch (error: any) {
       toast.error(error.message || `Failed to sign in with ${provider}`);
@@ -264,33 +232,143 @@ const Auth = () => {
     }
   };
 
+  const handleRequestAccess = async (additionalProfileData: Record<string, any>) => {
+    setWaitlistSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke("submit-waitlist-application", {
+        body: {
+          email: profileData.email,
+          full_name: profileData.full_name,
+          user_type: profileData.user_type,
+          profile_data: { ...additionalProfileData, password },
+        },
+      });
+      if (error) throw error;
+      navigate("/waitlist");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to submit application. Please try again.");
+    } finally {
+      setWaitlistSubmitting(false);
+    }
+  };
+
   // ==============================
-  // Render
+  // Render helpers
   // ==============================
+
+  const LogoHeader = ({ title, description }: { title: string; description: string }) => (
+    <CardHeader className="space-y-4 pb-8">
+      <div className="flex justify-center mb-2">
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 object-contain hidden sm:block" />
+          <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 object-contain sm:hidden" />
+        </Link>
+      </div>
+      <div className="space-y-2 text-center">
+        <CardTitle className="text-2xl font-bold text-foreground">{title}</CardTitle>
+        <CardDescription className="text-muted-foreground">{description}</CardDescription>
+      </div>
+    </CardHeader>
+  );
+
+  const BackButton = ({ to }: { to: AuthStep }) => (
+    <button type="button" onClick={() => setStep(to)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2">
+      <ArrowLeft className="h-3.5 w-3.5" /> Back
+    </button>
+  );
+
+  // ==============================
+  // STEP: landing
+  // ==============================
+  if (step === "landing") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
+        <Card className="w-full max-w-md shadow-2xl border-border/50">
+          <LogoHeader title="Welcome" description="U.S. Ski & Snowboard — Athlete Connection Platform" />
+          <CardContent className="space-y-4">
+            <Button className="w-full h-12 text-base" onClick={() => setStep("sign-in")}>
+              Sign In
+            </Button>
+            <Button variant="outline" className="w-full h-12 text-base" onClick={() => setStep("invite-code")}>
+              Join the Platform
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ==============================
+  // STEP: invite-code
+  // ==============================
+  if (step === "invite-code") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
+        <Card className="w-full max-w-md shadow-2xl border-border/50">
+          <LogoHeader title="Please, enter your invite code" description="Enter your 7-digit invite code" />
+          <CardContent className="space-y-6">
+            <BackButton to="landing" />
+
+            <div className="space-y-2">
+              <Label htmlFor="inviteCodeInput">Invite Code</Label>
+              <Input
+                id="inviteCodeInput"
+                type="text"
+                placeholder="e.g. GOBIG25"
+                value={inviteCodeInput}
+                onChange={(e) => { setInviteCodeInput(e.target.value.toUpperCase()); if (inviteCodeTouched) setInviteCodeError(""); }}
+                onBlur={() => setInviteCodeTouched(true)}
+                maxLength={10}
+                className="text-center tracking-widest text-lg font-mono uppercase"
+              />
+              {inviteCodeTouched && inviteCodeError && (
+                <p className="text-sm text-destructive">{inviteCodeError}</p>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Button className="w-full" onClick={handleInviteCodeConfirm}>
+                Confirm
+              </Button>
+              <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setStep("signup-no-code")}>
+                Don't have an invite code?
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ==============================
+  // STEP: profile-data (waitlist profile collection)
+  // ==============================
+  if (step === "profile-data") {
+    return <WaitlistProfileStep
+      userType={profileData.user_type as "athlete" | "employer"}
+      onBack={() => setStep("signup-no-code")}
+      onRequestAccess={handleRequestAccess}
+      isSubmitting={waitlistSubmitting}
+    />;
+  }
+
+  // ==============================
+  // STEP: sign-in / signup-with-code / signup-no-code
+  // ==============================
+  const isSignUpStep = step === "signup-with-code" || step === "signup-no-code";
+  const isNoCodeSignup = step === "signup-no-code";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
       <Card className="w-full max-w-md shadow-2xl border-border/50">
-        <CardHeader className="space-y-4 pb-8">
-          <div className="flex justify-center mb-2">
-            <Link to="/" className="hover:opacity-80 transition-opacity">
-              <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 object-contain hidden sm:block" />
-              <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 object-contain sm:hidden" />
-            </Link>
-          </div>
-          <div className="space-y-2 text-center">
-            <CardTitle className="text-2xl font-bold text-foreground">
-              {isSignUp ? "Create Account" : "Welcome Back"}
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {isSignUp
-                ? "Join the U.S. Ski & Snowboard community"
-                : "Sign in to access your dashboard"}
-            </CardDescription>
-          </div>
-        </CardHeader>
+        <LogoHeader
+          title={isSignUpStep ? "Create Account" : "Welcome Back"}
+          description={isSignUpStep ? "Join the U.S. Ski & Snowboard community" : "Sign in to access your dashboard"}
+        />
 
         <CardContent className="space-y-6">
+          <BackButton to={step === "signup-with-code" ? "invite-code" : step === "signup-no-code" ? "invite-code" : "landing"} />
+
           {/* Inline error alert */}
           {formError && formError !== "EMAIL_NOT_CONFIRMED" && (
             <Alert variant="destructive">
@@ -299,19 +377,12 @@ const Auth = () => {
             </Alert>
           )}
 
-          {/* Unverified email alert */}
           {formError === "EMAIL_NOT_CONFIRMED" && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="space-y-2">
                 <p>Your email address has not been verified. Please check your inbox.</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResendVerification}
-                  disabled={resendCooldown > 0}
-                >
+                <Button type="button" variant="outline" size="sm" onClick={handleResendVerification} disabled={resendCooldown > 0}>
                   {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend verification email"}
                 </Button>
               </AlertDescription>
@@ -319,18 +390,10 @@ const Auth = () => {
           )}
 
           {/* SSO buttons — sign-in only */}
-          {!isSignUp && (
+          {step === "sign-in" && (
             <div className="space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-11 relative"
-                onClick={() => handleOAuthLogin("google")}
-                disabled={loading || oauthLoading !== null}
-              >
-                {oauthLoading === "google" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
+              <Button type="button" variant="outline" className="w-full h-11 relative" onClick={() => handleOAuthLogin("google")} disabled={loading || oauthLoading !== null}>
+                {oauthLoading === "google" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -340,26 +403,16 @@ const Auth = () => {
                 )}
                 Continue with Google
               </Button>
-              <Button
-                type="button"
-                className="w-full h-11 bg-black text-white hover:bg-black/90"
-                onClick={() => handleOAuthLogin("apple")}
-                disabled={loading || oauthLoading !== null}
-              >
-                {oauthLoading === "apple" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
+              <Button type="button" className="w-full h-11 bg-black text-white hover:bg-black/90" onClick={() => handleOAuthLogin("apple")} disabled={loading || oauthLoading !== null}>
+                {oauthLoading === "apple" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                 )}
                 Continue with Apple
               </Button>
-
               <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
+                <div className="absolute inset-0 flex items-center"><Separator className="w-full" /></div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">or</span>
                 </div>
@@ -368,109 +421,46 @@ const Auth = () => {
           )}
 
           {/* Role selector — signup only */}
-          {isSignUp && (
+          {isSignUpStep && (
             <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant={userType === "athlete" ? "default" : "outline"}
-                onClick={() => setUserType("athlete")}
-                className="w-full"
-              >
-                Athlete
-              </Button>
-              <Button
-                type="button"
-                variant={userType === "employer" ? "default" : "outline"}
-                onClick={() => setUserType("employer")}
-                className="w-full"
-              >
-                Partner
-              </Button>
+              <Button type="button" variant={userType === "athlete" ? "default" : "outline"} onClick={() => setUserType("athlete")} className="w-full">Athlete</Button>
+              <Button type="button" variant={userType === "employer" ? "default" : "outline"} onClick={() => setUserType("employer")} className="w-full">Partner</Button>
             </div>
           )}
 
-          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4" noValidate>
-            {isSignUp && (
+          <form onSubmit={isSignUpStep ? (isNoCodeSignup ? handleNextStep : handleSignUp) : handleSignIn} className="space-y-4" noValidate>
+            {isSignUpStep && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  onBlur={() => markTouched("fullName")}
-                  disabled={loading}
-                />
-                {fieldErrors.fullName && (
-                  <p className="text-sm text-destructive">{fieldErrors.fullName}</p>
-                )}
+                <Input id="fullName" type="text" placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} onBlur={() => markTouched("fullName")} disabled={loading} />
+                {fieldErrors.fullName && <p className="text-sm text-destructive">{fieldErrors.fullName}</p>}
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={() => markTouched("email")}
-                disabled={loading}
-              />
-              {fieldErrors.email && (
-                <p className="text-sm text-destructive">{fieldErrors.email}</p>
-              )}
+              <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => markTouched("email")} disabled={loading} />
+              {fieldErrors.email && <p className="text-sm text-destructive">{fieldErrors.email}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onBlur={() => markTouched("password")}
-                  disabled={loading}
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} onBlur={() => markTouched("password")} disabled={loading} className="pr-10" />
+                <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)} disabled={loading}>
+                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                 </Button>
               </div>
-              {fieldErrors.password && (
-                <p className="text-sm text-destructive">{fieldErrors.password}</p>
-              )}
+              {fieldErrors.password && <p className="text-sm text-destructive">{fieldErrors.password}</p>}
 
-              {/* Password policy checklist — signup only */}
-              {isSignUp && password.length > 0 && (
+              {isSignUpStep && password.length > 0 && (
                 <ul className="space-y-1 mt-2">
                   {passwordRules.map((rule) => {
                     const passes = rule.test(password);
                     return (
                       <li key={rule.label} className="flex items-center gap-2 text-sm">
-                        {passes ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-destructive" />
-                        )}
-                        <span className={passes ? "text-green-600" : "text-muted-foreground"}>
-                          {rule.label}
-                        </span>
+                        {passes ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                        <span className={passes ? "text-green-600" : "text-muted-foreground"}>{rule.label}</span>
                       </li>
                     );
                   })}
@@ -478,94 +468,237 @@ const Auth = () => {
               )}
             </div>
 
-            {/* Confirm password — signup only */}
-            {isSignUp && (
+            {isSignUpStep && (
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Re-enter your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  onBlur={() => markTouched("confirmPassword")}
-                  disabled={loading}
-                />
-                {fieldErrors.confirmPassword && (
-                  <p className="text-sm text-destructive">{fieldErrors.confirmPassword}</p>
-                )}
+                <Input id="confirmPassword" type={showPassword ? "text" : "password"} placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onBlur={() => markTouched("confirmPassword")} disabled={loading} />
+                {fieldErrors.confirmPassword && <p className="text-sm text-destructive">{fieldErrors.confirmPassword}</p>}
               </div>
             )}
 
-            {isSignUp && (
+            {/* Invite code field — only for signup-with-code step */}
+            {step === "signup-with-code" && (
               <div className="space-y-2">
                 <Label htmlFor="inviteCode">Invite Code</Label>
-                <Input
-                  id="inviteCode"
-                  type="text"
-                  placeholder="Enter your invite code"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                  onBlur={() => markTouched("inviteCode")}
-                  disabled={loading}
-                />
-                {fieldErrors.inviteCode && (
-                  <p className="text-sm text-destructive">{fieldErrors.inviteCode}</p>
-                )}
+                <Input id="inviteCode" type="text" placeholder="Enter your invite code" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} onBlur={() => markTouched("inviteCode")} disabled={loading} />
+                {fieldErrors.inviteCode && <p className="text-sm text-destructive">{fieldErrors.inviteCode}</p>}
               </div>
             )}
 
-            {!isSignUp && (
+            {step === "sign-in" && (
               <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</Link>
               </div>
             )}
 
             <Button type="submit" className="w-full" disabled={isSubmitDisabled}>
               {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isSignUp ? "Creating account..." : "Signing in..."}
-                </>
-              ) : isSignUp ? (
-                "Create Account"
-              ) : (
-                "Sign In"
-              )}
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{isSignUpStep ? (isNoCodeSignup ? "Processing..." : "Creating account...") : "Signing in..."}</>
+              ) : isSignUpStep ? (isNoCodeSignup ? "Next Step" : "Create Account") : "Sign In"}
             </Button>
           </form>
 
           <div className="text-center text-sm">
-            {isSignUp ? (
+            {isSignUpStep ? (
               <p className="text-muted-foreground">
                 Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(false)}
-                  className="text-primary hover:underline font-medium"
-                  disabled={loading}
-                >
-                  Sign in
-                </button>
+                <button type="button" onClick={() => setStep("sign-in")} className="text-primary hover:underline font-medium" disabled={loading}>Sign in</button>
               </p>
-            ) : (
+            ) : step === "sign-in" ? (
               <p className="text-muted-foreground">
                 Don't have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(true)}
-                  className="text-primary hover:underline font-medium"
-                  disabled={loading}
-                >
-                  Create account
-                </button>
+                <button type="button" onClick={() => setStep("invite-code")} className="text-primary hover:underline font-medium" disabled={loading}>Join the Platform</button>
               </p>
-            )}
+            ) : null}
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+};
+
+// ==============================
+// WaitlistProfileStep — Step 4: profile data collection before waitlist submission
+// ==============================
+
+interface WaitlistProfileStepProps {
+  userType: "athlete" | "employer";
+  onBack: () => void;
+  onRequestAccess: (profileData: Record<string, any>) => void;
+  isSubmitting: boolean;
+}
+
+const WaitlistProfileStep = ({ userType, onBack, onRequestAccess, isSubmitting }: WaitlistProfileStepProps) => {
+  const [mode, setMode] = useState<"choice" | "manual">("choice");
+  const [formData, setFormData] = useState<Record<string, any>>({});
+
+  const athleteWelcome = {
+    header: "Welcome, Athlete!",
+    body: "You're one step away from connecting with top employers. Tell us about yourself to complete your profile.",
+  };
+  const partnerWelcome = {
+    header: "Welcome, Partner!",
+    body: "You're one step away from discovering top athletes. Share your company details to complete your profile.",
+  };
+
+  const welcome = userType === "athlete" ? athleteWelcome : partnerWelcome;
+
+  const updateField = (key: string, value: any) => setFormData((prev) => ({ ...prev, [key]: value }));
+
+  if (mode === "choice") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
+        <Card className="w-full max-w-lg shadow-2xl border-border/50">
+          <CardHeader className="space-y-4 pb-6">
+            <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back
+            </button>
+            <div className="space-y-2 text-center">
+              <CardTitle className="text-2xl font-bold">{welcome.header}</CardTitle>
+              <CardDescription>{welcome.body}</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center">How would you like to complete your profile?</p>
+            <Button className="w-full h-12" onClick={() => setMode("manual")}>
+              Complete Manually
+            </Button>
+            <Button variant="outline" className="w-full h-12" onClick={() => onRequestAccess({ ai_populate: true })}>
+              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : "Request Access (Skip Profile for Now)"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Manual form
+  return (
+    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 pt-8">
+      <Card className="w-full max-w-2xl shadow-2xl border-border/50">
+        <CardHeader className="space-y-2 pb-4">
+          <button type="button" onClick={() => setMode("choice")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-3.5 w-3.5" /> Back
+          </button>
+          <CardTitle className="text-xl font-bold">
+            {userType === "athlete" ? "Your Athlete Profile" : "Your Company Profile"}
+          </CardTitle>
+          <CardDescription>Fill in as much as you can — you can update this later after approval.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {userType === "athlete" ? (
+            <WaitlistAthleteForm formData={formData} updateField={updateField} />
+          ) : (
+            <WaitlistEmployerForm formData={formData} updateField={updateField} />
+          )}
+
+          <Button
+            className="w-full mt-6"
+            onClick={() => onRequestAccess(formData)}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting Application...</> : "Request Access"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// ==============================
+// WaitlistAthleteForm — simplified athlete fields
+// ==============================
+const WaitlistAthleteForm = ({ formData, updateField }: { formData: Record<string, any>; updateField: (k: string, v: any) => void }) => {
+  const SPORTS = ["Alpine Skiing", "Cross Country", "Freestyle Skiing", "Snowboarding", "Ski Jumping", "Nordic Combined", "Freeskiing"];
+  const AVAILABILITY = ["Available Now", "Off-Season Only", "Post-Retirement", "Part-Time", "Flexible"];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Sport / Discipline</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.sport_discipline || ""} onChange={(e) => updateField("sport_discipline", e.target.value)}>
+            <option value="">Select sport</option>
+            {SPORTS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label>Availability</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.availability || ""} onChange={(e) => updateField("availability", e.target.value)}>
+            <option value="">Select availability</option>
+            {AVAILABILITY.map((a) => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Bio</Label>
+        <textarea className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-none" placeholder="Tell us about yourself..." value={formData.bio || ""} onChange={(e) => updateField("bio", e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>Home Mountain</Label>
+        <Input placeholder="e.g. Park City Mountain" value={formData.home_mountain || ""} onChange={(e) => updateField("home_mountain", e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>Instagram URL</Label>
+        <Input placeholder="https://instagram.com/..." value={formData.instagram_url || ""} onChange={(e) => updateField("instagram_url", e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>Professional Highlights</Label>
+        <textarea className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-none" placeholder="Key achievements, records, competition history..." value={formData.professional_highlights || ""} onChange={(e) => updateField("professional_highlights", e.target.value)} />
+      </div>
+    </div>
+  );
+};
+
+// ==============================
+// WaitlistEmployerForm — simplified employer fields
+// ==============================
+const WaitlistEmployerForm = ({ formData, updateField }: { formData: Record<string, any>; updateField: (k: string, v: any) => void }) => {
+  const INDUSTRIES = ["Technology", "Finance", "Healthcare", "Sports & Recreation", "Media & Entertainment", "Retail", "Manufacturing", "Consulting", "Education", "Non-Profit", "Government", "Other"];
+  const SIZES = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Company Name <span className="text-destructive">*</span></Label>
+        <Input placeholder="Enter company name" value={formData.company_name || ""} onChange={(e) => updateField("company_name", e.target.value)} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Industry</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.industry || ""} onChange={(e) => updateField("industry", e.target.value)}>
+            <option value="">Select industry</option>
+            {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label>Company Size</Label>
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.company_size || ""} onChange={(e) => updateField("company_size", e.target.value)}>
+            <option value="">Select size</option>
+            {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>About</Label>
+        <textarea className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-none" placeholder="Tell us about your company..." value={formData.about || ""} onChange={(e) => updateField("about", e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>Website</Label>
+        <Input placeholder="https://..." value={formData.website || ""} onChange={(e) => updateField("website", e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>LinkedIn URL</Label>
+        <Input placeholder="https://linkedin.com/company/..." value={formData.linkedin_url || ""} onChange={(e) => updateField("linkedin_url", e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>HQ Location</Label>
+        <Input placeholder="e.g. Park City, UT" value={formData.hq_location || ""} onChange={(e) => updateField("hq_location", e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>Opportunities Offered</Label>
+        <textarea className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-none" placeholder="Internships, full-time roles, sponsorships..." value={formData.opportunities_offered || ""} onChange={(e) => updateField("opportunities_offered", e.target.value)} />
+      </div>
     </div>
   );
 };
