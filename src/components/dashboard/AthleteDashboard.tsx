@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,6 +12,11 @@ import ConnectionsList from "@/components/athlete/ConnectionsList";
 import { AthleteLandingPage } from "@/components/dashboard/athlete/AthleteLandingPage";
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+// ==============================
+// Types
+// ==============================
 
 interface AthleteDashboardProps {
   user: User;
@@ -21,21 +26,37 @@ interface AthleteDashboardProps {
   onProfileDialogOpened?: () => void;
 }
 
+// ==============================
+// Query Key
+// ==============================
+const athleteProfileKey = (userId: string) => ["athlete-dashboard-profile", userId];
+
+// ==============================
+// Query Function
+// Extracted outside the component — stable reference, not recreated per render.
+// Returns null when no profile exists yet (maybeSingle never throws on 0 rows).
+// ==============================
+const fetchAthleteProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("athlete_profiles")
+    .select(`*, profiles!inner(full_name)`)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
+};
+
+// ==============================
+// Types — Profile
+// ==============================
+type AthleteProfileData = Awaited<ReturnType<typeof fetchAthleteProfile>>;
+
 // ---------------------------------------------------------------------------
 // Reusable fade-in wrapper
-// Mounts children immediately but transitions opacity from 0 → 1. The `key`
-// prop on this component should change whenever the view changes so that the
-// animation re-fires on every navigation.
 // ---------------------------------------------------------------------------
 const FadeIn = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div
-    className={`animate-fade-in ${className}`}
-    // Tailwind doesn't ship animate-fade-in by default; the keyframe is added
-    // via a small inline style so this works without touching tailwind.config.
-    style={{
-      animation: "dashFadeIn 0.25s ease both",
-    }}
-  >
+  <div className={`animate-fade-in ${className}`} style={{ animation: "dashFadeIn 0.25s ease both" }}>
     {children}
   </div>
 );
@@ -45,23 +66,16 @@ const FadeIn = ({ children, className = "" }: { children: React.ReactNode; class
 // ---------------------------------------------------------------------------
 const HomeSkeleton = () => (
   <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl space-y-6">
-    {/* Hero / welcome bar */}
     <div className="flex items-center justify-between">
       <Skeleton className="h-8 w-48" />
       <Skeleton className="h-9 w-28 rounded-md" />
     </div>
-
-    {/* Stats cards row */}
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Skeleton className="h-36 rounded-xl" />
       <Skeleton className="h-36 rounded-xl" />
       <Skeleton className="h-36 rounded-xl" />
     </div>
-
-    {/* Main content block */}
     <Skeleton className="h-48 rounded-xl" />
-
-    {/* Secondary row */}
     <div className="grid gap-4 sm:grid-cols-2">
       <Skeleton className="h-28 rounded-xl" />
       <Skeleton className="h-28 rounded-xl" />
@@ -77,8 +91,6 @@ const PortfolioSkeleton = () => (
     <div className="flex items-center justify-between mb-4">
       <Skeleton className="h-9 w-28 rounded-md" />
     </div>
-
-    {/* Profile hero */}
     <div className="flex items-center gap-4">
       <Skeleton className="h-20 w-20 rounded-full shrink-0" />
       <div className="space-y-2 flex-1">
@@ -87,8 +99,6 @@ const PortfolioSkeleton = () => (
         <Skeleton className="h-4 w-32" />
       </div>
     </div>
-
-    {/* Portfolio cards */}
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <Skeleton key={i} className="h-48 rounded-xl" />
@@ -106,7 +116,6 @@ const ConnectionsSkeleton = () => (
       <Skeleton className="h-8 w-40" />
       <Skeleton className="h-9 w-28 rounded-md" />
     </div>
-
     {["Pending Requests", "Accepted Connections", "Declined Connections"].map((section) => (
       <div key={section} className="space-y-3">
         <Skeleton className="h-6 w-44" />
@@ -126,7 +135,7 @@ const ConnectionsSkeleton = () => (
 );
 
 // ---------------------------------------------------------------------------
-// Directory skeleton (bonus — keeps the directory view consistent too)
+// Directory skeleton
 // ---------------------------------------------------------------------------
 const DirectorySkeleton = () => (
   <div className="space-y-4">
@@ -144,66 +153,78 @@ const DirectorySkeleton = () => (
 );
 
 // ---------------------------------------------------------------------------
-// Main component
+// Main Component
+// Profile fetching migrated from useState/useEffect to useQuery.
+//
+// Previously, loadProfile() fired on every mount (via useEffect([user.id])),
+// reset profileLoading:true each time, and used a hand-rolled setTimeout
+// retry loop. Now the profile is cached by userId under athleteProfileKey:
+//
+//  - On the first visit: fetches from Supabase, stores in cache.
+//  - On repeat visits: initialData reads from cache synchronously —
+//    profileLoading is false from render zero, no skeleton flash.
+//  - Retry logic: delegated to useQuery's built-in retry/retryDelay,
+//    replacing the manual setTimeout recursion.
+//
+// UI-only state (currentView, viewKey, dialog visibility) stays as useState.
 // ---------------------------------------------------------------------------
-const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated, openProfileDialog, onProfileDialogOpened }: AthleteDashboardProps) => {
+
+const AthleteDashboard = ({
+  user,
+  isAdminView = false,
+  onProfileUpdated,
+  openProfileDialog,
+  onProfileDialogOpened,
+}: AthleteDashboardProps) => {
+  const queryClient = useQueryClient();
+
+  // ==============================
+  // UI-only state
+  // ==============================
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
-  // `profileLoading` tracks the initial profile fetch (shows skeleton).
-  const [profileLoading, setProfileLoading] = useState(true);
-  // `viewKey` increments on every navigation so <FadeIn> re-animates.
   const [viewKey, setViewKey] = useState(0);
 
-  // Open profile dialog when triggered from parent (e.g. "Complete Manually")
+  // ==============================
+  // Data Fetching — Athlete Profile
+  // Skipped entirely in admin view — mirrors the original early-return
+  // inside loadProfile().
+  // ==============================
+  const { data: profile = null, isLoading: profileLoading } = useQuery<AthleteProfileData>({
+    queryKey: athleteProfileKey(user.id),
+    queryFn: () => fetchAthleteProfile(user.id),
+    enabled: !isAdminView,
+    // Serve cached profile synchronously on repeated mounts — no skeleton flash.
+    initialData: () => queryClient.getQueryData<AthleteProfileData>(athleteProfileKey(user.id)),
+    staleTime: 5 * 60 * 1000,
+    // Replaces the manual setTimeout retry loop.
+    retry: 3,
+    retryDelay: (attempt) => 1000 * (attempt + 1),
+    meta: {
+      onError: () => toast.error("Failed to load profile. Please refresh the page."),
+    },
+  });
+
+  // ==============================
+  // Effects — Open Profile Dialog from Parent
+  // ==============================
   useEffect(() => {
     if (openProfileDialog) {
       setShowProfileDialog(true);
       onProfileDialogOpened?.();
     }
-  }, [openProfileDialog]);
+  }, [openProfileDialog, onProfileDialogOpened]);
 
-  useEffect(() => {
-    loadProfile();
-  }, [user.id]);
-
-  const loadProfile = async (retryCount = 0) => {
-    if (isAdminView) {
-      setProfileLoading(false);
-      return;
-    }
-    const MAX_RETRIES = 3;
-
-    try {
-      const { data, error } = await supabase
-        .from("athlete_profiles")
-        .select(
-          `
-          *,
-          profiles!inner(full_name)
-        `,
-        )
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error: any) {
-      if (retryCount < MAX_RETRIES) {
-        setTimeout(() => loadProfile(retryCount + 1), 1000 * (retryCount + 1));
-      } else {
-        toast.error("Failed to load profile. Please refresh the page.");
-      }
-    } finally {
-      if (retryCount === 0) {
-        setProfileLoading(false);
-      }
-    }
-  };
+  // ==============================
+  // Handlers
+  // After a successful profile save, invalidate the cache so useQuery
+  // re-fetches the latest data — replacing the direct loadProfile() calls.
+  // ==============================
+  const invalidateProfile = () => queryClient.invalidateQueries({ queryKey: athleteProfileKey(user.id) });
 
   const handleProfileComplete = () => {
     setShowProfileDialog(false);
-    loadProfile();
+    invalidateProfile();
     toast.success("Profile updated successfully!");
   };
 
@@ -212,17 +233,14 @@ const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated, openPro
       setShowProfileDialog(true);
     } else {
       setCurrentView(view);
-      setViewKey((k) => k + 1); // triggers re-animation
+      setViewKey((k) => k + 1);
     }
   };
 
-  // ------------------------------------------------------------------
-  // Render helpers — each view gets its own skeleton + content pair so
-  // we never show a blank screen or cause a layout snap.
-  // ------------------------------------------------------------------
+  // ==============================
+  // Render Helpers
+  // ==============================
   const renderContent = () => {
-    // While the initial profile fetch is in-flight, show the skeleton
-    // that matches whichever view is active (usually "home").
     if (profileLoading) {
       return <HomeSkeleton />;
     }
@@ -231,7 +249,14 @@ const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated, openPro
       case "home":
         return (
           <FadeIn key={viewKey}>
-            <AthleteLandingPage user={user} onNavigate={handleNavigate} onProfileUpdated={() => { loadProfile(); onProfileUpdated?.(); }} />
+            <AthleteLandingPage
+              user={user}
+              onNavigate={handleNavigate}
+              onProfileUpdated={() => {
+                invalidateProfile();
+                onProfileUpdated?.();
+              }}
+            />
           </FadeIn>
         );
 
@@ -303,10 +328,6 @@ const AthleteDashboard = ({ user, isAdminView = false, onProfileUpdated, openPro
 
   return (
     <>
-      {/*
-        Inject the @keyframes rule once. This avoids needing a tailwind.config
-        change while keeping the animation purely CSS-driven.
-      */}
       <style>{`
         @keyframes dashFadeIn {
           from { opacity: 0; transform: translateY(6px); }
