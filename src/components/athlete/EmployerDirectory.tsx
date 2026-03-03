@@ -521,7 +521,7 @@ const EmployerDirectory = () => {
               {employer.website && (
                 <div className="flex items-center gap-2">
                   <LinkIcon className="h-3 w-3 text-muted-foreground" />
-                  
+                  <a
                     href={employer.website}
                     target="_blank"
                     rel="noopener noreferrer"
