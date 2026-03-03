@@ -565,6 +565,7 @@ const EmployerDirectory = () => {
 
               <Button
                 className="w-full"
+                variant={existingRequests.get(employer.id) === "accepted" ? "default" : "outline"}
                 disabled={existingRequests.has(employer.id)}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -572,7 +573,11 @@ const EmployerDirectory = () => {
                   setShowRequestDialog(true);
                 }}
               >
-                {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
+                {existingRequests.get(employer.id) === "accepted"
+                  ? "✓ Connected"
+                  : existingRequests.get(employer.id) === "pending"
+                  ? "Request Sent"
+                  : "Request Connection"}
               </Button>
             </CardContent>
           </Card>
