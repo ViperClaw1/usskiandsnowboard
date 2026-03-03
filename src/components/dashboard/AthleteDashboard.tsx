@@ -15,6 +15,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ==============================
+// Global Keyframe Injection
+// Injected once at module load time rather than on every component mount.
+// Keeping it inside the component caused a <style> node to be added/removed
+// on every mount, triggering a browser reflow and a scrollbar flash.
+// ==============================
+if (typeof document !== "undefined") {
+  const KEYFRAME_ID = "dash-fade-in-keyframes";
+  if (!document.getElementById(KEYFRAME_ID)) {
+    const style = document.createElement("style");
+    style.id = KEYFRAME_ID;
+    style.textContent = `
+      @keyframes dashFadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: translateY(0);   }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+// ==============================
 // Types
 // ==============================
 
@@ -328,13 +349,6 @@ const AthleteDashboard = ({
 
   return (
     <>
-      <style>{`
-        @keyframes dashFadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0);   }
-        }
-      `}</style>
-
       <div className="min-h-screen bg-background overflow-x-hidden">
         <main>{renderContent()}</main>
 
