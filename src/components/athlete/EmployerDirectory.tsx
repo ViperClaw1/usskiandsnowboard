@@ -523,52 +523,62 @@ const EmployerDirectory = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {employer.about && <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>}
-              <div className="flex flex-wrap gap-2">
-                {employer.company_size && (
-                  <Badge variant="outline" className="text-xs">
-                    {employer.company_size}
-                  </Badge>
+            <CardContent className="flex flex-col flex-1 min-h-0 space-y-3 overflow-hidden">
+              <div className="flex flex-col flex-1 min-h-0 space-y-3 overflow-y-auto">
+                {employer.about && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
                 )}
-                {employer.hq_location && (
-                  <Badge variant="outline" className="text-xs">
-                    {employer.hq_location}
-                  </Badge>
+                <div className="flex flex-wrap gap-2">
+                  {employer.company_size && (
+                    <Badge variant="outline" className="text-xs">
+                      {employer.company_size}
+                    </Badge>
+                  )}
+                  {employer.hq_location && (
+                    <Badge variant="outline" className="text-xs">
+                      {employer.hq_location}
+                    </Badge>
+                  )}
+                </div>
+                {employer.website && (
+                  <div className="flex items-center gap-2">
+                    <LinkIcon className="h-3 w-3 text-muted-foreground" />
+                    
+                      href={employer.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline truncate"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {employer.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  </div>
+                )}
+                {employer.contact_person && (
+                  <div>
+                    <p className="text-xs font-semibold text-foreground mb-1">Contact</p>
+                    <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
+                    {employer.contact_title && (
+                      <p className="text-xs text-muted-foreground">{employer.contact_title}</p>
+                    )}
+                  </div>
                 )}
               </div>
-              {employer.website && (
-                <div className="flex items-center gap-2">
-                  <LinkIcon className="h-3 w-3 text-muted-foreground" />
-                  <a
-                    href={employer.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline truncate"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {employer.website.replace(/^https?:\/\//, "")}
-                  </a>
-                </div>
-              )}
-              {employer.contact_person && (
-                <div>
-                  <p className="text-xs font-semibold text-foreground mb-1">Contact</p>
-                  <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
-                  {employer.contact_title && <p className="text-xs text-muted-foreground">{employer.contact_title}</p>}
-                </div>
-              )}
-              <Button
-                className="w-full"
-                disabled={existingRequests.has(employer.id)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedEmployer(employer);
-                  setShowRequestDialog(true);
-                }}
-              >
-                {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
-              </Button>
+            
+              {/* Button pinned to bottom */}
+              <div className="mt-auto pt-2">
+                <Button
+                  className="w-full"
+                  disabled={existingRequests.has(employer.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedEmployer(employer);
+                    setShowRequestDialog(true);
+                  }}
+                >
+                  {existingRequests.has(employer.id) ? "Request Sent" : "Request Connection"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
