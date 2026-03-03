@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Shield, Settings, Users, Building2, BarChart3, Bell, FileText } from "lucide-react";
+import { LogOut, Shield, Settings, Users, Building2, BarChart3, Bell, FileText, Clock } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useNavigate } from "react-router-dom";
 import { AdminStatsCards } from "./admin/AdminStatsCards";
@@ -17,6 +17,7 @@ import { TopProfilesTable } from "./admin/TopProfilesTable";
 import { AthleteLayoutEditor } from "./admin/AthleteLayoutEditor";
 import { PartnerLayoutEditor } from "./admin/PartnerLayoutEditor";
 import { TrainingArticleManager } from "./admin/TrainingArticleManager";
+import { WaitlistManager } from "./admin/WaitlistManager";
 
 
 interface AdminDashboardProps {
