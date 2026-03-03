@@ -839,6 +839,39 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_applicants: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          profile_data: Json
+          status: string
+          updated_at: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          profile_data?: Json
+          status?: string
+          updated_at?: string
+          user_type: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          profile_data?: Json
+          status?: string
+          updated_at?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_analytics_summary: {
