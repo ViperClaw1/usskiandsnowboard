@@ -70,7 +70,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-4 mx-auto">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
