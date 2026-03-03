@@ -345,6 +345,7 @@ const Auth = () => {
   // ==============================
   if (step === "profile-data") {
     return <WaitlistProfileStep
+      fullName={profileData.full_name || ""}
       userType={profileData.user_type as "athlete" | "employer"}
       onBack={() => setStep("signup-no-code")}
       onRequestAccess={handleRequestAccess}
