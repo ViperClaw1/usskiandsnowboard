@@ -238,7 +238,7 @@ const Auth = () => {
     // Strip password from profile_data — it should never be persisted
     const { password: _pw, ...cleanProfileData } = additionalProfileData;
     try {
-      const { error, data } = await supabase.functions.invoke("submit-waitlist-application", {
+      const { error } = await supabase.functions.invoke("submit-waitlist-application", {
         body: {
           email: profileData.email,
           full_name: profileData.full_name,
@@ -246,10 +246,15 @@ const Auth = () => {
           profile_data: cleanProfileData,
         },
       });
-      // supabase.functions.invoke puts non-2xx bodies in `data` when context is set,
-      // but for edge functions returning JSON errors, check both error.message and data.error
-      const errMsg: string = (data as any)?.error || error?.message || "";
-      if (error || errMsg) {
+      if (error) {
+        // FunctionsHttpError stores the actual JSON body in error.context — parse it
+        let errMsg = error.message || "";
+        try {
+          const body = await (error as any).context?.json?.();
+          errMsg = body?.error || errMsg;
+        } catch {
+          // context.json() failed; fall back to error.message
+        }
         if (errMsg.includes("already pending") || errMsg.includes("pending review")) {
           toast.info("You already have a pending application. We'll be in touch!");
           navigate("/waitlist");
