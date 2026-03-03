@@ -1,132 +1,153 @@
 
-## Overview
+# Comprehensive Codebase Refactor Plan
 
-This is a large multi-part feature. Here's exactly what gets built:
+## Audit Summary
 
----
-
-### Part 1 — New Landing Screen on `/auth`
-
-The `/auth` page currently opens directly to Sign In. Add a new **initial "landing" step** (`"landing"`) that shows two CTA buttons:
-- **Sign In** → switches to current `isSignUp=false` view (no changes to the login form)
-- **Join the Platform** → switches to a new `"invite-code"` step
-
-This is a pure UI state machine change in `src/pages/Auth.tsx`.
+After reading all major files across pages, components, hooks, and data layers, here is what I found:
 
 ---
 
-### Part 2 — Invite Code Step
+## Key Issues Identified
 
-When user clicks "Join the Platform", show:
-1. Heading: "Please, enter your invite code"
-2. Subheading: "Enter your 7-digit invite code"
-3. Input with inline validation (empty check, must match `GOBIG25`)
-4. **Confirm** button → validates code → if valid, goes to existing signup form (with invite code pre-filled)
-5. **Don't have an invite code?** button → goes to a new `"signup-no-code"` step
+### 1. Duplicated Unauthenticated Nav (Critical)
+The same header block (logo + nav links + MobileNav + mountain background) is copy-pasted verbatim in **4 separate files**:
+- `src/pages/Index.tsx` — always renders it
+- `src/pages/News.tsx` — renders it when `!user`
+- `src/pages/Schedule.tsx` — renders it when `!user`
+- `src/pages/Employers.tsx` — renders it when `!user`
 
----
+`AuthenticatedNav` already exists. A `PublicNav` presentational component should be extracted and used in all four places.
 
-### Part 3 — "Signup without invite code" Step
+### 2. Duplicated Footer
+The identical footer block (`© 2025 U.S. Ski & Snowboard...`) is copy-pasted in:
+- `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx`
 
-A modified signup form:
-- Same fields as current signup: Full Name, Email, Password, Confirm Password, Role selector
-- **No invite code input** (since they don't have one)
-- Submit button labeled **"Next Step"** → instead of creating an account immediately, collects form data and advances to the `"profile-data"` step
+A `PageFooter` presentational component should be extracted.
 
----
+### 3. Duplicated "How It Works" + "Join Our Legacy" Sections
+`Index.tsx` and `Home.tsx` contain near-identical "How It Works" card grid and "Join Our Legacy" sections. These should become shared presentational components.
 
-### Part 4 — "Profile Data" Step (Waitlist Flow)
+### 4. Duplicated `Article` / `TrainingArticle` Interface
+The `TrainingArticle` interface is defined independently in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
+- `src/components/dashboard/admin/TrainingArticleManager.tsx` (as `Article`)
 
-This step mirrors the welcome popup from `src/pages/Dashboard.tsx`:
-1. Show the same role-specific welcome message (athlete or employer)
-2. **"Complete with AI"** button → shows inline AI populator UI (same logic from `AIProfilePopulator.tsx` but embedded, no dialog trigger)
-3. **"Complete Manually"** button → shows the full profile form inline:
-   - For athlete: same fields as `ProfileForm.tsx`
-   - For employer: same fields as `CompanyProfileForm.tsx`
-4. **"Request Access"** button at the bottom → submits to waitlist, creates a `waitlist_applicants` record in the DB, redirects to `/waitlist`
+These should be consolidated into `src/types/training.ts`.
 
----
+### 5. Duplicated `CATEGORY_COLORS` constant
+Defined separately in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
 
-### Part 5 — `/waitlist` Page
+Should move to `src/constants/training.ts`.
 
-Simple static page: "Your application is under review by the platform administrator. You'll receive an email once a decision has been made."
+### 6. Duplicated `CATEGORIES` array
+Defined as `TRAINING_CATEGORIES` in `Training.tsx` and as `CATEGORIES` in `TrainingArticleManager.tsx`. Should be a single export from `src/constants/training.ts`.
 
-Route added to `App.tsx` and `src/pages/Waitlist.tsx` created.
+### 7. `loadUserRole` pattern repeated across 3 pages
+`Athletes.tsx`, `Employers.tsx`, and `Dashboard.tsx` all manually call `supabase.from("user_roles")` inline. This belongs in a `useUserRole(userId)` custom hook.
 
----
+### 8. Smart/Dumb Separation Missing
+- `Home.tsx` and `Training.tsx` are both smart (data fetching) and presentational (full JSX render) in the same component.
+- `AthleteLandingPage.tsx` has 484 lines mixing data fetching, real-time subscriptions, and deeply nested JSX. The pure card sub-sections should be dumb components.
 
-### Part 6 — Database: `waitlist_applicants` Table
+### 9. Missing Semantic Block Structure
+No files currently use the structured comment blocks (`// === Imports ===`, `// === State ===`, etc.) as required by the refactoring spec.
 
-New migration creates table:
-```sql
-CREATE TABLE public.waitlist_applicants (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  email text NOT NULL,
-  full_name text NOT NULL,
-  user_type text NOT NULL CHECK (user_type IN ('athlete', 'employer')),
-  profile_data jsonb NOT NULL DEFAULT '{}',
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'declined')),
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-```
-RLS: Admins can read/update all. No user-level RLS needed (unauthenticated inserts via a new edge function).
+### 10. Inline Auth State Listeners in Pages
+`Athletes.tsx` manually wires `supabase.auth.onAuthStateChange` — this duplicates what `AuthContext` already provides. It should use `useAuth()` instead.
+
+### 11. `MobileNav` contains sign-out business logic
+`MobileNav` is supposed to be a presentational navigation component, but contains a full `handleSignOut` function with Supabase calls — same logic as `AuthenticatedNav`. This should be extracted to a `useSignOut` hook.
 
 ---
 
-### Part 7 — Edge Function: `submit-waitlist-application`
+## Proposed Changes
 
-New edge function (`supabase/functions/submit-waitlist-application/index.ts`):
-- Accepts: `{ email, full_name, user_type, profile_data }`
-- Inserts into `waitlist_applicants` using service role (bypassing RLS for unauthenticated users)
-- Returns success/error
-
----
-
-### Part 8 — Admin "Waitlist" Tab
-
-In `src/components/dashboard/AdminDashboard.tsx`:
-- Add a 5th tab: **Waitlist** (icon: `Clock`)
-- Change `grid-cols-4` to `grid-cols-5` in the `TabsList`
-- Create `src/components/dashboard/admin/WaitlistManager.tsx`:
-  - Table of waitlist applicants with Name, Email, Role, Applied Date, Status
-  - Clickable rows → opens a slide-over/dialog with all profile data the user submitted
-  - **Approve** and **Decline** buttons per row
-  - On approve: calls `approve-waitlist-applicant` edge function
-  - On decline: calls `decline-waitlist-applicant` edge function (or same function with action param)
-
----
-
-### Part 9 — Edge Functions: Approve & Decline Waitlist
-
-`supabase/functions/handle-waitlist-decision/index.ts`:
-- Accepts: `{ applicant_id, action: 'approve' | 'decline' }`
-- **Approve flow**:
-  1. Fetch applicant record
-  2. Create Supabase auth user with `supabase.auth.admin.createUser()` (pre-confirmed email)
-  3. Create profile record
-  4. Assign role in `user_roles`
-  5. Insert profile data into `athlete_profiles` or `employer_profiles`
-  6. Update `waitlist_applicants.status = 'approved'`
-  7. Generate password reset link, send branded approval email with login link
-- **Decline flow**:
-  1. Update `waitlist_applicants.status = 'declined'`
-  2. Send branded decline email
-- Both use `emailTemplate()` from `_shared/email-template.ts`
-
----
-
-### Files Changed
+### New Files to Create
 
 ```
-NEW   src/pages/Waitlist.tsx
-MOD   src/pages/Auth.tsx
-MOD   src/App.tsx
-NEW   src/components/dashboard/admin/WaitlistManager.tsx
-MOD   src/components/dashboard/AdminDashboard.tsx
-NEW   supabase/functions/submit-waitlist-application/index.ts
-NEW   supabase/functions/handle-waitlist-decision/index.ts
-NEW   supabase/migrations/YYYYMMDD_add_waitlist_applicants.sql
+src/types/
+  training.ts          — TrainingArticle + Article interfaces
+  news.ts              — NewsArticle interface (shared between Home + News pages)
+  connections.ts       — Connection, ConnectionStats, ConnectionRequest interfaces
+  profiles.ts          — AthleteProfile, EmployerProfile interfaces
+
+src/constants/
+  training.ts          — TRAINING_CATEGORIES, CATEGORY_COLORS
+  nav.ts               — NAV_ITEMS array (used by MobileNav, AuthenticatedNav)
+
+src/hooks/
+  useUserRole.ts       — extracts the repeated user_roles query pattern
+  useSignOut.ts        — extracts the repeated signOut + clear storage pattern
+
+src/components/layout/
+  PublicNav.tsx        — dumb: renders unauthenticated header (logo, links, MobileNav)
+  PageFooter.tsx       — dumb: renders the shared copyright footer
+
+src/components/home/
+  HowItWorksSection.tsx — dumb: the "How It Works" 3-card grid (shared by Index + Home)
+  JoinLegacySection.tsx — dumb: the "Join Our Legacy" CTA section (shared by Index + Home)
 ```
 
-No changes to existing edge functions or the shared email template.
+### Files to Modify
+
+| File | What Changes |
+|---|---|
+| `src/pages/Index.tsx` | Remove inline header + footer + section JSX; use `PublicNav`, `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; add semantic block comments |
+| `src/pages/Home.tsx` | Remove inline footer + section JSX; use `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; extract news data-fetch into comment-labeled blocks |
+| `src/pages/News.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Schedule.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Athletes.tsx` | Remove manual auth listener; use `useAuth()`; extract `loadUserRole` to `useUserRole` hook; add semantic block comments |
+| `src/pages/Training.tsx` | Import types from `src/types/training.ts`; import constants from `src/constants/training.ts`; add semantic block comments |
+| `src/pages/TrainingArticle.tsx` | Import types/constants from shared files; add semantic block comments |
+| `src/components/dashboard/admin/TrainingArticleManager.tsx` | Import shared types/constants; add semantic block comments |
+| `src/components/MobileNav.tsx` | Extract `handleSignOut` into `useSignOut` hook; add semantic block comments |
+| `src/components/AuthenticatedNav.tsx` | Use `useSignOut` hook instead of inline handler; add semantic block comments |
+| `src/pages/Dashboard.tsx` | Add semantic block comments; annotate welcome content constants |
+
+### Files That Do NOT Change
+- All Supabase edge functions
+- All UI primitives in `src/components/ui/`
+- `src/components/auth/AuthContext.tsx`
+- `src/App.tsx`
+- `src/integrations/` (auto-generated)
+- All admin page files (`AllUsers`, `AllAthletes`, etc.)
+- `src/data/suggestions.ts`
+
+---
+
+## Execution Order (Safe Steps)
+
+The changes are grouped to avoid broken references at any intermediate step:
+
+**Step 1 — New shared types/constants (no existing files touched)**
+- Create `src/types/training.ts`
+- Create `src/constants/training.ts`
+
+**Step 2 — New shared hooks (no existing files touched)**
+- Create `src/hooks/useUserRole.ts`
+- Create `src/hooks/useSignOut.ts`
+
+**Step 3 — New layout/section components (no existing files touched)**
+- Create `src/components/layout/PublicNav.tsx`
+- Create `src/components/layout/PageFooter.tsx`
+- Create `src/components/home/HowItWorksSection.tsx`
+- Create `src/components/home/JoinLegacySection.tsx`
+
+**Step 4 — Update consumers (all at once to avoid stale imports)**
+- Update `Training.tsx` + `TrainingArticle.tsx` + `TrainingArticleManager.tsx` to use shared types/constants
+- Update `MobileNav.tsx` + `AuthenticatedNav.tsx` to use `useSignOut`
+- Update `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx` to use `PublicNav`, `PageFooter`, shared sections
+- Update `Athletes.tsx` to use `useAuth()` and `useUserRole`
+- Add semantic block comments to `Dashboard.tsx` and `Settings.tsx`
+
+---
+
+## What Will NOT Change
+- All visual output — identical pixels
+- All routing — same paths
+- All Supabase queries — no logic changes
+- All component APIs — props unchanged
+- All edge functions

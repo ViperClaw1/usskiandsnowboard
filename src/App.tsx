@@ -28,6 +28,7 @@ import RejectedRequests from "./pages/admin/RejectedRequests";
 import Settings from "./pages/Settings";
 import Training from "./pages/Training";
 import TrainingArticle from "./pages/TrainingArticle";
+import Waitlist from "./pages/Waitlist";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const AppRoutes = () => (
       <Route path="/news" element={<News />} />
       <Route path="/training" element={<Training />} />
       <Route path="/training/:slug" element={<TrainingArticle />} />
+      <Route path="/waitlist" element={<Waitlist />} />
       <Route path="/admin/users" element={<AllUsers />} />
       <Route path="/admin/athletes" element={<AllAthletes />} />
       <Route path="/admin/employers" element={<AllEmployers />} />

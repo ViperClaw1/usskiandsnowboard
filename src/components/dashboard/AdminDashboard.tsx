@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Shield, Settings, Users, Building2, BarChart3, Bell, FileText } from "lucide-react";
+import { LogOut, Shield, Settings, Users, Building2, BarChart3, Bell, FileText, Clock } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useNavigate } from "react-router-dom";
 import { AdminStatsCards } from "./admin/AdminStatsCards";
@@ -17,6 +17,7 @@ import { TopProfilesTable } from "./admin/TopProfilesTable";
 import { AthleteLayoutEditor } from "./admin/AthleteLayoutEditor";
 import { PartnerLayoutEditor } from "./admin/PartnerLayoutEditor";
 import { TrainingArticleManager } from "./admin/TrainingArticleManager";
+import { WaitlistManager } from "./admin/WaitlistManager";
 
 
 interface AdminDashboardProps {
@@ -69,7 +70,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-4 mx-auto">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
@@ -85,6 +86,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <TabsTrigger value="training" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Training</span>
+            </TabsTrigger>
+            <TabsTrigger value="waitlist" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Waitlist</span>
             </TabsTrigger>
           </TabsList>
 
@@ -147,6 +152,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
           <TabsContent value="training" className="mt-6">
             <TrainingArticleManager />
+          </TabsContent>
+
+          <TabsContent value="waitlist" className="mt-6">
+            <WaitlistManager />
           </TabsContent>
         </Tabs>
       </main>
