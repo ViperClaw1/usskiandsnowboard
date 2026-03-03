@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -26,6 +26,11 @@ import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePrevie
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+// ==============================
+// Types / Interfaces
+// ==============================
 
 interface Connection {
   id: string;
@@ -74,28 +79,141 @@ interface ConnectionStats {
   rejected: number;
 }
 
+interface AthleteDashboardData {
+  profile: AthleteProfile | null;
+  connectionStats: ConnectionStats;
+  connections: Connection[];
+}
+
 interface AthleteHomeProps {
   user: User;
   onNavigate: (view: string) => void;
   onProfileUpdated?: () => void;
 }
 
+// ==============================
+// Query Keys
+// ==============================
+const athleteDashboardKey = (userId: string) => ["athlete-landing-dashboard", userId];
+const athleteFeaturedPartnersKey = ["athlete-landing-featured-partners"];
+
+// ==============================
+// Query Functions
+// Extracted outside the component — stable references, not recreated per render.
+//
+// Dashboard data (profile + connections) is fetched together since connection
+// stats depend on the athlete profile id — they are a single logical unit.
+//
+// Featured partners are independent of the athlete and cached separately so
+// invalidating athlete data never causes partners to re-fetch and vice versa.
+// ==============================
+
+const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardData> => {
+  const { data: profileData } = await supabase
+    .from("athlete_profiles")
+    .select("*, profiles(full_name, email, phone, first_name, last_name)")
+    .eq("user_id", userId)
+    .single();
+
+  if (!profileData) {
+    return {
+      profile: null,
+      connectionStats: { pending: 0, accepted: 0, rejected: 0 },
+      connections: [],
+    };
+  }
+
+  // All connection queries fire in parallel once we have the profile id
+  const [{ data: allConnections }, { data: acceptedConnections }] = await Promise.all([
+    supabase.from("connection_requests").select("status").eq("athlete_id", profileData.id),
+    supabase
+      .from("connection_requests")
+      .select("id, employer_id, employer_profiles(company_name, logo_url, industry)")
+      .eq("athlete_id", profileData.id)
+      .eq("status", "accepted"),
+  ]);
+
+  const connectionStats: ConnectionStats = {
+    pending: allConnections?.filter((c) => c.status === "pending").length ?? 0,
+    accepted: allConnections?.filter((c) => c.status === "accepted").length ?? 0,
+    rejected: allConnections?.filter((c) => c.status === "rejected").length ?? 0,
+  };
+
+  return {
+    profile: profileData as AthleteProfile,
+    connectionStats,
+    connections: (acceptedConnections as Connection[]) ?? [],
+  };
+};
+
+const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
+  const { data } = await supabase
+    .from("employer_profiles")
+    .select("id, company_name, logo_url, industry, opportunities_offered")
+    .order("profile_views", { ascending: false })
+    .limit(4);
+
+  return (data as EmployerProfile[]) ?? [];
+};
+
+// ==============================
+// Component Definition
+// All data fetching migrated from a single monolithic useEffect + useState
+// to two independent useQuery calls:
+//
+//  - athleteDashboardKey(userId)   — profile + connection stats + connections
+//  - athleteFeaturedPartnersKey    — featured partner previews (user-agnostic)
+//
+// On repeat visits, initialData reads from the QueryClient cache synchronously
+// so loading is false from the very first render — no full-screen spinner flash.
+//
+// The real-time Supabase channel subscription is preserved but now calls
+// queryClient.invalidateQueries instead of the imperative loadDashboardData(),
+// keeping the cache as the single source of truth.
+// ==============================
+
 export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: AthleteHomeProps) => {
-  const [profile, setProfile] = useState<AthleteProfile | null>(null);
-  const [connectionStats, setConnectionStats] = useState<ConnectionStats>({
-    pending: 0,
-    accepted: 0,
-    rejected: 0,
-  });
-  const [featuredPartners, setFeaturedPartners] = useState<EmployerProfile[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const { getText } = useDashboardTextOverrides("athlete");
 
-  useEffect(() => {
-    loadDashboardData();
+  // ==============================
+  // Data Fetching — Dashboard (profile + connections)
+  // ==============================
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery<AthleteDashboardData>({
+    queryKey: athleteDashboardKey(user.id),
+    queryFn: () => fetchAthleteDashboard(user.id),
+    initialData: () => queryClient.getQueryData<AthleteDashboardData>(athleteDashboardKey(user.id)),
+    staleTime: 5 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => 1000 * (attempt + 1),
+  });
 
-    // Set up real-time subscription for connection updates
+  // ==============================
+  // Data Fetching — Featured Partners
+  // User-agnostic — cached globally, not per athlete.
+  // ==============================
+  const { data: featuredPartners = [], isLoading: partnersLoading } = useQuery<EmployerProfile[]>({
+    queryKey: athleteFeaturedPartnersKey,
+    queryFn: fetchFeaturedPartners,
+    initialData: () => queryClient.getQueryData<EmployerProfile[]>(athleteFeaturedPartnersKey),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // ==============================
+  // Derived Values
+  // ==============================
+  const profile = dashboardData?.profile ?? null;
+  const connectionStats = dashboardData?.connectionStats ?? { pending: 0, accepted: 0, rejected: 0 };
+  const connections = dashboardData?.connections ?? [];
+
+  // ==============================
+  // Effects — Real-time Subscription
+  // Preserved from original. Invalidates the cache instead of calling
+  // loadDashboardData() directly — keeps the cache as source of truth.
+  // ==============================
+  useEffect(() => {
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
+
     const channel = supabase
       .channel("athlete-connections")
       .on(
@@ -106,75 +224,30 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
           table: "connection_requests",
           filter: profile?.id ? `athlete_id=eq.${profile.id}` : undefined,
         },
-        () => {
-          loadDashboardData();
-        },
+        invalidate,
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user.id, profile?.id]);
+  }, [user.id, profile?.id, queryClient]);
 
-  const loadDashboardData = async () => {
-    try {
-      // Load athlete profile with all fields
-      const { data: profileData } = await supabase
-        .from("athlete_profiles")
-        .select("*, profiles(full_name, email, phone, first_name, last_name)")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profileData) {
-        setProfile(profileData);
-
-        // Load connection stats
-        const { data: connections } = await supabase
-          .from("connection_requests")
-          .select("status")
-          .eq("athlete_id", profileData.id);
-
-        if (connections) {
-          setConnectionStats({
-            pending: connections.filter((c) => c.status === "pending").length,
-            accepted: connections.filter((c) => c.status === "accepted").length,
-            rejected: connections.filter((c) => c.status === "rejected").length,
-          });
-        }
-
-        // Load accepted connections
-        const { data: acceptedConnections } = await supabase
-          .from("connection_requests")
-          .select("id, employer_id, employer_profiles(company_name, logo_url, industry)")
-          .eq("athlete_id", profileData.id)
-          .eq("status", "accepted");
-
-        if (acceptedConnections) setConnections(acceptedConnections);
-      }
-
-      // Load featured partners
-      const { data: partners } = await supabase
-        .from("employer_profiles")
-        .select("id, company_name, logo_url, industry, opportunities_offered")
-        .order("profile_views", { ascending: false })
-        .limit(4);
-
-      if (partners) setFeaturedPartners(partners);
-    } catch (error) {
-      // Error handled silently - will retry on next mount
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  // ==============================
+  // Render — Loading Guard
+  // Only shown on first-ever visit. On all subsequent mounts, initialData
+  // populates from cache and loading is false from render zero.
+  // ==============================
+  if (dashboardLoading || partnersLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
-  const completeness = profile?.profile_completeness || 0;
-  const profileViewsThisMonth = profile?.profile_views || 0;
+  const completeness = profile?.profile_completeness ?? 0;
+  const profileViewsThisMonth = profile?.profile_views ?? 0;
 
+  // ==============================
+  // Render — Main
+  // ==============================
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       {/* Hero Section */}
@@ -219,7 +292,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       role="athlete"
                       userId={user.id}
                       onComplete={() => {
-                        loadDashboardData();
+                        queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
                         onProfileUpdated?.();
                       }}
                     />
