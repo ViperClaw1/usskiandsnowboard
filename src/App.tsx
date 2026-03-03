@@ -27,6 +27,7 @@ import AcceptedConnections from "./pages/admin/AcceptedConnections";
 import RejectedRequests from "./pages/admin/RejectedRequests";
 import Settings from "./pages/Settings";
 import Training from "./pages/Training";
+import TrainingArticle from "./pages/TrainingArticle";
 import Waitlist from "./pages/Waitlist";
 
 const queryClient = new QueryClient();
