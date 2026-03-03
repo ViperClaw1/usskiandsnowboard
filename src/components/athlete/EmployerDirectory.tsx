@@ -503,19 +503,39 @@ const EmployerDirectory = () => {
             onClick={() => setSelectedEmployer(employer)}
           >
             <CardHeader className="pb-3">
-              {/* ...unchanged... */}
+              <div className="flex flex-col items-center gap-3">
+                <Avatar className="h-24 w-24">
+                  {employer.logo_url ? (
+                    <img
+                      src={employer.logo_url}
+                      alt={`${employer.company_name} logo`}
+                      className="h-full w-full object-contain p-2"
+                    />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-12 w-12 text-primary" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="text-center w-full">
+                  <CardTitle className="text-lg">{employer.company_name}</CardTitle>
+                  {employer.industry && <p className="text-sm text-muted-foreground">{employer.industry}</p>}
+                </div>
+              </div>
             </CardHeader>
-      
+
             <CardContent className="flex flex-col flex-1 space-y-3">
-              {employer.about && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>
-              )}
+              {employer.about && <p className="text-sm text-muted-foreground line-clamp-3">{employer.about}</p>}
               <div className="flex flex-wrap gap-2">
                 {employer.company_size && (
-                  <Badge variant="outline" className="text-xs">{employer.company_size}</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {employer.company_size}
+                  </Badge>
                 )}
                 {employer.hq_location && (
-                  <Badge variant="outline" className="text-xs">{employer.hq_location}</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {employer.hq_location}
+                  </Badge>
                 )}
               </div>
               {employer.website && (
@@ -536,15 +556,13 @@ const EmployerDirectory = () => {
                 <div>
                   <p className="text-xs font-semibold text-foreground mb-1">Contact</p>
                   <p className="text-sm text-muted-foreground">{employer.contact_person}</p>
-                  {employer.contact_title && (
-                    <p className="text-xs text-muted-foreground">{employer.contact_title}</p>
-                  )}
+                  {employer.contact_title && <p className="text-xs text-muted-foreground">{employer.contact_title}</p>}
                 </div>
               )}
-      
+
               {/* Spacer pushes button to bottom */}
               <div className="flex-1" />
-      
+
               <Button
                 className="w-full"
                 disabled={existingRequests.has(employer.id)}
