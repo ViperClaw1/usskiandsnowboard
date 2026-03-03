@@ -239,7 +239,11 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   // populates from cache and loading is false from render zero.
   // ==============================
   if (dashboardLoading || partnersLoading) {
-    return <LoadingSpinner fullScreen />;
+    return (
+      <div className="flex items-center justify-center py-24">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   const completeness = profile?.profile_completeness ?? 0;
