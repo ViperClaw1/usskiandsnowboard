@@ -71,15 +71,15 @@ const fetchAthleteProfile = async (): Promise<AthleteProfile | null> => {
   return data ?? null;
 };
 
-const fetchExistingRequests = async (athleteId: string): Promise<Set<string>> => {
+const fetchExistingRequests = async (athleteId: string): Promise<Map<string, string>> => {
   const { data, error } = await supabase
     .from("connection_requests")
-    .select("employer_id")
+    .select("employer_id, status")
     .eq("athlete_id", athleteId)
     .in("status", ["pending", "accepted"]);
 
   if (error) throw error;
-  return new Set(data?.map((r) => r.employer_id) || []);
+  return new Map(data?.map((r) => [r.employer_id, r.status ?? "pending"]) || []);
 };
 
 // ==============================
