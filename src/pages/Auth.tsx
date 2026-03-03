@@ -247,13 +247,26 @@ const Auth = () => {
         },
       });
       if (error) {
-        // FunctionsHttpError stores the actual JSON body in error.context — parse it
+        // FunctionsHttpError: try multiple ways to get the actual JSON body
         let errMsg = error.message || "";
         try {
-          const body = await (error as any).context?.json?.();
-          errMsg = body?.error || errMsg;
+          // Method 1: context is a Response object
+          if (typeof (error as any).context?.json === "function") {
+            const body = await (error as any).context.json();
+            errMsg = body?.error || errMsg;
+          // Method 2: context is already parsed
+          } else if ((error as any).context?.error) {
+            errMsg = (error as any).context.error;
+          // Method 3: message contains the JSON string
+          } else if (error.message?.includes("{")) {
+            const match = error.message.match(/\{.*\}/s);
+            if (match) {
+              const body = JSON.parse(match[0]);
+              errMsg = body?.error || errMsg;
+            }
+          }
         } catch {
-          // context.json() failed; fall back to error.message
+          // fall back to error.message
         }
         if (errMsg.includes("already pending") || errMsg.includes("pending review")) {
           toast.info("You already have a pending application. We'll be in touch!");
