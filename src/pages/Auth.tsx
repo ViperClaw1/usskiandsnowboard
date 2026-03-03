@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, ArrowLeft, Sparkles, Globe, Instagram } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 
