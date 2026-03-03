@@ -523,14 +523,29 @@ const Auth = () => {
 
 interface WaitlistProfileStepProps {
   userType: "athlete" | "employer";
+  fullName: string;
   onBack: () => void;
   onRequestAccess: (profileData: Record<string, any>) => void;
   isSubmitting: boolean;
 }
 
-const WaitlistProfileStep = ({ userType, onBack, onRequestAccess, isSubmitting }: WaitlistProfileStepProps) => {
-  const [mode, setMode] = useState<"choice" | "manual">("choice");
+const AI_LOADING_MESSAGES = [
+  "Scanning website...",
+  "Reading page content...",
+  "Extracting profile details...",
+  "Analyzing with AI...",
+  "Polishing your profile...",
+  "Almost done...",
+];
+
+const WaitlistProfileStep = ({ userType, fullName, onBack, onRequestAccess, isSubmitting }: WaitlistProfileStepProps) => {
+  const [mode, setMode] = useState<"choice" | "manual" | "ai" | "ai-loading">("choice");
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [aiUrl, setAiUrl] = useState("");
+  const [aiLinkedin, setAiLinkedin] = useState("");
+  const [aiError, setAiError] = useState("");
+  const [aiProgress, setAiProgress] = useState(0);
+  const [aiLoadingMsg, setAiLoadingMsg] = useState(AI_LOADING_MESSAGES[0]);
 
   const athleteWelcome = {
     header: "Welcome, Athlete!",
