@@ -32,12 +32,12 @@ export const WaitlistManager = () => {
   const { data: applicants = [], isLoading } = useQuery({
     queryKey: ["waitlist-applicants"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("waitlist_applicants" as any)
+      const { data, error } = await (supabase as any)
+        .from("waitlist_applicants")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as WaitlistApplicant[];
+      return ((data || []) as unknown) as WaitlistApplicant[];
     },
   });
 
