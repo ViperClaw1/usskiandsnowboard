@@ -74,7 +74,12 @@ export interface EmailPayload {
  * Callers are responsible for inserting sleep() between sequential sends to avoid the 2 req/s limit.
  */
 export async function sendEmail(resend: Resend, payload: EmailPayload): Promise<void> {
-  const { error } = await resend.emails.send(payload);
+  let { error } = await resend.emails.send(payload);
+  if (error && (error as any).statusCode === 429) {
+    console.warn("Resend rate limit hit, retrying after 1500ms...");
+    await sleep(1500);
+    ({ error } = await resend.emails.send(payload));
+  }
   if (error) {
     console.error("Resend error:", error);
     throw new Error(`Failed to send email to ${payload.to.join(", ")}: ${error.message}`);
