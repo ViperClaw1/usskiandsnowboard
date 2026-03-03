@@ -461,7 +461,7 @@ const Auth = () => {
                     const passes = rule.test(password);
                     return (
                       <li key={rule.label} className="flex items-center gap-2 text-sm">
-                        {passes ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                        {passes ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <XCircle className="h-4 w-4 text-destructive" />}
                         <span className={passes ? "text-primary" : "text-muted-foreground"}>{rule.label}</span>
                       </li>
                     );
