@@ -188,11 +188,11 @@ const EmployerDirectory = () => {
   // Keyed by athleteId so the cache entry is correctly scoped per athlete.
   // Only enabled once athleteProfileId is known.
   // ==============================
-  const { data: existingRequests = new Set<string>() } = useQuery<Set<string>>({
+  const { data: existingRequests = new Map<string, string>() } = useQuery<Map<string, string>>({
     queryKey: ["existing-employer-requests", athleteProfileId],
     queryFn: () => fetchExistingRequests(athleteProfileId!),
     enabled: !!athleteProfileId,
-    initialData: () => queryClient.getQueryData<Set<string>>(["existing-employer-requests", athleteProfileId]),
+    initialData: () => queryClient.getQueryData<Map<string, string>>(["existing-employer-requests", athleteProfileId]),
     staleTime: 2 * 60 * 1000,
   });
 
