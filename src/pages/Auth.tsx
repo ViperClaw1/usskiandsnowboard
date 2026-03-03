@@ -562,6 +562,42 @@ const WaitlistProfileStep = ({ userType, fullName, onBack, onRequestAccess, isSu
 
   const updateField = (key: string, value: any) => setFormData((prev) => ({ ...prev, [key]: value }));
 
+  // AI mode — collect URL(s) then fire edge function
+  const handleAiSubmit = async () => {
+    if (!aiUrl.trim()) { setAiError("Please enter a URL."); return; }
+    setAiError("");
+    setMode("ai-loading");
+    setAiProgress(5);
+
+    let msgIndex = 0;
+    const msgInterval = setInterval(() => {
+      msgIndex = Math.min(msgIndex + 1, AI_LOADING_MESSAGES.length - 1);
+      setAiLoadingMsg(AI_LOADING_MESSAGES[msgIndex]);
+    }, 3000);
+    const progInterval = setInterval(() => {
+      setAiProgress((prev) => Math.min(prev + 2, 90));
+    }, 500);
+
+    try {
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("ai-populate-profile", {
+        body: { role: userType, url: aiUrl.trim(), name: fullName },
+      });
+      clearInterval(msgInterval);
+      clearInterval(progInterval);
+      if (fnError || !fnData?.success) throw new Error(fnData?.error || fnError?.message || "AI extraction failed");
+      const merged = { ...fnData.data, ...(userType === "employer" && aiLinkedin ? { linkedin_url: aiLinkedin } : {}) };
+      setAiProgress(100);
+      await new Promise((r) => setTimeout(r, 600));
+      onRequestAccess(merged);
+    } catch (err: unknown) {
+      clearInterval(msgInterval);
+      clearInterval(progInterval);
+      setAiError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setMode("ai");
+      setAiProgress(0);
+    }
+  };
+
   if (mode === "choice") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
@@ -577,13 +613,85 @@ const WaitlistProfileStep = ({ userType, fullName, onBack, onRequestAccess, isSu
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">How would you like to complete your profile?</p>
-            <Button className="w-full h-12" onClick={() => setMode("manual")}>
+            <Button className="w-full h-12" onClick={() => setMode("ai")}>
+              <Sparkles className="mr-2 h-4 w-4" /> Complete with AI
+            </Button>
+            <Button variant="outline" className="w-full h-12" onClick={() => setMode("manual")}>
               Complete Manually
             </Button>
-            <Button variant="outline" className="w-full h-12" onClick={() => onRequestAccess({ ai_populate: true })}>
-              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : "Request Access (Skip Profile for Now)"}
+            <Button variant="ghost" className="w-full h-10 text-muted-foreground text-sm" onClick={() => onRequestAccess({ ai_populate: true })} disabled={isSubmitting}>
+              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : "Skip for now"}
             </Button>
           </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (mode === "ai" || mode === "ai-loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
+        <Card className="w-full max-w-md shadow-2xl border-border/50">
+          {mode === "ai-loading" ? (
+            <CardContent className="flex flex-col items-center justify-center py-12 space-y-6">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+                <Sparkles className="h-8 w-8 text-primary animate-spin" style={{ animationDuration: "3s" }} />
+              </div>
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-semibold">Building your profile</h3>
+                <p className="text-sm text-muted-foreground animate-pulse">{aiLoadingMsg}</p>
+              </div>
+              <div className="w-full max-w-xs space-y-1">
+                <Progress value={aiProgress} className="h-2" />
+                <p className="text-xs text-muted-foreground text-center">{Math.round(aiProgress)}%</p>
+              </div>
+            </CardContent>
+          ) : (
+            <>
+              <CardHeader className="space-y-3 pb-4">
+                <button type="button" onClick={() => setMode("choice")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <ArrowLeft className="h-3.5 w-3.5" /> Back
+                </button>
+                <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                  <Sparkles className="h-5 w-5 text-primary" /> Auto-fill Profile with AI
+                </CardTitle>
+                <CardDescription>
+                  {userType === "athlete"
+                    ? "Enter your Instagram URL and we'll extract your profile automatically."
+                    : "Enter your company website and we'll extract your profile automatically."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {userType === "athlete" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-url" className="flex items-center gap-1">
+                      <Instagram className="h-3.5 w-3.5" /> Instagram Profile URL
+                    </Label>
+                    <Input id="ai-url" type="url" placeholder="https://www.instagram.com/username" value={aiUrl} onChange={(e) => setAiUrl(e.target.value)} />
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-url" className="flex items-center gap-1">
+                        <Globe className="h-3.5 w-3.5" /> Company Website
+                      </Label>
+                      <Input id="ai-url" type="url" placeholder="https://www.example.com" value={aiUrl} onChange={(e) => setAiUrl(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-linkedin" className="flex items-center gap-1">
+                        <Globe className="h-3.5 w-3.5" /> LinkedIn URL
+                      </Label>
+                      <Input id="ai-linkedin" type="url" placeholder="https://linkedin.com/company/..." value={aiLinkedin} onChange={(e) => setAiLinkedin(e.target.value)} />
+                    </div>
+                  </>
+                )}
+                {aiError && <p className="text-sm text-destructive">{aiError}</p>}
+                <Button className="w-full" onClick={handleAiSubmit}>
+                  <Sparkles className="mr-2 h-4 w-4" /> Build My Profile with AI
+                </Button>
+              </CardContent>
+            </>
+          )}
         </Card>
       </div>
     );
