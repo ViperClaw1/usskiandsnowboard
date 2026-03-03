@@ -739,9 +739,14 @@ const EmployerDirectory = () => {
                     <Button
                       onClick={() => setShowRequestDialog(true)}
                       className="w-full mt-4"
+                      variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
                       disabled={existingRequests.has(selectedEmployer.id)}
                     >
-                      {existingRequests.has(selectedEmployer.id) ? "Request Sent" : "Request Connection"}
+                      {existingRequests.get(selectedEmployer.id) === "accepted"
+                        ? "✓ Connected"
+                        : existingRequests.get(selectedEmployer.id) === "pending"
+                        ? "Request Sent"
+                        : "Request Connection"}
                     </Button>
                   </div>
                 ) : (
