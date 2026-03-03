@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, AlertCircle, ArrowLeft, Sparkles, Globe, Instagram } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
