@@ -30,7 +30,14 @@ import Training from "./pages/Training";
 import TrainingArticle from "./pages/TrainingArticle";
 import Waitlist from "./pages/Waitlist";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+    },
+  },
+});
 
 // ==============================
 // HomeRoute
