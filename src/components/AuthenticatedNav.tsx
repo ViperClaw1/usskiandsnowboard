@@ -1,7 +1,6 @@
 // ==============================
 // Imports
 // ==============================
-
 import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,20 +16,19 @@ import { useUserRole } from "@/hooks/useUserRole";
 // Component Definition
 // Authenticated sticky header. Sign-out logic delegated to useSignOut hook.
 // Wrapped in React.memo — no props, safe to skip re-renders across route changes.
+//
+// Nav items with allowedRoles are rendered with visibility:hidden rather than
+// being filtered out entirely. Filtering caused the nav to reflow when the role
+// resolved (null → "athlete"), changing the nav height and shifting all page
+// content — producing the scrollbar flash on repeated dashboard visits.
+// Using visibility:hidden keeps the nav the same height regardless of whether
+// the role has resolved, eliminating the layout shift entirely.
 // ==============================
-
 export const AuthenticatedNav = memo(() => {
-  // ==============================
-  // Hooks
-  // ==============================
   const { signOut } = useSignOut();
   const { user } = useAuth();
   const { role } = useUserRole(user?.id);
 
-  // ==============================
-  // Derived Values — Stable style object
-  // Extracted with useMemo to prevent recreating the object on every render tick
-  // ==============================
   const headerStyle = useMemo(
     () => ({
       backgroundImage: `url(${mountainHeaderBg})`,
@@ -38,36 +36,43 @@ export const AuthenticatedNav = memo(() => {
       backgroundPosition: "center" as const,
       backgroundColor: "#1e3a5f",
     }),
-    []
+    [],
   );
-
-  // ==============================
-  // Render
-  // ==============================
 
   return (
     <header className="sticky top-0 z-50" style={headerStyle}>
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="cursor-pointer">
-          <img
-            src={usLogo}
-            alt="U.S. Ski & Snowboard"
-            className="h-16 sm:h-20 hover:opacity-80 transition-opacity"
-          />
+          <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" />
         </Link>
 
         {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-          {NAV_ITEMS.filter(item => !item.allowedRoles || (role && item.allowedRoles.includes(role as any))).map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            // Determine visibility: items with no role restriction are always
+            // visible. Role-restricted items use visibility:hidden (not display:none)
+            // so they still occupy space in the layout — preventing nav reflow
+            // when the role resolves from null to the actual value.
+            const isAllowed =
+              !item.allowedRoles ||
+              (role !== null && item.allowedRoles.includes(role as "athlete" | "employer" | "admin"));
+            const isRestricted = !!item.allowedRoles;
+
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="text-white hover:text-white/80 font-medium transition-colors text-sm lg:text-base"
+                style={isRestricted ? { visibility: isAllowed ? "visible" : "hidden" } : undefined}
+                // Prevent interaction with hidden items
+                tabIndex={isRestricted && !isAllowed ? -1 : undefined}
+                aria-hidden={isRestricted && !isAllowed ? true : undefined}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
 
           {/* Authenticated CTAs */}
           <Link to="/dashboard">
