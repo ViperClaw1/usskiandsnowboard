@@ -46,6 +46,8 @@ export const PublicNav = memo(() => {
             src={usLogo}
             alt="U.S. Ski & Snowboard"
             className="h-16 sm:h-20 hover:opacity-80 transition-opacity"
+            width={57}
+            height={80}
           />
         </Link>
 
