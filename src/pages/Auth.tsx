@@ -313,30 +313,6 @@ const Auth = () => {
     }
   };
 
-  // ==============================
-  // Render helpers
-  // ==============================
-
-  const LogoHeader = ({ title, description }: { title: string; description: string }) => (
-    <CardHeader className="space-y-4 pb-8">
-      <div className="flex justify-center mb-2">
-        <Link to="/" className="hover:opacity-80 transition-opacity">
-          <img src={usSkiLogo} alt="U.S. Ski & Snowboard" className="h-16 object-contain hidden sm:block" />
-          <img src={usSkiMobileLogo} alt="U.S. Ski & Snowboard" className="h-12 object-contain sm:hidden" />
-        </Link>
-      </div>
-      <div className="space-y-2 text-center">
-        <CardTitle className="text-2xl font-bold text-foreground">{title}</CardTitle>
-        <CardDescription className="text-muted-foreground">{description}</CardDescription>
-      </div>
-    </CardHeader>
-  );
-
-  const BackButton = ({ to }: { to: AuthStep }) => (
-    <button type="button" onClick={() => setStep(to)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2">
-      <ArrowLeft className="h-3.5 w-3.5" /> Back
-    </button>
-  );
 
   // ==============================
   // STEP: landing
