@@ -478,8 +478,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   >
                     <CardContent className="pt-6">
                       <div className="flex flex-col items-center text-center space-y-3">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={connection.employer_profiles.logo_url || ""} />
+                        <Avatar className="h-16 w-16 shrink-0">
+                          <AvatarImage src={connection.employer_profiles.logo_url || ""} width={64} height={64} />
                           <AvatarFallback>
                             {connection.employer_profiles.company_name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -521,8 +521,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={partner.logo_url || ""} />
+                      <Avatar className="h-16 w-16 shrink-0">
+                        <AvatarImage src={partner.logo_url || ""} width={64} height={64} />
                         <AvatarFallback>{partner.company_name.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
