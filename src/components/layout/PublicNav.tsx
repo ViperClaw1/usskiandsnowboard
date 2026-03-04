@@ -45,7 +45,10 @@ export const PublicNav = memo(() => {
           <img
             src={usLogo}
             alt="U.S. Ski & Snowboard"
+            width={57}
+            height={80}
             className="h-16 sm:h-20 hover:opacity-80 transition-opacity"
+            fetchPriority="high"
           />
         </Link>
 
