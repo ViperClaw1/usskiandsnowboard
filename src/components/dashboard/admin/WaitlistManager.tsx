@@ -37,7 +37,7 @@ export const WaitlistManager = () => {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as WaitlistApplicant[];
+      return ((data || []) as unknown) as WaitlistApplicant[];
     },
   });
 
@@ -49,11 +49,7 @@ export const WaitlistManager = () => {
       if (error) throw error;
     },
     onSuccess: (_, { action }) => {
-      toast.success(
-        action === "approve"
-          ? "Applicant approved and notified by email."
-          : "Applicant declined and notified by email.",
-      );
+      toast.success(action === "approve" ? "Applicant approved and notified by email." : "Applicant declined and notified by email.");
       queryClient.invalidateQueries({ queryKey: ["waitlist-applicants"] });
       setSelected(null);
     },
@@ -74,7 +70,9 @@ export const WaitlistManager = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold">Waitlist Applications</h2>
-            <p className="text-primary-foreground/90">{pendingCount} pending review</p>
+            <p className="text-primary-foreground/90">
+              {pendingCount} pending review
+            </p>
           </div>
         </div>
       </div>
@@ -85,7 +83,9 @@ export const WaitlistManager = () => {
         </div>
       ) : applicants.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">No waitlist applications yet.</CardContent>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No waitlist applications yet.
+          </CardContent>
         </Card>
       ) : (
         <Card>
@@ -116,11 +116,7 @@ export const WaitlistManager = () => {
                       <td className="p-4 text-muted-foreground text-sm">{applicant.email}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-1.5 text-sm">
-                          {applicant.user_type === "athlete" ? (
-                            <User className="h-3.5 w-3.5 text-primary" />
-                          ) : (
-                            <Building2 className="h-3.5 w-3.5 text-primary" />
-                          )}
+                          {applicant.user_type === "athlete" ? <User className="h-3.5 w-3.5 text-primary" /> : <Building2 className="h-3.5 w-3.5 text-primary" />}
                           <span className="capitalize">{applicant.user_type}</span>
                         </div>
                       </td>
@@ -128,9 +124,7 @@ export const WaitlistManager = () => {
                         {format(new Date(applicant.created_at), "MMM d, yyyy")}
                       </td>
                       <td className="p-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[applicant.status] || ""}`}
-                        >
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[applicant.status] || ""}`}>
                           {applicant.status}
                         </span>
                       </td>
@@ -140,29 +134,21 @@ export const WaitlistManager = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-green-700 border-green-300 hover:bg-green-700"
+                              className="text-green-700 border-green-300 hover:bg-green-50"
                               onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "approve" })}
                               disabled={decisionMutation.isPending}
                             >
-                              {decisionMutation.isPending ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                              )}
+                              {decisionMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5 mr-1" />}
                               Approve
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-red-700 border-red-300 hover:bg-red-700"
+                              className="text-red-700 border-red-300 hover:bg-red-50"
                               onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "decline" })}
                               disabled={decisionMutation.isPending}
                             >
-                              {decisionMutation.isPending ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <XCircle className="h-3.5 w-3.5 mr-1" />
-                              )}
+                              {decisionMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5 mr-1" />}
                               Decline
                             </Button>
                           </div>
@@ -184,11 +170,7 @@ export const WaitlistManager = () => {
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  {selected.user_type === "athlete" ? (
-                    <User className="h-5 w-5 text-primary" />
-                  ) : (
-                    <Building2 className="h-5 w-5 text-primary" />
-                  )}
+                  {selected.user_type === "athlete" ? <User className="h-5 w-5 text-primary" /> : <Building2 className="h-5 w-5 text-primary" />}
                   {selected.full_name}
                 </DialogTitle>
               </DialogHeader>
@@ -207,9 +189,7 @@ export const WaitlistManager = () => {
 
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Status:</span>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[selected.status] || ""}`}
-                  >
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[selected.status] || ""}`}>
                     {selected.status}
                   </span>
                   <span className="text-sm text-muted-foreground capitalize ml-1">· {selected.user_type}</span>
@@ -241,11 +221,7 @@ export const WaitlistManager = () => {
                       onClick={() => decisionMutation.mutate({ applicant_id: selected.id, action: "approve" })}
                       disabled={decisionMutation.isPending}
                     >
-                      {decisionMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                      )}
+                      {decisionMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                       Approve &amp; Send Welcome Email
                     </Button>
                     <Button
@@ -254,11 +230,7 @@ export const WaitlistManager = () => {
                       onClick={() => decisionMutation.mutate({ applicant_id: selected.id, action: "decline" })}
                       disabled={decisionMutation.isPending}
                     >
-                      {decisionMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <XCircle className="mr-2 h-4 w-4" />
-                      )}
+                      {decisionMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
                       Decline
                     </Button>
                   </div>
