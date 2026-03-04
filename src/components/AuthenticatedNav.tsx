@@ -44,7 +44,7 @@ export const AuthenticatedNav = memo(() => {
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="cursor-pointer">
-          <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" />
+          <img src={usLogo} alt="U.S. Ski & Snowboard" className="h-16 sm:h-20 hover:opacity-80 transition-opacity" width={57} height={80} />
         </Link>
 
         {/* Desktop nav links */}
