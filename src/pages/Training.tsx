@@ -77,7 +77,7 @@ const Training = () => {
       {/* Hero Section */}
       <section className="relative bg-primary text-primary-foreground overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-glow opacity-90" />
-        <div className="relative container mx-auto px-4 pt-8 pb-16 md:pt-12 md:pb-24 text-center">
+        <div className="relative container mx-auto px-4 pt-16 pb-24 md:pt-12 md:pb-24 text-center">
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight max-w-3xl mx-auto leading-tight">
             Resources to Help You Thrive Beyond the Mountain
           </h1>
