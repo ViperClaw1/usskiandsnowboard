@@ -405,7 +405,7 @@ const Auth = () => {
         />
 
         <CardContent className="space-y-6">
-          <BackButton to={step === "signup-with-code" ? "invite-code" : step === "signup-no-code" ? "invite-code" : "landing"} />
+          <BackButton onClick={() => setStep(step === "signup-with-code" ? "invite-code" : step === "signup-no-code" ? "invite-code" : "landing")} />
 
           {/* Inline error alert */}
           {formError && formError !== "EMAIL_NOT_CONFIRMED" && (
