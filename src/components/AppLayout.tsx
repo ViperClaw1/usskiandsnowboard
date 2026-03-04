@@ -21,9 +21,11 @@ export const AppLayout = () => {
   const { user } = useAuth();
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       {user && <AuthenticatedNav />}
-      <MemoizedOutlet />
-    </>
+      <main className="flex-1">
+        <MemoizedOutlet />
+      </main>
+    </div>
   );
 };
