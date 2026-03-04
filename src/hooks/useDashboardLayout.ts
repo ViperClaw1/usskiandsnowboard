@@ -35,16 +35,18 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
   const [layout, setLayout] = useState<DashboardLayout>({ text_overrides: {} });
   const [saving, setSaving] = useState(false);
 
-  const { isLoading: loading } = useQuery<Record<string, string>>({
+  const { data: queryData, isLoading: loading } = useQuery<Record<string, string>>({
     queryKey: dashboardLayoutKey(role),
     queryFn: () => fetchDashboardLayout(role),
     initialData: () => queryClient.getQueryData<Record<string, string>>(dashboardLayoutKey(role)),
     staleTime: 5 * 60 * 1000,
-    select: (data) => {
-      setLayout({ text_overrides: data });
-      return data;
-    },
   });
+
+  useEffect(() => {
+    if (queryData) {
+      setLayout({ text_overrides: queryData });
+    }
+  }, [queryData]);
 
   const updateTextOverride = useCallback((key: string, value: string) => {
     setLayout((prev) => ({
