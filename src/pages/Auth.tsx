@@ -199,35 +199,12 @@ const Auth = () => {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      if (!session?.user) return;
-
-      // Check if this user has an approved role (i.e., went through proper onboarding).
-      // New SSO signups will have no role row — block and sign them out immediately.
-      const { data: roleRow } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      if (!roleRow) {
-        await supabase.auth.signOut();
-        setOauthLoading(null);
-        setStep("landing");
-        toast.error(
-          "Sign up is only available through an invite code or the waitlist. Please use the 'Join the Platform' option.",
-          { duration: 6000 }
-        );
-        return;
-      }
-
-      navigate("/dashboard");
+    } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session?.user) navigate("/dashboard");
     });
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) navigate("/dashboard");
     });
-
     return () => subscription.unsubscribe();
   }, [navigate]);
 
