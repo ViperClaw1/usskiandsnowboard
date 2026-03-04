@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Users, Briefcase } from "lucide-react";
-import heroMainImage from "@/assets/hero-main.jpg";
+import heroMainImage from "@/assets/hero-main.webp";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { PageFooter } from "@/components/layout/PageFooter";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
