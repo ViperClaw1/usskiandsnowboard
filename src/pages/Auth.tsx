@@ -344,7 +344,7 @@ const Auth = () => {
         <Card className="w-full max-w-md shadow-2xl border-border/50">
           <LogoHeader title="Please, enter your invite code" description="Enter your 7-digit invite code" />
           <CardContent className="space-y-6">
-            <BackButton to="landing" />
+            <BackButton onClick={() => setStep("landing")} />
 
             <div className="space-y-2">
               <Label htmlFor="inviteCodeInput">Invite Code</Label>
