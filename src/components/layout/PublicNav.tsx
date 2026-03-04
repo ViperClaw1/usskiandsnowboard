@@ -9,7 +9,7 @@ import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/MobileNav";
-import usLogo from "@/assets/us-logo-new.png";
+import usLogo from "@/assets/us-logo-new.webp";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { NAV_ITEMS } from "@/constants/nav";
 
@@ -45,7 +45,10 @@ export const PublicNav = memo(() => {
           <img
             src={usLogo}
             alt="U.S. Ski & Snowboard"
+            width={57}
+            height={80}
             className="h-16 sm:h-20 hover:opacity-80 transition-opacity"
+            fetchPriority="high"
           />
         </Link>
 
