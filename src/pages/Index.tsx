@@ -20,19 +20,6 @@ import { JoinLegacySection } from "@/components/home/JoinLegacySection";
 
 const Index = () => {
   // ==============================
-  // Derived Values — Stable style objects
-  // useMemo prevents inline object recreation on every render tick
-  // ==============================
-  const heroStyle = useMemo(
-    () => ({
-      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroMainImage})`,
-      backgroundSize: "cover" as const,
-      backgroundPosition: "center" as const,
-    }),
-    []
-  );
-
-  // ==============================
   // Render
   // ==============================
 
@@ -43,10 +30,21 @@ const Index = () => {
 
       <main>
         {/* Hero Section — full-bleed background image with CTAs */}
+        {/* The <img> tag below is visually hidden but makes the hero image
+            discoverable by the browser preloader, fixing LCP discovery. */}
         <section
-          className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center"
-          style={heroStyle}
+          className="relative min-h-[500px] sm:min-h-[600px] flex items-center justify-center overflow-hidden"
         >
+          <img
+            src={heroMainImage}
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ zIndex: 0 }}
+          />
+          {/* Dark overlay */}
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)", zIndex: 1 }} />
           <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-fade-in">
               Launch Your Next Chapter
