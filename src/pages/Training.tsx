@@ -75,24 +75,16 @@ const Training = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative bg-primary text-primary-foreground overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-glow opacity-90" />
-        <div className="relative container mx-auto px-4 py-16 md:py-24 text-center">
-          {/* <Badge className="mb-6 bg-secondary/20 text-secondary-foreground border-secondary/30 hover:bg-secondary/30 text-xs tracking-widest uppercase font-semibold px-4 py-1.5">
-            Training &amp; Development
-          </Badge> */}
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight max-w-3xl mx-auto leading-tight">
+      <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
             Resources to Help You Thrive Beyond the Mountain
           </h1>
-          <p className="mt-4 text-primary-foreground/80 text-lg max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Practical guides, expert insights, and career resources — published by U.S. Ski &amp; Snowboard's Training
             &amp; Development team.
           </p>
         </div>
-        {/* Curved bottom edge */}
-        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 60" preserveAspectRatio="none">
-          <path d="M0,60 L0,20 Q720,0 1440,20 L1440,60 Z" fill="hsl(var(--background))" />
-        </svg>
       </section>
 
       {/* Category Filter Bar */}
