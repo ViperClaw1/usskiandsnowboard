@@ -48,16 +48,6 @@ const passwordRules = [
   { label: "At least one special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p) },
 ];
 
-/**
- * Returns true if the user account was created within the last 60 seconds.
- * Used to detect brand-new OAuth sign-ups that should be blocked.
- */
-const isNewOAuthUser = (createdAt: string): boolean => {
-  const createdMs = new Date(createdAt).getTime();
-  const nowMs = Date.now();
-  return nowMs - createdMs < 60_000;
-};
-
 // ==============================
 // Types
 // Step machine: landing → invite-code | signup-no-code → profile-data → (submit to waitlist)
@@ -209,36 +199,12 @@ const Auth = () => {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!session?.user) return;
-
-      const user = session.user;
-
-      // Detect a brand-new OAuth sign-up and block it.
-      // A new OAuth user has: a provider that isn't "email", and was created <60s ago.
-      const isOAuthProvider = user.app_metadata?.provider && user.app_metadata.provider !== "email";
-
-      if (event === "SIGNED_IN" && isOAuthProvider && isNewOAuthUser(user.created_at)) {
-        // Sign them out immediately before they land anywhere protected.
-        await supabase.auth.signOut();
-        setOauthLoading(null);
-        toast.error(
-          "Sign-up via Google or Apple is not available yet. Please join the platform using an invite code or request access.",
-          { duration: 6000 },
-        );
-        // Return user to the landing step.
-        setStep("landing");
-        return;
-      }
-
-      // Existing user — navigate normally.
-      if (session.user) navigate("/dashboard");
+    } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session?.user) navigate("/dashboard");
     });
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) navigate("/dashboard");
     });
-
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -363,8 +329,6 @@ const Auth = () => {
     try {
       const { error } = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
       if (error) throw error;
-      // On success the browser will redirect; oauthLoading stays set until
-      // onAuthStateChange resolves (new user → cleared there, existing user → navigates away).
     } catch (error: any) {
       toast.error(error.message || `Failed to sign in with ${provider}`);
       setOauthLoading(null);
