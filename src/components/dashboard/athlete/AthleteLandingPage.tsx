@@ -16,7 +16,6 @@ import {
   TrendingUp,
   CheckCircle2,
   Clock,
-  XCircle,
   Video,
   EyeIcon,
 } from "lucide-react";
