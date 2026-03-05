@@ -10,6 +10,8 @@ import OpportunitiesForm from "@/components/employer/OpportunitiesForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
+import { ConnectionActivityBoard } from "@/components/connections/ConnectionActivityBoard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -189,20 +191,26 @@ const EmployerDashboard = ({
               </Button>
             </div>
             {profile?.id && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
+              <Tabs defaultValue="activity">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="activity">Activity Board</TabsTrigger>
+                  <TabsTrigger value="pending">Pending Requests</TabsTrigger>
+                  <TabsTrigger value="accepted">Accepted Connections</TabsTrigger>
+                </TabsList>
+                <TabsContent value="activity">
+                  <ConnectionActivityBoard
+                    profileId={profile.id}
+                    profileType="employer"
+                    userId={user.id}
+                  />
+                </TabsContent>
+                <TabsContent value="pending">
                   <ConnectionRequestsManager employerProfileId={profile.id} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Accepted Connections</h3>
+                </TabsContent>
+                <TabsContent value="accepted">
                   <ConnectionsList employerProfileId={profile.id} status="accepted" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Declined Connections</h3>
-                  <ConnectionsList employerProfileId={profile.id} status="rejected" />
-                </div>
-              </div>
+                </TabsContent>
+              </Tabs>
             )}
           </div>
         ) : null}

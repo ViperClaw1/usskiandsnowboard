@@ -9,6 +9,8 @@ import ProfileForm from "@/components/athlete/ProfileForm";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import ConnectionRequestsManager from "@/components/athlete/ConnectionRequestsManager";
 import ConnectionsList from "@/components/athlete/ConnectionsList";
+import { ConnectionActivityBoard } from "@/components/connections/ConnectionActivityBoard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteLandingPage } from "@/components/dashboard/athlete/AthleteLandingPage";
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -321,20 +323,26 @@ const AthleteDashboard = ({
                 </Button>
               </div>
               {profile?.id ? (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
+                <Tabs defaultValue="activity">
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="activity">Activity Board</TabsTrigger>
+                    <TabsTrigger value="pending">Pending Requests</TabsTrigger>
+                    <TabsTrigger value="accepted">Accepted Connections</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="activity">
+                    <ConnectionActivityBoard
+                      profileId={profile.id}
+                      profileType="athlete"
+                      userId={user.id}
+                    />
+                  </TabsContent>
+                  <TabsContent value="pending">
                     <ConnectionRequestsManager athleteProfileId={profile.id} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Accepted Connections</h3>
+                  </TabsContent>
+                  <TabsContent value="accepted">
                     <ConnectionsList athleteProfileId={profile.id} status="accepted" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Declined Connections</h3>
-                    <ConnectionsList athleteProfileId={profile.id} status="rejected" />
-                  </div>
-                </div>
+                  </TabsContent>
+                </Tabs>
               ) : (
                 <ConnectionsSkeleton />
               )}

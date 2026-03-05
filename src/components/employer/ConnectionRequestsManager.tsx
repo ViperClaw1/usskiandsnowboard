@@ -194,30 +194,20 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
   const handleRejectRequest = async (requestId: string) => {
     setProcessing(true);
     try {
-      const { data, error } = await supabase
+      // Delete the record entirely — allows the requester to re-send
+      const { error } = await supabase
         .from("connection_requests")
-        .update({ status: "rejected" })
-        .eq("id", requestId)
-        .select("id, status")
-        .single();
+        .delete()
+        .eq("id", requestId);
 
       if (error) throw error;
 
-      if (data?.id) {
-        await supabase.functions.invoke('send-connection-notification', {
-          body: {
-            notification_type: 'request_declined',
-            request_id: data.id,
-          }
-        });
-      }
-
-      toast.success("Request rejected");
+      toast.success("Request declined");
       setSelectedRequest(null);
       loadRequests();
     } catch (error) {
-      console.error("Error rejecting request:", error);
-      toast.error("Failed to reject request");
+      console.error("Error declining request:", error);
+      toast.error("Failed to decline request");
     } finally {
       setProcessing(false);
     }

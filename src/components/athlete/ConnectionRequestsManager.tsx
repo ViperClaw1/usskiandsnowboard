@@ -125,41 +125,51 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
     }
   };
 
-  const handleUpdateStatus = async (requestId: string, status: "accepted" | "rejected") => {
+  const handleUpdateStatus = async (requestId: string, status: "accepted" | "deleted") => {
     setProcessing(true);
     try {
+      if (status === "deleted") {
+        // Decline = delete the record entirely so the requester can re-send
+        const { error } = await supabase
+          .from("connection_requests")
+          .delete()
+          .eq("id", requestId);
+
+        if (error) throw error;
+        toast.success("Request declined");
+        setSelectedRequest(null);
+        loadRequests();
+        return;
+      }
+
+      // Accepted path
       const { data, error } = await supabase
         .from("connection_requests")
-        .update({ status })
+        .update({ status: "accepted" })
         .eq("id", requestId)
         .select("id, status")
         .single();
 
       if (error) throw error;
 
-      const eventType = status === 'accepted' ? 'request_accepted' : 'request_declined';
       if (data?.id) {
         await supabase.functions.invoke('send-connection-notification', {
           body: {
-            notification_type: eventType,
+            notification_type: 'request_accepted',
             request_id: data.id,
           }
         });
       }
 
-      if (status === "accepted" && selectedRequest) {
-        // Get user email
+      if (selectedRequest) {
         const { data: { user } } = await supabase.auth.getUser();
         const userEmail = user?.email || "your email";
         const companyName = selectedRequest.employer_profiles.company_name;
-        
         toast.success(`Please check your email (${userEmail}) for an introduction to ${companyName}!`, {
           duration: 6000,
         });
-      } else {
-        toast.success(`Connection ${status}`);
       }
-      
+
       setSelectedRequest(null);
       loadRequests();
     } catch (error) {
@@ -404,18 +414,18 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
                       Accept
                     </Button>
                     <Button
-                      onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
+                      onClick={() => handleUpdateStatus(selectedRequest.id, "deleted")}
                       disabled={processing}
                       variant="destructive"
                       className="flex-1"
                     >
                       {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
-                      Reject
+                      Decline
                     </Button>
                   </>
                 ) : (
                   <Button
-                    onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
+                    onClick={() => handleUpdateStatus(selectedRequest.id, "deleted")}
                     disabled={processing}
                     variant="outline"
                     className="flex-1"

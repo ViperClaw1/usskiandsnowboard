@@ -16,7 +16,6 @@ import {
   TrendingUp,
   CheckCircle2,
   Clock,
-  XCircle,
   Video,
   EyeIcon,
 } from "lucide-react";
@@ -323,30 +322,21 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-yellow-500" />
+                    <Clock className="h-4 w-4 text-amber-500" />
                     <span className="text-sm text-muted-foreground">
-                      {getText("connection_activity.pending", "Pending")}
+                      {getText("connection_activity.requests", "Requests")}
                     </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.pending}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
                     <span className="text-sm text-muted-foreground">
-                      {getText("connection_activity.accepted", "Accepted")}
+                      {getText("connection_activity.connections", "Connections")}
                     </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.accepted}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-muted-foreground">
-                      {getText("connection_activity.declined", "Declined")}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold">{connectionStats.rejected}</span>
                 </div>
                 <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("connections")}>
                   {getText("connection_activity.button", "Manage Connections")}
