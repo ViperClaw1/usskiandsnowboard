@@ -414,18 +414,18 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
                       Accept
                     </Button>
                     <Button
-                      onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
+                      onClick={() => handleUpdateStatus(selectedRequest.id, "deleted")}
                       disabled={processing}
                       variant="destructive"
                       className="flex-1"
                     >
                       {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
-                      Reject
+                      Decline
                     </Button>
                   </>
                 ) : (
                   <Button
-                    onClick={() => handleUpdateStatus(selectedRequest.id, "rejected")}
+                    onClick={() => handleUpdateStatus(selectedRequest.id, "deleted")}
                     disabled={processing}
                     variant="outline"
                     className="flex-1"
