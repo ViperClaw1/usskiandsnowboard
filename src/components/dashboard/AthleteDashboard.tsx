@@ -323,20 +323,26 @@ const AthleteDashboard = ({
                 </Button>
               </div>
               {profile?.id ? (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
+                <Tabs defaultValue="activity">
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="activity">Activity Board</TabsTrigger>
+                    <TabsTrigger value="pending">Pending Requests</TabsTrigger>
+                    <TabsTrigger value="accepted">Accepted Connections</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="activity">
+                    <ConnectionActivityBoard
+                      profileId={profile.id}
+                      profileType="athlete"
+                      userId={user.id}
+                    />
+                  </TabsContent>
+                  <TabsContent value="pending">
                     <ConnectionRequestsManager athleteProfileId={profile.id} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Accepted Connections</h3>
+                  </TabsContent>
+                  <TabsContent value="accepted">
                     <ConnectionsList athleteProfileId={profile.id} status="accepted" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Declined Connections</h3>
-                    <ConnectionsList athleteProfileId={profile.id} status="rejected" />
-                  </div>
-                </div>
+                  </TabsContent>
+                </Tabs>
               ) : (
                 <ConnectionsSkeleton />
               )}
