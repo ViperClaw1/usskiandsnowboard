@@ -1,153 +1,106 @@
 
-# Comprehensive Codebase Refactor Plan
+## Overview
 
-## Audit Summary
+Two major changes:
 
-After reading all major files across pages, components, hooks, and data layers, here is what I found:
+### Part 1: Remove "pending" and "declined" statuses from UI
+- When someone declines (or is declined), the `rejected` status is set in DB but the **requesting side** gets no notification and the button resets to "Request Connection" so they can re-send.
+- The `rejected` status should still exist in DB (we don't want to delete history), but we need to:
+  1. **Delete/reset the rejected record** when the other side tries to re-send, so a new pending request can be inserted.
+  2. **Stop sending email notification** on rejection (remove `send-connection-notification` call for `request_declined` in both ConnectionRequestsManagers).
+  3. **Remove "Declined Connections" section** from AthleteDashboard and EmployerDashboard connections view.
+  4. **Update connection buttons** in `EmployerDirectory` and `AthleteDirectory` to treat `rejected` the same as no-request (clickable, "Request Connection").
+  5. **Update Connection Activity cards** to remove "Declined" row — replace with just "Requests" (pending) and "Connections" (accepted) counts.
+  6. After rejection, the existing request record should be **deleted** so the requester can send again. The simplest approach: when handling rejection, delete the record (not update to `rejected`). OR: update to `rejected` and then when the athlete/employer tries to send a new request, check if there's a `rejected` one and delete it first.
 
----
+**Decision**: When a decline happens, **delete** the connection_request row entirely. This is simpler than keeping a `rejected` record that the UI needs to ignore. Benefits: clean DB, no need to filter, re-sending just works. We update `handleUpdateStatus` and `handleRejectRequest` to `DELETE` instead of `UPDATE status='rejected'`.
 
-## Key Issues Identified
+### Part 2: Activity Board in Connections view
 
-### 1. Duplicated Unauthenticated Nav (Critical)
-The same header block (logo + nav links + MobileNav + mountain background) is copy-pasted verbatim in **4 separate files**:
-- `src/pages/Index.tsx` — always renders it
-- `src/pages/News.tsx` — renders it when `!user`
-- `src/pages/Schedule.tsx` — renders it when `!user`
-- `src/pages/Employers.tsx` — renders it when `!user`
+**New table: `connection_activity_log`** — no, this adds complexity. Instead, we **repurpose the existing `connection_requests` table** and add an `updated_at` field (already exists). We'll query all requests (all statuses, not just pending) for the user's profile, including accepted ones, to build the activity history.
 
-`AuthenticatedNav` already exists. A `PublicNav` presentational component should be extracted and used in all four places.
+Actually `connection_requests` already has `created_at` and `updated_at`. We can derive events:
+- A row being created = "Request Sent" or "Request Received" event (based on `initiated_by_user_id`).
+- A row with `status='accepted'` = "Connection Made" event (use `updated_at`).
 
-### 2. Duplicated Footer
-The identical footer block (`© 2025 U.S. Ski & Snowboard...`) is copy-pasted in:
-- `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx`
+We **don't need a new table**. We query all connection_requests for the user's athlete/employer profile (all statuses) and reconstruct activity from the existing data.
 
-A `PageFooter` presentational component should be extracted.
+**"New" badge logic**: A request is "new" if it was created within the last 7 days (or unread — but there's no read flag on connection_requests). Simple approach: a request is "new" if its `created_at` is within the last 7 days.
 
-### 3. Duplicated "How It Works" + "Join Our Legacy" Sections
-`Index.tsx` and `Home.tsx` contain near-identical "How It Works" card grid and "Join Our Legacy" sections. These should become shared presentational components.
+### Files to change
 
-### 4. Duplicated `Article` / `TrainingArticle` Interface
-The `TrainingArticle` interface is defined independently in:
-- `src/pages/Training.tsx`
-- `src/pages/TrainingArticle.tsx`
-- `src/components/dashboard/admin/TrainingArticleManager.tsx` (as `Article`)
+1. **`src/components/athlete/ConnectionRequestsManager.tsx`**: Change rejection to DELETE the record instead of updating to `rejected`. Remove email notification call on rejection.
 
-These should be consolidated into `src/types/training.ts`.
+2. **`src/components/employer/ConnectionRequestsManager.tsx`**: Same — rejection = DELETE, no email on rejection.
 
-### 5. Duplicated `CATEGORY_COLORS` constant
-Defined separately in:
-- `src/pages/Training.tsx`
-- `src/pages/TrainingArticle.tsx`
+3. **`src/components/dashboard/AthleteDashboard.tsx`**: 
+   - Change "connections" view to remove "Declined Connections" section.
+   - Replace separate sections with new `ConnectionActivityBoard` component (shows activity log + connections list).
 
-Should move to `src/constants/training.ts`.
+4. **`src/components/dashboard/EmployerDashboard.tsx`**: Same — remove declined section, add `ConnectionActivityBoard`.
 
-### 6. Duplicated `CATEGORIES` array
-Defined as `TRAINING_CATEGORIES` in `Training.tsx` and as `CATEGORIES` in `TrainingArticleManager.tsx`. Should be a single export from `src/constants/training.ts`.
+5. **`src/components/dashboard/athlete/AthleteLandingPage.tsx`**: Update Connection Activity card — replace Pending/Accepted/Declined with "Requests" (total unique partners contacted) and "Connections" (accepted count). Update stats fetch accordingly.
 
-### 7. `loadUserRole` pattern repeated across 3 pages
-`Athletes.tsx`, `Employers.tsx`, and `Dashboard.tsx` all manually call `supabase.from("user_roles")` inline. This belongs in a `useUserRole(userId)` custom hook.
+6. **`src/components/dashboard/employer/PartnerLandingPage.tsx`**: Same stats card update.
 
-### 8. Smart/Dumb Separation Missing
-- `Home.tsx` and `Training.tsx` are both smart (data fetching) and presentational (full JSX render) in the same component.
-- `AthleteLandingPage.tsx` has 484 lines mixing data fetching, real-time subscriptions, and deeply nested JSX. The pure card sub-sections should be dumb components.
+7. **`src/components/athlete/EmployerDirectory.tsx`**: Already handles 3 states. Change `rejected` status (if it could appear) to not block button — but since we're now deleting on rejection, rejected rows won't exist, so this is effectively handled. Just make sure the Map only includes `pending` and `accepted`.
 
-### 9. Missing Semantic Block Structure
-No files currently use the structured comment blocks (`// === Imports ===`, `// === State ===`, etc.) as required by the refactoring spec.
+8. **NEW: `src/components/connections/ConnectionActivityBoard.tsx`**: A new shared component for the activity board tab. Shows:
+   - Tabs: "All Activity" | "New" | "Existing"
+   - Table grouped by date, sorted `created_at` desc
+   - Columns: Counterpart name+email, Message, New badge (if within 7 days), Date/Time
+   - Two sub-tabs or sections: Inbound / Outbound (or combined)
 
-### 10. Inline Auth State Listeners in Pages
-`Athletes.tsx` manually wires `supabase.auth.onAuthStateChange` — this duplicates what `AuthContext` already provides. It should use `useAuth()` instead.
+### Connection Activity Stats (dashboard cards)
 
-### 11. `MobileNav` contains sign-out business logic
-`MobileNav` is supposed to be a presentational navigation component, but contains a full `handleSignOut` function with Supabase calls — same logic as `AuthenticatedNav`. This should be extracted to a `useSignOut` hook.
+Change from Pending/Accepted/Declined to:
+- **Requests** = count of all connection_requests for the user's profile (both pending+accepted+any status — unique counterparts contacted/received)
+- **Connections** = count of accepted requests
 
----
+### Activity Board query
 
-## Proposed Changes
+For **athletes**: query all `connection_requests` where `athlete_id = athleteProfileId`, join with `employer_profiles(company_name, contact_email)`. Each row can be:
+- If `initiated_by_user_id = athleteUserId`: "Outbound request to [company]"
+- Else: "Inbound request from [company]"
+- If `status = 'accepted'`: show as "Connected"
 
-### New Files to Create
+For **employers**: query all `connection_requests` where `employer_id = employerProfileId`, join with `athlete_profiles(profiles(full_name, email))`.
+
+Group by date(`created_at`), sort by `created_at` DESC.
+
+"New" = `created_at` within last 7 days.
+
+### Implementation Plan (ordered)
+
+1. Create `src/components/connections/ConnectionActivityBoard.tsx` — the shared activity table component (takes `profileId`, `profileType: 'athlete' | 'employer'`, `userId`).
+2. Update `AthleteLandingPage.tsx` — stats card: "Requests" + "Connections" only.
+3. Update `PartnerLandingPage.tsx` — same stats card change.
+4. Update `AthleteDashboard.tsx` — connections view: remove declined, add activity board as the primary content with tabs (Activity Board | Accepted Connections | Pending Requests).
+5. Update `EmployerDashboard.tsx` — same connections view restructuring.
+6. Update `athlete/ConnectionRequestsManager.tsx` — delete on rejection, no email.
+7. Update `employer/ConnectionRequestsManager.tsx` — delete on rejection, no email.
+8. No DB migration needed (using existing table data).
+
+### Connections View Layout (both athlete and employer)
 
 ```
-src/types/
-  training.ts          — TrainingArticle + Article interfaces
-  news.ts              — NewsArticle interface (shared between Home + News pages)
-  connections.ts       — Connection, ConnectionStats, ConnectionRequest interfaces
-  profiles.ts          — AthleteProfile, EmployerProfile interfaces
+My Connections
+[Tabs]
+  [Activity Board] [Pending Requests] [Accepted Connections]
 
-src/constants/
-  training.ts          — TRAINING_CATEGORIES, CATEGORY_COLORS
-  nav.ts               — NAV_ITEMS array (used by MobileNav, AuthenticatedNav)
-
-src/hooks/
-  useUserRole.ts       — extracts the repeated user_roles query pattern
-  useSignOut.ts        — extracts the repeated signOut + clear storage pattern
-
-src/components/layout/
-  PublicNav.tsx        — dumb: renders unauthenticated header (logo, links, MobileNav)
-  PageFooter.tsx       — dumb: renders the shared copyright footer
-
-src/components/home/
-  HowItWorksSection.tsx — dumb: the "How It Works" 3-card grid (shared by Index + Home)
-  JoinLegacySection.tsx — dumb: the "Join Our Legacy" CTA section (shared by Index + Home)
+Activity Board tab:
+  Filter: [All] [New] [Existing]
+  
+  --- March 5, 2026 ---
+  | Recipient      | Message         | [New] | Date     |
+  | John Smith     | Hi, I'd love... | ●New  | 2:30 PM  |
+  
+  --- March 3, 2026 ---
+  | Nike Corp      | Interested in...| -     | 11:00 AM |
 ```
 
-### Files to Modify
+### "New" definition
+A record is "new" if it was created within the last **7 days** (simple, no extra DB column needed).
 
-| File | What Changes |
-|---|---|
-| `src/pages/Index.tsx` | Remove inline header + footer + section JSX; use `PublicNav`, `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; add semantic block comments |
-| `src/pages/Home.tsx` | Remove inline footer + section JSX; use `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; extract news data-fetch into comment-labeled blocks |
-| `src/pages/News.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
-| `src/pages/Schedule.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
-| `src/pages/Athletes.tsx` | Remove manual auth listener; use `useAuth()`; extract `loadUserRole` to `useUserRole` hook; add semantic block comments |
-| `src/pages/Training.tsx` | Import types from `src/types/training.ts`; import constants from `src/constants/training.ts`; add semantic block comments |
-| `src/pages/TrainingArticle.tsx` | Import types/constants from shared files; add semantic block comments |
-| `src/components/dashboard/admin/TrainingArticleManager.tsx` | Import shared types/constants; add semantic block comments |
-| `src/components/MobileNav.tsx` | Extract `handleSignOut` into `useSignOut` hook; add semantic block comments |
-| `src/components/AuthenticatedNav.tsx` | Use `useSignOut` hook instead of inline handler; add semantic block comments |
-| `src/pages/Dashboard.tsx` | Add semantic block comments; annotate welcome content constants |
-
-### Files That Do NOT Change
-- All Supabase edge functions
-- All UI primitives in `src/components/ui/`
-- `src/components/auth/AuthContext.tsx`
-- `src/App.tsx`
-- `src/integrations/` (auto-generated)
-- All admin page files (`AllUsers`, `AllAthletes`, etc.)
-- `src/data/suggestions.ts`
-
----
-
-## Execution Order (Safe Steps)
-
-The changes are grouped to avoid broken references at any intermediate step:
-
-**Step 1 — New shared types/constants (no existing files touched)**
-- Create `src/types/training.ts`
-- Create `src/constants/training.ts`
-
-**Step 2 — New shared hooks (no existing files touched)**
-- Create `src/hooks/useUserRole.ts`
-- Create `src/hooks/useSignOut.ts`
-
-**Step 3 — New layout/section components (no existing files touched)**
-- Create `src/components/layout/PublicNav.tsx`
-- Create `src/components/layout/PageFooter.tsx`
-- Create `src/components/home/HowItWorksSection.tsx`
-- Create `src/components/home/JoinLegacySection.tsx`
-
-**Step 4 — Update consumers (all at once to avoid stale imports)**
-- Update `Training.tsx` + `TrainingArticle.tsx` + `TrainingArticleManager.tsx` to use shared types/constants
-- Update `MobileNav.tsx` + `AuthenticatedNav.tsx` to use `useSignOut`
-- Update `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx` to use `PublicNav`, `PageFooter`, shared sections
-- Update `Athletes.tsx` to use `useAuth()` and `useUserRole`
-- Add semantic block comments to `Dashboard.tsx` and `Settings.tsx`
-
----
-
-## What Will NOT Change
-- All visual output — identical pixels
-- All routing — same paths
-- All Supabase queries — no logic changes
-- All component APIs — props unchanged
-- All edge functions
+### No DB migration needed
+All data exists in `connection_requests`. The activity board reads all statuses of connection_requests for the current user's profile. Since we're deleting rejected records, the activity board will show only pending + accepted entries — which is exactly what we want (no declined clutter).
