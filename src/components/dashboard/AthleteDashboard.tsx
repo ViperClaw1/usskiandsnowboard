@@ -9,6 +9,8 @@ import ProfileForm from "@/components/athlete/ProfileForm";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import ConnectionRequestsManager from "@/components/athlete/ConnectionRequestsManager";
 import ConnectionsList from "@/components/athlete/ConnectionsList";
+import { ConnectionActivityBoard } from "@/components/connections/ConnectionActivityBoard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteLandingPage } from "@/components/dashboard/athlete/AthleteLandingPage";
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 import { Skeleton } from "@/components/ui/skeleton";
