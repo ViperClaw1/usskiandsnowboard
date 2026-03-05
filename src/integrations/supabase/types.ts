@@ -943,6 +943,7 @@ export type Database = {
       }
     }
     Functions: {
+      block_oauth_signup_hook: { Args: { event: Json }; Returns: Json }
       clear_connection_requests: { Args: never; Returns: undefined }
       has_role: {
         Args: {
