@@ -10,6 +10,8 @@ import OpportunitiesForm from "@/components/employer/OpportunitiesForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsManager";
 import ConnectionsList from "@/components/employer/ConnectionsList";
+import { ConnectionActivityBoard } from "@/components/connections/ConnectionActivityBoard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
