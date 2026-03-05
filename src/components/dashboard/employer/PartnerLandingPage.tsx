@@ -343,7 +343,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                   <span className="text-2xl font-bold">{connectionStats.accepted}</span>
                 </div>
                 <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("connections")}>
-                  {getText("connection_activity.button", "Manage Connections")}
+                  {getText("connection_activity.button", "View Activity Board")}
                 </Button>
               </div>
             </CardContent>
