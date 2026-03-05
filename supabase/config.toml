@@ -1,5 +1,9 @@
 project_id = "fihcubajfjjbcjqiqqrv"
 
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/block_oauth_signup_hook"
+
 [functions.scrape-news]
 verify_jwt = false
 

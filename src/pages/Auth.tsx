@@ -206,6 +206,33 @@ const Auth = () => {
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
+  // Handle OAuth error redirects (e.g. from the before_user_created hook blocking new signups)
+  useEffect(() => {
+    const errorDescription = searchParams.get("error_description");
+    const error = searchParams.get("error");
+    if (errorDescription || error) {
+      const msg = errorDescription || error || "Sign-up via Google or Apple is not available.";
+      // Show a friendly message regardless of the raw error text
+      const isOAuthBlock =
+        msg.toLowerCase().includes("oauth") ||
+        msg.toLowerCase().includes("google") ||
+        msg.toLowerCase().includes("apple") ||
+        msg.toLowerCase().includes("sign-up via") ||
+        msg.toLowerCase().includes("invite") ||
+        error === "access_denied";
+      toast.error(
+        isOAuthBlock
+          ? "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist."
+          : msg,
+        { duration: 6000 },
+      );
+      setStep("landing");
+      setOauthLoading(null);
+      // Clean the URL so the params don't persist on refresh
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -214,25 +241,29 @@ const Auth = () => {
 
       const user = session.user;
 
-      // Detect a brand-new OAuth sign-up and block it.
-      // A new OAuth user has: a provider that isn't "email", and was created <60s ago.
+      // Secondary safety net: if somehow an OAuth user got through without a role, block them.
       const isOAuthProvider = user.app_metadata?.provider && user.app_metadata.provider !== "email";
+      if (event === "SIGNED_IN" && isOAuthProvider) {
+        const { data: roleRow } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-      if (event === "SIGNED_IN" && isOAuthProvider && isNewOAuthUser(user.created_at)) {
-        // Sign them out immediately before they land anywhere protected.
-        await supabase.auth.signOut();
-        setOauthLoading(null);
-        toast.error(
-          "Sign-up via Google or Apple is not available yet. Please join the platform using an invite code or request access.",
-          { duration: 6000 },
-        );
-        // Return user to the landing step.
-        setStep("landing");
-        return;
+        if (!roleRow) {
+          await supabase.auth.signOut();
+          setOauthLoading(null);
+          toast.error(
+            "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist.",
+            { duration: 6000 },
+          );
+          setStep("landing");
+          return;
+        }
       }
 
-      // Existing user — navigate normally.
-      if (session.user) navigate("/dashboard");
+      // Existing approved user — navigate normally.
+      navigate("/dashboard");
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
