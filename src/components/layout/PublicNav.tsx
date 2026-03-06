@@ -9,7 +9,7 @@ import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/MobileNav";
-import usLogo from "@/assets/us-logo-new.webp";
+import usLogo from "@/assets/us-logo-new.png";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { NAV_ITEMS } from "@/constants/nav";
 import { useAuth } from "@/components/auth/AuthContext";
