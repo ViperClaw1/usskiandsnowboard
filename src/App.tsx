@@ -83,7 +83,7 @@ const AppRoutes = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <ThemeProvider attribute="class" defaultTheme="ligth" enableSystem disableTransitionOnChange>
         <AuthProvider>
           <Toaster />
           <Sonner />
