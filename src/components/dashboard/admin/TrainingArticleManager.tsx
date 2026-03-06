@@ -190,8 +190,7 @@ export const TrainingArticleManager = () => {
   // ==============================
 
   const uploadFile = async (file: File, path: string): Promise<string> => {
-    const ext = file.name.split(".").pop();
-    const filePath = `${user?.id}/${path}.${ext}`;
+    const filePath = `${user?.id}/${path}.webp`;
     const { error } = await supabase.storage
       .from("training-images")
       .upload(filePath, file, { upsert: true });
