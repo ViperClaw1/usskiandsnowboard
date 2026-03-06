@@ -47,16 +47,16 @@ const estimateReadingTime = (text: string) =>
   Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, "").split(/\s+/).length / 200));
 
 /** Max allowed image size before conversion (2 MB) */
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /**
- * Validates that a file is ≤ 2 MB then converts it to WebP via Canvas API.
+ * Validates that a file is ≤ 5 MB then converts it to WebP via Canvas API.
  * Returns a new File with `.webp` extension and `image/webp` MIME type.
  */
 const convertToWebp = (file: File): Promise<File> =>
   new Promise((resolve, reject) => {
     if (file.size > MAX_IMAGE_BYTES) {
-      reject(new Error("Image must be 2 MB or smaller"));
+      reject(new Error("Image must be 5 MB or smaller"));
       return;
     }
     const img = new Image();
@@ -69,7 +69,10 @@ const convertToWebp = (file: File): Promise<File> =>
       URL.revokeObjectURL(url);
       canvas.toBlob(
         (blob) => {
-          if (!blob) { reject(new Error("Conversion failed")); return; }
+          if (!blob) {
+            reject(new Error("Conversion failed"));
+            return;
+          }
           const baseName = file.name.replace(/\.[^.]+$/, "");
           resolve(new File([blob], `${baseName}.webp`, { type: "image/webp" }));
         },
@@ -77,7 +80,10 @@ const convertToWebp = (file: File): Promise<File> =>
         0.88,
       );
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
+    };
     img.src = url;
   });
 
@@ -138,10 +144,7 @@ export const TrainingArticleManager = () => {
   // ==============================
 
   const fetchArticles = useCallback(async () => {
-    const { data } = await supabase
-      .from("training_articles")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data } = await supabase.from("training_articles").select("*").order("created_at", { ascending: false });
     if (data) setArticles(data as TrainingArticle[]);
     setLoading(false);
   }, []);
@@ -191,9 +194,7 @@ export const TrainingArticleManager = () => {
 
   const uploadFile = async (file: File, path: string): Promise<string> => {
     const filePath = `${user?.id}/${path}.webp`;
-    const { error } = await supabase.storage
-      .from("training-images")
-      .upload(filePath, file, { upsert: true });
+    const { error } = await supabase.storage.from("training-images").upload(filePath, file, { upsert: true });
     if (error) throw error;
     const { data } = supabase.storage.from("training-images").getPublicUrl(filePath);
     return data.publicUrl;
@@ -243,9 +244,7 @@ export const TrainingArticleManager = () => {
         if (error) throw error;
         toast.success("Article updated");
       } else {
-        const { error } = await supabase
-          .from("training_articles")
-          .insert({ id: articleId, ...record });
+        const { error } = await supabase.from("training_articles").insert({ id: articleId, ...record });
         if (error) throw error;
         toast.success("Article created");
       }
@@ -317,9 +316,7 @@ export const TrainingArticleManager = () => {
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading…</div>
         ) : articles.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            No articles yet. Create your first one!
-          </div>
+          <div className="py-8 text-center text-muted-foreground">No articles yet. Create your first one!</div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -338,16 +335,11 @@ export const TrainingArticleManager = () => {
                     <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
                     <TableCell>{a.category || "—"}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={a.status === "published" ? "default" : "secondary"}
-                        className="text-xs"
-                      >
+                      <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
                         {a.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}
-                    </TableCell>
+                    <TableCell>{a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
@@ -359,11 +351,7 @@ export const TrainingArticleManager = () => {
                           onClick={() => togglePublish(a)}
                           title={a.status === "published" ? "Unpublish" : "Publish"}
                         >
-                          {a.status === "published" ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
+                          {a.status === "published" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                         <Button
                           size="icon"
@@ -423,10 +411,7 @@ export const TrainingArticleManager = () => {
             </div>
             <div>
               <Label>Category</Label>
-              <Select
-                value={form.category}
-                onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
-              >
+              <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -475,14 +460,11 @@ export const TrainingArticleManager = () => {
                 }}
               />
               {authorPreview && (
-                <img
-                  src={authorPreview}
-                  alt="Author"
-                  className="h-12 w-12 rounded-full object-cover mt-2"
-                />
+                <img src={authorPreview} alt="Author" className="h-12 w-12 rounded-full object-cover mt-2" />
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Max 2 MB · Automatically converted to WebP · If no image is uploaded, the U.S. Ski &amp; Snowboard logo is used as fallback.
+                Max 2 MB · Automatically converted to WebP · If no image is uploaded, the U.S. Ski &amp; Snowboard logo
+                is used as fallback.
               </p>
             </div>
             <div>
@@ -503,20 +485,11 @@ export const TrainingArticleManager = () => {
                   }
                 }}
               />
-              {heroPreview && (
-                <img
-                  src={heroPreview}
-                  alt="Hero"
-                  className="h-32 w-full rounded-lg object-cover mt-2"
-                />
-              )}
+              {heroPreview && <img src={heroPreview} alt="Hero" className="h-32 w-full rounded-lg object-cover mt-2" />}
               <p className="text-xs text-muted-foreground mt-1">Max 2 MB · Automatically converted to WebP</p>
             </div>
             <div className="flex items-center gap-3">
-              <Switch
-                checked={form.isPublished}
-                onCheckedChange={(v) => setForm((f) => ({ ...f, isPublished: v }))}
-              />
+              <Switch checked={form.isPublished} onCheckedChange={(v) => setForm((f) => ({ ...f, isPublished: v }))} />
               <Label>{form.isPublished ? "Published" : "Draft"}</Label>
             </div>
             <Button onClick={handleSave} disabled={saving} className="w-full">
