@@ -83,16 +83,16 @@ const AppRoutes = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-            <CookieConsent />
-          </BrowserRouter>
-        </AuthProvider>
-      </ThemeProvider>
+      {/* <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange> */}
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+          <CookieConsent />
+        </BrowserRouter>
+      </AuthProvider>
+      {/* </ThemeProvider> */}
     </TooltipProvider>
   </QueryClientProvider>
 );
