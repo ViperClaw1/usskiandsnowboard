@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -195,6 +195,32 @@ const EmployerDirectory = () => {
     initialData: () => queryClient.getQueryData<Map<string, string>>(["existing-employer-requests", athleteProfileId]),
     staleTime: 2 * 60 * 1000,
   });
+
+  // ==============================
+  // Realtime — hot-reload button states when the employer acts on a request
+  // ==============================
+  useEffect(() => {
+    if (!athleteProfileId) return;
+    const channel = supabase
+      .channel(`employer-dir-requests-${athleteProfileId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "connection_requests",
+          filter: `athlete_id=eq.${athleteProfileId}`,
+        },
+        () =>
+          queryClient.invalidateQueries({
+            queryKey: ["existing-employer-requests", athleteProfileId],
+          }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [athleteProfileId, queryClient]);
 
   // ==============================
   // Derived Values — Filter Options

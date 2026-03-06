@@ -1,157 +1,153 @@
 
-## Plan: Activity Board redesign + real-time hot-reload
+# Comprehensive Codebase Refactor Plan
 
-### Overview
-Two distinct changes:
-1. **Activity Board UI**: Remove the 3 filter tabs, render a single chronological list where "new" items (≤7 days) always float to the top with visual highlighting. Inbound pending requests show Accept/Decline inline via the same Dialog. After accepting, the row moves to the non-new section (stays in list). After declining, the row is removed immediately.
-2. **Real-time hot-reload**: Wire Supabase Realtime subscriptions everywhere data can change so that every affected component updates without a page refresh.
+## Audit Summary
 
----
-
-### Part 1: Activity Board Redesign (`ConnectionActivityBoard.tsx`)
-
-**Current**: filter tabs (All/New/Existing), date-grouped table.
-
-**New layout**:
-```
---- New (3) ---
-[highlighted row] Company A | message | ●New | Accept | Decline | 2:30 PM
-[highlighted row] Company B | ...    | ●New | Accept | Decline | yesterday
-
---- Earlier ---
-[normal row] Company C | ...  | ✓ Connected | Mar 3
-```
-
-**Sorting logic**:
-- Items within `isNew=true` group → sorted `createdAt` desc
-- Items within `isNew=false` (existing) group → sorted `createdAt` desc
-- New group always renders first
-
-**"New" row highlighting**:
-- `bg-primary/5 border-l-2 border-l-primary` on the `<TableRow>`
-- Stays highlighted until the opposite-side user acts on it (Accept/Decline)
-- "New" badge on the row
-
-**Inline Accept/Decline**:
-- Only shown when `row.direction === "inbound"` AND `row.status === "pending"`
-- Clicking the row (or an "Open" button) opens the existing accept/decline Dialog (reuse logic from `ConnectionRequestsManager`)
-- Accept → calls supabase update to `accepted`, then `queryClient.invalidateQueries` → row moves to "Earlier" section, status shows "✓ Connected"
-- Decline → calls supabase delete, then invalidate → row disappears immediately
-
-**Props change**: Add `onActionComplete?: () => void` callback so parent can chain invalidations if needed (optional, realtime handles it).
-
-**Remove**: The `<Tabs>` filter UI entirely. Remove the `filter` state and the `useMemo` filtered list.
+After reading all major files across pages, components, hooks, and data layers, here is what I found:
 
 ---
 
-### Part 2: Real-time Hot-Reload
+## Key Issues Identified
 
-The goal is: any DB change to `connection_requests` instantly updates all visible UI.
+### 1. Duplicated Unauthenticated Nav (Critical)
+The same header block (logo + nav links + MobileNav + mountain background) is copy-pasted verbatim in **4 separate files**:
+- `src/pages/Index.tsx` — always renders it
+- `src/pages/News.tsx` — renders it when `!user`
+- `src/pages/Schedule.tsx` — renders it when `!user`
+- `src/pages/Employers.tsx` — renders it when `!user`
 
-#### Current realtime gaps
+`AuthenticatedNav` already exists. A `PublicNav` presentational component should be extracted and used in all four places.
 
-| Component | Current realtime | Gap |
-|---|---|---|
-| `AthleteLandingPage` (stats card) | ✅ has subscription on `athlete_id` | Already works for own-profile changes |
-| `PartnerLandingPage` (stats card) | ✅ has subscription on `employer_id` | Already works for own-profile changes |
-| `ConnectionActivityBoard` | ❌ only `useQuery` with 2min stale | No realtime at all |
-| `EmployerDirectory` (button state) | ❌ only manual `invalidateQueries` on send | No realtime for accept/decline by other side |
-| Athlete `ConnectionRequestsManager` | Uses imperative `loadRequests()` after action | Fine for own actions, but no cross-user signal |
-| Employer `ConnectionRequestsManager` | Same | Same |
+### 2. Duplicated Footer
+The identical footer block (`© 2025 U.S. Ski & Snowboard...`) is copy-pasted in:
+- `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx`
 
-#### Fixes
+A `PageFooter` presentational component should be extracted.
 
-**A. `ConnectionActivityBoard.tsx`** — add a `useEffect` Realtime subscription:
-```typescript
-useEffect(() => {
-  const channel = supabase
-    .channel(`activity-board-${profileId}`)
-    .on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: "connection_requests",
-      filter: profileType === "athlete"
-        ? `athlete_id=eq.${profileId}`
-        : `employer_id=eq.${profileId}`,
-    }, () => queryClient.invalidateQueries({ queryKey }))
-    .subscribe();
-  return () => supabase.removeChannel(channel);
-}, [profileId, profileType, queryClient]);
-```
-This covers the activity board for all changes (inserts, updates, deletes).
+### 3. Duplicated "How It Works" + "Join Our Legacy" Sections
+`Index.tsx` and `Home.tsx` contain near-identical "How It Works" card grid and "Join Our Legacy" sections. These should become shared presentational components.
 
-**B. `EmployerDirectory.tsx` — button state after remote accept/decline**
+### 4. Duplicated `Article` / `TrainingArticle` Interface
+The `TrainingArticle` interface is defined independently in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
+- `src/components/dashboard/admin/TrainingArticleManager.tsx` (as `Article`)
 
-The `existingRequests` Map is currently only invalidated when the athlete *sends* a request. If the employer accepts or declines on their side, the athlete's directory button never updates.
+These should be consolidated into `src/types/training.ts`.
 
-Fix: Add a realtime subscription scoped to `athlete_id=eq.${athleteProfileId}` that invalidates `["existing-employer-requests", athleteProfileId]`:
-```typescript
-useEffect(() => {
-  if (!athleteProfileId) return;
-  const channel = supabase
-    .channel(`employer-dir-requests-${athleteProfileId}`)
-    .on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: "connection_requests",
-      filter: `athlete_id=eq.${athleteProfileId}`,
-    }, () => queryClient.invalidateQueries({
-      queryKey: ["existing-employer-requests", athleteProfileId]
-    }))
-    .subscribe();
-  return () => supabase.removeChannel(channel);
-}, [athleteProfileId, queryClient]);
-```
-- Accept by employer → `status` updates to `accepted` → realtime fires → `fetchExistingRequests` re-runs → Map updates → button shows "✓ Connected" (disabled)
-- Decline by employer → record deleted → realtime fires → Map updates → button shows "Request Connection" (enabled)
+### 5. Duplicated `CATEGORY_COLORS` constant
+Defined separately in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
 
-**C. `AthleteLandingPage` + `PartnerLandingPage` stats cards**
+Should move to `src/constants/training.ts`.
 
-Both already have realtime subscriptions that call `invalidateQueries` on connection_requests changes. However, the subscription is only set up **after** `profile?.id` is known, and the filter uses that id. This is fine as-is — the stats update immediately when changes happen. No changes needed here.
+### 6. Duplicated `CATEGORIES` array
+Defined as `TRAINING_CATEGORIES` in `Training.tsx` and as `CATEGORIES` in `TrainingArticleManager.tsx`. Should be a single export from `src/constants/training.ts`.
 
-**D. `ConnectionActivityBoard` inline actions** — after Accept/Decline inside the board:
-- The realtime subscription (added in fix A) automatically catches the mutation and re-fetches, so explicit `invalidateQueries` in the action handlers is a belt-and-suspenders extra. Both realtime + manual invalidation will be used.
+### 7. `loadUserRole` pattern repeated across 3 pages
+`Athletes.tsx`, `Employers.tsx`, and `Dashboard.tsx` all manually call `supabase.from("user_roles")` inline. This belongs in a `useUserRole(userId)` custom hook.
+
+### 8. Smart/Dumb Separation Missing
+- `Home.tsx` and `Training.tsx` are both smart (data fetching) and presentational (full JSX render) in the same component.
+- `AthleteLandingPage.tsx` has 484 lines mixing data fetching, real-time subscriptions, and deeply nested JSX. The pure card sub-sections should be dumb components.
+
+### 9. Missing Semantic Block Structure
+No files currently use the structured comment blocks (`// === Imports ===`, `// === State ===`, etc.) as required by the refactoring spec.
+
+### 10. Inline Auth State Listeners in Pages
+`Athletes.tsx` manually wires `supabase.auth.onAuthStateChange` — this duplicates what `AuthContext` already provides. It should use `useAuth()` instead.
+
+### 11. `MobileNav` contains sign-out business logic
+`MobileNav` is supposed to be a presentational navigation component, but contains a full `handleSignOut` function with Supabase calls — same logic as `AuthenticatedNav`. This should be extracted to a `useSignOut` hook.
 
 ---
 
-### Files to change
+## Proposed Changes
 
-1. **`src/components/connections/ConnectionActivityBoard.tsx`** — major rewrite:
-   - Remove `filter` state + tabs
-   - Split rows into `newRows` / `existingRows` by `isNew`, render new group first with highlighted rows
-   - Add inline Accept/Decline actions for inbound pending rows (own Dialog inside the component)
-   - Add `useQueryClient` + realtime subscription
-   - Accept → `supabase.update({ status: "accepted" })` + invalidate + notify edge function
-   - Decline → `supabase.delete()` + invalidate
+### New Files to Create
 
-2. **`src/components/athlete/EmployerDirectory.tsx`** — add realtime subscription for `["existing-employer-requests", athleteProfileId]` to hot-reload button states.
+```
+src/types/
+  training.ts          — TrainingArticle + Article interfaces
+  news.ts              — NewsArticle interface (shared between Home + News pages)
+  connections.ts       — Connection, ConnectionStats, ConnectionRequest interfaces
+  profiles.ts          — AthleteProfile, EmployerProfile interfaces
 
-3. **No changes needed** to `AthleteLandingPage`, `PartnerLandingPage`, `AthleteDashboard`, `EmployerDashboard`, or the `ConnectionRequestsManagers` for the realtime objective — they already call `loadRequests()` / invalidate after their own mutations, and the landing page stat cards already have working realtime subscriptions.
+src/constants/
+  training.ts          — TRAINING_CATEGORIES, CATEGORY_COLORS
+  nav.ts               — NAV_ITEMS array (used by MobileNav, AuthenticatedNav)
+
+src/hooks/
+  useUserRole.ts       — extracts the repeated user_roles query pattern
+  useSignOut.ts        — extracts the repeated signOut + clear storage pattern
+
+src/components/layout/
+  PublicNav.tsx        — dumb: renders unauthenticated header (logo, links, MobileNav)
+  PageFooter.tsx       — dumb: renders the shared copyright footer
+
+src/components/home/
+  HowItWorksSection.tsx — dumb: the "How It Works" 3-card grid (shared by Index + Home)
+  JoinLegacySection.tsx — dumb: the "Join Our Legacy" CTA section (shared by Index + Home)
+```
+
+### Files to Modify
+
+| File | What Changes |
+|---|---|
+| `src/pages/Index.tsx` | Remove inline header + footer + section JSX; use `PublicNav`, `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; add semantic block comments |
+| `src/pages/Home.tsx` | Remove inline footer + section JSX; use `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; extract news data-fetch into comment-labeled blocks |
+| `src/pages/News.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Schedule.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Athletes.tsx` | Remove manual auth listener; use `useAuth()`; extract `loadUserRole` to `useUserRole` hook; add semantic block comments |
+| `src/pages/Training.tsx` | Import types from `src/types/training.ts`; import constants from `src/constants/training.ts`; add semantic block comments |
+| `src/pages/TrainingArticle.tsx` | Import types/constants from shared files; add semantic block comments |
+| `src/components/dashboard/admin/TrainingArticleManager.tsx` | Import shared types/constants; add semantic block comments |
+| `src/components/MobileNav.tsx` | Extract `handleSignOut` into `useSignOut` hook; add semantic block comments |
+| `src/components/AuthenticatedNav.tsx` | Use `useSignOut` hook instead of inline handler; add semantic block comments |
+| `src/pages/Dashboard.tsx` | Add semantic block comments; annotate welcome content constants |
+
+### Files That Do NOT Change
+- All Supabase edge functions
+- All UI primitives in `src/components/ui/`
+- `src/components/auth/AuthContext.tsx`
+- `src/App.tsx`
+- `src/integrations/` (auto-generated)
+- All admin page files (`AllUsers`, `AllAthletes`, etc.)
+- `src/data/suggestions.ts`
 
 ---
 
-### Accept/Decline Dialog inside ActivityBoard
+## Execution Order (Safe Steps)
 
-Since the board now needs to handle accept/decline for inbound requests, the component will include:
-- A `useState<ActivityRow | null>` for `actionRow`
-- A small `Dialog` that shows:
-  - For athletes accepting an employer request: same accept button + `send-connection-notification`
-  - For employers accepting an athlete request: same accept dialog with message field
-- On confirm: mutate → invalidate (realtime also fires for belt-and-suspenders)
+The changes are grouped to avoid broken references at any intermediate step:
 
-This avoids duplicating the full `ConnectionRequestsManager` but reuses the same Supabase mutation pattern.
+**Step 1 — New shared types/constants (no existing files touched)**
+- Create `src/types/training.ts`
+- Create `src/constants/training.ts`
 
-### Visual spec for new/existing sections
-```
-New (2)          ← collapsible label with count
-────────────────────────────────────────────────
-[bg-primary/5 row] Nike Corp | "Hi, interested..." | ●New | Accept | Decline | 2:30 PM
-[bg-primary/5 row] Patagonia | "We'd love..."      | ●New | Accept | Decline | yesterday
+**Step 2 — New shared hooks (no existing files touched)**
+- Create `src/hooks/useUserRole.ts`
+- Create `src/hooks/useSignOut.ts`
 
-Earlier
-────────────────────────────────────────────────
-March 5, 2026  
-[normal row] Red Bull | "Great profile" | ✓ Connected | 11:00 AM
-March 3, 2026
-[normal row] GoPro    | "Interested..." | ✓ Connected | 9:15 AM
-```
+**Step 3 — New layout/section components (no existing files touched)**
+- Create `src/components/layout/PublicNav.tsx`
+- Create `src/components/layout/PageFooter.tsx`
+- Create `src/components/home/HowItWorksSection.tsx`
+- Create `src/components/home/JoinLegacySection.tsx`
+
+**Step 4 — Update consumers (all at once to avoid stale imports)**
+- Update `Training.tsx` + `TrainingArticle.tsx` + `TrainingArticleManager.tsx` to use shared types/constants
+- Update `MobileNav.tsx` + `AuthenticatedNav.tsx` to use `useSignOut`
+- Update `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx` to use `PublicNav`, `PageFooter`, shared sections
+- Update `Athletes.tsx` to use `useAuth()` and `useUserRole`
+- Add semantic block comments to `Dashboard.tsx` and `Settings.tsx`
+
+---
+
+## What Will NOT Change
+- All visual output — identical pixels
+- All routing — same paths
+- All Supabase queries — no logic changes
+- All component APIs — props unchanged
+- All edge functions
