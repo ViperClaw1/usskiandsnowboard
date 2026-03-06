@@ -132,6 +132,7 @@ const Auth = () => {
   const [formError, setFormError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [oauthRedirectError, setOauthRedirectError] = useState<string | null>(null);
 
   // ---- Invite code step ----
   const [inviteCodeInput, setInviteCodeInput] = useState("");
@@ -209,38 +210,37 @@ const Auth = () => {
 
   // Handle OAuth error redirects (e.g. from the before_user_created hook blocking new signups)
   useEffect(() => {
-    // Use location.search (string) as the reactive source of truth for query params.
-    // Some redirects mutate/replace the underlying URLSearchParams instance, so relying on
-    // the object identity from useSearchParams can be flaky.
     const params = new URLSearchParams(location.search);
     const errorDescription = params.get("error_description");
     const error = params.get("error");
     if (errorDescription || error) {
-      const msg = errorDescription || error || "Sign-up via Google or Apple is not available.";
-      // Show a friendly message regardless of the raw error text
+      const msg = (errorDescription || error || "").trim();
+      const lower = msg.toLowerCase();
+      // Treat server_error / "failed to sign in with vendor" and similar as OAuth block
       const isOAuthBlock =
-        msg.toLowerCase().includes("oauth") ||
-        msg.toLowerCase().includes("google") ||
-        msg.toLowerCase().includes("apple") ||
-        msg.toLowerCase().includes("sign-up via") ||
-        msg.toLowerCase().includes("invite") ||
-        error === "access_denied";
-      // Schedule the toast one tick later to ensure the Sonner Toaster is mounted
-      // and to avoid racing with URL cleanup.
-      setTimeout(() => {
-        toast.error(
-          isOAuthBlock
-            ? "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist."
-            : msg,
-          { duration: 6000 },
-        );
-      }, 0);
+        error === "access_denied" ||
+        error === "server_error" ||
+        lower.includes("oauth") ||
+        lower.includes("google") ||
+        lower.includes("apple") ||
+        lower.includes("sign-up via") ||
+        lower.includes("invite") ||
+        lower.includes("vendor") ||
+        lower.includes("failed to sign in");
+      const friendlyMessage = isOAuthBlock
+        ? "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist."
+        : msg || "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist.";
+      setOauthRedirectError(friendlyMessage);
       setStep("landing");
       setOauthLoading(null);
-      // Clean the URL so the params don't persist on refresh
       window.history.replaceState({}, "", window.location.pathname);
+      setTimeout(() => toast.error(friendlyMessage, { duration: 6000 }), 0);
     }
   }, [location.search]);
+
+  useEffect(() => {
+    if (step !== "landing") setOauthRedirectError(null);
+  }, [step]);
 
   useEffect(() => {
     const {
@@ -475,6 +475,12 @@ const Auth = () => {
         <Card className="w-full max-w-md shadow-2xl border-border/50">
           <LogoHeader title="Welcome" description="U.S. Ski & Snowboard — Athlete Connection Platform" />
           <CardContent className="space-y-4">
+            {oauthRedirectError && (
+              <Alert variant="destructive" className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <AlertDescription>{oauthRedirectError}</AlertDescription>
+              </Alert>
+            )}
             <Button className="w-full h-12 text-base" onClick={() => setStep("sign-in")}>
               Sign In
             </Button>
