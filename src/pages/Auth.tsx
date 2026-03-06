@@ -208,35 +208,47 @@ const Auth = () => {
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
-  // Handle OAuth error redirects (e.g. from the before_user_created hook blocking new signups)
+  // Handle OAuth error redirects: read from the real URL so we're not dependent on
+  // React Router's location (which can be stale on full-page redirect).
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    if (typeof window === "undefined") return;
+    const search = window.location.search || (window.location.hash ? window.location.hash.slice(1) : "");
+    const params = new URLSearchParams(search);
     const errorDescription = params.get("error_description");
     const error = params.get("error");
-    if (errorDescription || error) {
-      const msg = (errorDescription || error || "").trim();
-      const lower = msg.toLowerCase();
-      // Treat server_error / "failed to sign in with vendor" and similar as OAuth block
-      const isOAuthBlock =
-        error === "access_denied" ||
-        error === "server_error" ||
-        lower.includes("oauth") ||
-        lower.includes("google") ||
-        lower.includes("apple") ||
-        lower.includes("sign-up via") ||
-        lower.includes("invite") ||
-        lower.includes("vendor") ||
-        lower.includes("failed to sign in");
-      const friendlyMessage = isOAuthBlock
-        ? "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist."
-        : msg || "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist.";
-      setOauthRedirectError(friendlyMessage);
-      setStep("landing");
-      setOauthLoading(null);
-      window.history.replaceState({}, "", window.location.pathname);
-      setTimeout(() => toast.error(friendlyMessage, { duration: 6000 }), 0);
-    }
-  }, [location.search]);
+    if (!errorDescription && !error) return;
+
+    const msg = (errorDescription || error || "").trim();
+    const lower = msg.toLowerCase();
+    const isOAuthBlock =
+      error === "access_denied" ||
+      error === "server_error" ||
+      lower.includes("oauth") ||
+      lower.includes("google") ||
+      lower.includes("apple") ||
+      lower.includes("sign-up via") ||
+      lower.includes("invite") ||
+      lower.includes("vendor") ||
+      lower.includes("failed to sign in");
+    const friendlyMessage = isOAuthBlock
+      ? "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist."
+      : msg || "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist.";
+
+    setOauthRedirectError(friendlyMessage);
+    setStep("landing");
+    setOauthLoading(null);
+    setTimeout(() => toast.error(friendlyMessage, { duration: 6000 }), 0);
+    // Intentionally run only on mount: read real URL so we see params after full-page OAuth redirect
+  }, []);
+
+  // Clean the URL after we've shown the error (deferred so the message state is committed first)
+  useEffect(() => {
+    if (!oauthRedirectError) return;
+    const t = setTimeout(() => {
+      if (typeof window !== "undefined") window.history.replaceState({}, "", window.location.pathname);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [oauthRedirectError]);
 
   useEffect(() => {
     if (step !== "landing") setOauthRedirectError(null);
