@@ -46,6 +46,41 @@ const generateSlug = (title: string) =>
 const estimateReadingTime = (text: string) =>
   Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, "").split(/\s+/).length / 200));
 
+/** Max allowed image size before conversion (2 MB) */
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Validates that a file is ≤ 2 MB then converts it to WebP via Canvas API.
+ * Returns a new File with `.webp` extension and `image/webp` MIME type.
+ */
+const convertToWebp = (file: File): Promise<File> =>
+  new Promise((resolve, reject) => {
+    if (file.size > MAX_IMAGE_BYTES) {
+      reject(new Error("Image must be 2 MB or smaller"));
+      return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { reject(new Error("Conversion failed")); return; }
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          resolve(new File([blob], `${baseName}.webp`, { type: "image/webp" }));
+        },
+        "image/webp",
+        0.88,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
+    img.src = url;
+  });
+
 // ==============================
 // Types / Interfaces
 // ==============================
@@ -155,8 +190,7 @@ export const TrainingArticleManager = () => {
   // ==============================
 
   const uploadFile = async (file: File, path: string): Promise<string> => {
-    const ext = file.name.split(".").pop();
-    const filePath = `${user?.id}/${path}.${ext}`;
+    const filePath = `${user?.id}/${path}.webp`;
     const { error } = await supabase.storage
       .from("training-images")
       .upload(filePath, file, { upsert: true });
@@ -427,11 +461,16 @@ export const TrainingArticleManager = () => {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const f = e.target.files?.[0];
-                  if (f) {
-                    setAuthorFile(f);
-                    setAuthorPreview(URL.createObjectURL(f));
+                  if (!f) return;
+                  try {
+                    const webp = await convertToWebp(f);
+                    setAuthorFile(webp);
+                    setAuthorPreview(URL.createObjectURL(webp));
+                  } catch (err: any) {
+                    toast.error(err.message || "Failed to process image");
+                    e.target.value = "";
                   }
                 }}
               />
@@ -443,7 +482,7 @@ export const TrainingArticleManager = () => {
                 />
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                If no image is uploaded, the U.S. Ski &amp; Snowboard logo is used as fallback.
+                Max 2 MB · Automatically converted to WebP · If no image is uploaded, the U.S. Ski &amp; Snowboard logo is used as fallback.
               </p>
             </div>
             <div>
@@ -451,11 +490,16 @@ export const TrainingArticleManager = () => {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const f = e.target.files?.[0];
-                  if (f) {
-                    setHeroFile(f);
-                    setHeroPreview(URL.createObjectURL(f));
+                  if (!f) return;
+                  try {
+                    const webp = await convertToWebp(f);
+                    setHeroFile(webp);
+                    setHeroPreview(URL.createObjectURL(webp));
+                  } catch (err: any) {
+                    toast.error(err.message || "Failed to process image");
+                    e.target.value = "";
                   }
                 }}
               />
@@ -466,6 +510,7 @@ export const TrainingArticleManager = () => {
                   className="h-32 w-full rounded-lg object-cover mt-2"
                 />
               )}
+              <p className="text-xs text-muted-foreground mt-1">Max 2 MB · Automatically converted to WebP</p>
             </div>
             <div className="flex items-center gap-3">
               <Switch
