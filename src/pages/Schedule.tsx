@@ -3,7 +3,7 @@
 // ==============================
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import scheduleImage from "@/assets/schedule-image.png";
+import scheduleImage from "@/assets/schedule-image.webp";
 import { PageFooter } from "@/components/layout/PageFooter";
 
 // ==============================
