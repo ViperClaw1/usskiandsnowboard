@@ -46,6 +46,41 @@ const generateSlug = (title: string) =>
 const estimateReadingTime = (text: string) =>
   Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, "").split(/\s+/).length / 200));
 
+/** Max allowed image size before conversion (2 MB) */
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Validates that a file is ≤ 2 MB then converts it to WebP via Canvas API.
+ * Returns a new File with `.webp` extension and `image/webp` MIME type.
+ */
+const convertToWebp = (file: File): Promise<File> =>
+  new Promise((resolve, reject) => {
+    if (file.size > MAX_IMAGE_BYTES) {
+      reject(new Error("Image must be 2 MB or smaller"));
+      return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { reject(new Error("Conversion failed")); return; }
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          resolve(new File([blob], `${baseName}.webp`, { type: "image/webp" }));
+        },
+        "image/webp",
+        0.88,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
+    img.src = url;
+  });
+
 // ==============================
 // Types / Interfaces
 // ==============================
