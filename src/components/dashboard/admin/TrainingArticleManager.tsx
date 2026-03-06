@@ -463,7 +463,7 @@ export const TrainingArticleManager = () => {
                 <img src={authorPreview} alt="Author" className="h-12 w-12 rounded-full object-cover mt-2" />
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Max 2 MB · Automatically converted to WebP · If no image is uploaded, the U.S. Ski &amp; Snowboard logo
+                Max 5 MB · Automatically converted to WebP · If no image is uploaded, the U.S. Ski &amp; Snowboard logo
                 is used as fallback.
               </p>
             </div>
@@ -486,7 +486,7 @@ export const TrainingArticleManager = () => {
                 }}
               />
               {heroPreview && <img src={heroPreview} alt="Hero" className="h-32 w-full rounded-lg object-cover mt-2" />}
-              <p className="text-xs text-muted-foreground mt-1">Max 2 MB · Automatically converted to WebP</p>
+              <p className="text-xs text-muted-foreground mt-1">Max 5 MB · Automatically converted to WebP</p>
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={form.isPublished} onCheckedChange={(v) => setForm((f) => ({ ...f, isPublished: v }))} />
