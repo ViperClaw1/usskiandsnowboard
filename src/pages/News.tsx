@@ -50,18 +50,16 @@ const News = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Show public nav only for unauthenticated visitors */}
-      {!user && <PublicNav />}
+      {/*{!user && <PublicNav />}*/}
 
       <main>
         {/* Page hero */}
         <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
-              Latest News
-            </h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Latest News</h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-              Stay updated on success stories, platform updates, and career insights for U.S. Ski
-              &amp; Snowboard athletes.
+              Stay updated on success stories, platform updates, and career insights for U.S. Ski &amp; Snowboard
+              athletes.
             </p>
           </div>
         </section>
