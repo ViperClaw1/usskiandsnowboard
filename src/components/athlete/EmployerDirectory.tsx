@@ -197,6 +197,32 @@ const EmployerDirectory = () => {
   });
 
   // ==============================
+  // Realtime — hot-reload button states when the employer acts on a request
+  // ==============================
+  useEffect(() => {
+    if (!athleteProfileId) return;
+    const channel = supabase
+      .channel(`employer-dir-requests-${athleteProfileId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "connection_requests",
+          filter: `athlete_id=eq.${athleteProfileId}`,
+        },
+        () =>
+          queryClient.invalidateQueries({
+            queryKey: ["existing-employer-requests", athleteProfileId],
+          }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [athleteProfileId, queryClient]);
+
+  // ==============================
   // Derived Values — Filter Options
   // ==============================
   const uniqueCompanySizes = useMemo(
