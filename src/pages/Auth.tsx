@@ -3,7 +3,7 @@
 // ==============================
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -112,6 +112,7 @@ const BackButton = ({ onClick }: { onClick: () => void }) => (
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const typeParam = searchParams.get("type");
   const initialType = typeParam === "athlete" || typeParam === "employer" ? typeParam : null;
 
@@ -208,8 +209,12 @@ const Auth = () => {
 
   // Handle OAuth error redirects (e.g. from the before_user_created hook blocking new signups)
   useEffect(() => {
-    const errorDescription = searchParams.get("error_description");
-    const error = searchParams.get("error");
+    // Use location.search (string) as the reactive source of truth for query params.
+    // Some redirects mutate/replace the underlying URLSearchParams instance, so relying on
+    // the object identity from useSearchParams can be flaky.
+    const params = new URLSearchParams(location.search);
+    const errorDescription = params.get("error_description");
+    const error = params.get("error");
     if (errorDescription || error) {
       const msg = errorDescription || error || "Sign-up via Google or Apple is not available.";
       // Show a friendly message regardless of the raw error text
@@ -220,18 +225,22 @@ const Auth = () => {
         msg.toLowerCase().includes("sign-up via") ||
         msg.toLowerCase().includes("invite") ||
         error === "access_denied";
-      toast.error(
-        isOAuthBlock
-          ? "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist."
-          : msg,
-        { duration: 6000 },
-      );
+      // Schedule the toast one tick later to ensure the Sonner Toaster is mounted
+      // and to avoid racing with URL cleanup.
+      setTimeout(() => {
+        toast.error(
+          isOAuthBlock
+            ? "Sign-up via Google or Apple is not available. Please use an invite code or apply via the waitlist."
+            : msg,
+          { duration: 6000 },
+        );
+      }, 0);
       setStep("landing");
       setOauthLoading(null);
       // Clean the URL so the params don't persist on refresh
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, [searchParams]);
+  }, [location.search]);
 
   useEffect(() => {
     const {
