@@ -244,11 +244,7 @@ const Auth = () => {
       // Secondary safety net: if somehow an OAuth user got through without a role, block them.
       const isOAuthProvider = user.app_metadata?.provider && user.app_metadata.provider !== "email";
       if (event === "SIGNED_IN" && isOAuthProvider) {
-        const { data: roleRow } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        const { data: roleRow } = await supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
 
         if (!roleRow) {
           await supabase.auth.signOut();
@@ -392,7 +388,11 @@ const Auth = () => {
   const handleOAuthLogin = async (provider: "google" | "apple") => {
     setOauthLoading(provider);
     try {
-      const { error } = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
+      // Important: the before_user_created hook can block OAuth sign-ups and Supabase
+      // redirects back with `error` / `error_description` query params.
+      // We need those params to land on this page so the toast handler above can show them.
+      const redirectUri = `${window.location.origin}/auth`;
+      const { error } = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirectUri });
       if (error) throw error;
       // On success the browser will redirect; oauthLoading stays set until
       // onAuthStateChange resolves (new user → cleared there, existing user → navigates away).
