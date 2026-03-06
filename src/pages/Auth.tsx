@@ -487,6 +487,12 @@ const Auth = () => {
         <Card className="w-full max-w-md shadow-2xl border-border/50">
           <LogoHeader title="Welcome" description="U.S. Ski & Snowboard — Athlete Connection Platform" />
           <CardContent className="space-y-4">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Go back
+            </Link>
             {oauthRedirectError && (
               <Alert variant="destructive" className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
