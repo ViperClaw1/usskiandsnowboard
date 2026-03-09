@@ -1,7 +1,8 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command as CommandPrimitive } from "cmdk";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -55,31 +56,20 @@ export function MultiSelect({
     }
   };
 
-  const selectables = options.filter(
-    (option) => !selected.includes(option.value)
-  );
+  const selectables = options.filter((option) => !selected.includes(option.value));
 
   const filteredOptions = inputValue
-    ? selectables.filter((option) =>
-        option.label.toLowerCase().includes(inputValue.toLowerCase())
-      )
+    ? selectables.filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()))
     : selectables;
 
   return (
-    <Command
-      onKeyDown={handleKeyDown}
-      className={cn("overflow-visible bg-transparent w-full", className)}
-    >
+    <Command onKeyDown={handleKeyDown} className={cn("overflow-visible bg-transparent w-full", className)}>
       <div className="group w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
         <div className="flex flex-wrap gap-1 w-full">
           {selected.map((item) => {
             const option = options.find((opt) => opt.value === item);
             return (
-              <Badge
-                key={item}
-                variant="secondary"
-                className="rounded-sm px-2 py-1 font-normal"
-              >
+              <Badge key={item} variant="secondary" className="rounded-sm px-2 py-1 font-normal">
                 {option?.label || item}
                 <button
                   className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -99,14 +89,14 @@ export function MultiSelect({
               </Badge>
             );
           })}
-          <CommandInput
+          <CommandPrimitive.Input
             ref={inputRef}
             value={inputValue}
             onValueChange={setInputValue}
             onBlur={() => setOpen(false)}
             onFocus={() => setOpen(true)}
             placeholder={selected.length === 0 ? placeholder : undefined}
-            className="ml-0 flex-1 min-w-0 bg-transparent outline-none placeholder:text-muted-foreground border-0 px-0 py-0 h-auto min-h-[24px]"
+            className="ml-0 flex-1 min-w-[120px] bg-transparent outline-none placeholder:text-muted-foreground border-0 px-0 py-0 h-auto min-h-[24px]"
           />
         </div>
       </div>
