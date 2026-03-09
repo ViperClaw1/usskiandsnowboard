@@ -12,6 +12,7 @@ const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
 
 const FROM = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
+const CC_ALWAYS = ["michele.lowry@usskiandsnowboard.org"];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,7 +96,18 @@ async function shouldSendEmail(
   return true;
 }
 
-// === Email body builders (produce inner HTML only; wrapper applied by emailTemplate()) ===
+// === Name helpers ===
+
+/** Split a full name string into [firstName, lastName], tolerating empty/null. */
+function splitName(fullName: string | null | undefined): [string, string] {
+  const trimmed = (fullName ?? "").trim();
+  if (!trimmed) return ["", ""];
+  const idx = trimmed.indexOf(" ");
+  if (idx === -1) return [trimmed, ""];
+  return [trimmed.slice(0, idx), trimmed.slice(idx + 1)];
+}
+
+// === Email body builders ===
 
 function newRequestBody(companyName: string, athleteName: string, request: any, appUrl: string): string {
   return `
@@ -126,74 +138,42 @@ function newRequestBody(companyName: string, athleteName: string, request: any, 
     </table>`;
 }
 
-function acceptedAthleteBody(
-  athleteName: string,
+/**
+ * Builds the joint introduction email body sent to both parties on connection acceptance.
+ */
+function introductionBody(
+  athleteFirstName: string,
+  athleteLastName: string,
+  athleteSport: string,
+  repFirstName: string,
+  repLastName: string,
+  repTitle: string,
   companyName: string,
-  request: any,
-  employerEmail: string,
-  appUrl: string,
 ): string {
-  return `
-    <p style="margin: 0 0 20px; font-size: 16px;">Great news, ${athleteName}!</p>
-    <p style="margin: 0 0 30px; font-size: 16px;">
-      <strong>${companyName}</strong> has accepted your connection request.
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
-      <tr>
-        <td style="padding: 20px;">
-          <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Partner Contact Information</p>
-          <p style="margin: 0 0 8px; font-size: 15px;"><strong>Company:</strong> ${companyName}</p>
-          ${request.employer_profiles.industry ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Industry:</strong> ${request.employer_profiles.industry}</p>` : ""}
-          ${employerEmail ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Email:</strong> ${employerEmail}</p>` : ""}
-          ${request.employer_profiles.about ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>About:</strong> ${request.employer_profiles.about}</p>` : ""}
-        </td>
-      </tr>
-    </table>
-    <p style="margin: 0 0 30px; font-size: 16px;">
-      You can now reach out directly to start exploring opportunities together!
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td align="center">
-          <a href="${appUrl}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Dashboard</a>
-        </td>
-      </tr>
-    </table>`;
-}
+  const athleteFullName = [athleteFirstName, athleteLastName].filter(Boolean).join(" ");
+  const repFullName = [repFirstName, repLastName].filter(Boolean).join(" ");
+  const sportLabel = athleteSport ? `${athleteSport} ` : "";
+  const titleClause = repTitle ? `a ${repTitle} at` : "from";
 
-function acceptedEmployerBody(
-  companyName: string,
-  athleteName: string,
-  request: any,
-  athleteEmail: string,
-  appUrl: string,
-): string {
   return `
-    <p style="margin: 0 0 20px; font-size: 16px;">Hello ${companyName},</p>
-    <p style="margin: 0 0 30px; font-size: 16px;">
-      You've successfully connected with <strong>${athleteName}</strong>!
+    <p style="margin: 0 0 24px; font-size: 16px;">${repFirstName},</p>
+
+    <p style="margin: 0 0 24px; font-size: 16px;">
+      Please meet <strong>${athleteFullName}</strong>, an accomplished professional ${sportLabel}athlete and member of the US Ski &amp; Snowboard.
     </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
-      <tr>
-        <td style="padding: 20px;">
-          <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Athlete Contact Information</p>
-          <p style="margin: 0 0 8px; font-size: 15px;"><strong>Name:</strong> ${athleteName}</p>
-          ${request.athlete_profiles.sport_discipline ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
-          ${athleteEmail ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Email:</strong> ${athleteEmail}</p>` : ""}
-          ${request.athlete_profiles.bio ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
-        </td>
-      </tr>
-    </table>
-    <p style="margin: 0 0 30px; font-size: 16px;">
-      You can now reach out directly to discuss opportunities!
+
+    <p style="margin: 0 0 24px; font-size: 16px;">${athleteFirstName},</p>
+
+    <p style="margin: 0 0 24px; font-size: 16px;">
+      Please meet <strong>${repFullName}</strong>, ${titleClause} <strong>${companyName}</strong>.
     </p>
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td align="center">
-          <a href="${appUrl}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Dashboard</a>
-        </td>
-      </tr>
-    </table>`;
+
+    <p style="margin: 0 0 40px; font-size: 16px;">
+      ${repFirstName} will take it from here to introduce themselves and find time to connect.
+    </p>
+
+    <p style="margin: 0 0 4px; font-size: 16px;">Cheers,</p>
+    <p style="margin: 0; font-size: 16px; font-weight: bold;">US Ski &amp; Snowboard Athlete Development Team</p>`;
 }
 
 function declinedBody(recipientName: string, otherPartyName: string, appUrl: string): string {
@@ -237,8 +217,8 @@ const handler = async (req: Request): Promise<Response> => {
       .from("connection_requests")
       .select(`
         *,
-        athlete_profiles (email, sport_discipline, bio, user_id, phone, profiles (full_name)),
-        employer_profiles (company_name, industry, about, contact_email, user_id, phone, profiles (full_name))
+        athlete_profiles (email, sport_discipline, bio, user_id, phone, profiles (full_name, first_name, last_name)),
+        employer_profiles (company_name, industry, about, contact_email, contact_person, contact_title, user_id, phone, profiles (full_name, first_name, last_name))
       `)
       .eq("id", request_id)
       .single();
@@ -250,10 +230,28 @@ const handler = async (req: Request): Promise<Response> => {
 
     const athleteEmail = request.athlete_profiles.email;
     const employerEmail = request.employer_profiles.contact_email;
-    const athleteName = request.athlete_profiles.profiles.full_name || "An athlete";
-    const companyName = request.employer_profiles.company_name;
     const athleteUserId = request.athlete_profiles.user_id;
     const employerUserId = request.employer_profiles.user_id;
+    const companyName = request.employer_profiles.company_name;
+
+    // Resolve athlete name: prefer first_name/last_name, fall back to splitting full_name
+    const athleteProfiles = request.athlete_profiles.profiles as any;
+    const athleteFirstName: string =
+      athleteProfiles?.first_name || splitName(athleteProfiles?.full_name)[0] || "Athlete";
+    const athleteLastName: string =
+      athleteProfiles?.last_name || splitName(athleteProfiles?.full_name)[1] || "";
+    const athleteFullName = [athleteFirstName, athleteLastName].filter(Boolean).join(" ");
+
+    // Resolve employer rep name: prefer contact_person, fall back to profiles.full_name
+    const contactPerson: string = request.employer_profiles.contact_person || "";
+    const employerProfiles = request.employer_profiles.profiles as any;
+    const repFallbackName = employerProfiles?.full_name || "";
+    const [repFirstName, repLastName] = contactPerson
+      ? splitName(contactPerson)
+      : splitName(repFallbackName);
+    const repFirstNameSafe = repFirstName || "The team";
+    const repLastNameSafe = repLastName || "";
+    const repTitle: string = request.employer_profiles.contact_title || "";
 
     if (notification_type === "new_request") {
       const sendEmail_ = employerUserId ? await shouldSendEmail(supabase, employerUserId, "new_request") : true;
@@ -261,48 +259,47 @@ const handler = async (req: Request): Promise<Response> => {
         await sendEmail(resend, {
           from: FROM,
           to: [employerEmail],
-          subject: `New Connection Request from ${athleteName}`,
-          html: emailTemplate("New Connection Request", newRequestBody(companyName, athleteName, request, appUrl)),
+          subject: `New Connection Request from ${athleteFullName}`,
+          html: emailTemplate("New Connection Request", newRequestBody(companyName, athleteFullName, request, appUrl)),
         });
         console.log(`New request email sent to ${employerEmail}`);
       }
       if (employerUserId) {
         const sms = await shouldSendSMS(supabase, employerUserId);
         if (sms.send && sms.phone) {
-          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: New connection request from ${athleteName}. Log in to review.`);
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: New connection request from ${athleteFullName}. Log in to review.`);
         }
       }
       await notifyAdmins("new_connection_request", request_id);
 
     } else if (notification_type === "request_accepted") {
-      const sendToAthlete = athleteUserId ? await shouldSendEmail(supabase, athleteUserId, "request_accepted") : true;
-      const sendToEmployer = employerUserId ? await shouldSendEmail(supabase, employerUserId, "request_accepted") : true;
+      // Build recipient list — both athlete and employer
+      const toAddresses = [athleteEmail, employerEmail].filter((e): e is string => Boolean(e));
 
-      if (sendToAthlete && athleteEmail) {
+      if (toAddresses.length > 0) {
+        const subject = `${companyName} <> ${athleteFirstName} ${athleteLastName} — Athlete Connection`.trim();
         await sendEmail(resend, {
           from: FROM,
-          to: [athleteEmail],
-          subject: `Connection Accepted - ${companyName} wants to connect!`,
-          html: emailTemplate("🎉 Connection Accepted!", acceptedAthleteBody(athleteName, companyName, request, employerEmail, appUrl)),
+          to: toAddresses,
+          cc: CC_ALWAYS,
+          subject,
+          html: emailTemplate(
+            "You're Connected!",
+            introductionBody(
+              athleteFirstName,
+              athleteLastName,
+              request.athlete_profiles.sport_discipline || "",
+              repFirstNameSafe,
+              repLastNameSafe,
+              repTitle,
+              companyName,
+            ),
+          ),
         });
-        console.log(`Acceptance email sent to athlete: ${athleteEmail}`);
+        console.log(`Introduction email sent to: ${toAddresses.join(", ")} (CC: ${CC_ALWAYS.join(", ")})`);
       }
 
-      // Rate limit guard: 600 ms between the two acceptance emails
-      // Always sleep between consecutive sends to stay under the 2 req/s Resend limit,
-      // even if one of the two emails is skipped (concurrent invocations share the quota).
-      await sleep(1000);
-
-      if (sendToEmployer && employerEmail) {
-        await sendEmail(resend, {
-          from: FROM,
-          to: [employerEmail],
-          subject: `Connection Confirmed - You're now connected with ${athleteName}!`,
-          html: emailTemplate("🎉 Connection Confirmed!", acceptedEmployerBody(companyName, athleteName, request, athleteEmail, appUrl)),
-        });
-        console.log(`Acceptance email sent to employer: ${employerEmail}`);
-      }
-
+      // SMS notifications remain unchanged
       if (athleteUserId) {
         const sms = await shouldSendSMS(supabase, athleteUserId);
         if (sms.send && sms.phone) {
@@ -312,7 +309,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (employerUserId) {
         const sms = await shouldSendSMS(supabase, employerUserId);
         if (sms.send && sms.phone) {
-          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: You're now connected with ${athleteName}. View details on your dashboard.`);
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: You're now connected with ${athleteFullName}. View details on your dashboard.`);
         }
       }
       await notifyAdmins("connection_accepted", request_id);
@@ -325,12 +322,12 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (initiatorUserId === athleteUserId) {
         recipientEmail = athleteEmail;
-        recipientName = athleteName;
+        recipientName = athleteFullName;
         otherPartyName = companyName;
       } else if (initiatorUserId === employerUserId) {
         recipientEmail = employerEmail;
         recipientName = companyName;
-        otherPartyName = athleteName;
+        otherPartyName = athleteFullName;
       }
 
       const sendEmail_ = initiatorUserId ? await shouldSendEmail(supabase, initiatorUserId, "request_declined") : true;
