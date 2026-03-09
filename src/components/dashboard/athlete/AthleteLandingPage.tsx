@@ -93,7 +93,7 @@ interface AthleteHomeProps {
 // ==============================
 // Query Keys
 // ==============================
-const athleteDashboardKey = (userId: string) => ["athlete-landing-dashboard", userId];
+export const athleteDashboardKey = (userId: string) => ["athlete-landing-dashboard", userId];
 const athleteFeaturedPartnersKey = ["athlete-landing-featured-partners"];
 
 // ==============================

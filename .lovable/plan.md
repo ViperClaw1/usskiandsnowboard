@@ -1,56 +1,153 @@
 
-## Plan: Fix MultiSelect width + instant completeness after onboarding
+# Comprehensive Codebase Refactor Plan
 
-### Issue 1 — MultiSelect not filling full width (Steps 10, 11, 14)
+## Audit Summary
 
-**Root cause**: cmdk's `<Command>` component renders with its own internal wrapper div that wraps `<CommandInput>` in a `cmdk-input-wrapper` element styled with `display: flex` but no explicit `width: 100%`. Combined with the outer flex row (badges + input), the input shrinks and doesn't reach the container edge.
-
-**Fix in `src/components/ui/multi-select.tsx`**:
-- Add `w-full` to the `<Command>` root className (alongside `overflow-visible bg-transparent`)
-- Add `w-full` to the inner flex container `div` (the `group rounded-md border...` div)
-- Add `w-full min-w-0` to the `CommandInput` wrapper portion — specifically override the cmdk input wrapper by adding a class that forces it to take up remaining space
-- The `<CommandInput>` already has `flex-1` but the cmdk parent `[cmdk-input-wrapper]` may constrain it — add `className` override to ensure the search element fills remaining space
-
-The concrete change: the wrapping `<div className="flex flex-wrap gap-1">` should use `w-full`, and the `CommandInput` needs `w-full` on its container. Since cmdk `CommandInput` renders its own wrapper, we target it via the `className` on `CommandInput` to ensure `flex: 1 1 0%` and `min-width: 0`.
-
-### Issue 2 — Profile completeness not updating instantly after wizard completion
-
-**Root cause**: Two separate query keys exist:
-- `AthleteDashboard` uses `["athlete-dashboard-profile", userId]` → invalidated by `invalidateProfile()`  
-- `AthleteLandingPage` uses `["athlete-landing-dashboard", userId]` → **NOT invalidated** on wizard completion
-
-When `AthleteOnboardingWizard.onComplete()` is called → `handleProfileComplete()` in `AthleteDashboard` runs → only invalidates `athlete-dashboard-profile` → `AthleteLandingPage`'s cached dashboard data (which holds `profile_completeness`) stays stale until its own 5-minute stale time expires.
-
-**Fix in `src/components/dashboard/AthleteDashboard.tsx`**:
-
-In `handleProfileComplete`, also invalidate the landing page query:
-```typescript
-const handleProfileComplete = () => {
-  setShowProfileDialog(false);
-  queryClient.invalidateQueries({ queryKey: athleteProfileKey(user.id) });
-  queryClient.invalidateQueries({ queryKey: ["athlete-landing-dashboard", user.id] });
-  toast.success("Profile updated successfully!");
-};
-```
-
-Since `athleteDashboardKey` is defined inside `AthleteLandingPage.tsx` (not exported), the string array `["athlete-landing-dashboard", user.id]` must be used directly, or the key should be exported from `AthleteLandingPage.tsx` and imported in `AthleteDashboard.tsx`.
-
-**Cleanest approach**: Export `athleteDashboardKey` from `AthleteLandingPage.tsx` and import it in `AthleteDashboard.tsx` to avoid hardcoding string arrays in multiple places.
+After reading all major files across pages, components, hooks, and data layers, here is what I found:
 
 ---
 
-### Files to change
+## Key Issues Identified
 
-1. **`src/components/ui/multi-select.tsx`**  
-   - Add `w-full` to the `<Command>` className  
-   - Add `w-full` to the border-wrapper div  
-   - Add `w-full` to the `flex flex-wrap gap-1` div  
+### 1. Duplicated Unauthenticated Nav (Critical)
+The same header block (logo + nav links + MobileNav + mountain background) is copy-pasted verbatim in **4 separate files**:
+- `src/pages/Index.tsx` — always renders it
+- `src/pages/News.tsx` — renders it when `!user`
+- `src/pages/Schedule.tsx` — renders it when `!user`
+- `src/pages/Employers.tsx` — renders it when `!user`
 
-2. **`src/components/dashboard/athlete/AthleteLandingPage.tsx`**  
-   - Export `athleteDashboardKey` so it can be imported elsewhere  
+`AuthenticatedNav` already exists. A `PublicNav` presentational component should be extracted and used in all four places.
 
-3. **`src/components/dashboard/AthleteDashboard.tsx`**  
-   - Import `athleteDashboardKey` from `AthleteLandingPage.tsx`  
-   - In `handleProfileComplete`, add `queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) })` alongside the existing profile key invalidation  
+### 2. Duplicated Footer
+The identical footer block (`© 2025 U.S. Ski & Snowboard...`) is copy-pasted in:
+- `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx`
 
-No DB migrations, no new dependencies.
+A `PageFooter` presentational component should be extracted.
+
+### 3. Duplicated "How It Works" + "Join Our Legacy" Sections
+`Index.tsx` and `Home.tsx` contain near-identical "How It Works" card grid and "Join Our Legacy" sections. These should become shared presentational components.
+
+### 4. Duplicated `Article` / `TrainingArticle` Interface
+The `TrainingArticle` interface is defined independently in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
+- `src/components/dashboard/admin/TrainingArticleManager.tsx` (as `Article`)
+
+These should be consolidated into `src/types/training.ts`.
+
+### 5. Duplicated `CATEGORY_COLORS` constant
+Defined separately in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
+
+Should move to `src/constants/training.ts`.
+
+### 6. Duplicated `CATEGORIES` array
+Defined as `TRAINING_CATEGORIES` in `Training.tsx` and as `CATEGORIES` in `TrainingArticleManager.tsx`. Should be a single export from `src/constants/training.ts`.
+
+### 7. `loadUserRole` pattern repeated across 3 pages
+`Athletes.tsx`, `Employers.tsx`, and `Dashboard.tsx` all manually call `supabase.from("user_roles")` inline. This belongs in a `useUserRole(userId)` custom hook.
+
+### 8. Smart/Dumb Separation Missing
+- `Home.tsx` and `Training.tsx` are both smart (data fetching) and presentational (full JSX render) in the same component.
+- `AthleteLandingPage.tsx` has 484 lines mixing data fetching, real-time subscriptions, and deeply nested JSX. The pure card sub-sections should be dumb components.
+
+### 9. Missing Semantic Block Structure
+No files currently use the structured comment blocks (`// === Imports ===`, `// === State ===`, etc.) as required by the refactoring spec.
+
+### 10. Inline Auth State Listeners in Pages
+`Athletes.tsx` manually wires `supabase.auth.onAuthStateChange` — this duplicates what `AuthContext` already provides. It should use `useAuth()` instead.
+
+### 11. `MobileNav` contains sign-out business logic
+`MobileNav` is supposed to be a presentational navigation component, but contains a full `handleSignOut` function with Supabase calls — same logic as `AuthenticatedNav`. This should be extracted to a `useSignOut` hook.
+
+---
+
+## Proposed Changes
+
+### New Files to Create
+
+```
+src/types/
+  training.ts          — TrainingArticle + Article interfaces
+  news.ts              — NewsArticle interface (shared between Home + News pages)
+  connections.ts       — Connection, ConnectionStats, ConnectionRequest interfaces
+  profiles.ts          — AthleteProfile, EmployerProfile interfaces
+
+src/constants/
+  training.ts          — TRAINING_CATEGORIES, CATEGORY_COLORS
+  nav.ts               — NAV_ITEMS array (used by MobileNav, AuthenticatedNav)
+
+src/hooks/
+  useUserRole.ts       — extracts the repeated user_roles query pattern
+  useSignOut.ts        — extracts the repeated signOut + clear storage pattern
+
+src/components/layout/
+  PublicNav.tsx        — dumb: renders unauthenticated header (logo, links, MobileNav)
+  PageFooter.tsx       — dumb: renders the shared copyright footer
+
+src/components/home/
+  HowItWorksSection.tsx — dumb: the "How It Works" 3-card grid (shared by Index + Home)
+  JoinLegacySection.tsx — dumb: the "Join Our Legacy" CTA section (shared by Index + Home)
+```
+
+### Files to Modify
+
+| File | What Changes |
+|---|---|
+| `src/pages/Index.tsx` | Remove inline header + footer + section JSX; use `PublicNav`, `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; add semantic block comments |
+| `src/pages/Home.tsx` | Remove inline footer + section JSX; use `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; extract news data-fetch into comment-labeled blocks |
+| `src/pages/News.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Schedule.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Athletes.tsx` | Remove manual auth listener; use `useAuth()`; extract `loadUserRole` to `useUserRole` hook; add semantic block comments |
+| `src/pages/Training.tsx` | Import types from `src/types/training.ts`; import constants from `src/constants/training.ts`; add semantic block comments |
+| `src/pages/TrainingArticle.tsx` | Import types/constants from shared files; add semantic block comments |
+| `src/components/dashboard/admin/TrainingArticleManager.tsx` | Import shared types/constants; add semantic block comments |
+| `src/components/MobileNav.tsx` | Extract `handleSignOut` into `useSignOut` hook; add semantic block comments |
+| `src/components/AuthenticatedNav.tsx` | Use `useSignOut` hook instead of inline handler; add semantic block comments |
+| `src/pages/Dashboard.tsx` | Add semantic block comments; annotate welcome content constants |
+
+### Files That Do NOT Change
+- All Supabase edge functions
+- All UI primitives in `src/components/ui/`
+- `src/components/auth/AuthContext.tsx`
+- `src/App.tsx`
+- `src/integrations/` (auto-generated)
+- All admin page files (`AllUsers`, `AllAthletes`, etc.)
+- `src/data/suggestions.ts`
+
+---
+
+## Execution Order (Safe Steps)
+
+The changes are grouped to avoid broken references at any intermediate step:
+
+**Step 1 — New shared types/constants (no existing files touched)**
+- Create `src/types/training.ts`
+- Create `src/constants/training.ts`
+
+**Step 2 — New shared hooks (no existing files touched)**
+- Create `src/hooks/useUserRole.ts`
+- Create `src/hooks/useSignOut.ts`
+
+**Step 3 — New layout/section components (no existing files touched)**
+- Create `src/components/layout/PublicNav.tsx`
+- Create `src/components/layout/PageFooter.tsx`
+- Create `src/components/home/HowItWorksSection.tsx`
+- Create `src/components/home/JoinLegacySection.tsx`
+
+**Step 4 — Update consumers (all at once to avoid stale imports)**
+- Update `Training.tsx` + `TrainingArticle.tsx` + `TrainingArticleManager.tsx` to use shared types/constants
+- Update `MobileNav.tsx` + `AuthenticatedNav.tsx` to use `useSignOut`
+- Update `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx` to use `PublicNav`, `PageFooter`, shared sections
+- Update `Athletes.tsx` to use `useAuth()` and `useUserRole`
+- Add semantic block comments to `Dashboard.tsx` and `Settings.tsx`
+
+---
+
+## What Will NOT Change
+- All visual output — identical pixels
+- All routing — same paths
+- All Supabase queries — no logic changes
+- All component APIs — props unchanged
+- All edge functions
