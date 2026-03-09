@@ -248,6 +248,7 @@ const AthleteDashboard = ({
   const handleProfileComplete = () => {
     setShowProfileDialog(false);
     invalidateProfile();
+    queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
     toast.success("Profile updated successfully!");
   };
 
