@@ -7,27 +7,15 @@ export interface TypographySettings {
   fontSize: string;
 }
 
-export const DEFAULT_TYPOGRAPHY: TypographySettings = {
-  fontFamily: "Montserrat, sans-serif",
-  fontSize: "16",
-};
-
-const TYPOGRAPHY_KEY = "__typography";
-
-function parseTypography(overrides: Record<string, string>): TypographySettings {
-  try {
-    const raw = overrides[TYPOGRAPHY_KEY];
-    if (raw) return { ...DEFAULT_TYPOGRAPHY, ...JSON.parse(raw) };
-  } catch {
-    // fall through to default
-  }
-  return DEFAULT_TYPOGRAPHY;
-}
-
 export interface DashboardLayout {
   text_overrides: Record<string, string>;
   typography: TypographySettings;
 }
+
+const DEFAULT_TYPOGRAPHY: TypographySettings = {
+  fontFamily: "Inter, sans-serif",
+  fontSize: "14",
+};
 
 export const useDashboardLayout = (role: "athlete" | "employer") => {
   const [layout, setLayout] = useState<DashboardLayout>({
@@ -46,11 +34,11 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
         .maybeSingle();
 
       if (error) throw error;
+
       if (data) {
-        const raw: Record<string, string> = (data as any).text_overrides || {};
         setLayout({
-          text_overrides: raw,
-          typography: parseTypography(raw),
+          text_overrides: (data as any).text_overrides || {},
+          typography: (data as any).typography || DEFAULT_TYPOGRAPHY,
         });
       }
     } catch (err) {
@@ -78,11 +66,6 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
   const saveLayout = useCallback(async () => {
     setSaving(true);
     try {
-      const overridesToSave = {
-        ...layout.text_overrides,
-        [TYPOGRAPHY_KEY]: JSON.stringify(layout.typography),
-      };
-
       const { data: existing } = await supabase
         .from("dashboard_layouts" as any)
         .select("id")
@@ -93,18 +76,18 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
         const { error } = await supabase
           .from("dashboard_layouts" as any)
           .update({
-            text_overrides: overridesToSave,
+            text_overrides: layout.text_overrides,
+            typography: layout.typography,
             updated_at: new Date().toISOString(),
           } as any)
           .eq("role", role);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("dashboard_layouts" as any)
-          .insert({
-            role,
-            text_overrides: overridesToSave,
-          } as any);
+        const { error } = await supabase.from("dashboard_layouts" as any).insert({
+          role,
+          text_overrides: layout.text_overrides,
+          typography: layout.typography,
+        } as any);
         if (error) throw error;
       }
 
@@ -143,15 +126,15 @@ export const useDashboardTextOverrides = (role: "athlete" | "employer") => {
       try {
         const { data, error } = await supabase
           .from("dashboard_layouts" as any)
-          .select("text_overrides")
+          .select("text_overrides, typography")
           .eq("role", role)
           .maybeSingle();
 
         if (error) throw error;
+
         if (data) {
-          const raw: Record<string, string> = (data as any).text_overrides || {};
-          setOverrides(raw);
-          setTypography(parseTypography(raw));
+          setOverrides((data as any).text_overrides || {});
+          setTypography((data as any).typography || DEFAULT_TYPOGRAPHY);
         }
       } catch (err) {
         console.error("Failed to load text overrides:", err);
@@ -159,13 +142,11 @@ export const useDashboardTextOverrides = (role: "athlete" | "employer") => {
         setLoading(false);
       }
     };
+
     fetch();
   }, [role]);
 
-  const getText = useCallback(
-    (key: string, defaultValue: string) => overrides[key] ?? defaultValue,
-    [overrides]
-  );
+  const getText = useCallback((key: string, defaultValue: string) => overrides[key] ?? defaultValue, [overrides]);
 
   return { getText, typography, loading };
 };
