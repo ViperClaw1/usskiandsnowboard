@@ -173,7 +173,7 @@ const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
 
 export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: AthleteHomeProps) => {
   const queryClient = useQueryClient();
-  const { getText } = useDashboardTextOverrides("athlete");
+  const { getText, typography } = useDashboardTextOverrides("athlete");
 
   // ==============================
   // Data Fetching — Dashboard (profile + connections)

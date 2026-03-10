@@ -165,7 +165,7 @@ const fetchFeaturedAthletes = async (): Promise<AthleteProfile[]> => {
 
 export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: PartnerLandingPageProps) => {
   const queryClient = useQueryClient();
-  const { getText } = useDashboardTextOverrides("employer");
+  const { getText, typography } = useDashboardTextOverrides("employer");
 
   // ==============================
   // Data Fetching — Dashboard (profile + connections)
