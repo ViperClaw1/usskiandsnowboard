@@ -13,8 +13,8 @@ export interface DashboardLayout {
 }
 
 const DEFAULT_TYPOGRAPHY: TypographySettings = {
-  fontFamily: "Inter, sans-serif",
-  fontSize: "14",
+  fontFamily: "Montserrat, sans-serif",
+  fontSize: "16",
 };
 
 export const useDashboardLayout = (role: "athlete" | "employer") => {
