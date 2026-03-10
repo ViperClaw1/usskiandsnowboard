@@ -307,7 +307,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           : "AT"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="space-y-1 p-5 bg-white rounded">
+                    <div className="space-y-1 p-5 pb-0 bg-white rounded">
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
                         {profile?.profiles?.full_name || "Athlete"}
                       </h1>
