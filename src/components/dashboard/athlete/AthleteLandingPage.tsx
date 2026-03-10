@@ -18,6 +18,9 @@ import {
   Clock,
   Video,
   EyeIcon,
+  Pencil,
+  MapPin,
+  Instagram,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +56,8 @@ interface AthleteProfile {
   skills: string[] | null;
   career_interests: string[] | null;
   geographic_preferences: string[] | null;
+  home_mountain: string | null;
+  hero_image_url: string | null;
   professional_highlights: string | null;
   sponsors: string[] | null;
   email: string | null;
@@ -256,57 +261,123 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
       className="bg-gradient-to-b from-background to-muted/30"
       style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
     >
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-background py-12 px-4 sm:px-6 lg:px-8">
+      {/* LinkedIn-style profile block */}
+      <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-6">
-            <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
-              <AvatarImage src={profile?.photo_url || ""} />
-              <AvatarFallback>
-                {profile?.profiles?.full_name
-                  ? profile.profiles.full_name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                  : "AT"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                Welcome back, {profile?.profiles?.full_name?.split(" ")[0] || "Athlete"}
-              </h1>
-              {profile?.sport_discipline && (
-                <p className="text-lg text-muted-foreground">{profile.sport_discipline} Athlete</p>
-              )}
+          <Card className="overflow-hidden rounded-xl border shadow-elegant">
+            {/* Cover / banner */}
+            <div
+              className="relative h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
+              style={
+                profile?.hero_image_url
+                  ? {
+                      backgroundImage: `url(${profile.hero_image_url})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : undefined
+              }
+            >
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/80 hover:bg-background shadow-md"
+                onClick={() => onNavigate("profile")}
+                aria-label="Edit profile"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </div>
-            {completeness < 100 && (
-              <Card className="hidden lg:block w-64">
-                <CardContent className="pt-6">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {getText("hero.profile_complete_label", "Profile Complete")}
-                      </span>
-                      <span className="font-semibold">{completeness}%</span>
+
+            {/* Content block: overlapping avatar + name, headline, location, links, availability */}
+            <div className="px-4 sm:px-6 pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14">
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
+                    <AvatarImage src={profile?.photo_url || ""} />
+                    <AvatarFallback className="text-xl sm:text-2xl">
+                      {profile?.profiles?.full_name
+                        ? profile.profiles.full_name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                        : "AT"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-1 pt-1 sm:pt-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                      {profile?.profiles?.full_name || "Athlete"}
+                    </h1>
+                    {profile?.sport_discipline && (
+                      <p className="text-base text-muted-foreground">{profile.sport_discipline} Athlete</p>
+                    )}
+                    {(profile?.geographic_preferences?.length || profile?.home_mountain) && (
+                      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        {profile?.geographic_preferences?.[0] || profile?.home_mountain || "—"}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                      {profile?.instagram_url && (
+                        <a
+                          href={profile.instagram_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                        >
+                          <Instagram className="h-4 w-4" />
+                          Instagram
+                        </a>
+                      )}
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-muted-foreground"
+                        onClick={() => onNavigate("profile")}
+                      >
+                        Edit profile
+                      </Button>
                     </div>
-                    <Progress value={completeness} className="h-2" />
-                    <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                      {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
-                      <ArrowRight className="ml-1 h-3 w-3" />
-                    </Button>
-                    <AIProfilePopulator
-                      role="athlete"
-                      userId={user.id}
-                      onComplete={() => {
-                        queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
-                        onProfileUpdated?.();
-                      }}
-                    />
+                    {profile?.availability && (
+                      <Badge
+                        variant="secondary"
+                        className="mt-2 w-fit bg-green-500/15 text-green-700 dark:text-green-400 border-0"
+                      >
+                        {profile.availability}
+                      </Badge>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                </div>
+                {completeness < 100 && (
+                  <Card className="w-full sm:w-64 shrink-0">
+                    <CardContent className="pt-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {getText("hero.profile_complete_label", "Profile Complete")}
+                          </span>
+                          <span className="font-semibold">{completeness}%</span>
+                        </div>
+                        <Progress value={completeness} className="h-2" />
+                        <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                          {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                          <ArrowRight className="ml-1 h-3 w-3" />
+                        </Button>
+                        <AIProfilePopulator
+                          role="athlete"
+                          userId={user.id}
+                          onComplete={() => {
+                            queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
+                            onProfileUpdated?.();
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       </section>
 
