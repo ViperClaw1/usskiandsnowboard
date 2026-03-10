@@ -57,7 +57,7 @@ export const AthleteLayoutEditor = () => {
       {/* Toolbar */}
       <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3 border gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-1 flex-wrap">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground w-full">
             Click any text with a <span className="text-primary font-medium">pencil icon</span> to edit it. Changes
             apply to all athlete dashboards.
           </p>
