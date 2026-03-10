@@ -285,7 +285,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               <Button
                 variant="secondary"
                 size="icon"
-                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/80 hover:bg-background shadow-md"
+                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-black/80 hover:bg-background shadow-md"
                 onClick={() => onNavigate("profile")}
                 aria-label="Edit profile"
               >
