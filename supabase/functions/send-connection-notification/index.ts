@@ -1,444 +1,366 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { format, formatDistanceToNow, isToday, isYesterday, isWithinInterval, subDays } from "date-fns";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, ArrowDownLeft, CheckCircle2, Clock, Loader2, ChevronDown, ChevronUp, Mail } from "lucide-react";
-import { toast } from "sonner";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { Resend } from "https://esm.sh/resend@4.0.0";
+import { emailTemplate, sendEmail, sleep } from "../_shared/email-template.ts";
 
-// ==============================
-// Types
-// ==============================
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-interface ActivityRow {
-  id: string;
-  counterpartName: string;
-  counterpartEmail: string | null;
-  message: string | null;
-  opportunityType: string | null;
-  status: string;
-  direction: "outbound" | "inbound";
-  createdAt: string;
-  isNew: boolean;
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
+
+const FROM = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
+const CC_ALWAYS = ["michele.lowry@usskiandsnowboard.org"];
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface NotificationRequest {
+  notification_type: "new_request" | "request_accepted" | "request_declined";
+  request_id: string;
 }
 
-interface ConnectionActivityBoardProps {
-  profileId: string;
-  profileType: "athlete" | "employer";
-  userId: string;
-  onActionComplete?: () => void;
-}
-
-// ==============================
-// Query functions
-// ==============================
-
-const fetchAthleteActivity = async (profileId: string, userId: string): Promise<ActivityRow[]> => {
-  const { data, error } = await supabase
-    .from("connection_requests")
-    .select(
-      `
-      id,
-      message,
-      opportunity_type,
-      status,
-      created_at,
-      initiated_by_user_id,
-      employer_profiles (
-        company_name,
-        contact_email
-      )
-    `,
-    )
-    .eq("athlete_id", profileId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-
-  const sevenDaysAgo = subDays(new Date(), 7);
-
-  return (data ?? []).map((row) => {
-    const ep = row.employer_profiles as { company_name: string; contact_email: string | null } | null;
-    return {
-      id: row.id,
-      counterpartName: ep?.company_name ?? "Unknown Company",
-      counterpartEmail: ep?.contact_email ?? null,
-      message: row.message,
-      opportunityType: row.opportunity_type,
-      status: row.status ?? "pending",
-      direction: row.initiated_by_user_id === userId ? "outbound" : "inbound",
-      createdAt: row.created_at,
-      isNew: isWithinInterval(new Date(row.created_at), { start: sevenDaysAgo, end: new Date() }),
-    };
-  });
-};
-
-const fetchEmployerActivity = async (profileId: string, userId: string): Promise<ActivityRow[]> => {
-  const { data, error } = await supabase
-    .from("connection_requests")
-    .select(
-      `
-      id,
-      message,
-      opportunity_type,
-      status,
-      created_at,
-      initiated_by_user_id,
-      athlete_profiles (
-        email,
-        profiles (
-          full_name
-        )
-      )
-    `,
-    )
-    .eq("employer_id", profileId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-
-  const sevenDaysAgo = subDays(new Date(), 7);
-
-  return (data ?? []).map((row) => {
-    const ap = row.athlete_profiles as {
-      email: string | null;
-      profiles: { full_name: string | null } | null;
-    } | null;
-    return {
-      id: row.id,
-      counterpartName: ap?.profiles?.full_name ?? "Unknown Athlete",
-      counterpartEmail: ap?.email ?? null,
-      message: row.message,
-      opportunityType: row.opportunity_type,
-      status: row.status ?? "pending",
-      direction: row.initiated_by_user_id === userId ? "outbound" : "inbound",
-      createdAt: row.created_at,
-      isNew: isWithinInterval(new Date(row.created_at), { start: sevenDaysAgo, end: new Date() }),
-    };
-  });
-};
-
-// ==============================
-// Date group label for feed separators
-// ==============================
-const getDateGroupLabel = (date: Date): string => {
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
-  return format(date, "MMMM d, yyyy");
-};
-
-// ==============================
-// Status pill
-// ==============================
-const StatusPill = ({ status }: { status: string }) => {
-  if (status === "accepted") {
-    return (
-      <Badge variant="default" className="bg-green-500/15 text-green-700 dark:text-green-400 border-0 gap-1">
-        <CheckCircle2 className="h-3 w-3" />
-        Connected
-      </Badge>
-    );
+// === SMS helper ===
+async function sendTwilioSMS(toPhone: string, message: string): Promise<void> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+    console.log("Twilio credentials not configured, skipping SMS");
+    return;
   }
-  return (
-    <Badge variant="secondary" className="gap-1">
-      <Clock className="h-3 w-3" />
-      Pending
-    </Badge>
-  );
-};
+  try {
+    const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+      {
+        method: "POST",
+        headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ From: TWILIO_PHONE_NUMBER, To: toPhone, Body: message }),
+      },
+    );
+    if (!response.ok) {
+      console.error(`Twilio SMS failed (${response.status}):`, await response.text());
+    } else {
+      console.log(`SMS sent to ${toPhone}`);
+    }
+  } catch (err) {
+    console.error("Error sending Twilio SMS:", err);
+  }
+}
 
-// ==============================
-// Direction icon
-// ==============================
-const DirectionIcon = ({ direction }: { direction: "inbound" | "outbound" }) =>
-  direction === "outbound" ? (
-    <ArrowUpRight className="h-3.5 w-3.5 text-primary shrink-0" />
-  ) : (
-    <ArrowDownLeft className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-  );
+async function shouldSendSMS(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<{ send: boolean; phone: string | null }> {
+  const { data: prefs } = await supabase
+    .from("notification_preferences")
+    .select("sms_notifications_enabled")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!prefs?.sms_notifications_enabled) return { send: false, phone: null };
+  const { data: profile } = await supabase.from("profiles").select("phone").eq("id", userId).maybeSingle();
+  if (!profile?.phone) return { send: false, phone: null };
+  return { send: true, phone: profile.phone };
+}
 
-// ==============================
-// Date separator (between feed cards when date changes)
-// ==============================
-const FeedDateSeparator = ({ label }: { label: string }) => (
-  <div className="flex items-center gap-3 py-2">
-    <div className="h-px flex-1 bg-border" />
-    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">{label}</span>
-    <div className="h-px flex-1 bg-border" />
-  </div>
-);
+async function notifyAdmins(notificationType: string, requestId: string) {
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-admin-notification`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseServiceKey}` },
+      body: JSON.stringify({ notification_type: notificationType, request_id: requestId }),
+    });
+    console.log(`Notified admins about ${notificationType}`);
+  } catch (err) {
+    console.error("Error notifying admins:", err);
+  }
+}
 
-// ==============================
-// Main Component
-// ==============================
+async function shouldSendEmail(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  notificationType: string,
+): Promise<boolean> {
+  const { data: prefs } = await supabase
+    .from("notification_preferences")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!prefs) return true;
+  if (prefs.digest_frequency === "off") return false;
+  if (prefs.digest_frequency !== "instant") return false;
+  if (notificationType === "new_request" && !prefs.email_new_requests) return false;
+  if (notificationType === "request_accepted" && !prefs.email_accepted_connections) return false;
+  return true;
+}
 
-export const ConnectionActivityBoard = ({
-  profileId,
-  profileType,
-  userId,
-  onActionComplete,
-}: ConnectionActivityBoardProps) => {
-  const queryClient = useQueryClient();
+// === Name helpers ===
 
-  const [actionRow, setActionRow] = useState<ActivityRow | null>(null);
-  const [actionMessage, setActionMessage] = useState("");
-  const [processing, setProcessing] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+/** Split a full name string into [firstName, lastName], tolerating empty/null. */
+function splitName(fullName: string | null | undefined): [string, string] {
+  const trimmed = (fullName ?? "").trim();
+  if (!trimmed) return ["", ""];
+  const idx = trimmed.indexOf(" ");
+  if (idx === -1) return [trimmed, ""];
+  return [trimmed.slice(0, idx), trimmed.slice(idx + 1)];
+}
 
-  const queryKey = ["connection-activity", profileType, profileId];
-  const queryFn =
-    profileType === "athlete"
-      ? () => fetchAthleteActivity(profileId, userId)
-      : () => fetchEmployerActivity(profileId, userId);
+// === Email body builders ===
 
-  const { data: rows = [], isLoading } = useQuery<ActivityRow[]>({
-    queryKey,
-    queryFn,
-    staleTime: 2 * 60 * 1000,
-  });
+function newRequestBody(companyName: string, athleteName: string, request: any, appUrl: string): string {
+  return `
+    <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${companyName}</strong>,</p>
+    <p style="margin: 0 0 30px; font-size: 16px;">
+      You have received a new connection request from <strong>${athleteName}</strong>!
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Athlete Profile</p>
+          <p style="margin: 0 0 8px; font-size: 15px;"><strong>Name:</strong> ${athleteName}</p>
+          ${request.athlete_profiles.sport_discipline ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Sport:</strong> ${request.athlete_profiles.sport_discipline}</p>` : ""}
+          ${request.athlete_profiles.bio ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Bio:</strong> ${request.athlete_profiles.bio}</p>` : ""}
+          ${request.message ? `<p style="margin: 0; font-size: 15px;"><strong>Message:</strong> ${request.message}</p>` : ""}
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0 0 30px; font-size: 16px;">
+      Log in to your dashboard to review this request and connect with ${athleteName}.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <a href="${appUrl}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Request</a>
+        </td>
+      </tr>
+    </table>`;
+}
 
-  useEffect(() => {
-    const filter = profileType === "athlete" ? `athlete_id=eq.${profileId}` : `employer_id=eq.${profileId}`;
+/**
+ * Builds the joint introduction email body sent to both parties on connection acceptance.
+ */
+function introductionBody(
+  athleteFirstName: string,
+  athleteLastName: string,
+  athleteSport: string,
+  repFirstName: string,
+  repLastName: string,
+  repTitle: string,
+  companyName: string,
+): string {
+  const athleteFullName = [athleteFirstName, athleteLastName].filter(Boolean).join(" ");
+  const repFullName = [repFirstName, repLastName].filter(Boolean).join(" ");
+  const sportLabel = athleteSport ? `${athleteSport} ` : "";
+  const titleClause = repTitle ? `a ${repTitle} at` : "from";
 
-    const channel = supabase
-      .channel(`activity-board-${profileId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "connection_requests", filter }, () =>
-        queryClient.invalidateQueries({ queryKey }),
-      )
-      .subscribe();
+  return `
+    <p style="margin: 0 0 24px; font-size: 16px;">${repFirstName},</p>
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileId, profileType, queryClient]);
+    <p style="margin: 0 0 24px; font-size: 16px;">
+      Please meet <strong>${athleteFullName}</strong>, an accomplished professional ${sportLabel}athlete and member of the US Ski &amp; Snowboard.
+    </p>
 
-  const handleAccept = async () => {
-    if (!actionRow) return;
-    setProcessing(true);
-    try {
-      const { error } = await supabase
-        .from("connection_requests")
-        .update({ status: "accepted" })
-        .eq("id", actionRow.id);
-      if (error) throw error;
+    <p style="margin: 0 0 24px; font-size: 16px;">${athleteFirstName},</p>
 
-      try {
-        await supabase.functions.invoke("send-connection-notification", {
-          body: { notification_type: "request_accepted", request_id: actionRow.id },
+    <p style="margin: 0 0 24px; font-size: 16px;">
+      Please meet <strong>${repFullName}</strong>, ${titleClause} <strong>${companyName}</strong>.
+    </p>
+
+    <p style="margin: 0 0 40px; font-size: 16px;">
+      ${repFirstName} will take it from here to introduce themselves and find time to connect.
+    </p>
+
+    <p style="margin: 0 0 4px; font-size: 16px;">Cheers,</p>
+    <p style="margin: 0; font-size: 16px; font-weight: bold;">US Ski &amp; Snowboard Athlete Development Team</p>`;
+}
+
+function declinedBody(recipientName: string, otherPartyName: string, appUrl: string): string {
+  return `
+    <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${recipientName}</strong>,</p>
+    <p style="margin: 0 0 30px; font-size: 16px;">
+      Unfortunately, <strong>${otherPartyName}</strong> has declined your connection request at this time.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 12px; font-size: 15px;">Don't be discouraged! There are many other opportunities on the platform.</p>
+          <p style="margin: 0; font-size: 15px;">Keep building your profile and exploring connections that align with your goals.</p>
+        </td>
+      </tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <a href="${appUrl}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Continue Exploring</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+// === Handler ===
+
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { notification_type, request_id }: NotificationRequest = await req.json();
+    console.log(`Processing ${notification_type} notification for request ${request_id}`);
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const appUrl = "https://usskiandsnowboard.lovable.app";
+
+    const { data: request, error: requestError } = await supabase
+      .from("connection_requests")
+      .select(`
+        *,
+        athlete_profiles (email, sport_discipline, bio, user_id, phone, profiles (full_name, first_name, last_name)),
+        employer_profiles (company_name, industry, about, contact_email, contact_person, contact_title, user_id, phone, profiles (full_name, first_name, last_name))
+      `)
+      .eq("id", request_id)
+      .single();
+
+    if (requestError || !request) {
+      console.error("Error fetching request:", requestError);
+      throw new Error("Connection request not found");
+    }
+
+    const athleteEmail = request.athlete_profiles.email;
+    const employerEmail = request.employer_profiles.contact_email;
+    const athleteUserId = request.athlete_profiles.user_id;
+    const employerUserId = request.employer_profiles.user_id;
+    const companyName = request.employer_profiles.company_name;
+
+    // Resolve athlete name: prefer first_name/last_name, fall back to splitting full_name
+    const athleteProfiles = request.athlete_profiles.profiles as any;
+    const athleteFirstName: string =
+      athleteProfiles?.first_name || splitName(athleteProfiles?.full_name)[0] || "Athlete";
+    const athleteLastName: string =
+      athleteProfiles?.last_name || splitName(athleteProfiles?.full_name)[1] || "";
+    const athleteFullName = [athleteFirstName, athleteLastName].filter(Boolean).join(" ");
+
+    // Resolve employer rep name: prefer contact_person, fall back to profiles.full_name
+    const contactPerson: string = request.employer_profiles.contact_person || "";
+    const employerProfiles = request.employer_profiles.profiles as any;
+    const repFallbackName = employerProfiles?.full_name || "";
+    const [repFirstName, repLastName] = contactPerson
+      ? splitName(contactPerson)
+      : splitName(repFallbackName);
+    const repFirstNameSafe = repFirstName || "The team";
+    const repLastNameSafe = repLastName || "";
+    const repTitle: string = request.employer_profiles.contact_title || "";
+
+    if (notification_type === "new_request") {
+      const sendEmail_ = employerUserId ? await shouldSendEmail(supabase, employerUserId, "new_request") : true;
+      if (sendEmail_ && employerEmail) {
+        await sendEmail(resend, {
+          from: FROM,
+          to: [employerEmail],
+          subject: `New Connection Request from ${athleteFullName}`,
+          html: emailTemplate("New Connection Request", newRequestBody(companyName, athleteFullName, request, appUrl)),
         });
-      } catch (e) {
-        console.error("Notification error:", e);
+        console.log(`New request email sent to ${employerEmail}`);
+      }
+      if (employerUserId) {
+        const sms = await shouldSendSMS(supabase, employerUserId);
+        if (sms.send && sms.phone) {
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: New connection request from ${athleteFullName}. Log in to review.`);
+        }
+      }
+      await notifyAdmins("new_connection_request", request_id);
+
+    } else if (notification_type === "request_accepted") {
+      // Build recipient list — both athlete and employer
+      const toAddresses = [athleteEmail, employerEmail].filter((e): e is string => Boolean(e));
+
+      if (toAddresses.length > 0) {
+        const subject = `${companyName} <> ${athleteFirstName} ${athleteLastName} — Athlete Connection`.trim();
+        await sendEmail(resend, {
+          from: FROM,
+          to: toAddresses,
+          cc: CC_ALWAYS,
+          subject,
+          html: emailTemplate(
+            "You're Connected!",
+            introductionBody(
+              athleteFirstName,
+              athleteLastName,
+              request.athlete_profiles.sport_discipline || "",
+              repFirstNameSafe,
+              repLastNameSafe,
+              repTitle,
+              companyName,
+            ),
+          ),
+        });
+        console.log(`Introduction email sent to: ${toAddresses.join(", ")} (CC: ${CC_ALWAYS.join(", ")})`);
       }
 
-      toast.success(`Connected with ${actionRow.counterpartName}`);
-      queryClient.invalidateQueries({ queryKey });
-      onActionComplete?.();
-      setActionRow(null);
-      setActionMessage("");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to accept request");
-    } finally {
-      setProcessing(false);
+      // SMS notifications remain unchanged
+      if (athleteUserId) {
+        const sms = await shouldSendSMS(supabase, athleteUserId);
+        if (sms.send && sms.phone) {
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: ${companyName} accepted your connection request! Check your dashboard.`);
+        }
+      }
+      if (employerUserId) {
+        const sms = await shouldSendSMS(supabase, employerUserId);
+        if (sms.send && sms.phone) {
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: You're now connected with ${athleteFullName}. View details on your dashboard.`);
+        }
+      }
+      await notifyAdmins("connection_accepted", request_id);
+
+    } else if (notification_type === "request_declined") {
+      const initiatorUserId = request.initiated_by_user_id;
+      let recipientEmail: string | null = null;
+      let recipientName = "";
+      let otherPartyName = "";
+
+      if (initiatorUserId === athleteUserId) {
+        recipientEmail = athleteEmail;
+        recipientName = athleteFullName;
+        otherPartyName = companyName;
+      } else if (initiatorUserId === employerUserId) {
+        recipientEmail = employerEmail;
+        recipientName = companyName;
+        otherPartyName = athleteFullName;
+      }
+
+      const sendEmail_ = initiatorUserId ? await shouldSendEmail(supabase, initiatorUserId, "request_declined") : true;
+      if (sendEmail_ && recipientEmail) {
+        await sendEmail(resend, {
+          from: FROM,
+          to: [recipientEmail],
+          subject: `Connection Request Update`,
+          html: emailTemplate("Connection Request Update", declinedBody(recipientName, otherPartyName, appUrl)),
+        });
+        console.log(`Declined notification sent to ${recipientEmail}`);
+      }
+
+      if (initiatorUserId) {
+        const sms = await shouldSendSMS(supabase, initiatorUserId);
+        if (sms.send && sms.phone) {
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: ${otherPartyName} declined your connection request. Keep exploring!`);
+        }
+      }
+      await notifyAdmins("connection_declined", request_id);
     }
-  };
 
-  const handleDecline = async () => {
-    if (!actionRow) return;
-    setProcessing(true);
-    try {
-      const { error } = await supabase.from("connection_requests").delete().eq("id", actionRow.id);
-      if (error) throw error;
-
-      toast.success("Request declined");
-      queryClient.invalidateQueries({ queryKey });
-      onActionComplete?.();
-      setActionRow(null);
-      setActionMessage("");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to decline request");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner />
-      </div>
-    );
+    return new Response(JSON.stringify({ success: true, notification_type }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  } catch (error: any) {
+    console.error("Error in send-connection-notification:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
-
-  if (rows.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p className="text-sm">No connection activity yet.</p>
-      </div>
-    );
-  }
-
-  // Single chronological feed: rows already sorted by created_at desc
-  let lastDateLabel: string | null = null;
-
-  return (
-    <div className="space-y-1">
-      <ul className="list-none p-0 m-0 space-y-1" role="list">
-        {rows.map((row) => {
-          const date = new Date(row.createdAt);
-          const dateLabel = getDateGroupLabel(date);
-          const showDateSeparator = dateLabel !== lastDateLabel;
-          if (showDateSeparator) lastDateLabel = dateLabel;
-
-          const canReview = row.direction === "inbound" && row.status === "pending";
-          const isExpanded = expandedId === row.id;
-
-          return (
-            <li key={row.id} className="list-none" role="listitem">
-              {showDateSeparator && <FeedDateSeparator label={dateLabel} />}
-
-              <Card
-                className={`overflow-hidden transition-colors hover:bg-muted/30 ${
-                  row.isNew ? "border-l-4 border-l-primary" : ""
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex flex-col gap-3">
-                    {/* Top row: direction, name, badges, time, actions */}
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <DirectionIcon direction={row.direction} />
-                        <div className="min-w-0">
-                          <p className="font-medium text-sm truncate">{row.counterpartName}</p>
-                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                            {row.isNew && (
-                              <Badge className="h-4 text-[10px] px-1.5 bg-primary/15 text-primary border-0">New</Badge>
-                            )}
-                            <StatusPill status={row.status} />
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(date, { addSuffix: true })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {canReview && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            className="h-9 min-w-[72px]"
-                            onClick={() => {
-                              setActionRow(row);
-                              setActionMessage("");
-                            }}
-                          >
-                            Review
-                          </Button>
-                        )}
-                        {row.message && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-9 w-9 p-0"
-                            onClick={() => setExpandedId(isExpanded ? null : row.id)}
-                            aria-expanded={isExpanded}
-                            aria-label={isExpanded ? "Collapse message" : "Expand message"}
-                          >
-                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Opportunity type */}
-                    {row.opportunityType && (
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium">Opportunity:</span> {row.opportunityType}
-                      </p>
-                    )}
-
-                    {/* Message preview or full */}
-                    {row.message && (
-                      <div className="text-sm">
-                        {isExpanded ? (
-                          <p className="text-muted-foreground whitespace-pre-wrap rounded-md bg-muted/50 p-3 border">
-                            {row.message}
-                          </p>
-                        ) : (
-                          <p className="text-muted-foreground line-clamp-2">{row.message}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Email link */}
-                    {row.counterpartEmail && (
-                      <a
-                        href={`mailto:${row.counterpartEmail}`}
-                        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-fit"
-                      >
-                        <Mail className="h-3.5 w-3.5" />
-                        {row.counterpartEmail}
-                      </a>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </li>
-          );
-        })}
-      </ul>
-
-      <Dialog
-        open={!!actionRow}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActionRow(null);
-            setActionMessage("");
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Connection Request</DialogTitle>
-            <DialogDescription>
-              {actionRow?.counterpartName} sent you a connection request
-              {actionRow?.opportunityType ? ` regarding "${actionRow.opportunityType}"` : ""}.
-            </DialogDescription>
-          </DialogHeader>
-
-          {actionRow?.message && (
-            <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground border">"{actionRow.message}"</div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="response-message">Optional response message</Label>
-            <Textarea
-              id="response-message"
-              placeholder="Add a message when accepting (optional)..."
-              value={actionMessage}
-              onChange={(e) => setActionMessage(e.target.value)}
-              className="min-h-[80px]"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button className="flex-1 min-h-[44px]" onClick={handleAccept} disabled={processing}>
-              {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept"}
-            </Button>
-            <Button variant="outline" className="flex-1 min-h-[44px]" onClick={handleDecline} disabled={processing}>
-              {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Decline"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
 };
+
+serve(handler);
