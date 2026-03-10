@@ -19,7 +19,6 @@ import { PartnerLayoutEditor } from "./admin/PartnerLayoutEditor";
 import { TrainingArticleManager } from "./admin/TrainingArticleManager";
 import { WaitlistManager } from "./admin/WaitlistManager";
 
-
 interface AdminDashboardProps {
   user: User;
 }
@@ -30,7 +29,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut({ scope: 'local' });
+      await supabase.auth.signOut({ scope: "local" });
       localStorage.clear();
       sessionStorage.clear();
       toast.success("Signed out successfully");
@@ -44,12 +43,12 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const testNotification = async () => {
     try {
       toast.loading("Sending test notification...");
-      
-      const { error } = await supabase.functions.invoke('send-admin-notification', {
+
+      const { error } = await supabase.functions.invoke("send-admin-notification", {
         body: {
-          notification_type: 'new_account',
-          user_id: user.id
-        }
+          notification_type: "new_account",
+          user_id: user.id,
+        },
       });
 
       if (error) {
@@ -66,8 +65,6 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      
-
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto">
@@ -93,7 +90,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="analytics" className="space-y-6 mt-6">
+          <TabsContent value="analytics" forceMount className="space-y-6 mt-6">
             {/* Header Card */}
             <div className="bg-gradient-to-r from-primary to-primary-glow rounded-lg p-6 text-primary-foreground shadow-elegant">
               <div className="flex items-center gap-4">
@@ -142,19 +139,19 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="athlete" className="mt-6">
+          <TabsContent value="athlete" forceMount className="mt-6">
             <AthleteLayoutEditor />
           </TabsContent>
 
-          <TabsContent value="employer" className="mt-6">
+          <TabsContent value="employer" forceMount className="mt-6">
             <PartnerLayoutEditor />
           </TabsContent>
 
-          <TabsContent value="training" className="mt-6">
+          <TabsContent value="training" forceMount className="mt-6">
             <TrainingArticleManager />
           </TabsContent>
 
-          <TabsContent value="waitlist" className="mt-6">
+          <TabsContent value="waitlist" forceMount className="mt-6">
             <WaitlistManager />
           </TabsContent>
         </Tabs>
