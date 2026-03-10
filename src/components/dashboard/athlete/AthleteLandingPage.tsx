@@ -173,7 +173,7 @@ const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
 
 export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: AthleteHomeProps) => {
   const queryClient = useQueryClient();
-  const { getText } = useDashboardTextOverrides("athlete");
+  const { getText, typography } = useDashboardTextOverrides("athlete");
 
   // ==============================
   // Data Fetching — Dashboard (profile + connections)
@@ -252,7 +252,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   // Render — Main
   // ==============================
   return (
-    <div className="bg-gradient-to-b from-background to-muted/30">
+    <div
+      className="bg-gradient-to-b from-background to-muted/30"
+      style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
+    >
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
