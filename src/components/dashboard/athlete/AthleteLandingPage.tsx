@@ -290,10 +290,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             </div>
 
             {/* Content block: overlapping avatar + name, headline, location, links, availability */}
-            <div className="px-4 sm:px-6 pb-6">
+            <div className="relative px-4 sm:px-6 pb-6 min-h-[11rem] sm:min-h-[8rem]">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14">
-                <div className="flex flex-col sm:flex-row items-start gap-4">
-                  <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
+                <div className="relative flex flex-col sm:flex-row items-start gap-4 min-h-[7rem] sm:min-h-0">
+                  <Avatar className="relative z-0 h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
                     <AvatarImage src={profile?.photo_url || ""} />
                     <AvatarFallback className="text-xl sm:text-2xl">
                       {profile?.profiles?.full_name
@@ -304,7 +304,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                         : "AT"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="space-y-1 pt-1 sm:pt-0">
+                  <div className="absolute left-0 top-24 sm:top-0 sm:left-32 z-10 min-w-0 max-w-[calc(100%-8rem)] space-y-1">
                     <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                       {profile?.profiles?.full_name || "Athlete"}
                     </h1>
