@@ -293,7 +293,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               </Button>
 
               {/* Profile info block — floated above the banner via absolute positioning */}
-              <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 px-4 sm:px-6 z-10">
+              <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 px-4 sm:px-6 z-10 rounded">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white rounded-lg">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
@@ -307,7 +307,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           : "AT"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="space-y-1 p-5 pb-0 bg-white rounded">
+                    <div className="space-y-1">
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
                         {profile?.profiles?.full_name || "Athlete"}
                       </h1>
