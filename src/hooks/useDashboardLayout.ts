@@ -2,12 +2,38 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export interface TypographySettings {
+  fontFamily: string;
+  fontSize: string;
+}
+
+export const DEFAULT_TYPOGRAPHY: TypographySettings = {
+  fontFamily: "Montserrat, sans-serif",
+  fontSize: "16",
+};
+
+const TYPOGRAPHY_KEY = "__typography";
+
+function parseTypography(overrides: Record<string, string>): TypographySettings {
+  try {
+    const raw = overrides[TYPOGRAPHY_KEY];
+    if (raw) return { ...DEFAULT_TYPOGRAPHY, ...JSON.parse(raw) };
+  } catch {
+    // fall through to default
+  }
+  return DEFAULT_TYPOGRAPHY;
+}
+
 export interface DashboardLayout {
   text_overrides: Record<string, string>;
+  typography: TypographySettings;
 }
 
 export const useDashboardLayout = (role: "athlete" | "employer") => {
-  const [layout, setLayout] = useState<DashboardLayout>({ text_overrides: {} });
+  const [layout, setLayout] = useState<DashboardLayout>({
+    text_overrides: {},
+    typography: DEFAULT_TYPOGRAPHY,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -21,8 +47,10 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
 
       if (error) throw error;
       if (data) {
+        const raw: Record<string, string> = (data as any).text_overrides || {};
         setLayout({
-          text_overrides: (data as any).text_overrides || {},
+          text_overrides: raw,
+          typography: parseTypography(raw),
         });
       }
     } catch (err) {
@@ -43,9 +71,18 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
     }));
   }, []);
 
+  const updateTypography = useCallback((settings: TypographySettings) => {
+    setLayout((prev) => ({ ...prev, typography: settings }));
+  }, []);
+
   const saveLayout = useCallback(async () => {
     setSaving(true);
     try {
+      const overridesToSave = {
+        ...layout.text_overrides,
+        [TYPOGRAPHY_KEY]: JSON.stringify(layout.typography),
+      };
+
       const { data: existing } = await supabase
         .from("dashboard_layouts" as any)
         .select("id")
@@ -56,7 +93,7 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
         const { error } = await supabase
           .from("dashboard_layouts" as any)
           .update({
-            text_overrides: layout.text_overrides,
+            text_overrides: overridesToSave,
             updated_at: new Date().toISOString(),
           } as any)
           .eq("role", role);
@@ -66,7 +103,7 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
           .from("dashboard_layouts" as any)
           .insert({
             role,
-            text_overrides: layout.text_overrides,
+            text_overrides: overridesToSave,
           } as any);
         if (error) throw error;
       }
@@ -81,7 +118,7 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
   }, [role, layout]);
 
   const resetLayout = useCallback(() => {
-    setLayout({ text_overrides: {} });
+    setLayout({ text_overrides: {}, typography: DEFAULT_TYPOGRAPHY });
   }, []);
 
   return {
@@ -89,6 +126,7 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
     loading,
     saving,
     updateTextOverride,
+    updateTypography,
     saveLayout,
     resetLayout,
   };
@@ -97,6 +135,7 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
 // Read-only hook for actual dashboards
 export const useDashboardTextOverrides = (role: "athlete" | "employer") => {
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [typography, setTypography] = useState<TypographySettings>(DEFAULT_TYPOGRAPHY);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -110,7 +149,9 @@ export const useDashboardTextOverrides = (role: "athlete" | "employer") => {
 
         if (error) throw error;
         if (data) {
-          setOverrides((data as any).text_overrides || {});
+          const raw: Record<string, string> = (data as any).text_overrides || {};
+          setOverrides(raw);
+          setTypography(parseTypography(raw));
         }
       } catch (err) {
         console.error("Failed to load text overrides:", err);
@@ -126,5 +167,5 @@ export const useDashboardTextOverrides = (role: "athlete" | "employer") => {
     [overrides]
   );
 
-  return { getText, loading };
+  return { getText, typography, loading };
 };
