@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { format, formatDistanceToNow, isToday, isYesterday, isWithinInterval, subDays } from "date-fns";
+import { format, isWithinInterval, subDays } from "date-fns";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, ArrowDownLeft, CheckCircle2, Clock, Loader2, ChevronDown, ChevronUp, Mail } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 // ==============================
@@ -42,8 +42,7 @@ interface ConnectionActivityBoardProps {
 const fetchAthleteActivity = async (profileId: string, userId: string): Promise<ActivityRow[]> => {
   const { data, error } = await supabase
     .from("connection_requests")
-    .select(
-      `
+    .select(`
       id,
       message,
       opportunity_type,
@@ -54,8 +53,7 @@ const fetchAthleteActivity = async (profileId: string, userId: string): Promise<
         company_name,
         contact_email
       )
-    `,
-    )
+    `)
     .eq("athlete_id", profileId)
     .order("created_at", { ascending: false });
 
@@ -82,8 +80,7 @@ const fetchAthleteActivity = async (profileId: string, userId: string): Promise<
 const fetchEmployerActivity = async (profileId: string, userId: string): Promise<ActivityRow[]> => {
   const { data, error } = await supabase
     .from("connection_requests")
-    .select(
-      `
+    .select(`
       id,
       message,
       opportunity_type,
@@ -96,8 +93,7 @@ const fetchEmployerActivity = async (profileId: string, userId: string): Promise
           full_name
         )
       )
-    `,
-    )
+    `)
     .eq("employer_id", profileId)
     .order("created_at", { ascending: false });
 
@@ -125,12 +121,16 @@ const fetchEmployerActivity = async (profileId: string, userId: string): Promise
 };
 
 // ==============================
-// Date group label for feed separators
+// Group rows by date label
 // ==============================
-const getDateGroupLabel = (date: Date): string => {
-  if (isToday(date)) return "Today";
-  if (isYesterday(date)) return "Yesterday";
-  return format(date, "MMMM d, yyyy");
+const groupByDate = (rows: ActivityRow[]): { label: string; items: ActivityRow[] }[] => {
+  const groups: Record<string, ActivityRow[]> = {};
+  rows.forEach((row) => {
+    const label = format(new Date(row.createdAt), "MMMM d, yyyy");
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(row);
+  });
+  return Object.entries(groups).map(([label, items]) => ({ label, items }));
 };
 
 // ==============================
@@ -158,19 +158,30 @@ const StatusPill = ({ status }: { status: string }) => {
 // ==============================
 const DirectionIcon = ({ direction }: { direction: "inbound" | "outbound" }) =>
   direction === "outbound" ? (
-    <ArrowUpRight className="h-3.5 w-3.5 text-primary shrink-0" />
+    <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
   ) : (
-    <ArrowDownLeft className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+    <ArrowDownLeft className="h-3.5 w-3.5 text-muted-foreground" />
   );
 
 // ==============================
-// Date separator (between feed cards when date changes)
+// Section divider
 // ==============================
-const FeedDateSeparator = ({ label }: { label: string }) => (
-  <div className="flex items-center gap-3 py-2">
+const SectionDivider = ({ label }: { label: string }) => (
+  <div className="flex items-center gap-3 my-4">
     <div className="h-px flex-1 bg-border" />
     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">{label}</span>
     <div className="h-px flex-1 bg-border" />
+  </div>
+);
+
+// ==============================
+// Date divider inside a section
+// ==============================
+const DateDivider = ({ label }: { label: string }) => (
+  <div className="flex items-center gap-3 mb-2">
+    <div className="h-px flex-1 bg-border/50" />
+    <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wide">{label}</span>
+    <div className="h-px flex-1 bg-border/50" />
   </div>
 );
 
@@ -186,11 +197,16 @@ export const ConnectionActivityBoard = ({
 }: ConnectionActivityBoardProps) => {
   const queryClient = useQueryClient();
 
+  // ==============================
+  // State — inline action dialog
+  // ==============================
   const [actionRow, setActionRow] = useState<ActivityRow | null>(null);
   const [actionMessage, setActionMessage] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // ==============================
+  // Data fetching
+  // ==============================
   const queryKey = ["connection-activity", profileType, profileId];
   const queryFn =
     profileType === "athlete"
@@ -203,13 +219,19 @@ export const ConnectionActivityBoard = ({
     staleTime: 2 * 60 * 1000,
   });
 
+  // ==============================
+  // Realtime subscription — invalidates query on any change
+  // ==============================
   useEffect(() => {
-    const filter = profileType === "athlete" ? `athlete_id=eq.${profileId}` : `employer_id=eq.${profileId}`;
+    const filter =
+      profileType === "athlete" ? `athlete_id=eq.${profileId}` : `employer_id=eq.${profileId}`;
 
     const channel = supabase
       .channel(`activity-board-${profileId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "connection_requests", filter }, () =>
-        queryClient.invalidateQueries({ queryKey }),
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "connection_requests", filter },
+        () => queryClient.invalidateQueries({ queryKey }),
       )
       .subscribe();
 
@@ -219,6 +241,21 @@ export const ConnectionActivityBoard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId, profileType, queryClient]);
 
+  // ==============================
+  // Derived — split into new / existing, each sorted desc
+  // ==============================
+  const newRows = [...rows.filter((r) => r.isNew)].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  const existingRows = [...rows.filter((r) => !r.isNew)].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  const existingGroups = groupByDate(existingRows);
+
+  // ==============================
+  // Handlers — accept / decline from activity board
+  // ==============================
   const handleAccept = async () => {
     if (!actionRow) return;
     setProcessing(true);
@@ -229,6 +266,7 @@ export const ConnectionActivityBoard = ({
         .eq("id", actionRow.id);
       if (error) throw error;
 
+      // Send notification
       try {
         await supabase.functions.invoke("send-connection-notification", {
           body: { notification_type: "request_accepted", request_id: actionRow.id },
@@ -270,6 +308,10 @@ export const ConnectionActivityBoard = ({
     }
   };
 
+  // ==============================
+  // Render
+  // ==============================
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -286,116 +328,145 @@ export const ConnectionActivityBoard = ({
     );
   }
 
-  // Single chronological feed: rows already sorted by created_at desc
-  let lastDateLabel: string | null = null;
+  const renderTable = (items: ActivityRow[], highlighted: boolean) => (
+    <div className={`rounded-lg border overflow-hidden ${highlighted ? "border-primary/30" : ""}`}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[180px]">
+              {profileType === "athlete" ? "Partner" : "Athlete"}
+            </TableHead>
+            <TableHead className="hidden md:table-cell">Email</TableHead>
+            <TableHead className="hidden lg:table-cell">Opportunity</TableHead>
+            <TableHead>Message</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[80px] text-right">Time</TableHead>
+            {highlighted && <TableHead className="w-[160px] text-right">Actions</TableHead>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.map((row) => {
+            const canAct = highlighted && row.direction === "inbound" && row.status === "pending";
+            return (
+              <TableRow
+                key={row.id}
+                className={
+                  highlighted
+                    ? "bg-primary/5 border-l-2 border-l-primary hover:bg-primary/10 transition-colors"
+                    : undefined
+                }
+              >
+                {/* Name + direction + new badge */}
+                <TableCell>
+                  <div className="flex items-start gap-1.5">
+                    <DirectionIcon direction={row.direction} />
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm leading-tight truncate max-w-[140px]">
+                        {row.counterpartName}
+                      </p>
+                      {highlighted && (
+                        <Badge className="mt-0.5 h-4 text-[10px] px-1.5 bg-primary/15 text-primary border-0">
+                          New
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* Email */}
+                <TableCell className="hidden md:table-cell">
+                  {row.counterpartEmail ? (
+                    <a
+                      href={`mailto:${row.counterpartEmail}`}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {row.counterpartEmail}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/50">—</span>
+                  )}
+                </TableCell>
+
+                {/* Opportunity */}
+                <TableCell className="hidden lg:table-cell">
+                  <span className="text-xs text-muted-foreground">{row.opportunityType ?? "—"}</span>
+                </TableCell>
+
+                {/* Message */}
+                <TableCell>
+                  {row.message ? (
+                    <p className="text-xs text-muted-foreground line-clamp-2 max-w-[200px]">{row.message}</p>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/50">—</span>
+                  )}
+                </TableCell>
+
+                {/* Status */}
+                <TableCell>
+                  <StatusPill status={row.status} />
+                </TableCell>
+
+                {/* Time */}
+                <TableCell className="text-right">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {format(new Date(row.createdAt), "h:mm a")}
+                  </span>
+                </TableCell>
+
+                {/* Inline actions (new inbound pending only) */}
+                {highlighted && (
+                  <TableCell className="text-right">
+                    {canAct ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 px-2"
+                        onClick={() => {
+                          setActionRow(row);
+                          setActionMessage("");
+                        }}
+                      >
+                        Review
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/50">—</span>
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
 
   return (
-    <div className="space-y-1">
-      <ul className="list-none p-0 m-0 space-y-1" role="list">
-        {rows.map((row) => {
-          const date = new Date(row.createdAt);
-          const dateLabel = getDateGroupLabel(date);
-          const showDateSeparator = dateLabel !== lastDateLabel;
-          if (showDateSeparator) lastDateLabel = dateLabel;
+    <div className="space-y-2">
+      {/* ---- New section ---- */}
+      {newRows.length > 0 && (
+        <>
+          <SectionDivider label={`New (${newRows.length})`} />
+          {renderTable(newRows, true)}
+        </>
+      )}
 
-          const canReview = row.direction === "inbound" && row.status === "pending";
-          const isExpanded = expandedId === row.id;
+      {/* ---- Earlier section ---- */}
+      {existingRows.length > 0 && (
+        <>
+          <SectionDivider label="Earlier" />
+          <div className="space-y-6">
+            {existingGroups.map(({ label, items }) => (
+              <div key={label}>
+                <DateDivider label={label} />
+                {renderTable(items, false)}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
-          return (
-            <li key={row.id} className="list-none" role="listitem">
-              {showDateSeparator && <FeedDateSeparator label={dateLabel} />}
-
-              <Card
-                className={`overflow-hidden transition-colors hover:bg-muted/30 ${
-                  row.isNew ? "border-l-4 border-l-primary" : ""
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex flex-col gap-3">
-                    {/* Top row: direction, name, badges, time, actions */}
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <DirectionIcon direction={row.direction} />
-                        <div className="min-w-0">
-                          <p className="font-medium text-sm truncate">{row.counterpartName}</p>
-                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                            {row.isNew && (
-                              <Badge className="h-4 text-[10px] px-1.5 bg-primary/15 text-primary border-0">New</Badge>
-                            )}
-                            <StatusPill status={row.status} />
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(date, { addSuffix: true })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {canReview && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            className="h-9 min-w-[72px]"
-                            onClick={() => {
-                              setActionRow(row);
-                              setActionMessage("");
-                            }}
-                          >
-                            Review
-                          </Button>
-                        )}
-                        {row.message && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-9 w-9 p-0"
-                            onClick={() => setExpandedId(isExpanded ? null : row.id)}
-                            aria-expanded={isExpanded}
-                            aria-label={isExpanded ? "Collapse message" : "Expand message"}
-                          >
-                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Opportunity type */}
-                    {row.opportunityType && (
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium">Opportunity:</span> {row.opportunityType}
-                      </p>
-                    )}
-
-                    {/* Message preview or full */}
-                    {row.message && (
-                      <div className="text-sm">
-                        {isExpanded ? (
-                          <p className="text-muted-foreground whitespace-pre-wrap rounded-md bg-muted/50 p-3 border">
-                            {row.message}
-                          </p>
-                        ) : (
-                          <p className="text-muted-foreground line-clamp-2">{row.message}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Email link */}
-                    {row.counterpartEmail && (
-                      <a
-                        href={`mailto:${row.counterpartEmail}`}
-                        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-fit"
-                      >
-                        <Mail className="h-3.5 w-3.5" />
-                        {row.counterpartEmail}
-                      </a>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </li>
-          );
-        })}
-      </ul>
-
+      {/* ---- Accept / Decline Dialog ---- */}
       <Dialog
         open={!!actionRow}
         onOpenChange={(open) => {
@@ -415,7 +486,9 @@ export const ConnectionActivityBoard = ({
           </DialogHeader>
 
           {actionRow?.message && (
-            <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground border">"{actionRow.message}"</div>
+            <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground border">
+              "{actionRow.message}"
+            </div>
           )}
 
           <div className="space-y-2">
@@ -430,10 +503,19 @@ export const ConnectionActivityBoard = ({
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button className="flex-1 min-h-[44px]" onClick={handleAccept} disabled={processing}>
+            <Button
+              className="flex-1"
+              onClick={handleAccept}
+              disabled={processing}
+            >
               {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept"}
             </Button>
-            <Button variant="outline" className="flex-1 min-h-[44px]" onClick={handleDecline} disabled={processing}>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleDecline}
+              disabled={processing}
+            >
               {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Decline"}
             </Button>
           </div>
