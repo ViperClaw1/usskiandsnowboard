@@ -294,8 +294,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
 
               {/* Profile info block — floated above the banner via absolute positioning */}
               <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 px-4 pl-0 sm:px-6 z-10">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded">
-                  <div className="flex flex-col rounded sm:flex-row items-start gap-4 p-4 bg-white">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded-xl">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white rounded-xl">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
                       <AvatarImage src={profile?.photo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
