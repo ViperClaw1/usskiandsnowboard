@@ -265,19 +265,23 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
           <Card className="overflow-hidden rounded-xl border shadow-elegant">
-            {/* Cover / banner */}
-            <div
-              className="relative h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
-              style={
-                profile?.hero_image_url
-                  ? {
-                      backgroundImage: `url(${profile.hero_image_url})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }
-                  : undefined
-              }
-            >
+            {/* Cover / banner — positioned relative so profile block can overlay it */}
+            <div className="relative">
+              {/* Background image / gradient */}
+              <div
+                className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
+                style={
+                  profile?.hero_image_url
+                    ? {
+                        backgroundImage: `url(${profile.hero_image_url})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : undefined
+                }
+              />
+
+              {/* Edit button — anchored to top-right of banner */}
               <Button
                 variant="secondary"
                 size="icon"
@@ -287,68 +291,74 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-            </div>
 
-            {/* Content block: overlapping avatar + name, headline, location, links, availability */}
-            <div className="px-4 sm:px-6 pb-6">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14">
-                <div className="flex flex-col sm:flex-row items-start gap-4">
-                  <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
-                    <AvatarImage src={profile?.photo_url || ""} />
-                    <AvatarFallback className="text-xl sm:text-2xl">
-                      {profile?.profiles?.full_name
-                        ? profile.profiles.full_name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                        : "AT"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-1 pt-1 sm:pt-0">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                      {profile?.profiles?.full_name || "Athlete"}
-                    </h1>
-                    {profile?.sport_discipline && (
-                      <p className="text-base text-muted-foreground">{profile.sport_discipline} Athlete</p>
-                    )}
-                    {(profile?.geographic_preferences?.length || profile?.home_mountain) && (
-                      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5 shrink-0" />
-                        {profile?.geographic_preferences?.[0] || profile?.home_mountain || "—"}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                      {profile?.instagram_url && (
-                        <a
-                          href={profile.instagram_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-primary hover:underline"
-                        >
-                          <Instagram className="h-4 w-4" />
-                          Instagram
-                        </a>
+              {/* Profile info block — floated above the banner via absolute positioning */}
+              <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 px-4 sm:px-6 z-10">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
+                      <AvatarImage src={profile?.photo_url || ""} />
+                      <AvatarFallback className="text-xl sm:text-2xl">
+                        {profile?.profiles?.full_name
+                          ? profile.profiles.full_name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                          : "AT"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-1 pt-1 sm:pt-0">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
+                        {profile?.profiles?.full_name || "Athlete"}
+                      </h1>
+                      {profile?.sport_discipline && (
+                        <p className="text-base text-muted-foreground">{profile.sport_discipline} Athlete</p>
                       )}
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-muted-foreground"
-                        onClick={() => onNavigate("profile")}
-                      >
-                        Edit profile
-                      </Button>
+                      {(profile?.geographic_preferences?.length || profile?.home_mountain) && (
+                        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          {profile?.geographic_preferences?.[0] || profile?.home_mountain || "—"}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                        {profile?.instagram_url && (
+                          <a
+                            href={profile.instagram_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                          >
+                            <Instagram className="h-4 w-4" />
+                            Instagram
+                          </a>
+                        )}
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-muted-foreground"
+                          onClick={() => onNavigate("profile")}
+                        >
+                          Edit profile
+                        </Button>
+                      </div>
+                      {profile?.availability && (
+                        <Badge
+                          variant="secondary"
+                          className="mt-2 w-fit bg-green-500/15 text-green-700 dark:text-green-400 border-0"
+                        >
+                          {profile.availability}
+                        </Badge>
+                      )}
                     </div>
-                    {profile?.availability && (
-                      <Badge
-                        variant="secondary"
-                        className="mt-2 w-fit bg-green-500/15 text-green-700 dark:text-green-400 border-0"
-                      >
-                        {profile.availability}
-                      </Badge>
-                    )}
                   </div>
                 </div>
-                {completeness < 100 && (
+              </div>
+            </div>
+
+            {/* Spacer + completion card — pushed down to clear the overlapping profile block */}
+            <div className="px-4 sm:px-6 pb-6 pt-16 sm:pt-20">
+              {completeness < 100 && (
+                <div className="flex justify-end">
                   <Card className="w-full sm:w-64 shrink-0">
                     <CardContent className="pt-6">
                       <div className="space-y-2">
@@ -374,8 +384,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       </div>
                     </CardContent>
                   </Card>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </Card>
         </div>
