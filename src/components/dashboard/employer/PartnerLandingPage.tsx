@@ -290,9 +290,9 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
             </div>
 
             {/* Content block: overlapping logo + company name, industry, location, links */}
-            <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-10">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded-xl">
-                <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white rounded-tr-xl">
+            <div className="relative px-4 sm:px-6 pb-6 min-h-[11rem] sm:min-h-[8rem]">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14">
+                <div className="relative flex flex-col sm:flex-row items-start gap-4 min-h-[7rem] sm:min-h-0 bg-white rounded-tr-x">
                   <Avatar className="relative z-0 h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
                     <AvatarImage src={profile?.logo_url || ""} />
                     <AvatarFallback className="text-xl sm:text-2xl">
