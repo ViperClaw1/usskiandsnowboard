@@ -100,11 +100,24 @@ interface ArticleForm {
   author_name: string;
   slug: string;
   isPublished: boolean;
+  font_family: string;
+  font_size: string;
 }
 
 // ==============================
 // Constants
 // ==============================
+
+const FONT_OPTIONS = [
+  { label: "Default (inherit)", value: "" },
+  { label: "Montserrat", value: "Montserrat, sans-serif" },
+  { label: "Inter", value: "Inter, sans-serif" },
+  { label: "Roboto", value: "Roboto, sans-serif" },
+  { label: "Open Sans", value: "Open Sans, sans-serif" },
+  { label: "Lato", value: "Lato, sans-serif" },
+];
+
+const FONT_SIZE_OPTIONS = ["12", "13", "14", "15", "16", "17", "18", "20"];
 
 const EMPTY_FORM: ArticleForm = {
   title: "",
@@ -114,6 +127,8 @@ const EMPTY_FORM: ArticleForm = {
   author_name: "",
   slug: "",
   isPublished: false,
+  font_family: "",
+  font_size: "",
 };
 
 // ==============================
