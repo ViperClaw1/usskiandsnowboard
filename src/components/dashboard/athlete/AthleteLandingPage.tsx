@@ -103,13 +103,6 @@ const athleteFeaturedPartnersKey = ["athlete-landing-featured-partners"];
 
 // ==============================
 // Query Functions
-// Extracted outside the component — stable references, not recreated per render.
-//
-// Dashboard data (profile + connections) is fetched together since connection
-// stats depend on the athlete profile id — they are a single logical unit.
-//
-// Featured partners are independent of the athlete and cached separately so
-// invalidating athlete data never causes partners to re-fetch and vice versa.
 // ==============================
 
 const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardData> => {
@@ -127,7 +120,6 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
     };
   }
 
-  // All connection queries fire in parallel once we have the profile id
   const [{ data: allConnections }, { data: acceptedConnections }] = await Promise.all([
     supabase.from("connection_requests").select("status").eq("athlete_id", profileData.id),
     supabase
@@ -160,29 +152,10 @@ const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
   return (data as EmployerProfile[]) ?? [];
 };
 
-// ==============================
-// Component Definition
-// All data fetching migrated from a single monolithic useEffect + useState
-// to two independent useQuery calls:
-//
-//  - athleteDashboardKey(userId)   — profile + connection stats + connections
-//  - athleteFeaturedPartnersKey    — featured partner previews (user-agnostic)
-//
-// On repeat visits, initialData reads from the QueryClient cache synchronously
-// so loading is false from the very first render — no full-screen spinner flash.
-//
-// The real-time Supabase channel subscription is preserved but now calls
-// queryClient.invalidateQueries instead of the imperative loadDashboardData(),
-// keeping the cache as the single source of truth.
-// ==============================
-
 export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: AthleteHomeProps) => {
   const queryClient = useQueryClient();
   const { getText, typography } = useDashboardTextOverrides("athlete");
 
-  // ==============================
-  // Data Fetching — Dashboard (profile + connections)
-  // ==============================
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<AthleteDashboardData>({
     queryKey: athleteDashboardKey(user.id),
     queryFn: () => fetchAthleteDashboard(user.id),
@@ -192,10 +165,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     retryDelay: (attempt) => 1000 * (attempt + 1),
   });
 
-  // ==============================
-  // Data Fetching — Featured Partners
-  // User-agnostic — cached globally, not per athlete.
-  // ==============================
   const { data: featuredPartners = [], isLoading: partnersLoading } = useQuery<EmployerProfile[]>({
     queryKey: athleteFeaturedPartnersKey,
     queryFn: fetchFeaturedPartners,
@@ -203,18 +172,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     staleTime: 5 * 60 * 1000,
   });
 
-  // ==============================
-  // Derived Values
-  // ==============================
   const profile = dashboardData?.profile ?? null;
   const connectionStats = dashboardData?.connectionStats ?? { pending: 0, accepted: 0, rejected: 0 };
   const connections = dashboardData?.connections ?? [];
 
-  // ==============================
-  // Effects — Real-time Subscription
-  // Preserved from original. Invalidates the cache instead of calling
-  // loadDashboardData() directly — keeps the cache as source of truth.
-  // ==============================
   useEffect(() => {
     const invalidate = () => queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
 
@@ -237,11 +198,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     };
   }, [user.id, profile?.id, queryClient]);
 
-  // ==============================
-  // Render — Loading Guard
-  // Only shown on first-ever visit. On all subsequent mounts, initialData
-  // populates from cache and loading is false from render zero.
-  // ==============================
   if (dashboardLoading || partnersLoading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -253,21 +209,17 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   const completeness = profile?.profile_completeness ?? 0;
   const profileViewsThisMonth = profile?.profile_views ?? 0;
 
-  // ==============================
-  // Render — Main
-  // ==============================
   return (
     <div
       className="bg-gradient-to-b from-background to-muted/30"
       style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
     >
-      {/* LinkedIn-style profile block — mobile: profile below banner; sm+: profile overlaps banner */}
+      {/* LinkedIn-style profile block */}
       <section className="w-full min-w-0 px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto w-full min-w-0">
           <Card className="overflow-hidden rounded-xl border shadow-elegant w-full min-w-0">
-            {/* Cover / banner — positioned relative so profile block can overlay on sm+ */}
             <div className="relative w-full min-w-0">
-              {/* Background image / gradient */}
+              {/* Banner */}
               <div
                 className="h-40 sm:h-48 w-full min-w-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted rounded-t-xl sm:rounded-t-xl"
                 style={
@@ -281,7 +233,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 }
               />
 
-              {/* Edit button — anchored to top-right of banner */}
+              {/* Edit button */}
               <Button
                 variant="secondary"
                 size="icon"
@@ -292,10 +244,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <Pencil className="h-4 w-4" />
               </Button>
 
-              {/* Profile info block — mobile: below banner (flow); sm+: absolute overlap */}
-              <div className="relative w-full min-w-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded-b-xl sm:rounded-xl">
-                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background sm:bg-white rounded-b-xl sm:rounded-tr-xl min-w-0 w-full">
+              {/* Profile info block:
+                  - mobile (<640px): full-width, flows below banner
+                  - sm+ (>=640px): content-fit width, absolutely positioned overlapping banner bottom-left */}
+              <div className="relative w-full min-w-0 sm:absolute sm:bottom-0 sm:left-0 sm:w-auto z-10">
+                <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background sm:bg-white rounded-b-xl sm:rounded-tr-xl w-full sm:w-auto">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
                       <AvatarImage src={profile?.photo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
@@ -307,7 +261,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           : "AT"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="space-y-1 min-w-0 flex-1">
+                    <div className="space-y-1 min-w-0 sm:max-w-sm lg:max-w-md">
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm break-words">
                         {profile?.profiles?.full_name || "Athlete"}
                       </h1>
@@ -355,7 +309,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               </div>
             </div>
 
-            {/* Spacer + completion card — less top padding on mobile (no overlap); more on sm+ to clear overlap */}
+            {/* Spacer + completion card */}
             <div className="px-4 sm:px-6 pb-6 pt-6 sm:pt-20 min-w-0">
               {completeness < 100 && (
                 <div className="flex justify-end">
