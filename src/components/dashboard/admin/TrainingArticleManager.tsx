@@ -226,7 +226,6 @@ export const TrainingArticleManager = () => {
             .insert({ role: "training", text_overrides: nextOverrides } as any);
         }
         queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, { font_family: fontFamily, font_size: fontSize });
-        queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
       } catch (err) {
         console.error("Failed to save global typography:", err);
       }
