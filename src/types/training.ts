@@ -20,4 +20,6 @@ export interface TrainingArticle {
   published_at: string | null;
   created_at: string;
   created_by: string;
+  font_family: string | null;
+  font_size: string | null;
 }

@@ -775,6 +775,8 @@ export type Database = {
           category: string | null
           created_at: string
           created_by: string
+          font_family: string | null
+          font_size: string | null
           hero_image_url: string | null
           id: string
           published_at: string | null
@@ -792,6 +794,8 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by: string
+          font_family?: string | null
+          font_size?: string | null
           hero_image_url?: string | null
           id?: string
           published_at?: string | null
@@ -809,6 +813,8 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string
+          font_family?: string | null
+          font_size?: string | null
           hero_image_url?: string | null
           id?: string
           published_at?: string | null
