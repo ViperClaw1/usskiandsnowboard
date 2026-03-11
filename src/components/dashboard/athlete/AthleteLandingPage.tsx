@@ -217,8 +217,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
       {/* LinkedIn-style profile block */}
       <section className="w-full min-w-0 px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto w-full min-w-0">
-          <Card className="overflow-visible rounded-xl border shadow-elegant w-full min-w-0">
-            <div className="relative w-full min-w-0 sm:h-48 overflow-visible">
+          <Card className="overflow-hidden rounded-xl border shadow-elegant w-full min-w-0">
+            <div className="relative w-full min-w-0">
               {/* Banner */}
               <div
                 className="h-40 sm:h-48 w-full min-w-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted rounded-t-xl sm:rounded-t-xl"
@@ -247,7 +247,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               {/* Profile info block:
                   - mobile (<640px): full-width, flows below banner, rounded top corners (rounded-t-xl)
                   - sm+ (>=640px): content-fit, absolute bottom-left overlap, top-right corner only (rounded-tr-xl) */}
-              <div className="w-full sm:absolute sm:bottom-0 sm:left-0 sm:w-auto z-10 sm:translate-y-0">
+              <div className="w-full sm:absolute sm:bottom-0 sm:left-0 sm:w-auto z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end">
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background rounded-t-xl sm:rounded-none sm:rounded-tr-xl w-full sm:w-auto">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
@@ -310,7 +310,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             </div>
 
             {/* Spacer + completion card */}
-            <div className="px-4 sm:px-6 pb-6 pt-6 sm:pt-36 min-w-0">
+            <div className="px-4 sm:px-6 pb-6 pt-6 sm:pt-20 min-w-0">
               {completeness < 100 && (
                 <div className="flex justify-end">
                   <Card className="w-full sm:w-64 shrink-0">
