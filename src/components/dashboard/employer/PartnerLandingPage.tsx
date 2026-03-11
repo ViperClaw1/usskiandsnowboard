@@ -272,12 +272,16 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
       className="min-h-screen bg-gradient-to-b from-background to-muted/30"
       style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
     >
-      {/* LinkedIn-style profile block */}
+      {/* LinkedIn-style profile block — layout matches AthleteLandingPage */}
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
           <Card className="overflow-hidden rounded-xl border shadow-elegant">
-            {/* Cover / banner (gradient for employers) */}
-            <div className="relative h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted">
+            {/* Cover / banner — positioned relative so profile block can overlay it */}
+            <div className="relative">
+              {/* Background image / gradient */}
+              <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
+
+              {/* Edit button — anchored to top-right of banner */}
               <Button
                 variant="secondary"
                 size="icon"
@@ -287,68 +291,70 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-            </div>
 
-            {/* Content block: overlapping logo + company name, industry, location, links */}
-            <div className="relative px-4 sm:px-6 pb-6 min-h-[11rem] sm:min-h-[8rem]">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded-x1">
-                <div className="relative flex flex-col sm:flex-row items-start gap-4 min-h-[7rem] sm:min-h-0 bg-white rounded-tr-x1">
-                  <Avatar className="relative z-0 h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
-                    <AvatarImage src={profile?.logo_url || ""} />
-                    <AvatarFallback className="text-xl sm:text-2xl">
-                      {profile?.company_name ? profile.company_name.substring(0, 2).toUpperCase() : "CO"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute left-0 top-24 sm:top-0 sm:left-32 z-10 min-w-0 max-w-[calc(100%-8rem)] space-y-1">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                      {profile?.company_name || "Partner"}
-                    </h1>
-                    {profile?.industry && (
-                      <Badge variant="secondary" className="text-sm w-fit">
-                        {profile.industry}
-                      </Badge>
-                    )}
-                    {profile?.hq_location && (
-                      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5 shrink-0" />
-                        {profile.hq_location}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                      {profile?.website && (
-                        <a
-                          href={profile.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-primary hover:underline"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                          Website
-                        </a>
+              {/* Profile info block — floated above the banner via absolute positioning */}
+              <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-10">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded-xl">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white rounded-tr-xl">
+                    <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
+                      <AvatarImage src={profile?.logo_url || ""} />
+                      <AvatarFallback className="text-xl sm:text-2xl">
+                        {profile?.company_name ? profile.company_name.substring(0, 2).toUpperCase() : "CO"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-1">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
+                        {profile?.company_name || "Partner"}
+                      </h1>
+                      {profile?.industry && <p className="text-base text-muted-foreground">{profile.industry}</p>}
+                      {profile?.hq_location && (
+                        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          {profile.hq_location}
+                        </p>
                       )}
-                      {profile?.linkedin_url && (
-                        <a
-                          href={profile.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                        {profile?.website && (
+                          <a
+                            href={profile.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Website
+                          </a>
+                        )}
+                        {profile?.linkedin_url && (
+                          <a
+                            href={profile.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                            LinkedIn
+                          </a>
+                        )}
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-muted-foreground"
+                          onClick={() => onNavigate("profile")}
                         >
-                          <Linkedin className="h-4 w-4" />
-                          LinkedIn
-                        </a>
-                      )}
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-muted-foreground"
-                        onClick={() => onNavigate("profile")}
-                      >
-                        Edit profile
-                      </Button>
+                          Edit profile
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-                {completeness < 100 && (
+              </div>
+            </div>
+
+            {/* Spacer + completion card — pushed down to clear the overlapping profile block */}
+            <div className="px-4 sm:px-6 pb-6 pt-16 sm:pt-20">
+              {completeness < 100 && (
+                <div className="flex justify-end">
                   <Card className="w-full sm:w-64 shrink-0">
                     <CardContent className="pt-6">
                       <div className="space-y-2">
@@ -374,8 +380,8 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                       </div>
                     </CardContent>
                   </Card>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </Card>
         </div>
