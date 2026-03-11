@@ -2,8 +2,8 @@
 // Imports
 // ==============================
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,22 @@ const FONT_SIZE_OPTIONS = ["12", "13", "14", "15", "16", "17", "18", "20"];
 
 const TYPOGRAPHY_KEY = "__typography";
 
+const TYPOGRAPHY_QUERY_KEY = ["training-global-typography"] as const;
+
+/** Fetches global typography from dashboard_layouts (role = 'training'). Same as TrainingArticle.tsx. */
+const fetchGlobalTypography = async (): Promise<{ font_family: string; font_size: string } | null> => {
+  const { data } = await supabase
+    .from("dashboard_layouts" as any)
+    .select("text_overrides")
+    .eq("role", "training")
+    .maybeSingle();
+  if (!data) return null;
+  const overrides = (data as any).text_overrides || {};
+  const typo = overrides[TYPOGRAPHY_KEY];
+  if (!typo) return null;
+  return { font_family: typo.font_family || "", font_size: typo.font_size || "" };
+};
+
 const EMPTY_FORM: ArticleForm = {
   title: "",
   subtitle: "",
@@ -155,11 +171,15 @@ export const TrainingArticleManager = () => {
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [authorPreview, setAuthorPreview] = useState<string | null>(null);
 
-  // Global typography — sourced from dashboard_layouts (role = 'training')
-  const [globalFontFamily, setGlobalFontFamily] = useState<string>("");
-  const [globalFontSize, setGlobalFontSize] = useState<string>("");
   const queryClient = useQueryClient();
-  const globalTypographyRef = useRef({ fontFamily: "", fontSize: "" });
+  const { data: globalTypography } = useQuery({
+    queryKey: TYPOGRAPHY_QUERY_KEY,
+    queryFn: fetchGlobalTypography,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const globalFontFamily = globalTypography?.font_family ?? "";
+  const globalFontSize = globalTypography?.font_size ?? "";
 
   // ==============================
   // Effects — Data Fetching
@@ -171,30 +191,9 @@ export const TrainingArticleManager = () => {
     setLoading(false);
   }, []);
 
-  /** Fetches the global typography setting stored under role = 'training' */
-  const fetchGlobalTypography = useCallback(async () => {
-    const { data } = await supabase
-      .from("dashboard_layouts" as any)
-      .select("text_overrides")
-      .eq("role", "training")
-      .maybeSingle();
-
-    if (data) {
-      const overrides = (data as any).text_overrides || {};
-      const typo = overrides[TYPOGRAPHY_KEY] || {};
-      setGlobalFontFamily(typo.font_family || "");
-      setGlobalFontSize(typo.font_size || "");
-    }
-  }, []);
-
   useEffect(() => {
     fetchArticles();
-    fetchGlobalTypography();
-  }, [fetchArticles, fetchGlobalTypography]);
-
-  useEffect(() => {
-    globalTypographyRef.current = { fontFamily: globalFontFamily, fontSize: globalFontSize };
-  }, [globalFontFamily, globalFontSize]);
+  }, [fetchArticles]);
 
   // ==============================
   // Event Handlers — Global Typography
@@ -226,7 +225,8 @@ export const TrainingArticleManager = () => {
             .from("dashboard_layouts" as any)
             .insert({ role: "training", text_overrides: nextOverrides } as any);
         }
-        queryClient.invalidateQueries({ queryKey: ["training-global-typography"] });
+        queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, { font_family: fontFamily, font_size: fontSize });
+        queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
       } catch (err) {
         console.error("Failed to save global typography:", err);
       }
@@ -236,14 +236,20 @@ export const TrainingArticleManager = () => {
 
   const handleFontFamilyChange = (value: string) => {
     const next = value === "__none" ? "" : value;
-    setGlobalFontFamily(next);
-    saveGlobalTypography(next, globalTypographyRef.current.fontSize);
+    const current = queryClient.getQueryData<{ font_family: string; font_size: string }>(TYPOGRAPHY_QUERY_KEY) ?? {
+      font_family: "",
+      font_size: "",
+    };
+    saveGlobalTypography(next, current.font_size);
   };
 
   const handleFontSizeChange = (value: string) => {
     const next = value === "__none" ? "" : value;
-    setGlobalFontSize(next);
-    saveGlobalTypography(globalTypographyRef.current.fontFamily, next);
+    const current = queryClient.getQueryData<{ font_family: string; font_size: string }>(TYPOGRAPHY_QUERY_KEY) ?? {
+      font_family: "",
+      font_size: "",
+    };
+    saveGlobalTypography(current.font_family, next);
   };
 
   // ==============================
