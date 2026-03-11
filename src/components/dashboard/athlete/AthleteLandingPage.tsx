@@ -261,15 +261,15 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
       className="bg-gradient-to-b from-background to-muted/30"
       style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
     >
-      {/* LinkedIn-style profile block */}
-      <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
-        <div className="max-w-7xl mx-auto">
-          <Card className="overflow-hidden rounded-xl border shadow-elegant">
-            {/* Cover / banner — positioned relative so profile block can overlay it */}
-            <div className="relative">
+      {/* LinkedIn-style profile block — mobile: profile below banner; sm+: profile overlaps banner */}
+      <section className="w-full min-w-0 px-4 sm:px-6 lg:px-8 pt-4 pb-2">
+        <div className="max-w-7xl mx-auto w-full min-w-0">
+          <Card className="overflow-hidden rounded-xl border shadow-elegant w-full min-w-0">
+            {/* Cover / banner — positioned relative so profile block can overlay on sm+ */}
+            <div className="relative w-full min-w-0">
               {/* Background image / gradient */}
               <div
-                className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
+                className="h-40 sm:h-48 w-full min-w-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted rounded-t-xl sm:rounded-t-xl"
                 style={
                   profile?.hero_image_url
                     ? {
@@ -292,10 +292,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <Pencil className="h-4 w-4" />
               </Button>
 
-              {/* Profile info block — floated above the banner via absolute positioning */}
-              <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-10">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded-xl">
-                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white rounded-tr-xl">
+              {/* Profile info block — mobile: below banner (flow); sm+: absolute overlap */}
+              <div className="relative w-full min-w-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 rounded-b-xl sm:rounded-xl">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background sm:bg-white rounded-b-xl sm:rounded-tr-xl min-w-0 w-full">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
                       <AvatarImage src={profile?.photo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
@@ -307,8 +307,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           : "AT"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="space-y-1">
-                      <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm break-words">
                         {profile?.profiles?.full_name || "Athlete"}
                       </h1>
                       {profile?.sport_discipline && (
@@ -355,8 +355,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               </div>
             </div>
 
-            {/* Spacer + completion card — pushed down to clear the overlapping profile block */}
-            <div className="px-4 sm:px-6 pb-6 pt-16 sm:pt-20">
+            {/* Spacer + completion card — less top padding on mobile (no overlap); more on sm+ to clear overlap */}
+            <div className="px-4 sm:px-6 pb-6 pt-6 sm:pt-20 min-w-0">
               {completeness < 100 && (
                 <div className="flex justify-end">
                   <Card className="w-full sm:w-64 shrink-0">
