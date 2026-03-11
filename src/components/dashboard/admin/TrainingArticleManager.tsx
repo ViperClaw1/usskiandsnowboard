@@ -443,6 +443,44 @@ export const TrainingArticleManager = () => {
                 </SelectContent>
               </Select>
             </div>
+            {/* Typography — font family + font size applied to article body */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Body Font Family</Label>
+                <Select value={form.font_family} onValueChange={(v) => setForm((f) => ({ ...f, font_family: v }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Default" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONT_OPTIONS.map((opt) => (
+                      <SelectItem
+                        key={opt.value || "__default"}
+                        value={opt.value || "__default"}
+                        style={opt.value ? { fontFamily: opt.value } : undefined}
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Body Font Size</Label>
+                <Select value={form.font_size} onValueChange={(v) => setForm((f) => ({ ...f, font_size: v }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Default" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__default">Default</SelectItem>
+                    {FONT_SIZE_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}px
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div>
               <Label>Body (HTML) *</Label>
               <RichTextarea

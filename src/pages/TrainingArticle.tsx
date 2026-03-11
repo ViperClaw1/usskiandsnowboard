@@ -170,6 +170,10 @@ const TrainingArticlePage = () => {
             prose-strong:text-foreground
             prose-a:text-primary prose-a:underline
             prose-ul:my-4 prose-ol:my-4"
+          style={{
+            fontFamily: article.font_family || undefined,
+            fontSize: article.font_size ? `${article.font_size}px` : undefined,
+          }}
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
       </article>
