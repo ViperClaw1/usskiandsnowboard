@@ -84,11 +84,11 @@ const STYLES = `
   overflow-y: auto;
   padding: 10px 12px;
   outline: none;
-  font-size: 0.875rem;
+  font-size: var(--rt-body-font-size, 0.875rem);
   line-height: 1.75;
   color: var(--rt-text);
   background: var(--rt-bg);
-  font-family: inherit;
+  font-family: var(--rt-body-font-family, inherit);
   word-break: break-word;
 }
 .rt-area:empty::before {
