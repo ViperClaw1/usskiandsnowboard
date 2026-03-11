@@ -447,15 +447,18 @@ export const TrainingArticleManager = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Body Font Family</Label>
-                <Select value={form.font_family} onValueChange={(v) => setForm((f) => ({ ...f, font_family: v }))}>
+                <Select
+                  value={form.font_family || "__none"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, font_family: v === "__none" ? "" : v }))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Default" />
                   </SelectTrigger>
                   <SelectContent>
                     {FONT_OPTIONS.map((opt) => (
                       <SelectItem
-                        key={opt.value || "__default"}
-                        value={opt.value || "__default"}
+                        key={opt.value || "__none"}
+                        value={opt.value || "__none"}
                         style={opt.value ? { fontFamily: opt.value } : undefined}
                       >
                         {opt.label}
@@ -466,12 +469,15 @@ export const TrainingArticleManager = () => {
               </div>
               <div>
                 <Label>Body Font Size</Label>
-                <Select value={form.font_size} onValueChange={(v) => setForm((f) => ({ ...f, font_size: v }))}>
+                <Select
+                  value={form.font_size || "__none"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, font_size: v === "__none" ? "" : v }))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Default" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__default">Default</SelectItem>
+                    <SelectItem value="__none">Default (inherit)</SelectItem>
                     {FONT_SIZE_OPTIONS.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}px
