@@ -1,0 +1,3 @@
+ALTER TABLE public.training_articles
+  ADD COLUMN IF NOT EXISTS font_family TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS font_size TEXT DEFAULT NULL;

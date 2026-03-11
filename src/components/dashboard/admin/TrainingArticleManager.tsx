@@ -100,11 +100,24 @@ interface ArticleForm {
   author_name: string;
   slug: string;
   isPublished: boolean;
+  font_family: string;
+  font_size: string;
 }
 
 // ==============================
 // Constants
 // ==============================
+
+const FONT_OPTIONS = [
+  { label: "Default (inherit)", value: "" },
+  { label: "Montserrat", value: "Montserrat, sans-serif" },
+  { label: "Inter", value: "Inter, sans-serif" },
+  { label: "Roboto", value: "Roboto, sans-serif" },
+  { label: "Open Sans", value: "Open Sans, sans-serif" },
+  { label: "Lato", value: "Lato, sans-serif" },
+];
+
+const FONT_SIZE_OPTIONS = ["12", "13", "14", "15", "16", "17", "18", "20"];
 
 const EMPTY_FORM: ArticleForm = {
   title: "",
@@ -114,6 +127,8 @@ const EMPTY_FORM: ArticleForm = {
   author_name: "",
   slug: "",
   isPublished: false,
+  font_family: "",
+  font_size: "",
 };
 
 // ==============================
@@ -179,6 +194,8 @@ export const TrainingArticleManager = () => {
       author_name: a.author_name || "",
       slug: a.slug,
       isPublished: a.status === "published",
+      font_family: a.font_family || "",
+      font_size: a.font_size || "",
     });
     setHeroFile(null);
     setAuthorFile(null);
@@ -237,6 +254,8 @@ export const TrainingArticleManager = () => {
         reading_time_minutes: readingTime,
         published_at: form.isPublished ? new Date().toISOString() : null,
         created_by: user.id,
+        font_family: form.font_family || null,
+        font_size: form.font_size || null,
       };
 
       if (editingId) {
@@ -423,6 +442,50 @@ export const TrainingArticleManager = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            {/* Typography — font family + font size applied to article body */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Body Font Family</Label>
+                <Select
+                  value={form.font_family || "__none"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, font_family: v === "__none" ? "" : v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Default" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONT_OPTIONS.map((opt) => (
+                      <SelectItem
+                        key={opt.value || "__none"}
+                        value={opt.value || "__none"}
+                        style={opt.value ? { fontFamily: opt.value } : undefined}
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Body Font Size</Label>
+                <Select
+                  value={form.font_size || "__none"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, font_size: v === "__none" ? "" : v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Default" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none">Default (inherit)</SelectItem>
+                    {FONT_SIZE_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}px
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label>Body (HTML) *</Label>
