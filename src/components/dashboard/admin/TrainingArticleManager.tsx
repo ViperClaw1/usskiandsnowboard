@@ -254,6 +254,8 @@ export const TrainingArticleManager = () => {
         reading_time_minutes: readingTime,
         published_at: form.isPublished ? new Date().toISOString() : null,
         created_by: user.id,
+        font_family: form.font_family || null,
+        font_size: form.font_size || null,
       };
 
       if (editingId) {
