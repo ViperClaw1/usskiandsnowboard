@@ -247,7 +247,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               {/* Profile info block:
                   - mobile (<640px): full-width, flows below banner, rounded top corners (rounded-t-xl)
                   - sm+ (>=640px): content-fit, absolute bottom-left overlap, top-right corner only (rounded-tr-xl) */}
-              <div className="w-full sm:absolute sm:bottom-0 sm:left-0 sm:w-auto z-10 sm:translate-y-fit">
+              <div className="w-full sm:absolute sm:bottom-0 sm:left-0 sm:w-auto z-10 sm:translate-y-full">
                 <div className="flex flex-col sm:flex-row sm:items-end">
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background rounded-t-xl sm:rounded-none sm:rounded-tr-xl w-full sm:w-auto">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
