@@ -261,15 +261,15 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
       className="bg-gradient-to-b from-background to-muted/30"
       style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
     >
-      {/* LinkedIn-style profile block — mobile: profile below banner; sm+: profile overlaps banner */}
+      {/* LinkedIn-style profile block — mobile: full width, top rounded; sm+: content-fit, top-right rounded */}
       <section className="w-full min-w-0 px-4 sm:px-6 lg:px-8 pt-4 pb-2">
-        <div className="max-w-7xl mx-auto w-full min-w-0">
-          <Card className="overflow-hidden rounded-xl border shadow-elegant w-full min-w-0">
+        <div className="max-w-7xl mx-auto w-full min-w-0 flex flex-col sm:items-end">
+          <Card className="overflow-hidden border shadow-elegant w-full min-w-0 sm:w-fit sm:min-w-0 rounded-t-xl sm:rounded-tr-xl sm:rounded-b-xl sm:rounded-tl-none">
             {/* Cover / banner — positioned relative so profile block can overlay on sm+ */}
             <div className="relative w-full min-w-0">
               {/* Background image / gradient */}
               <div
-                className="h-40 sm:h-48 w-full min-w-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted rounded-t-xl sm:rounded-t-xl"
+                className="h-40 sm:h-48 w-full min-w-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted rounded-t-xl sm:rounded-tr-xl sm:rounded-tl-none"
                 style={
                   profile?.hero_image_url
                     ? {
