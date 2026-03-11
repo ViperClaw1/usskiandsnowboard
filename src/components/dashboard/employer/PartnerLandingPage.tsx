@@ -18,6 +18,10 @@ import {
   Clock,
   UserCircle,
   PlusCircle,
+  Pencil,
+  MapPin,
+  ExternalLink,
+  Linkedin,
 } from "lucide-react";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
@@ -47,6 +51,9 @@ interface EmployerProfile {
   profile_completeness: number;
   profile_views: number;
   opportunities_offered: string | null;
+  hq_location: string | null;
+  website: string | null;
+  linkedin_url: string | null;
 }
 
 interface AthleteProfile {
@@ -99,7 +106,9 @@ const partnerFeaturedAthletesKey = ["partner-landing-featured-athletes"];
 const fetchPartnerDashboard = async (userId: string): Promise<DashboardData> => {
   const { data: profileData } = await supabase
     .from("employer_profiles")
-    .select("id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered")
+    .select(
+      "id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered, hq_location, website, linkedin_url",
+    )
     .eq("user_id", userId)
     .single();
 
@@ -263,54 +272,112 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
       className="min-h-screen bg-gradient-to-b from-background to-muted/30"
       style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
     >
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-background py-12 px-4 sm:px-6 lg:px-8">
+      {/* LinkedIn-style profile block */}
+      <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-6">
-            <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
-              <AvatarImage src={profile?.logo_url || ""} />
-              <AvatarFallback>
-                {profile?.company_name ? profile.company_name.substring(0, 2).toUpperCase() : "CO"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-                Welcome back, {profile?.company_name || "Partner"}
-              </h1>
-              {profile?.industry && (
-                <Badge variant="secondary" className="text-sm">
-                  {profile.industry}
-                </Badge>
-              )}
+          <Card className="overflow-hidden rounded-xl border shadow-elegant">
+            {/* Cover / banner (gradient for employers) */}
+            <div className="relative h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/80 hover:bg-background shadow-md"
+                onClick={() => onNavigate("profile")}
+                aria-label="Edit profile"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </div>
-            {completeness < 100 && (
-              <Card className="hidden lg:block w-64">
-                <CardContent className="pt-6">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {getText("hero.profile_complete_label", "Profile Complete")}
-                      </span>
-                      <span className="font-semibold">{completeness}%</span>
+
+            {/* Content block: overlapping logo + company name, industry, location, links */}
+            <div className="relative px-4 sm:px-6 pb-6 min-h-[11rem] sm:min-h-[8rem]">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14">
+                <div className="relative flex flex-col sm:flex-row items-start gap-4 min-h-[7rem] sm:min-h-0">
+                  <Avatar className="relative z-0 h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
+                    <AvatarImage src={profile?.logo_url || ""} />
+                    <AvatarFallback className="text-xl sm:text-2xl">
+                      {profile?.company_name ? profile.company_name.substring(0, 2).toUpperCase() : "CO"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute left-0 top-24 sm:top-0 sm:left-32 z-10 min-w-0 max-w-[calc(100%-8rem)] space-y-1">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                      {profile?.company_name || "Partner"}
+                    </h1>
+                    {profile?.industry && (
+                      <Badge variant="secondary" className="text-sm w-fit">
+                        {profile.industry}
+                      </Badge>
+                    )}
+                    {profile?.hq_location && (
+                      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        {profile.hq_location}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                      {profile?.website && (
+                        <a
+                          href={profile.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Website
+                        </a>
+                      )}
+                      {profile?.linkedin_url && (
+                        <a
+                          href={profile.linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                        >
+                          <Linkedin className="h-4 w-4" />
+                          LinkedIn
+                        </a>
+                      )}
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-muted-foreground"
+                        onClick={() => onNavigate("profile")}
+                      >
+                        Edit profile
+                      </Button>
                     </div>
-                    <Progress value={completeness} className="h-2" />
-                    <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                      {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
-                      <ArrowRight className="ml-1 h-3 w-3" />
-                    </Button>
-                    <AIProfilePopulator
-                      role="employer"
-                      userId={user.id}
-                      onComplete={() => {
-                        queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
-                        onProfileUpdated?.();
-                      }}
-                    />
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                </div>
+                {completeness < 100 && (
+                  <Card className="w-full sm:w-64 shrink-0">
+                    <CardContent className="pt-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {getText("hero.profile_complete_label", "Profile Complete")}
+                          </span>
+                          <span className="font-semibold">{completeness}%</span>
+                        </div>
+                        <Progress value={completeness} className="h-2" />
+                        <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                          {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                          <ArrowRight className="ml-1 h-3 w-3" />
+                        </Button>
+                        <AIProfilePopulator
+                          role="employer"
+                          userId={user.id}
+                          onComplete={() => {
+                            queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
+                            onProfileUpdated?.();
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       </section>
 
