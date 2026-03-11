@@ -2,7 +2,8 @@
 // Imports
 // ==============================
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -157,6 +158,8 @@ export const TrainingArticleManager = () => {
   // Global typography — sourced from dashboard_layouts (role = 'training')
   const [globalFontFamily, setGlobalFontFamily] = useState<string>("");
   const [globalFontSize, setGlobalFontSize] = useState<string>("");
+  const queryClient = useQueryClient();
+  const globalTypographyRef = useRef({ fontFamily: "", fontSize: "" });
 
   // ==============================
   // Effects — Data Fetching
@@ -189,6 +192,10 @@ export const TrainingArticleManager = () => {
     fetchGlobalTypography();
   }, [fetchArticles, fetchGlobalTypography]);
 
+  useEffect(() => {
+    globalTypographyRef.current = { fontFamily: globalFontFamily, fontSize: globalFontSize };
+  }, [globalFontFamily, globalFontSize]);
+
   // ==============================
   // Event Handlers — Global Typography
   // Immediately persists a change to dashboard_layouts (role = 'training')
@@ -219,23 +226,24 @@ export const TrainingArticleManager = () => {
             .from("dashboard_layouts" as any)
             .insert({ role: "training", text_overrides: nextOverrides } as any);
         }
+        queryClient.invalidateQueries({ queryKey: ["training-global-typography"] });
       } catch (err) {
         console.error("Failed to save global typography:", err);
       }
     },
-    [],
+    [queryClient],
   );
 
   const handleFontFamilyChange = (value: string) => {
     const next = value === "__none" ? "" : value;
     setGlobalFontFamily(next);
-    saveGlobalTypography(next, globalFontSize);
+    saveGlobalTypography(next, globalTypographyRef.current.fontSize);
   };
 
   const handleFontSizeChange = (value: string) => {
     const next = value === "__none" ? "" : value;
     setGlobalFontSize(next);
-    saveGlobalTypography(globalFontFamily, next);
+    saveGlobalTypography(globalTypographyRef.current.fontFamily, next);
   };
 
   // ==============================
@@ -389,6 +397,8 @@ export const TrainingArticleManager = () => {
   const bodyPreviewStyle: React.CSSProperties = {
     fontFamily: globalFontFamily || undefined,
     fontSize: globalFontSize ? `${globalFontSize}px` : undefined,
+    ...(globalFontFamily && { ["--rt-body-font-family" as string]: globalFontFamily }),
+    ...(globalFontSize && { ["--rt-body-font-size" as string]: `${globalFontSize}px` }),
   };
 
   // ==============================
@@ -430,7 +440,9 @@ export const TrainingArticleManager = () => {
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__none" className="text-xs">Default</SelectItem>
+              <SelectItem value="__none" className="text-xs">
+                Default
+              </SelectItem>
               {FONT_SIZE_OPTIONS.map((s) => (
                 <SelectItem key={s} value={s} className="text-xs">
                   {s}px
