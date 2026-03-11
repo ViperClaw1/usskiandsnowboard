@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type } from "lucide-react";
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { ARTICLE_CATEGORIES } from "@/constants/training";
@@ -46,7 +46,7 @@ const generateSlug = (title: string) =>
 const estimateReadingTime = (text: string) =>
   Math.max(1, Math.ceil(text.replace(/<[^>]*>/g, "").split(/\s+/).length / 200));
 
-/** Max allowed image size before conversion (2 MB) */
+/** Max allowed image size before conversion (5 MB) */
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /**
@@ -100,8 +100,6 @@ interface ArticleForm {
   author_name: string;
   slug: string;
   isPublished: boolean;
-  font_family: string;
-  font_size: string;
 }
 
 // ==============================
@@ -109,7 +107,7 @@ interface ArticleForm {
 // ==============================
 
 const FONT_OPTIONS = [
-  { label: "Default (inherit)", value: "" },
+  { label: "Default (inherit)", value: "__none" },
   { label: "Montserrat", value: "Montserrat, sans-serif" },
   { label: "Inter", value: "Inter, sans-serif" },
   { label: "Roboto", value: "Roboto, sans-serif" },
@@ -119,6 +117,8 @@ const FONT_OPTIONS = [
 
 const FONT_SIZE_OPTIONS = ["12", "13", "14", "15", "16", "17", "18", "20"];
 
+const TYPOGRAPHY_KEY = "__typography";
+
 const EMPTY_FORM: ArticleForm = {
   title: "",
   subtitle: "",
@@ -127,14 +127,14 @@ const EMPTY_FORM: ArticleForm = {
   author_name: "",
   slug: "",
   isPublished: false,
-  font_family: "",
-  font_size: "",
 };
 
 // ==============================
 // Component Definition
 // Smart component — manages full CRUD for training articles.
-// Handles file uploads, status toggling, and delete confirmation.
+// Global typography (font family + size) is stored in dashboard_layouts
+// (role = 'training') and applied to the RichTextarea preview and all
+// published article pages.
 // ==============================
 
 export const TrainingArticleManager = () => {
@@ -154,6 +154,10 @@ export const TrainingArticleManager = () => {
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [authorPreview, setAuthorPreview] = useState<string | null>(null);
 
+  // Global typography — sourced from dashboard_layouts (role = 'training')
+  const [globalFontFamily, setGlobalFontFamily] = useState<string>("");
+  const [globalFontSize, setGlobalFontSize] = useState<string>("");
+
   // ==============================
   // Effects — Data Fetching
   // ==============================
@@ -164,9 +168,75 @@ export const TrainingArticleManager = () => {
     setLoading(false);
   }, []);
 
+  /** Fetches the global typography setting stored under role = 'training' */
+  const fetchGlobalTypography = useCallback(async () => {
+    const { data } = await supabase
+      .from("dashboard_layouts" as any)
+      .select("text_overrides")
+      .eq("role", "training")
+      .maybeSingle();
+
+    if (data) {
+      const overrides = (data as any).text_overrides || {};
+      const typo = overrides[TYPOGRAPHY_KEY] || {};
+      setGlobalFontFamily(typo.font_family || "");
+      setGlobalFontSize(typo.font_size || "");
+    }
+  }, []);
+
   useEffect(() => {
     fetchArticles();
-  }, [fetchArticles]);
+    fetchGlobalTypography();
+  }, [fetchArticles, fetchGlobalTypography]);
+
+  // ==============================
+  // Event Handlers — Global Typography
+  // Immediately persists a change to dashboard_layouts (role = 'training')
+  // ==============================
+
+  const saveGlobalTypography = useCallback(
+    async (fontFamily: string, fontSize: string) => {
+      try {
+        const { data: existing } = await supabase
+          .from("dashboard_layouts" as any)
+          .select("id, text_overrides")
+          .eq("role", "training")
+          .maybeSingle();
+
+        const prevOverrides = (existing as any)?.text_overrides || {};
+        const nextOverrides = {
+          ...prevOverrides,
+          [TYPOGRAPHY_KEY]: { font_family: fontFamily, font_size: fontSize },
+        };
+
+        if (existing) {
+          await supabase
+            .from("dashboard_layouts" as any)
+            .update({ text_overrides: nextOverrides, updated_at: new Date().toISOString() } as any)
+            .eq("role", "training");
+        } else {
+          await supabase
+            .from("dashboard_layouts" as any)
+            .insert({ role: "training", text_overrides: nextOverrides } as any);
+        }
+      } catch (err) {
+        console.error("Failed to save global typography:", err);
+      }
+    },
+    [],
+  );
+
+  const handleFontFamilyChange = (value: string) => {
+    const next = value === "__none" ? "" : value;
+    setGlobalFontFamily(next);
+    saveGlobalTypography(next, globalFontSize);
+  };
+
+  const handleFontSizeChange = (value: string) => {
+    const next = value === "__none" ? "" : value;
+    setGlobalFontSize(next);
+    saveGlobalTypography(globalFontFamily, next);
+  };
 
   // ==============================
   // Event Handlers — Dialog
@@ -194,8 +264,6 @@ export const TrainingArticleManager = () => {
       author_name: a.author_name || "",
       slug: a.slug,
       isPublished: a.status === "published",
-      font_family: a.font_family || "",
-      font_size: a.font_size || "",
     });
     setHeroFile(null);
     setAuthorFile(null);
@@ -254,8 +322,6 @@ export const TrainingArticleManager = () => {
         reading_time_minutes: readingTime,
         published_at: form.isPublished ? new Date().toISOString() : null,
         created_by: user.id,
-        font_family: form.font_family || null,
-        font_size: form.font_size || null,
       };
 
       if (editingId) {
@@ -316,19 +382,67 @@ export const TrainingArticleManager = () => {
   };
 
   // ==============================
+  // Derived Values
+  // ==============================
+
+  /** Inline style applied to the RichTextarea wrapper for live font preview */
+  const bodyPreviewStyle: React.CSSProperties = {
+    fontFamily: globalFontFamily || undefined,
+    fontSize: globalFontSize ? `${globalFontSize}px` : undefined,
+  };
+
+  // ==============================
   // Render
   // ==============================
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
           Training Articles
         </CardTitle>
-        <Button onClick={openCreate} size="sm">
-          <Plus className="h-4 w-4 mr-1" /> New Article
-        </Button>
+
+        {/* Global typography controls + New Article button */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Type className="h-4 w-4 text-muted-foreground shrink-0" />
+          {/* Body Font Family */}
+          <Select value={globalFontFamily || "__none"} onValueChange={handleFontFamilyChange}>
+            <SelectTrigger className="h-8 w-40 text-xs">
+              <SelectValue placeholder="Body Font" />
+            </SelectTrigger>
+            <SelectContent>
+              {FONT_OPTIONS.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  style={opt.value !== "__none" ? { fontFamily: opt.value } : undefined}
+                  className="text-xs"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* Body Font Size */}
+          <Select value={globalFontSize || "__none"} onValueChange={handleFontSizeChange}>
+            <SelectTrigger className="h-8 w-24 text-xs">
+              <SelectValue placeholder="Size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none" className="text-xs">Default</SelectItem>
+              {FONT_SIZE_OPTIONS.map((s) => (
+                <SelectItem key={s} value={s} className="text-xs">
+                  {s}px
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button onClick={openCreate} size="sm">
+            <Plus className="h-4 w-4 mr-1" /> New Article
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent>
@@ -443,58 +557,17 @@ export const TrainingArticleManager = () => {
                 </SelectContent>
               </Select>
             </div>
-            {/* Typography — font family + font size applied to article body */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Body Font Family</Label>
-                <Select
-                  value={form.font_family || "__none"}
-                  onValueChange={(v) => setForm((f) => ({ ...f, font_family: v === "__none" ? "" : v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Default" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FONT_OPTIONS.map((opt) => (
-                      <SelectItem
-                        key={opt.value || "__none"}
-                        value={opt.value || "__none"}
-                        style={opt.value ? { fontFamily: opt.value } : undefined}
-                      >
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Body Font Size</Label>
-                <Select
-                  value={form.font_size || "__none"}
-                  onValueChange={(v) => setForm((f) => ({ ...f, font_size: v === "__none" ? "" : v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Default" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none">Default (inherit)</SelectItem>
-                    {FONT_SIZE_OPTIONS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}px
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
             <div>
               <Label>Body (HTML) *</Label>
-              <RichTextarea
-                value={form.body}
-                onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-                placeholder="Your article content…"
-                className="min-h-[200px]"
-              />
+              {/* Wrap with global font preview so the admin sees the chosen typography while writing */}
+              <div style={bodyPreviewStyle}>
+                <RichTextarea
+                  value={form.body}
+                  onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+                  placeholder="Your article content…"
+                  className="min-h-[200px]"
+                />
+              </div>
             </div>
             <div>
               <Label>Author Name</Label>

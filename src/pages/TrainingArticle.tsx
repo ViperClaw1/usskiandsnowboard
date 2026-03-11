@@ -14,9 +14,16 @@ import { TrainingArticle } from "@/types/training";
 import { getCategoryColor } from "@/constants/training";
 
 // ==============================
-// Query Function
-// Extracted outside the component — stable reference, no closure capture needed.
+// Constants
 // ==============================
+
+const TYPOGRAPHY_KEY = "__typography";
+
+// ==============================
+// Query Functions
+// Extracted outside the component — stable references, no closure capture needed.
+// ==============================
+
 const fetchArticleBySlug = async (slug: string): Promise<TrainingArticle | null> => {
   const { data } = await supabase
     .from("training_articles")
@@ -27,11 +34,30 @@ const fetchArticleBySlug = async (slug: string): Promise<TrainingArticle | null>
   return data ? (data as TrainingArticle) : null;
 };
 
+/**
+ * Fetches the global typography settings stored in dashboard_layouts
+ * (role = 'training'). Returns { font_family, font_size } or null if unset.
+ */
+const fetchGlobalTypography = async (): Promise<{ font_family: string; font_size: string } | null> => {
+  const { data } = await supabase
+    .from("dashboard_layouts" as any)
+    .select("text_overrides")
+    .eq("role", "training")
+    .maybeSingle();
+
+  if (!data) return null;
+  const overrides = (data as any).text_overrides || {};
+  const typo = overrides[TYPOGRAPHY_KEY];
+  if (!typo) return null;
+  return { font_family: typo.font_family || "", font_size: typo.font_size || "" };
+};
+
 // ==============================
 // Component Definition
 // Smart component — fetches a single article by slug via useQuery.
 // Result cached per-slug for 5 min — navigating back to a read article is instant.
 // Delegates category color logic to shared getCategoryColor helper.
+// Global typography is fetched from dashboard_layouts and applied to the body.
 // ==============================
 
 const TrainingArticlePage = () => {
@@ -43,12 +69,19 @@ const TrainingArticlePage = () => {
   // ==============================
   // Data Fetching
   // useQuery caches the article body per slug — repeat visits render instantly.
+  // Global typography is cached for 10 min (changes rarely).
   // ==============================
   const { data: article, isLoading: loading } = useQuery({
     queryKey:  ["training-article", slug],
     queryFn:   () => fetchArticleBySlug(slug!),
     enabled:   !!slug,
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: globalTypography } = useQuery({
+    queryKey:  ["training-global-typography"],
+    queryFn:   fetchGlobalTypography,
+    staleTime: 10 * 60 * 1000,
   });
 
   // ==============================
@@ -81,6 +114,12 @@ const TrainingArticlePage = () => {
   // Derived Values
   // ==============================
   const catColor = getCategoryColor(article.category).bg;
+
+  /** Global typography applied to the article body wrapper */
+  const bodyStyle: React.CSSProperties = {
+    fontFamily: globalTypography?.font_family || undefined,
+    fontSize:   globalTypography?.font_size ? `${globalTypography.font_size}px` : undefined,
+  };
 
   // ==============================
   // Render — Article
@@ -160,7 +199,9 @@ const TrainingArticlePage = () => {
           </span>
         </div>
 
-        {/* Article body — rendered as HTML from rich text editor */}
+        {/* Article body — rendered as HTML from rich text editor.
+            Global typography (font-family + font-size) from dashboard_layouts
+            is applied here so all articles share the same configured appearance. */}
         <div
           className="prose prose-lg max-w-none text-foreground
             prose-headings:font-bold prose-headings:text-foreground
@@ -170,10 +211,7 @@ const TrainingArticlePage = () => {
             prose-strong:text-foreground
             prose-a:text-primary prose-a:underline
             prose-ul:my-4 prose-ol:my-4"
-          style={{
-            fontFamily: article.font_family || undefined,
-            fontSize: article.font_size ? `${article.font_size}px` : undefined,
-          }}
+          style={bodyStyle}
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
       </article>
