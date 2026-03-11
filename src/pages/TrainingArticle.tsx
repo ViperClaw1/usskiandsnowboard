@@ -72,15 +72,15 @@ const TrainingArticlePage = () => {
   // Global typography is cached for 10 min (changes rarely).
   // ==============================
   const { data: article, isLoading: loading } = useQuery({
-    queryKey:  ["training-article", slug],
-    queryFn:   () => fetchArticleBySlug(slug!),
-    enabled:   !!slug,
+    queryKey: ["training-article", slug],
+    queryFn: () => fetchArticleBySlug(slug!),
+    enabled: !!slug,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: globalTypography } = useQuery({
-    queryKey:  ["training-global-typography"],
-    queryFn:   fetchGlobalTypography,
+    queryKey: ["training-global-typography"],
+    queryFn: fetchGlobalTypography,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -118,7 +118,7 @@ const TrainingArticlePage = () => {
   /** Global typography applied to the article body wrapper */
   const bodyStyle: React.CSSProperties = {
     fontFamily: globalTypography?.font_family || undefined,
-    fontSize:   globalTypography?.font_size ? `${globalTypography.font_size}px` : undefined,
+    fontSize: globalTypography?.font_size ? `${globalTypography.font_size}px` : undefined,
   };
 
   // ==============================
@@ -141,11 +141,7 @@ const TrainingArticlePage = () => {
       {article.hero_image_url && (
         <div className="container mx-auto px-4 mt-6">
           <div className="rounded-xl overflow-hidden max-h-[420px]">
-            <img
-              src={article.hero_image_url}
-              alt={article.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={article.hero_image_url} alt={article.title} className="w-full h-full object-cover" />
           </div>
         </div>
       )}
@@ -174,22 +170,15 @@ const TrainingArticlePage = () => {
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight mb-3">
-          {article.title}
-        </h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight mb-3">{article.title}</h1>
 
         {/* Subtitle */}
-        {article.subtitle && (
-          <p className="text-lg text-muted-foreground italic mb-6">{article.subtitle}</p>
-        )}
+        {article.subtitle && <p className="text-lg text-muted-foreground italic mb-6">{article.subtitle}</p>}
 
         {/* Author row */}
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-border">
           <Avatar className="h-10 w-10">
-            <AvatarImage
-              src={article.author_image_url || usLogo}
-              alt={article.author_name || "Author"}
-            />
+            <AvatarImage src={article.author_image_url || usLogo} alt={article.author_name || "Author"} />
             <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
               {(article.author_name || "US")[0]}
             </AvatarFallback>
