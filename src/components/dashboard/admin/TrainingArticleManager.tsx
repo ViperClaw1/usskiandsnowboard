@@ -194,6 +194,8 @@ export const TrainingArticleManager = () => {
       author_name: a.author_name || "",
       slug: a.slug,
       isPublished: a.status === "published",
+      font_family: a.font_family || "",
+      font_size: a.font_size || "",
     });
     setHeroFile(null);
     setAuthorFile(null);
