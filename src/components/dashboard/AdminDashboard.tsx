@@ -125,12 +125,16 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             {/* User Management Card */}
             <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
               <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 [@media(min-width:830px)]:flex-row [@media(min-width:830px)]:items-center [@media(min-width:830px)]:justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-foreground">User Management</h3>
                     <p className="text-muted-foreground">Grant or revoke admin access to team members</p>
                   </div>
-                  <Button onClick={() => navigate("/admin/users")} size="lg">
+                  <Button
+                    onClick={() => navigate("/admin/users")}
+                    size="lg"
+                    className="w-full [@media(min-width:830px)]:w-auto shrink-0"
+                  >
                     <Shield className="h-4 w-4 mr-2" />
                     Manage Users
                   </Button>
