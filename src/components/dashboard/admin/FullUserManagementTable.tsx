@@ -96,8 +96,6 @@ export const FullUserManagementTable = () => {
     },
   });
 
-  // Removed temp password functionality - using single invite code instead
-
   const inviteUserMutation = useMutation({
     mutationFn: async (userData: typeof inviteForm) => {
       const {
@@ -127,23 +125,6 @@ export const FullUserManagementTable = () => {
     },
     onError: (error: Error) => {
       toast.error(`Failed to invite user: ${error.message}`);
-    },
-  });
-
-  const resendConfirmationMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await supabase.functions.invoke("resend-confirmation", {
-        body: { email },
-      });
-
-      if (response.error) throw response.error;
-      if (response.data?.error) throw new Error(response.data.error);
-    },
-    onSuccess: () => {
-      toast.success("Confirmation email sent successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to resend confirmation: ${error.message}`);
     },
   });
 
@@ -196,7 +177,9 @@ export const FullUserManagementTable = () => {
         ...new Set(
           users
             .filter(
-              (u) => ((u.roles as string[]) ?? []).includes("employer") && (u as { companyName?: string | null }).companyName,
+              (u) =>
+                ((u.roles as string[]) ?? []).includes("employer") &&
+                (u as { companyName?: string | null }).companyName,
             )
             .map((u) => (u as { companyName: string }).companyName),
         ),
@@ -211,9 +194,7 @@ export const FullUserManagementTable = () => {
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole =
-      roleFilter === "all" ||
-      roles.includes(roleFilter) ||
-      (roleFilter === "none" && roles.length === 0);
+      roleFilter === "all" || roles.includes(roleFilter) || (roleFilter === "none" && roles.length === 0);
 
     const matchesCompany =
       roleFilter !== "employer" ||
@@ -284,49 +265,129 @@ export const FullUserManagementTable = () => {
           )}
         </div>
       </CardHeader>
+
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Roles</TableHead>
-              <TableHead>Company Name</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-40" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-20" />
+        {/* ── Desktop table (≥ 830 px) ── */}
+        <div className="hidden [@media(min-width:830px)]:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Roles</TableHead>
+                <TableHead>Company Name</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredUsers && filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.full_name || "N/A"}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {currentUser && (
+                        <UserRoleManager
+                          userId={user.id}
+                          currentUserId={currentUser.id}
+                          userEmail={user.email}
+                          userName={user.full_name || ""}
+                          roles={user.roles as ("admin" | "athlete" | "employer")[]}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {(user as { companyName?: string | null }).companyName ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(user.created_at), "MMM dd, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteUser(user.id, user.email, user.full_name || "")}
+                          disabled={currentUser?.id === user.id}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No users found
                   </TableCell>
                 </TableRow>
-              ))
-            ) : filteredUsers && filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.full_name || "N/A"}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {currentUser && (
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* ── Mobile / tablet card list (< 830 px) ── */}
+        <div className="flex flex-col gap-3 [@media(min-width:830px)]:hidden">
+          {isLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-border px-4 py-3 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-56" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            ))
+          ) : filteredUsers && filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => {
+              const companyName = (user as { companyName?: string | null }).companyName;
+              const isSelf = currentUser?.id === user.id;
+              return (
+                <div
+                  key={user.id}
+                  className="relative rounded-xl border border-border bg-card px-4 py-3 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {/* Joined date — top-right */}
+                  <div className="absolute top-3 right-3 text-xs text-muted-foreground">
+                    {format(new Date(user.created_at), "MMM d, yyyy")}
+                  </div>
+
+                  {/* Name */}
+                  <p className="pr-28 font-semibold text-sm leading-snug text-foreground">{user.full_name || "N/A"}</p>
+
+                  {/* Email + company */}
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                    <span>{user.email}</span>
+                    {companyName && <span className="font-medium text-foreground/70">{companyName}</span>}
+                  </div>
+
+                  {/* Roles */}
+                  {currentUser && (
+                    <div className="mt-2">
                       <UserRoleManager
                         userId={user.id}
                         currentUserId={currentUser.id}
@@ -334,38 +395,29 @@ export const FullUserManagementTable = () => {
                         userName={user.full_name || ""}
                         roles={user.roles as ("admin" | "athlete" | "employer")[]}
                       />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {(user as { companyName?: string | null }).companyName ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format(new Date(user.created_at), "MMM dd, yyyy")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteUser(user.id, user.email, user.full_name || "")}
-                        disabled={currentUser?.id === user.id}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No users found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  )}
+
+                  {/* Action strip */}
+                  <div className="mt-3 flex items-center border-t border-border/60 pt-2.5">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="ml-auto h-8 gap-1.5 px-2 text-xs text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteUser(user.id, user.email, user.full_name || "")}
+                      disabled={isSelf}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">No users found</p>
+          )}
+        </div>
       </CardContent>
 
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
