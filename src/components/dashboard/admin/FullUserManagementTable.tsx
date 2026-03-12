@@ -344,17 +344,6 @@ export const FullUserManagementTable = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      {!user.emailConfirmed && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => resendConfirmationMutation.mutate(user.email)}
-                          disabled={resendConfirmationMutation.isPending}
-                          title="Resend confirmation email"
-                        >
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                      )}
                       <Button
                         variant="ghost"
                         size="icon"
