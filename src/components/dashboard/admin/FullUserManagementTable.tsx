@@ -80,24 +80,15 @@ export const FullUserManagementTable = () => {
         return acc;
       }, {});
 
-      // Fetch auth users to get email confirmation status
-      const { data: { users: authUsers } = { users: [] }, error: authError } = await supabase.auth.admin.listUsers();
-
-      if (authError) {
-        console.error("Error fetching auth users:", authError);
-      }
-
       return (
         profiles?.map((profile) => {
           const userRoles = allRoles.filter((r) => r.user_id === profile.id).map((r) => r.role);
-
-          const authUser = authUsers?.find((u: any) => u.id === profile.id);
           const isEmployer = userRoles.includes("employer");
 
           return {
             ...profile,
-            roles: userRoles.length > 0 ? userRoles : [],
-            emailConfirmed: authUser?.email_confirmed_at != null,
+            roles: userRoles as string[],
+            emailConfirmed: false,
             companyName: isEmployer ? (employerByUserId[profile.id] ?? null) : null,
           };
         }) || []
