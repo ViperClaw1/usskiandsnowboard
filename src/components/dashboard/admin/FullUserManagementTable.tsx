@@ -56,7 +56,7 @@ export const FullUserManagementTable = () => {
   });
 
   const { data: users, isLoading } = useQuery({
-    queryKey: ["all-users"],
+    queryKey: ["all-users-full"],
     queryFn: async () => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
