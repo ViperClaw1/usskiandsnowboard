@@ -125,7 +125,7 @@ export const FullUserManagementTable = () => {
     },
     onSuccess: () => {
       toast.success("User invited successfully! They will receive an email to set their password.");
-      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
       setIsInviteDialogOpen(false);
       setInviteForm({
         email: "",
