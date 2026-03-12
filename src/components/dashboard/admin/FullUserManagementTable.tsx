@@ -196,7 +196,7 @@ export const FullUserManagementTable = () => {
         ...new Set(
           users
             .filter(
-              (u) => (u.roles as string[]).includes("employer") && (u as { companyName?: string | null }).companyName,
+              (u) => ((u.roles as string[]) ?? []).includes("employer") && (u as { companyName?: string | null }).companyName,
             )
             .map((u) => (u as { companyName: string }).companyName),
         ),
