@@ -56,7 +56,7 @@ export const FullUserManagementTable = () => {
   });
 
   const { data: users, isLoading } = useQuery({
-    queryKey: ["all-users"],
+    queryKey: ["all-users-full"],
     queryFn: async () => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
@@ -125,7 +125,7 @@ export const FullUserManagementTable = () => {
     },
     onSuccess: () => {
       toast.success("User invited successfully! They will receive an email to set their password.");
-      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
       setIsInviteDialogOpen(false);
       setInviteForm({
         email: "",
@@ -174,7 +174,7 @@ export const FullUserManagementTable = () => {
     },
     onSuccess: () => {
       toast.success("User deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
       setUserToDelete(null);
     },
     onError: (error: Error) => {
