@@ -275,14 +275,16 @@ export const WaitlistManager = () => {
               </DialogHeader>
 
               <div className="space-y-4 mt-2">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    <span>{selected.email}</span>
+                <div className="grid grid-cols-2 gap-3 text-sm min-w-0">
+                  <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+                    <Mail className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 break-words">{selected.email}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Applied {format(new Date(selected.created_at), "MMMM d, yyyy 'at' h:mm a")}</span>
+                  <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+                    <Calendar className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 break-words">
+                      Applied {format(new Date(selected.created_at), "MMMM d, yyyy 'at' h:mm a")}
+                    </span>
                   </div>
                 </div>
 
@@ -298,16 +300,18 @@ export const WaitlistManager = () => {
 
                 {/* Profile data */}
                 {Object.keys(selected.profile_data).length > 0 && (
-                  <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <div className="border rounded-lg p-4 space-y-3 bg-muted/30 min-w-0">
                     <h4 className="font-semibold text-sm">Profile Information</h4>
                     <div className="grid grid-cols-1 gap-2">
                       {Object.entries(selected.profile_data).map(([key, value]) => {
                         if (!value || key === "password" || key === "ai_populate") return null;
                         const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
                         return (
-                          <div key={key} className="text-sm">
+                          <div key={key} className="text-sm min-w-0">
                             <span className="font-medium text-muted-foreground">{label}:</span>{" "}
-                            <span>{typeof value === "object" ? JSON.stringify(value) : String(value)}</span>
+                            <span className="break-words">
+                              {typeof value === "object" ? JSON.stringify(value) : String(value)}
+                            </span>
                           </div>
                         );
                       })}
