@@ -205,10 +205,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     >
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
-          <Card className="overflow-hidden rounded-xl border shadow-elegant">
-            {/* Banner — relative so the sm+ absolute block is contained here */}
+          <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
+            {/* Banner — relative so the sm+ absolute block is contained here; parent for avatar alignment on mobile */}
             <div className="relative overflow-visible">
-              {/* Background image / gradient */}
+              {/* Background image / gradient — on mobile avatar center aligns with this div's bottom */}
               <div
                 className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
                 style={
