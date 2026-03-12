@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
-import { Search, Trash2, UserPlus, Mail } from "lucide-react";
+import { Search, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -80,24 +80,15 @@ export const FullUserManagementTable = () => {
         return acc;
       }, {});
 
-      // Fetch auth users to get email confirmation status
-      const { data: { users: authUsers } = { users: [] }, error: authError } = await supabase.auth.admin.listUsers();
-
-      if (authError) {
-        console.error("Error fetching auth users:", authError);
-      }
-
       return (
         profiles?.map((profile) => {
           const userRoles = allRoles.filter((r) => r.user_id === profile.id).map((r) => r.role);
-
-          const authUser = authUsers?.find((u: any) => u.id === profile.id);
           const isEmployer = userRoles.includes("employer");
 
           return {
             ...profile,
-            roles: userRoles.length > 0 ? userRoles : [],
-            emailConfirmed: authUser?.email_confirmed_at != null,
+            roles: userRoles as string[],
+            emailConfirmed: false,
             companyName: isEmployer ? (employerByUserId[profile.id] ?? null) : null,
           };
         }) || []
@@ -213,14 +204,16 @@ export const FullUserManagementTable = () => {
     : [];
 
   const filteredUsers = users?.filter((user) => {
+    const roles: string[] = (user.roles as string[]) ?? [];
+
     const matchesSearch =
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole =
       roleFilter === "all" ||
-      (user.roles as string[]).includes(roleFilter) ||
-      (roleFilter === "none" && user.roles.length === 0);
+      roles.includes(roleFilter) ||
+      (roleFilter === "none" && roles.length === 0);
 
     const matchesCompany =
       roleFilter !== "employer" ||
@@ -351,17 +344,6 @@ export const FullUserManagementTable = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      {!user.emailConfirmed && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => resendConfirmationMutation.mutate(user.email)}
-                          disabled={resendConfirmationMutation.isPending}
-                          title="Resend confirmation email"
-                        >
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                      )}
                       <Button
                         variant="ghost"
                         size="icon"
