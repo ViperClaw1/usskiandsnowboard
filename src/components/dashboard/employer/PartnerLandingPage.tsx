@@ -216,10 +216,10 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
     >
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
-          <Card className="overflow-hidden rounded-xl border shadow-elegant">
-            {/* Banner — relative so the sm+ absolute block is contained here */}
+          <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
+            {/* Banner — relative so the sm+ absolute block is contained here; parent for avatar alignment on mobile */}
             <div className="relative overflow-visible">
-              {/* Background gradient */}
+              {/* Background gradient — on mobile avatar center aligns with this div's bottom */}
               <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
 
               {/* Edit button */}
@@ -234,9 +234,9 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
               </Button>
 
               {/* Profile info block
-                  <640px : flows below banner, full-width, rounded top corners
+                  <640px : flows below banner, full-width, rounded top corners; -mt-16 so avatar center sits on banner bottom
                   >=640px: absolute, overlaps banner centre (translate-y-1/2), content-fit width, rounded-tr only */}
-              <div className="sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
+              <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
