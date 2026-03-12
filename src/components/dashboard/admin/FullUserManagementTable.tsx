@@ -96,8 +96,6 @@ export const FullUserManagementTable = () => {
     },
   });
 
-  // Removed temp password functionality - using single invite code instead
-
   const inviteUserMutation = useMutation({
     mutationFn: async (userData: typeof inviteForm) => {
       const {
@@ -196,7 +194,9 @@ export const FullUserManagementTable = () => {
         ...new Set(
           users
             .filter(
-              (u) => ((u.roles as string[]) ?? []).includes("employer") && (u as { companyName?: string | null }).companyName,
+              (u) =>
+                ((u.roles as string[]) ?? []).includes("employer") &&
+                (u as { companyName?: string | null }).companyName,
             )
             .map((u) => (u as { companyName: string }).companyName),
         ),
@@ -211,9 +211,7 @@ export const FullUserManagementTable = () => {
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole =
-      roleFilter === "all" ||
-      roles.includes(roleFilter) ||
-      (roleFilter === "none" && roles.length === 0);
+      roleFilter === "all" || roles.includes(roleFilter) || (roleFilter === "none" && roles.length === 0);
 
     const matchesCompany =
       roleFilter !== "employer" ||
@@ -284,88 +282,92 @@ export const FullUserManagementTable = () => {
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Roles</TableHead>
-              <TableHead>Company Name</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-40" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : filteredUsers && filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.full_name || "N/A"}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {currentUser && (
-                      <UserRoleManager
-                        userId={user.id}
-                        currentUserId={currentUser.id}
-                        userEmail={user.email}
-                        userName={user.full_name || ""}
-                        roles={user.roles as ("admin" | "athlete" | "employer")[]}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {(user as { companyName?: string | null }).companyName ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format(new Date(user.created_at), "MMM dd, yyyy")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteUser(user.id, user.email, user.full_name || "")}
-                        disabled={currentUser?.id === user.id}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
+
+      {/* Table wrapped in overflow-x-auto so it scrolls horizontally on <640px */}
+      <CardContent className="p-0 sm:p-6">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No users found
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Roles</TableHead>
+                <TableHead>Company Name</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredUsers && filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.full_name || "N/A"}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {currentUser && (
+                        <UserRoleManager
+                          userId={user.id}
+                          currentUserId={currentUser.id}
+                          userEmail={user.email}
+                          userName={user.full_name || ""}
+                          roles={user.roles as ("admin" | "athlete" | "employer")[]}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {(user as { companyName?: string | null }).companyName ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(user.created_at), "MMM dd, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteUser(user.id, user.email, user.full_name || "")}
+                          disabled={currentUser?.id === user.id}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
 
       <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
