@@ -468,57 +468,126 @@ export const TrainingArticleManager = () => {
         ) : articles.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">No articles yet. Create your first one!</div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Published</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {articles.map((a) => (
-                  <TableRow key={a.id}>
-                    <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
-                    <TableCell>{a.category || "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
-                        {a.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => togglePublish(a)}
-                          title={a.status === "published" ? "Unpublish" : "Publish"}
-                        >
-                          {a.status === "published" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(a.id)}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          <>
+            {/* ── Desktop table (≥ 830 px) ── */}
+            <div className="hidden [@media(min-width:830px)]:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Published</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {articles.map((a) => (
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
+                      <TableCell>{a.category || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
+                          {a.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => togglePublish(a)}
+                            title={a.status === "published" ? "Unpublish" : "Publish"}
+                          >
+                            {a.status === "published" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setDeleteId(a.id)}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* ── Mobile / tablet card list (< 830 px) ── */}
+            <div className="flex flex-col gap-3 [@media(min-width:830px)]:hidden">
+              {articles.map((a) => (
+                <div
+                  key={a.id}
+                  className="group relative rounded-xl border border-border bg-card px-4 py-3 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {/* Status pill — top-right */}
+                  <div className="absolute top-3 right-3">
+                    <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs capitalize">
+                      {a.status}
+                    </Badge>
+                  </div>
+
+                  {/* Title */}
+                  <p className="pr-20 font-semibold text-sm leading-snug line-clamp-2 text-foreground">{a.title}</p>
+
+                  {/* Meta row */}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    {a.category && (
+                      <span className="inline-flex items-center gap-1">
+                        <FileText className="h-3 w-3 shrink-0" />
+                        {a.category}
+                      </span>
+                    )}
+                    {a.published_at && <span>{format(new Date(a.published_at), "MMM d, yyyy")}</span>}
+                  </div>
+
+                  {/* Action strip */}
+                  <div className="mt-3 flex items-center gap-1 border-t border-border/60 pt-2.5">
+                    <Button size="sm" variant="ghost" className="h-8 gap-1.5 px-2 text-xs" onClick={() => openEdit(a)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 gap-1.5 px-2 text-xs"
+                      onClick={() => togglePublish(a)}
+                    >
+                      {a.status === "published" ? (
+                        <>
+                          <EyeOff className="h-3.5 w-3.5" />
+                          Unpublish
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-3.5 w-3.5" />
+                          Publish
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="ml-auto h-8 gap-1.5 px-2 text-xs text-destructive hover:text-destructive"
+                      onClick={() => setDeleteId(a.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
 
