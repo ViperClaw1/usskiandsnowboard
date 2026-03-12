@@ -204,14 +204,16 @@ export const FullUserManagementTable = () => {
     : [];
 
   const filteredUsers = users?.filter((user) => {
+    const roles: string[] = (user.roles as string[]) ?? [];
+
     const matchesSearch =
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole =
       roleFilter === "all" ||
-      (user.roles as string[]).includes(roleFilter) ||
-      (roleFilter === "none" && user.roles.length === 0);
+      roles.includes(roleFilter) ||
+      (roleFilter === "none" && roles.length === 0);
 
     const matchesCompany =
       roleFilter !== "employer" ||
