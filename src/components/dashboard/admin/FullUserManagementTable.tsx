@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
-import { Search, Trash2, UserPlus, Mail } from "lucide-react";
+import { Search, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
