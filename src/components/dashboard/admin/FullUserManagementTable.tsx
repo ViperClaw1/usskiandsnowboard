@@ -56,7 +56,7 @@ export const FullUserManagementTable = () => {
   });
 
   const { data: users, isLoading } = useQuery({
-    queryKey: ["all-users-full"],
+    queryKey: ["all-users"],
     queryFn: async () => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
@@ -125,7 +125,7 @@ export const FullUserManagementTable = () => {
     },
     onSuccess: () => {
       toast.success("User invited successfully! They will receive an email to set their password.");
-      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
       setIsInviteDialogOpen(false);
       setInviteForm({
         email: "",
@@ -174,7 +174,7 @@ export const FullUserManagementTable = () => {
     },
     onSuccess: () => {
       toast.success("User deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
       setUserToDelete(null);
     },
     onError: (error: Error) => {
@@ -233,19 +233,19 @@ export const FullUserManagementTable = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between my-[5px] gap-0">
+        <div className="flex flex-col min-[478px]:flex-row min-[478px]:items-center min-[478px]:justify-between my-[5px] gap-3">
           <div>
             <CardTitle>User Management</CardTitle>
             <CardDescription>Manage user roles and access permissions</CardDescription>
           </div>
-          <Button onClick={() => setIsInviteDialogOpen(true)}>
+          <Button onClick={() => setIsInviteDialogOpen(true)} className="w-full min-[478px]:w-auto shrink-0">
             <UserPlus className="h-4 w-4 mr-2" />
             Invite User
           </Button>
         </div>
 
-        <div className="flex gap-4 mt-4">
-          <div className="relative flex-1">
+        <div className="flex flex-col min-[478px]:flex-row gap-3 mt-4">
+          <div className="relative w-full min-[478px]:flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by name or email..."
@@ -262,7 +262,7 @@ export const FullUserManagementTable = () => {
               if (v !== "employer") setCompanyFilter("all");
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full min-[478px]:w-[180px]">
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
             <SelectContent>
@@ -276,7 +276,7 @@ export const FullUserManagementTable = () => {
 
           {roleFilter === "employer" && (
             <Select value={companyFilter} onValueChange={setCompanyFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full min-[478px]:w-[180px]">
                 <SelectValue placeholder="Filter by company" />
               </SelectTrigger>
               <SelectContent>
