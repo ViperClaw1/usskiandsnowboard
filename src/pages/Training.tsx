@@ -79,10 +79,11 @@ const Training = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  // In TrainingArticleManager.tsx, Training.tsx, and TrainingArticlePage.tsx
   const { data: globalTypography } = useQuery({
-    queryKey: ["training-global-typography"],
+    queryKey: TYPOGRAPHY_QUERY_KEY, // or ["training-global-typography"] in the consumer files
     queryFn: fetchGlobalTypography,
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30 seconds — won't auto-refetch mid-save
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
