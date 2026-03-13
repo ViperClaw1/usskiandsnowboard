@@ -91,10 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { notification_type, user_id, request_id }: AdminNotificationRequest = await req.json();
     console.log("Processing admin notification:", { notification_type, user_id, request_id });
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
     // Get all admin users
     const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
@@ -111,11 +108,20 @@ const handler = async (req: Request): Promise<Response> => {
     // Determine which preference column to check
     let preferenceColumn: string;
     switch (notification_type) {
-      case "new_account":           preferenceColumn = "email_new_accounts"; break;
-      case "connection_declined":   preferenceColumn = "email_connections_declined"; break;
-      case "new_connection_request": preferenceColumn = "email_new_requests"; break;
-      case "connection_accepted":   preferenceColumn = "email_accepted_connections"; break;
-      default:                      preferenceColumn = "email_new_requests";
+      case "new_account":
+        preferenceColumn = "email_new_accounts";
+        break;
+      case "connection_declined":
+        preferenceColumn = "email_connections_declined";
+        break;
+      case "new_connection_request":
+        preferenceColumn = "email_new_requests";
+        break;
+      case "connection_accepted":
+        preferenceColumn = "email_accepted_connections";
+        break;
+      default:
+        preferenceColumn = "email_new_requests";
     }
 
     const { data: preferences } = await supabase
@@ -158,15 +164,20 @@ const handler = async (req: Request): Promise<Response> => {
         "New User Registration",
         newAccountBody(profile?.full_name ?? "N/A", profile?.email ?? "N/A", roleData?.role ?? "N/A"),
       );
-
     } else if (notification_type === "new_connection_request" && request_id) {
       const { data: req_ } = await supabase
         .from("connection_requests")
-        .select(`*, athlete:athlete_profiles!inner(user_id, sport_discipline), employer:employer_profiles!inner(user_id, company_name)`)
+        .select(
+          `*, athlete:athlete_profiles!inner(user_id, sport_discipline), employer:employer_profiles!inner(user_id, company_name)`,
+        )
         .eq("id", request_id)
         .single();
       if (req_) {
-        const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", req_.athlete.user_id).single();
+        const { data: ap } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", req_.athlete.user_id)
+          .single();
         emailSubject = "New Connection Request - US Ski & Snowboard";
         emailHtml = emailTemplate(
           "New Connection Request",
@@ -178,7 +189,6 @@ const handler = async (req: Request): Promise<Response> => {
           ),
         );
       }
-
     } else if (notification_type === "connection_accepted" && request_id) {
       const { data: req_ } = await supabase
         .from("connection_requests")
@@ -186,7 +196,11 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("id", request_id)
         .single();
       if (req_) {
-        const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", req_.athlete.user_id).single();
+        const { data: ap } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", req_.athlete.user_id)
+          .single();
         emailSubject = "Connection Accepted - US Ski & Snowboard";
         emailHtml = emailTemplate(
           "Connection Accepted",
@@ -197,7 +211,6 @@ const handler = async (req: Request): Promise<Response> => {
           ),
         );
       }
-
     } else if (notification_type === "connection_declined" && request_id) {
       const { data: req_ } = await supabase
         .from("connection_requests")
@@ -205,7 +218,11 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("id", request_id)
         .single();
       if (req_) {
-        const { data: ap } = await supabase.from("profiles").select("full_name").eq("id", req_.athlete.user_id).single();
+        const { data: ap } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", req_.athlete.user_id)
+          .single();
         emailSubject = "Connection Request Declined - US Ski & Snowboard";
         emailHtml = emailTemplate(
           "Connection Request Declined",
@@ -218,10 +235,10 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // === Sequential send with 600 ms gap to stay under the 2 req/s Resend limit ===
+    // === Sequential send with 1000 ms gap to stay under the 2 req/s Resend limit ===
     let sent = 0;
     for (const admin of adminProfiles) {
-      if (sent > 0) await sleep(600);
+      if (sent > 0) await sleep(1000);
       await sendEmail(resend, { from: FROM, to: [admin.email], subject: emailSubject, html: emailHtml });
       sent++;
     }
