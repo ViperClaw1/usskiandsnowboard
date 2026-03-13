@@ -225,7 +225,6 @@ export const TrainingArticleManager = () => {
             .from("dashboard_layouts" as any)
             .insert({ role: "training", text_overrides: nextOverrides } as any);
         }
-        queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
       } catch (err) {
         console.error("Failed to save global typography:", err);
         queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
