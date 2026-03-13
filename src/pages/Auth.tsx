@@ -535,7 +535,7 @@ const Auth = () => {
                 }}
                 onBlur={() => setInviteCodeTouched(true)}
                 maxLength={10}
-                className="text-center tracking-widest text-lg font-mono uppercase"
+                className="text-center tracking-widest text-lg font-mono"
               />
               {inviteCodeTouched && inviteCodeError && <p className="text-sm text-destructive">{inviteCodeError}</p>}
             </div>
