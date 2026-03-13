@@ -197,7 +197,6 @@ export const TrainingArticleManager = () => {
 
   // ==============================
   // Event Handlers — Global Typography
-  // Immediately persists a change to dashboard_layouts (role = 'training')
   // ==============================
 
   const saveGlobalTypography = useCallback(
@@ -225,9 +224,12 @@ export const TrainingArticleManager = () => {
             .from("dashboard_layouts" as any)
             .insert({ role: "training", text_overrides: nextOverrides } as any);
         }
+
+        // Invalidate AFTER the write completes, not before
         queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
       } catch (err) {
         console.error("Failed to save global typography:", err);
+        // Roll back the optimistic update on failure
         queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
         toast.error("Failed to save typography settings");
       }
@@ -237,12 +239,15 @@ export const TrainingArticleManager = () => {
 
   const handleFontFamilyChange = (value: string) => {
     const nextFamily = value === "__none" ? "" : value;
+    // Read current font size directly from the query data
     const current = queryClient.getQueryData<{ font_family: string; font_size: string }>(TYPOGRAPHY_QUERY_KEY) ?? {
       font_family: "",
       font_size: "",
     };
     const nextState = { font_family: nextFamily, font_size: current.font_size };
+    // 1. Optimistic update so UI responds instantly
     queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, nextState);
+    // 2. Persist — do NOT invalidate until the write resolves (handled inside saveGlobalTypography)
     saveGlobalTypography(nextFamily, current.font_size);
   };
 
