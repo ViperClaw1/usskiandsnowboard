@@ -213,15 +213,11 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               {/* Background image / gradient — on mobile avatar center aligns with this div's bottom */}
               <div
                 className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
-                style={
-                  profile?.hero_image_url
-                    ? {
-                        backgroundImage: `url(${profile.hero_image_url})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }
-                    : undefined
-                }
+                style={{
+                  backgroundImage: `url(${profile?.background_image_url || usBgMountain})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
               />
 
               {/* Edit button */}
@@ -241,7 +237,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
-                    <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
+                    <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.photo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
                         {profile?.profiles?.full_name

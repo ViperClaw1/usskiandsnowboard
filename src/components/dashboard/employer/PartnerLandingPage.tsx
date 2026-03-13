@@ -91,7 +91,7 @@ const fetchPartnerDashboard = async (userId: string): Promise<DashboardData> => 
   const { data: profileData } = await supabase
     .from("employer_profiles")
     .select(
-      "id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered, hq_location, website, linkedin_url",
+      "id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered, hq_location, website, linkedin_url, background_image_url",
     )
     .eq("user_id", userId)
     .single();
