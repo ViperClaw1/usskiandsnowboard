@@ -1,153 +1,116 @@
 
-# Comprehensive Codebase Refactor Plan
+## Full Plan
 
-## Audit Summary
+### What needs to be built
 
-After reading all major files across pages, components, hooks, and data layers, here is what I found:
-
----
-
-## Key Issues Identified
-
-### 1. Duplicated Unauthenticated Nav (Critical)
-The same header block (logo + nav links + MobileNav + mountain background) is copy-pasted verbatim in **4 separate files**:
-- `src/pages/Index.tsx` — always renders it
-- `src/pages/News.tsx` — renders it when `!user`
-- `src/pages/Schedule.tsx` — renders it when `!user`
-- `src/pages/Employers.tsx` — renders it when `!user`
-
-`AuthenticatedNav` already exists. A `PublicNav` presentational component should be extracted and used in all four places.
-
-### 2. Duplicated Footer
-The identical footer block (`© 2025 U.S. Ski & Snowboard...`) is copy-pasted in:
-- `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx`
-
-A `PageFooter` presentational component should be extracted.
-
-### 3. Duplicated "How It Works" + "Join Our Legacy" Sections
-`Index.tsx` and `Home.tsx` contain near-identical "How It Works" card grid and "Join Our Legacy" sections. These should become shared presentational components.
-
-### 4. Duplicated `Article` / `TrainingArticle` Interface
-The `TrainingArticle` interface is defined independently in:
-- `src/pages/Training.tsx`
-- `src/pages/TrainingArticle.tsx`
-- `src/components/dashboard/admin/TrainingArticleManager.tsx` (as `Article`)
-
-These should be consolidated into `src/types/training.ts`.
-
-### 5. Duplicated `CATEGORY_COLORS` constant
-Defined separately in:
-- `src/pages/Training.tsx`
-- `src/pages/TrainingArticle.tsx`
-
-Should move to `src/constants/training.ts`.
-
-### 6. Duplicated `CATEGORIES` array
-Defined as `TRAINING_CATEGORIES` in `Training.tsx` and as `CATEGORIES` in `TrainingArticleManager.tsx`. Should be a single export from `src/constants/training.ts`.
-
-### 7. `loadUserRole` pattern repeated across 3 pages
-`Athletes.tsx`, `Employers.tsx`, and `Dashboard.tsx` all manually call `supabase.from("user_roles")` inline. This belongs in a `useUserRole(userId)` custom hook.
-
-### 8. Smart/Dumb Separation Missing
-- `Home.tsx` and `Training.tsx` are both smart (data fetching) and presentational (full JSX render) in the same component.
-- `AthleteLandingPage.tsx` has 484 lines mixing data fetching, real-time subscriptions, and deeply nested JSX. The pure card sub-sections should be dumb components.
-
-### 9. Missing Semantic Block Structure
-No files currently use the structured comment blocks (`// === Imports ===`, `// === State ===`, etc.) as required by the refactoring spec.
-
-### 10. Inline Auth State Listeners in Pages
-`Athletes.tsx` manually wires `supabase.auth.onAuthStateChange` — this duplicates what `AuthContext` already provides. It should use `useAuth()` instead.
-
-### 11. `MobileNav` contains sign-out business logic
-`MobileNav` is supposed to be a presentational navigation component, but contains a full `handleSignOut` function with Supabase calls — same logic as `AuthenticatedNav`. This should be extracted to a `useSignOut` hook.
+**4 coordinated changes:**
+1. DB migration — add `background_image_url` to both `athlete_profiles` and `employer_profiles`
+2. Onboarding wizards — optional background image step (athlete + employer), default to `us-background-mountain.png` on submit if blank
+3. Edit profile dialogs — background image uploader with delete, before profile photo, default on delete
+4. Mobile layout — avatar center sits exactly on top border of the white info block (`-mt-12` on the Avatar so its center aligns with the container top)
 
 ---
 
-## Proposed Changes
+### 1. DB Migration
 
-### New Files to Create
+```sql
+ALTER TABLE public.athlete_profiles
+  ADD COLUMN IF NOT EXISTS background_image_url text;
 
-```
-src/types/
-  training.ts          — TrainingArticle + Article interfaces
-  news.ts              — NewsArticle interface (shared between Home + News pages)
-  connections.ts       — Connection, ConnectionStats, ConnectionRequest interfaces
-  profiles.ts          — AthleteProfile, EmployerProfile interfaces
-
-src/constants/
-  training.ts          — TRAINING_CATEGORIES, CATEGORY_COLORS
-  nav.ts               — NAV_ITEMS array (used by MobileNav, AuthenticatedNav)
-
-src/hooks/
-  useUserRole.ts       — extracts the repeated user_roles query pattern
-  useSignOut.ts        — extracts the repeated signOut + clear storage pattern
-
-src/components/layout/
-  PublicNav.tsx        — dumb: renders unauthenticated header (logo, links, MobileNav)
-  PageFooter.tsx       — dumb: renders the shared copyright footer
-
-src/components/home/
-  HowItWorksSection.tsx — dumb: the "How It Works" 3-card grid (shared by Index + Home)
-  JoinLegacySection.tsx — dumb: the "Join Our Legacy" CTA section (shared by Index + Home)
+ALTER TABLE public.employer_profiles
+  ADD COLUMN IF NOT EXISTS background_image_url text;
 ```
 
-### Files to Modify
-
-| File | What Changes |
-|---|---|
-| `src/pages/Index.tsx` | Remove inline header + footer + section JSX; use `PublicNav`, `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; add semantic block comments |
-| `src/pages/Home.tsx` | Remove inline footer + section JSX; use `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; extract news data-fetch into comment-labeled blocks |
-| `src/pages/News.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
-| `src/pages/Schedule.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
-| `src/pages/Athletes.tsx` | Remove manual auth listener; use `useAuth()`; extract `loadUserRole` to `useUserRole` hook; add semantic block comments |
-| `src/pages/Training.tsx` | Import types from `src/types/training.ts`; import constants from `src/constants/training.ts`; add semantic block comments |
-| `src/pages/TrainingArticle.tsx` | Import types/constants from shared files; add semantic block comments |
-| `src/components/dashboard/admin/TrainingArticleManager.tsx` | Import shared types/constants; add semantic block comments |
-| `src/components/MobileNav.tsx` | Extract `handleSignOut` into `useSignOut` hook; add semantic block comments |
-| `src/components/AuthenticatedNav.tsx` | Use `useSignOut` hook instead of inline handler; add semantic block comments |
-| `src/pages/Dashboard.tsx` | Add semantic block comments; annotate welcome content constants |
-
-### Files That Do NOT Change
-- All Supabase edge functions
-- All UI primitives in `src/components/ui/`
-- `src/components/auth/AuthContext.tsx`
-- `src/App.tsx`
-- `src/integrations/` (auto-generated)
-- All admin page files (`AllUsers`, `AllAthletes`, etc.)
-- `src/data/suggestions.ts`
+No RLS changes needed — both tables already have existing policies covering the new column.
 
 ---
 
-## Execution Order (Safe Steps)
+### 2. Storage
 
-The changes are grouped to avoid broken references at any intermediate step:
-
-**Step 1 — New shared types/constants (no existing files touched)**
-- Create `src/types/training.ts`
-- Create `src/constants/training.ts`
-
-**Step 2 — New shared hooks (no existing files touched)**
-- Create `src/hooks/useUserRole.ts`
-- Create `src/hooks/useSignOut.ts`
-
-**Step 3 — New layout/section components (no existing files touched)**
-- Create `src/components/layout/PublicNav.tsx`
-- Create `src/components/layout/PageFooter.tsx`
-- Create `src/components/home/HowItWorksSection.tsx`
-- Create `src/components/home/JoinLegacySection.tsx`
-
-**Step 4 — Update consumers (all at once to avoid stale imports)**
-- Update `Training.tsx` + `TrainingArticle.tsx` + `TrainingArticleManager.tsx` to use shared types/constants
-- Update `MobileNav.tsx` + `AuthenticatedNav.tsx` to use `useSignOut`
-- Update `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx` to use `PublicNav`, `PageFooter`, shared sections
-- Update `Athletes.tsx` to use `useAuth()` and `useUserRole`
-- Add semantic block comments to `Dashboard.tsx` and `Settings.tsx`
+Background images for both athletes and employers can reuse the existing `athlete-photos` bucket (for athletes) and `company-logos` bucket (for employers) — both are public. No new bucket needed. Files stored at `{userId}/bg-{timestamp}.{ext}`.
 
 ---
 
-## What Will NOT Change
-- All visual output — identical pixels
-- All routing — same paths
-- All Supabase queries — no logic changes
-- All component APIs — props unchanged
-- All edge functions
+### 3. Onboarding Wizards
+
+**`AthleteOnboardingWizard.tsx`**
+- Add `backgroundImageUrl` state (string, default `""`).
+- Insert a new step **after the profile photo step (case 1)** — step index 2 becomes "Background Image" (optional). Increment `TOTAL_STEPS` from 15 to 16. Shift all subsequent `case` numbers by 1.
+- In `canGoNext`, new case 2 returns `true` (optional).
+- In `onSubmit`, pass `background_image_url: backgroundImageUrl || null` to the upsert. No default image is stored in DB — the default asset is applied at render time when the value is null.
+
+**`EmployerOnboardingWizard.tsx`**
+- Add `backgroundImageUrl` state (string, default `""`).
+- Insert a new optional step after the logo step (case 1 → new case 2 = "Background Image"). Increment `TOTAL_STEPS` from 11 to 12. Shift cases.
+- In `onSubmit`, pass `background_image_url: backgroundImageUrl || null`.
+
+Both steps share the same upload pattern: use `athlete-photos` / `company-logos` bucket respectively, `{userId}/bg-{timestamp}.{ext}` path, preview image with remove button, `StepNavigation` with `onSkip`.
+
+---
+
+### 4. Profile Edit Forms
+
+**`ProfileForm.tsx` (Athlete)**
+- Add `backgroundImageUrl` state, loaded from `athleteData.background_image_url`.
+- Add `backgroundImageFile` state + uploader function.
+- Before the existing "Profile Photo" section, add a **"Background Image"** section with:
+  - If set: preview (wide, `h-32 object-cover rounded-lg`) + "Change" + "Remove" (X) button
+  - If not set: upload area
+  - On remove: `setBackgroundImageUrl("")` — the dashboard renders the default asset when null
+- In `handleSubmit`, include `background_image_url: backgroundImageUrl || null` in the upsert.
+
+**`CompanyProfileForm.tsx` (Employer)**
+- Add `backgroundImageUrl` state from `existingProfile?.background_image_url`.
+- Add background image uploader section before the logo avatar section (same pattern as athlete).
+- In `onSubmit`, include `background_image_url: backgroundImageUrl ? backgroundImageUrl.split('?')[0] : null`.
+
+---
+
+### 5. Dashboard Landing Pages (background image display)
+
+**`AthleteLandingPage.tsx`**
+- The banner `<div>` currently uses `profile?.hero_image_url` for the background style. Change to use `profile?.background_image_url`. If null, fall back to `us-background-mountain.png` (imported as ES6 module).
+- Add `background_image_url` to the `AthleteProfile` interface and the `select` query (`"*, profiles(...)"` already returns all columns).
+
+**`PartnerLandingPage.tsx`**
+- The banner `<div>` currently uses only a gradient. Change to:
+  - If `profile?.background_image_url` → background image
+  - Else → import and use `us-background-mountain.png` asset
+- Add `background_image_url` to the `EmployerProfile` interface and to the `select` string in `fetchPartnerDashboard`.
+
+---
+
+### 6. Mobile Avatar Fix (point 4)
+
+The screenshot shows the avatar should be half-inside the banner and half-inside the white info block — its center sits exactly on the container's top border.
+
+**Current state** (`AthleteLandingPage.tsx` + `PartnerLandingPage.tsx`):
+```
+<div className="-mt-16 sm:mt-0 ...">          ← info block pulled up by 64px
+  <div className="... bg-white rounded-t-xl">
+    <Avatar className="h-24 w-24 ...">         ← 96px tall, so center is 48px down
+```
+The `-mt-16` (64px) pulls the whole white block up, but the avatar (h-24 = 96px) starts at the top of the white block. Its center is 48px into the white area, not on the border.
+
+**Fix** — apply only to `< sm` (mobile):
+```jsx
+<Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0
+                   -mt-12 sm:mt-0">
+```
+`-mt-12` = -48px = exactly half of `h-24` (96px), so the avatar center lands on the white block's top border. `sm:mt-0` restores desktop behaviour unchanged.
+
+The white info block pull-up stays at `-mt-16` (64px): the avatar's top edge (`-mt-12` + block's own padding) will sit within the banner overlap, and the center will be on the border.
+
+---
+
+### Files to change
+
+```
+supabase/migrations/          New migration: add background_image_url columns
+src/components/athlete/AthleteOnboardingWizard.tsx   Add BG image step + submit
+src/components/employer/EmployerOnboardingWizard.tsx Add BG image step + submit
+src/components/athlete/ProfileForm.tsx               BG image uploader section
+src/components/employer/CompanyProfileForm.tsx       BG image uploader section
+src/components/dashboard/athlete/AthleteLandingPage.tsx  Use background_image_url (fallback to asset)
+src/components/dashboard/employer/PartnerLandingPage.tsx Use background_image_url (fallback to asset)
+```
