@@ -69,7 +69,7 @@ const TrainingArticlePage = () => {
   // ==============================
   // Data Fetching
   // useQuery caches the article body per slug — repeat visits render instantly.
-  // Global typography is cached for 10 min (changes rarely).
+  // Global typography refetches on window focus (staleTime: 0) so other tabs see updates.
   // ==============================
   const { data: article, isLoading: loading } = useQuery({
     queryKey: ["training-article", slug],
@@ -81,7 +81,7 @@ const TrainingArticlePage = () => {
   const { data: globalTypography } = useQuery({
     queryKey: ["training-global-typography"],
     queryFn: fetchGlobalTypography,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0,
   });
 
   // ==============================
