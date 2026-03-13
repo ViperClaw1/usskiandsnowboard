@@ -527,7 +527,7 @@ const Auth = () => {
               <Input
                 id="inviteCodeInput"
                 type="text"
-                placeholder="Enter your invite code here..."
+                placeholder="Enter invite code..."
                 value={inviteCodeInput}
                 onChange={(e) => {
                   setInviteCodeInput(e.target.value.toUpperCase());
@@ -535,7 +535,7 @@ const Auth = () => {
                 }}
                 onBlur={() => setInviteCodeTouched(true)}
                 maxLength={10}
-                className="text-center tracking-widest text-lg font-mono"
+                className="text-center tracking-widest text-sm font-mono"
               />
               {inviteCodeTouched && inviteCodeError && <p className="text-sm text-destructive">{inviteCodeError}</p>}
             </div>
