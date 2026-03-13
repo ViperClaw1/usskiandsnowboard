@@ -527,7 +527,7 @@ const Auth = () => {
               <Input
                 id="inviteCodeInput"
                 type="text"
-                placeholder="e.g. GOBIG25"
+                placeholder="Enter your invite code here..."
                 value={inviteCodeInput}
                 onChange={(e) => {
                   setInviteCodeInput(e.target.value.toUpperCase());
