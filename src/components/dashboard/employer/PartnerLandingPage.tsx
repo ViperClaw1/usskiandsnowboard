@@ -51,6 +51,7 @@ interface EmployerProfile {
   hq_location: string | null;
   website: string | null;
   linkedin_url: string | null;
+  background_image_url: string | null;
 }
 
 interface AthleteProfile {

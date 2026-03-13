@@ -55,6 +55,7 @@ interface AthleteProfile {
   geographic_preferences: string[] | null;
   home_mountain: string | null;
   hero_image_url: string | null;
+  background_image_url: string | null;
   professional_highlights: string | null;
   sponsors: string[] | null;
   email: string | null;
