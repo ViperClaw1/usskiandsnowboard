@@ -20,7 +20,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
+  AlertDialogDescription,const { data: globalTypography } = useQuery({
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -173,9 +173,11 @@ export const TrainingArticleManager = () => {
 
   const queryClient = useQueryClient();
   const { data: globalTypography } = useQuery({
-    queryKey: TYPOGRAPHY_QUERY_KEY,
+    queryKey: TYPOGRAPHY_QUERY_KEY,   // or ["training-global-typography"] in the consumer files
     queryFn: fetchGlobalTypography,
-    staleTime: 0,
+    staleTime: 30 * 1000,   // 30 seconds — won't auto-refetch mid-save
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const globalFontFamily = globalTypography?.font_family ?? "";
