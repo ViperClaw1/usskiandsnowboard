@@ -174,6 +174,7 @@ export type Database = {
         Row: {
           affiliation: string | null
           availability: string | null
+          background_image_url: string | null
           bio: string | null
           career_interests: string[] | null
           created_at: string
@@ -200,6 +201,7 @@ export type Database = {
         Insert: {
           affiliation?: string | null
           availability?: string | null
+          background_image_url?: string | null
           bio?: string | null
           career_interests?: string[] | null
           created_at?: string
@@ -226,6 +228,7 @@ export type Database = {
         Update: {
           affiliation?: string | null
           availability?: string | null
+          background_image_url?: string | null
           bio?: string | null
           career_interests?: string[] | null
           created_at?: string
@@ -489,6 +492,7 @@ export type Database = {
       employer_profiles: {
         Row: {
           about: string | null
+          background_image_url: string | null
           company_name: string
           company_size: string | null
           connection_to_ussa: string | null
@@ -513,6 +517,7 @@ export type Database = {
         }
         Insert: {
           about?: string | null
+          background_image_url?: string | null
           company_name: string
           company_size?: string | null
           connection_to_ussa?: string | null
@@ -537,6 +542,7 @@ export type Database = {
         }
         Update: {
           about?: string | null
+          background_image_url?: string | null
           company_name?: string
           company_size?: string | null
           connection_to_ussa?: string | null

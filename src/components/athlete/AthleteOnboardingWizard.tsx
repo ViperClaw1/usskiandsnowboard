@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
 import PhotoUploader from "./PhotoUploader";
-import { Sparkles, Upload } from "lucide-react";
+import { Sparkles, Upload, X } from "lucide-react";
 import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
 
 interface AthleteOnboardingWizardProps {
@@ -39,13 +39,15 @@ interface FormData {
   galleryPhotos: string[];
 }
 
-const TOTAL_STEPS = 15;
+const TOTAL_STEPS = 16;
 
 export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string>("");
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>("");
   const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingBg, setIsUploadingBg] = useState(false);
 
   const { register, watch, setValue, handleSubmit, formState: { errors } } = useForm<FormData>({
     mode: "onChange",
@@ -79,6 +81,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         setValue(key as keyof FormData, parsed.formData[key]);
       });
       if (parsed.photoUrl) setPhotoUrl(parsed.photoUrl);
+      if (parsed.backgroundImageUrl) setBackgroundImageUrl(parsed.backgroundImageUrl);
       if (parsed.galleryPhotos) setGalleryPhotos(parsed.galleryPhotos);
       if (parsed.currentStep) setCurrentStep(parsed.currentStep);
     }
@@ -93,6 +96,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           currentStep,
           formData: formValues,
           photoUrl,
+          backgroundImageUrl,
           galleryPhotos,
           lastSaved: Date.now(),
         })
@@ -100,24 +104,25 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formValues, currentStep, photoUrl, galleryPhotos, user.id]);
+  }, [formValues, currentStep, photoUrl, backgroundImageUrl, galleryPhotos, user.id]);
 
   const canGoNext = useMemo(() => {
     switch (currentStep) {
       case 0: return true; // Welcome
       case 1: return true; // Photo (optional)
-      case 2: return formValues.firstName.trim().length > 0;
-      case 3: return formValues.lastName.trim().length > 0;
-      case 4: return formValues.email.trim().length > 0 && formValues.email.includes("@");
-      case 5: return formValues.affiliation.trim().length > 0;
-      case 6: return formValues.sport.trim().length > 0;
-      case 7: return true; // Home mountain (optional)
-      case 8: return formValues.bio.trim().length > 0;
-      case 9: return formValues.careerInterests.length > 0;
-      case 10: return formValues.skills.length > 0;
-      case 11: return formValues.availability.trim().length > 0;
-      case 12: return true; // Optional
-      case 13: return true; // Review
+      case 2: return true; // Background image (optional)
+      case 3: return formValues.firstName.trim().length > 0;
+      case 4: return formValues.lastName.trim().length > 0;
+      case 5: return formValues.email.trim().length > 0 && formValues.email.includes("@");
+      case 6: return formValues.affiliation.trim().length > 0;
+      case 7: return formValues.sport.trim().length > 0;
+      case 8: return true; // Home mountain (optional)
+      case 9: return formValues.bio.trim().length > 0;
+      case 10: return formValues.careerInterests.length > 0;
+      case 11: return formValues.skills.length > 0;
+      case 12: return formValues.availability.trim().length > 0;
+      case 13: return true; // Optional
+      case 14: return true; // Review
       default: return false;
     }
   }, [currentStep, formValues]);
@@ -136,6 +141,39 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
   const skipStep = () => {
     nextStep();
+  };
+
+  const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBg(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const timestamp = Date.now();
+      const filePath = `${user.id}/bg-${timestamp}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("athlete-photos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("athlete-photos")
+        .getPublicUrl(filePath);
+
+      setBackgroundImageUrl(data.publicUrl);
+      toast({ title: "Background image uploaded!" });
+    } catch (error: any) {
+      toast({
+        title: "Error uploading background",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingBg(false);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
@@ -174,6 +212,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         years_of_membership: data.yearsOfMembership ? parseInt(data.yearsOfMembership) : null,
         sponsors: sponsorsArray.length > 0 ? sponsorsArray : null,
         photo_url: photoUrl || null,
+        background_image_url: backgroundImageUrl || null,
         hero_image_url: galleryPhotos.length > 0 ? galleryPhotos[0] : null,
         gallery_images: galleryPhotos.length > 1 ? galleryPhotos.slice(1) : null,
         email: data.email,
@@ -301,6 +340,60 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       case 2:
         return (
+          <OnboardingStep
+            title="Add a background image"
+            description="Upload a banner image for your profile (mountains, action shots, etc.)"
+            optional
+          >
+            <div className="flex flex-col items-center gap-4">
+              {backgroundImageUrl ? (
+                <div className="relative w-full">
+                  <img
+                    src={backgroundImageUrl}
+                    alt="Background"
+                    className="w-full h-32 object-cover rounded-lg border-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setBackgroundImageUrl("")}
+                    className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : null}
+              <Label
+                htmlFor="bg-upload"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 h-14 px-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-lg"
+              >
+                <Upload className="h-5 w-5" />
+                {isUploadingBg ? "Uploading..." : backgroundImageUrl ? "Change Background" : "Upload Background"}
+              </Label>
+              <Input
+                id="bg-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleBackgroundUpload}
+                className="hidden"
+                disabled={isUploadingBg}
+              />
+              <p className="text-sm text-muted-foreground">Recommended: wide landscape photo (16:9)</p>
+            </div>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              canGoBack={true}
+              canGoNext={true}
+              onBack={prevStep}
+              onNext={nextStep}
+              onSkip={skipStep}
+              isLoading={isUploadingBg}
+            />
+          </OnboardingStep>
+        );
+
+      case 3:
+        return (
           <OnboardingStep title="What's your first name?">
             <Input
               {...register("firstName", { required: true })}
@@ -319,7 +412,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 3:
+      case 4:
         return (
           <OnboardingStep title="And your last name?">
             <Input
@@ -339,7 +432,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 4:
+      case 5:
         return (
           <OnboardingStep title="What's the best email to reach you?">
             <Input
@@ -360,7 +453,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 5:
+      case 6:
         return (
           <OnboardingStep title="What is your current affiliation with US Ski & Snowboard?">
             <Select value={formValues.affiliation} onValueChange={(value) => setValue("affiliation", value)}>
@@ -383,7 +476,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 6:
+      case 7:
         return (
           <OnboardingStep title="What's your primary sport?">
             <Select value={formValues.sport} onValueChange={(value) => setValue("sport", value)}>
@@ -410,10 +503,10 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 7:
+      case 8:
         return (
-          <OnboardingStep 
-            title="What's your home mountain?" 
+          <OnboardingStep
+            title="What's your home mountain?"
             description="Where do you primarily train?"
             optional
           >
@@ -435,7 +528,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 8:
+      case 9:
         return (
           <OnboardingStep
             title="Tell us about yourself"
@@ -462,7 +555,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 9:
+      case 10:
         return (
           <OnboardingStep
             title="What career areas interest you?"
@@ -486,7 +579,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 10:
+      case 11:
         return (
           <OnboardingStep
             title="What are your top skills?"
@@ -510,7 +603,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 11:
+      case 12:
         return (
           <OnboardingStep title="When are you available?">
             <Select value={formValues.availability} onValueChange={(value) => setValue("availability", value)}>
@@ -535,7 +628,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 12:
+      case 13:
         return (
           <OnboardingStep
             title="Add photos to your profile"
@@ -627,7 +720,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 13:
+      case 14:
         return (
           <OnboardingStep
             title="A few more details?"
@@ -677,7 +770,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
           </OnboardingStep>
         );
 
-      case 14:
+      case 15:
         return (
           <OnboardingStep
             title="Review & Complete"

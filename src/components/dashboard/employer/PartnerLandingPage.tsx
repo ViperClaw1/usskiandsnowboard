@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import usBgMountain from "@/assets/us-background-mountain.png";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,6 +51,7 @@ interface EmployerProfile {
   hq_location: string | null;
   website: string | null;
   linkedin_url: string | null;
+  background_image_url?: string | null;
 }
 
 interface AthleteProfile {
@@ -89,7 +91,7 @@ const fetchPartnerDashboard = async (userId: string): Promise<DashboardData> => 
   const { data: profileData } = await supabase
     .from("employer_profiles")
     .select(
-      "id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered, hq_location, website, linkedin_url",
+      "id, company_name, logo_url, industry, profile_completeness, profile_views, opportunities_offered, hq_location, website, linkedin_url, background_image_url",
     )
     .eq("user_id", userId)
     .single();
@@ -219,8 +221,15 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
           <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
             {/* Banner — relative so the sm+ absolute block is contained here; parent for avatar alignment on mobile */}
             <div className="relative overflow-visible">
-              {/* Background gradient — on mobile avatar center aligns with this div's bottom */}
-              <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
+              {/* Background image — on mobile avatar center aligns with this div's bottom */}
+              <div
+                className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
+                style={{
+                  backgroundImage: `url(${profile?.background_image_url || usBgMountain})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
 
               {/* Edit button */}
               <Button
@@ -238,8 +247,8 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                   >=640px: absolute, overlaps banner centre (translate-y-1/2), content-fit width, rounded-tr only */}
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-white w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
-                    <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
+                    <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.logo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
                         {profile?.company_name ? profile.company_name.substring(0, 2).toUpperCase() : "CO"}

@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from "sonner";
-import { Loader2, Upload, X, Instagram, Phone } from "lucide-react";
+import { Loader2, Upload, X, Instagram, Phone, Image } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { SKILLS_OPTIONS, CAREER_INTERESTS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
+import usBgMountain from "@/assets/us-background-mountain.png";
 
 interface ProfileFormProps {
   userId: string;
@@ -55,8 +56,12 @@ const validatePhone = (digits: string): string => {
 const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>("");
+  const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(null);
+  const [backgroundImagePreview, setBackgroundImagePreview] = useState<string>("");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [formData, setFormData] = useState({
@@ -84,7 +89,6 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
   const loadExistingProfile = async () => {
     try {
-      // Load athlete profile
       const { data: athleteData, error: athleteError } = await supabase
         .from("athlete_profiles")
         .select("*")
@@ -93,7 +97,6 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       if (athleteError) throw athleteError;
 
-      // Load user profile (name and email)
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("first_name, last_name, email")
@@ -122,6 +125,9 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           is_public: athleteData.is_public ?? true
         });
         setPhotoUrl(athleteData.photo_url || "");
+        const bgUrl = (athleteData as any).background_image_url || "";
+        setBackgroundImageUrl(bgUrl);
+        setBackgroundImagePreview(bgUrl);
       } else if (profileData) {
         setFormData(prev => ({
           ...prev,
@@ -152,6 +158,22 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     }
   };
 
+  const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Background image must be less than 10MB");
+        return;
+      }
+      setBackgroundImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBackgroundImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const uploadPhoto = async (): Promise<string | null> => {
     if (!photoFile) return photoUrl;
 
@@ -161,15 +183,17 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
       const timestamp = Date.now();
       const fileName = `${userId}/profile-${timestamp}.${fileExt}`;
 
-      // Delete old photos in user folder
       try {
         const { data: files } = await supabase.storage
           .from('athlete-photos')
           .list(userId);
         
         if (files && files.length > 0) {
-          const filesToDelete = files.map(file => `${userId}/${file.name}`);
-          await supabase.storage.from('athlete-photos').remove(filesToDelete);
+          const profileFiles = files.filter(f => f.name.startsWith('profile-'));
+          if (profileFiles.length > 0) {
+            const filesToDelete = profileFiles.map(file => `${userId}/${file.name}`);
+            await supabase.storage.from('athlete-photos').remove(filesToDelete);
+          }
         }
       } catch (error) {
         console.error("Error deleting old photos:", error);
@@ -185,7 +209,6 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .from('athlete-photos')
         .getPublicUrl(fileName);
 
-      // Cache-bust in UI
       return `${data.publicUrl}?v=${timestamp}`;
     } catch (error: any) {
       console.error("Error uploading photo:", error);
@@ -196,15 +219,45 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     }
   };
 
+  const uploadBackgroundImage = async (): Promise<string | null> => {
+    if (!backgroundImageFile) return backgroundImageUrl || null;
+
+    setUploadingBg(true);
+    try {
+      const fileExt = backgroundImageFile.name.split('.').pop();
+      const timestamp = Date.now();
+      const fileName = `${userId}/bg-${timestamp}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('athlete-photos')
+        .upload(fileName, backgroundImageFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('athlete-photos')
+        .getPublicUrl(fileName);
+
+      return `${data.publicUrl}?v=${timestamp}`;
+    } catch (error: any) {
+      console.error("Error uploading background:", error);
+      toast.error("Failed to upload background image");
+      return null;
+    } finally {
+      setUploadingBg(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Upload photo if there's a new one
-      const uploadedPhotoUrl = await uploadPhoto();
+      const [uploadedPhotoUrl, uploadedBgUrl] = await Promise.all([
+        uploadPhoto(),
+        uploadBackgroundImage(),
+      ]);
 
-      // Update user profile (name)
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -215,7 +268,6 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       if (profileError) throw profileError;
 
-      // Convert comma-separated strings to arrays
       const career_interests = formData.career_interests
         .split(",")
         .map(s => s.trim())
@@ -236,7 +288,6 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .map(s => s.trim())
         .filter(s => s);
 
-      // Calculate profile completeness dynamically
       let completeness = 0;
       if (formData.first_name && formData.last_name) completeness += 20;
       if (formData.sport_discipline) completeness += 20;
@@ -262,10 +313,10 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         sponsors,
         is_public: formData.is_public,
         photo_url: uploadedPhotoUrl ? uploadedPhotoUrl.split('?')[0] : (photoUrl ? photoUrl.split('?')[0] : null),
+        background_image_url: uploadedBgUrl ? uploadedBgUrl.split('?')[0] : (backgroundImageUrl ? backgroundImageUrl.split('?')[0] : null),
         profile_completeness: completeness
       };
 
-      // Check if profile exists
       const { data: existingProfile } = await supabase
         .from("athlete_profiles")
         .select("id")
@@ -273,7 +324,6 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .maybeSingle();
 
       if (existingProfile) {
-        // Update existing profile
         const { error } = await supabase
           .from("athlete_profiles")
           .update(profileData)
@@ -281,7 +331,6 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
         if (error) throw error;
       } else {
-        // Create new profile
         const { error } = await supabase
           .from("athlete_profiles")
           .insert({
@@ -304,6 +353,66 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Background Image */}
+      <div className="space-y-2">
+        <Label>Background Image</Label>
+        <div className="space-y-2">
+          {backgroundImagePreview ? (
+            <div className="relative w-full">
+              <img
+                src={backgroundImagePreview}
+                alt="Background"
+                className="w-full h-32 object-cover rounded-lg border"
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2 h-7 w-7"
+                onClick={() => {
+                  setBackgroundImageUrl("");
+                  setBackgroundImageFile(null);
+                  setBackgroundImagePreview("");
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+              <div className="absolute bottom-2 left-2">
+                <Label
+                  htmlFor="bg-upload"
+                  className="cursor-pointer inline-flex items-center gap-1.5 text-xs bg-background/80 hover:bg-background px-2 py-1 rounded border shadow-sm"
+                >
+                  <Image className="h-3 w-3" />
+                  Change
+                </Label>
+              </div>
+            </div>
+          ) : (
+            <Label
+              htmlFor="bg-upload"
+              className="cursor-pointer flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg hover:bg-muted/50 transition-colors gap-2 text-muted-foreground"
+            >
+              <Image className="h-6 w-6" />
+              <span className="text-sm">Upload background image</span>
+              <span className="text-xs">Wide photo recommended (max 10MB)</span>
+            </Label>
+          )}
+          <Input
+            id="bg-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleBackgroundChange}
+            className="hidden"
+          />
+          {!backgroundImagePreview && (
+            <p className="text-xs text-muted-foreground">
+              If left empty, a default mountain image will be used.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Profile Photo */}
       <div className="space-y-2">
         <Label>Profile Photo</Label>
         <div className="flex items-center gap-4">
@@ -581,11 +690,11 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         </Label>
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading || uploading}>
-        {loading || uploading ? (
+      <Button type="submit" className="w-full" disabled={loading || uploading || uploadingBg}>
+        {loading || uploading || uploadingBg ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {uploading ? "Uploading photo..." : "Saving..."}
+            {uploading ? "Uploading photo..." : uploadingBg ? "Uploading background..." : "Saving..."}
           </>
         ) : (
           "Save Profile"
