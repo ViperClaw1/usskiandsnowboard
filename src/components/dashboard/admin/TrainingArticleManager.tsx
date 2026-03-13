@@ -175,7 +175,7 @@ export const TrainingArticleManager = () => {
   const { data: globalTypography } = useQuery({
     queryKey: TYPOGRAPHY_QUERY_KEY,
     queryFn: fetchGlobalTypography,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0,
   });
 
   const globalFontFamily = globalTypography?.font_family ?? "";
@@ -225,30 +225,35 @@ export const TrainingArticleManager = () => {
             .from("dashboard_layouts" as any)
             .insert({ role: "training", text_overrides: nextOverrides } as any);
         }
-        queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, { font_family: fontFamily, font_size: fontSize });
       } catch (err) {
         console.error("Failed to save global typography:", err);
+        queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
+        toast.error("Failed to save typography settings");
       }
     },
     [queryClient],
   );
 
   const handleFontFamilyChange = (value: string) => {
-    const next = value === "__none" ? "" : value;
+    const nextFamily = value === "__none" ? "" : value;
     const current = queryClient.getQueryData<{ font_family: string; font_size: string }>(TYPOGRAPHY_QUERY_KEY) ?? {
       font_family: "",
       font_size: "",
     };
-    saveGlobalTypography(next, current.font_size);
+    const nextState = { font_family: nextFamily, font_size: current.font_size };
+    queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, nextState);
+    saveGlobalTypography(nextFamily, current.font_size);
   };
 
   const handleFontSizeChange = (value: string) => {
-    const next = value === "__none" ? "" : value;
+    const nextSize = value === "__none" ? "" : value;
     const current = queryClient.getQueryData<{ font_family: string; font_size: string }>(TYPOGRAPHY_QUERY_KEY) ?? {
       font_family: "",
       font_size: "",
     };
-    saveGlobalTypography(current.font_family, next);
+    const nextState = { font_family: current.font_family, font_size: nextSize };
+    queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, nextState);
+    saveGlobalTypography(current.font_family, nextSize);
   };
 
   // ==============================
