@@ -82,6 +82,8 @@ const TrainingArticlePage = () => {
     queryKey: ["training-global-typography"],
     queryFn: fetchGlobalTypography,
     staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   // ==============================
