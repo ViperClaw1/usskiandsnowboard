@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload, Building2 } from "lucide-react";
+import { Loader2, Upload, Building2, X, Image } from "lucide-react";
 
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
@@ -39,6 +40,10 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(existingProfile?.logo_url || null);
   const [uploading, setUploading] = useState(false);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>(existingProfile?.background_image_url || "");
+  const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(null);
+  const [backgroundImagePreview, setBackgroundImagePreview] = useState<string>(existingProfile?.background_image_url || "");
+  const [uploadingBg, setUploadingBg] = useState(false);
 
   const industryOptions = [
     "Technology & Software",
@@ -73,8 +78,6 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     "Other"
   ];
 
-
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -97,13 +100,11 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be less than 5MB");
       return;
@@ -115,7 +116,6 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       const timestamp = Date.now();
       const filePath = `${userId}/logo-${timestamp}.${fileExt}`;
 
-      // Delete old logo if exists - list all files in user folder and delete them
       if (logoUrl) {
         try {
           const { data: files } = await supabase.storage
@@ -123,27 +123,27 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
             .list(userId);
           
           if (files && files.length > 0) {
-            const filesToDelete = files.map(file => `${userId}/${file.name}`);
-            await supabase.storage.from("company-logos").remove(filesToDelete);
+            const logoFiles = files.filter(f => f.name.startsWith('logo-'));
+            if (logoFiles.length > 0) {
+              const filesToDelete = logoFiles.map(file => `${userId}/${file.name}`);
+              await supabase.storage.from("company-logos").remove(filesToDelete);
+            }
           }
         } catch (error) {
           console.error("Error deleting old logo:", error);
         }
       }
 
-      // Upload new logo with upsert
       const { error: uploadError } = await supabase.storage
         .from("company-logos")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from("company-logos")
         .getPublicUrl(filePath);
 
-      // Cache-bust in UI to avoid stale image
       setLogoUrl(`${publicUrl}?v=${timestamp}`);
       toast.success("Logo uploaded successfully!");
     } catch (error) {
@@ -154,10 +154,56 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     }
   };
 
+  const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Background image must be less than 10MB");
+        return;
+      }
+      setBackgroundImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBackgroundImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadBackgroundImage = async (): Promise<string | null> => {
+    if (!backgroundImageFile) return backgroundImageUrl || null;
+
+    setUploadingBg(true);
+    try {
+      const fileExt = backgroundImageFile.name.split('.').pop();
+      const timestamp = Date.now();
+      const fileName = `${userId}/bg-${timestamp}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('company-logos')
+        .upload(fileName, backgroundImageFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('company-logos')
+        .getPublicUrl(fileName);
+
+      return `${data.publicUrl}?v=${timestamp}`;
+    } catch (error: any) {
+      console.error("Error uploading background:", error);
+      toast.error("Failed to upload background image");
+      return null;
+    } finally {
+      setUploadingBg(false);
+    }
+  };
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
+      const uploadedBgUrl = await uploadBackgroundImage();
+
       const profileData = {
         user_id: userId,
         company_name: values.company_name,
@@ -173,6 +219,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
         website: values.website || null,
         linkedin_url: values.linkedin_url || null,
         logo_url: logoUrl ? logoUrl.split('?')[0] : null,
+        background_image_url: uploadedBgUrl ? uploadedBgUrl.split('?')[0] : (backgroundImageUrl ? backgroundImageUrl.split('?')[0] : null),
       };
 
       let error;
@@ -204,6 +251,67 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+        {/* Background Image */}
+        <div className="space-y-2">
+          <Label>Background Image</Label>
+          <div className="space-y-2">
+            {backgroundImagePreview ? (
+              <div className="relative w-full">
+                <img
+                  src={backgroundImagePreview}
+                  alt="Background"
+                  className="w-full h-32 object-cover rounded-lg border"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-7 w-7"
+                  onClick={() => {
+                    setBackgroundImageUrl("");
+                    setBackgroundImageFile(null);
+                    setBackgroundImagePreview("");
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+                <div className="absolute bottom-2 left-2">
+                  <Label
+                    htmlFor="company-bg-upload"
+                    className="cursor-pointer inline-flex items-center gap-1.5 text-xs bg-background/80 hover:bg-background px-2 py-1 rounded border shadow-sm"
+                  >
+                    <Image className="h-3 w-3" />
+                    Change
+                  </Label>
+                </div>
+              </div>
+            ) : (
+              <Label
+                htmlFor="company-bg-upload"
+                className="cursor-pointer flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg hover:bg-muted/50 transition-colors gap-2 text-muted-foreground"
+              >
+                <Image className="h-6 w-6" />
+                <span className="text-sm">Upload background image</span>
+                <span className="text-xs">Wide photo recommended (max 10MB)</span>
+              </Label>
+            )}
+            <input
+              id="company-bg-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleBackgroundChange}
+              className="hidden"
+            />
+            {!backgroundImagePreview && (
+              <p className="text-xs text-muted-foreground">
+                If left empty, a default mountain image will be used.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Company Logo */}
         <div className="flex flex-col items-center gap-4">
           <Avatar className="h-32 w-32">
             {logoUrl ? (
@@ -382,7 +490,6 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
           )}
         />
 
-
         <FormField
           control={form.control}
           name="about"
@@ -447,8 +554,8 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
           )}
         />
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isSubmitting || uploadingBg} className="w-full">
+          {(isSubmitting || uploadingBg) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {existingProfile ? "Update Profile" : "Create Profile"}
         </Button>
       </form>

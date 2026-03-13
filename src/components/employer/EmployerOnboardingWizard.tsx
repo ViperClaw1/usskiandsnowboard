@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Upload } from "lucide-react";
+import { Building2, Upload, X } from "lucide-react";
 import { LocationSearch } from "@/components/ui/location-search";
 
 interface EmployerOnboardingWizardProps {
@@ -35,12 +35,14 @@ interface FormData {
   connectionToUssa: string;
 }
 
-const TOTAL_STEPS = 11;
+const TOTAL_STEPS = 12;
 
 export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [logoUrl, setLogoUrl] = useState<string>("");
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingBg, setIsUploadingBg] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, watch, setValue, handleSubmit } = useForm<FormData>({
@@ -73,6 +75,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
         setValue(key as keyof FormData, parsed.formData[key]);
       });
       if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
+      if (parsed.backgroundImageUrl) setBackgroundImageUrl(parsed.backgroundImageUrl);
       if (parsed.currentStep) setCurrentStep(parsed.currentStep);
     }
   }, [user.id, setValue]);
@@ -86,27 +89,29 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           currentStep,
           formData: formValues,
           logoUrl,
+          backgroundImageUrl,
           lastSaved: Date.now(),
         })
       );
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formValues, currentStep, logoUrl, user.id]);
+  }, [formValues, currentStep, logoUrl, backgroundImageUrl, user.id]);
 
   const canGoNext = useMemo(() => {
     switch (currentStep) {
       case 0: return true; // Welcome
       case 1: return true; // Logo (optional)
-      case 2: return formValues.companyName.trim().length > 0;
-      case 3: return formValues.industry.trim().length > 0;
-      case 4: return formValues.companySize.trim().length > 0;
-      case 5: return formValues.hqLocation.trim().length > 0;
-      case 6: return formValues.about.trim().length > 0;
-      case 7: return formValues.connectionToUssa.trim().length > 0;
-      case 8: return formValues.opportunities.trim().length > 0;
-      case 9: return formValues.contactPerson.trim().length > 0 && formValues.contactEmail.trim().length > 0;
-      case 10: return true; // Review
+      case 2: return true; // Background image (optional)
+      case 3: return formValues.companyName.trim().length > 0;
+      case 4: return formValues.industry.trim().length > 0;
+      case 5: return formValues.companySize.trim().length > 0;
+      case 6: return formValues.hqLocation.trim().length > 0;
+      case 7: return formValues.about.trim().length > 0;
+      case 8: return formValues.connectionToUssa.trim().length > 0;
+      case 9: return formValues.opportunities.trim().length > 0;
+      case 10: return formValues.contactPerson.trim().length > 0 && formValues.contactEmail.trim().length > 0;
+      case 11: return true; // Review
       default: return false;
     }
   }, [currentStep, formValues]);
@@ -160,6 +165,39 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
     }
   };
 
+  const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBg(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const timestamp = Date.now();
+      const filePath = `${user.id}/bg-${timestamp}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("company-logos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("company-logos")
+        .getPublicUrl(filePath);
+
+      setBackgroundImageUrl(data.publicUrl);
+      toast({ title: "Background image uploaded!" });
+    } catch (error: any) {
+      toast({
+        title: "Error uploading background",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingBg(false);
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
@@ -180,6 +218,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           website: data.website || null,
           linkedin_url: data.linkedin || null,
           logo_url: logoUrl || null,
+          background_image_url: backgroundImageUrl || null,
         });
 
       if (error) throw error;
@@ -266,6 +305,60 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
 
       case 2:
         return (
+          <OnboardingStep
+            title="Add a background image"
+            description="Upload a banner image for your company profile"
+            optional
+          >
+            <div className="flex flex-col items-center gap-4">
+              {backgroundImageUrl ? (
+                <div className="relative w-full">
+                  <img
+                    src={backgroundImageUrl}
+                    alt="Background"
+                    className="w-full h-32 object-cover rounded-lg border-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setBackgroundImageUrl("")}
+                    className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : null}
+              <Label
+                htmlFor="bg-upload"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 h-14 px-8 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-lg"
+              >
+                <Upload className="h-5 w-5" />
+                {isUploadingBg ? "Uploading..." : backgroundImageUrl ? "Change Background" : "Upload Background"}
+              </Label>
+              <Input
+                id="bg-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleBackgroundUpload}
+                className="hidden"
+                disabled={isUploadingBg}
+              />
+              <p className="text-sm text-muted-foreground">Recommended: wide landscape photo (16:9)</p>
+            </div>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              canGoBack={true}
+              canGoNext={true}
+              onBack={prevStep}
+              onNext={nextStep}
+              onSkip={skipStep}
+              isLoading={isUploadingBg}
+            />
+          </OnboardingStep>
+        );
+
+      case 3:
+        return (
           <OnboardingStep title="What's your company name?">
             <Input
               {...register("companyName", { required: true })}
@@ -284,7 +377,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 3:
+      case 4:
         return (
           <OnboardingStep title="What industry are you in?">
             <Select value={formValues.industry} onValueChange={(value) => setValue("industry", value)}>
@@ -335,7 +428,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 4:
+      case 5:
         return (
           <OnboardingStep title="How large is your team?">
             <Select value={formValues.companySize} onValueChange={(value) => setValue("companySize", value)}>
@@ -362,7 +455,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 5:
+      case 6:
         return (
           <OnboardingStep title="Where is your HQ located?">
             <LocationSearch
@@ -381,7 +474,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 6:
+      case 7:
         return (
           <OnboardingStep
             title="Tell athletes about your company"
@@ -404,7 +497,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 7:
+      case 8:
         return (
           <OnboardingStep
             title="What's your connection to US Ski & Snowboard?"
@@ -427,7 +520,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 8:
+      case 9:
         return (
           <OnboardingStep
             title="What opportunities do you offer?"
@@ -450,7 +543,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 9:
+      case 10:
         return (
           <OnboardingStep
             title="Who should athletes contact?"
@@ -516,7 +609,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
           </OnboardingStep>
         );
 
-      case 10:
+      case 11:
         return (
           <OnboardingStep
             title="Review & Complete"
