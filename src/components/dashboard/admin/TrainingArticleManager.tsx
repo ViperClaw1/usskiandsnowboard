@@ -411,6 +411,12 @@ export const TrainingArticleManager = () => {
     ...(globalFontSize && { ["--rt-body-font-size" as string]: `${globalFontSize}px` }),
   };
 
+  /** Typography applied to the article list (table + cards) so it matches global settings in real-time */
+  const articlesListStyle: React.CSSProperties = {
+    fontFamily: globalFontFamily || undefined,
+    fontSize: globalFontSize ? `${globalFontSize}px` : undefined,
+  };
+
   // ==============================
   // Render
   // ==============================
@@ -467,7 +473,7 @@ export const TrainingArticleManager = () => {
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent style={articlesListStyle}>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading…</div>
         ) : articles.length === 0 ? (
