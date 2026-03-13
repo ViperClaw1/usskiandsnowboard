@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,12 @@ import { Clock, User } from "lucide-react";
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { TRAINING_CATEGORIES, getCategoryColor } from "@/constants/training";
+
+// ==============================
+// Constants
+// ==============================
+
+const TYPOGRAPHY_KEY = "__typography";
 
 // ==============================
 // Utility Functions
@@ -23,7 +29,7 @@ const getExcerpt = (body: string): string => {
 };
 
 // ==============================
-// Query Function
+// Query Functions
 // Extracted outside the component so the reference is stable across renders.
 // ==============================
 const fetchPublishedArticles = async (): Promise<TrainingArticle[]> => {
@@ -34,6 +40,20 @@ const fetchPublishedArticles = async (): Promise<TrainingArticle[]> => {
     .order("published_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as TrainingArticle[];
+};
+
+/** Fetches global typography from dashboard_layouts (role = 'training'). */
+const fetchGlobalTypography = async (): Promise<{ font_family: string; font_size: string } | null> => {
+  const { data } = await supabase
+    .from("dashboard_layouts" as any)
+    .select("text_overrides")
+    .eq("role", "training")
+    .maybeSingle();
+  if (!data) return null;
+  const overrides = (data as any).text_overrides || {};
+  const typo = overrides[TYPOGRAPHY_KEY];
+  if (!typo) return null;
+  return { font_family: typo.font_family || "", font_size: typo.font_size || "" };
 };
 
 // ==============================
@@ -59,6 +79,12 @@ const Training = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: globalTypography } = useQuery({
+    queryKey: ["training-global-typography"],
+    queryFn: fetchGlobalTypography,
+    staleTime: 0,
+  });
+
   // ==============================
   // Derived Values
   // Memoized so category-switching does not re-filter the full list unnecessarily.
@@ -68,12 +94,17 @@ const Training = () => {
     [articles, activeCategory],
   );
 
+  const typographyStyle: CSSProperties = {
+    fontFamily: globalTypography?.font_family || undefined,
+    fontSize: globalTypography?.font_size ? `${globalTypography.font_size}px` : undefined,
+  };
+
   // ==============================
   // Render
   // ==============================
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={typographyStyle}>
       {/* Hero Section */}
       <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
         <div className="container mx-auto px-4 text-center">
