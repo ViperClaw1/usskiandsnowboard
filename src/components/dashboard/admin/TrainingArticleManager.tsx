@@ -422,7 +422,7 @@ export const TrainingArticleManager = () => {
                 <TableBody>
                   {articles.map((a) => (
                     <TableRow key={a.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate" style={typographyStyle}>{a.title}</TableCell>
                       <TableCell>{a.category || "—"}</TableCell>
                       <TableCell>
                         <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
