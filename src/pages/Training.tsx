@@ -163,7 +163,7 @@ const Training = () => {
                     <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {article.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground line-clamp-2 flex-1">{getExcerpt(article.body)}</p>
+                    <p className="text-muted-foreground line-clamp-2 flex-1" style={typographyStyle}>{getExcerpt(article.body)}</p>
                     <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5" />
