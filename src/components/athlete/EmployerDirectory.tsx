@@ -718,18 +718,20 @@ const EmployerDirectory = () => {
                   )}
                 </div>
 
-                <Button
-                  onClick={() => setShowRequestDialog(true)}
-                  className="w-full"
-                  variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
-                  disabled={existingRequests.has(selectedEmployer.id)}
-                >
-                  {existingRequests.get(selectedEmployer.id) === "accepted"
-                    ? "✓ Connected"
-                    : existingRequests.get(selectedEmployer.id) === "pending"
-                    ? "Request Sent"
-                    : "Request Connection"}
-                </Button>
+                {canSendRequest && (
+                  <Button
+                    onClick={() => setShowRequestDialog(true)}
+                    className="w-full"
+                    variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
+                    disabled={existingRequests.has(selectedEmployer.id)}
+                  >
+                    {existingRequests.get(selectedEmployer.id) === "accepted"
+                      ? "✓ Connected"
+                      : existingRequests.get(selectedEmployer.id) === "pending"
+                      ? "Request Sent"
+                      : "Request Connection"}
+                  </Button>
+                )}
               </TabsContent>
 
               <TabsContent value="positions" className="mt-6">
