@@ -5,6 +5,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeArticleHtml } from "@/lib/sanitizeArticleHtml";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
@@ -175,7 +176,7 @@ const TrainingArticlePage = () => {
             '--article-font-family': bodyStyle.fontFamily ?? 'inherit',
             fontFamily: bodyStyle.fontFamily,
           } as React.CSSProperties}
-          dangerouslySetInnerHTML={{ __html: article.body }}
+          dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
         />
       </article>
     </div>
