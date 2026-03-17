@@ -1,145 +1,153 @@
 
-## Analysis of Current State
+# Comprehensive Codebase Refactor Plan
 
-The system **already has** global typography implemented and working:
+## Audit Summary
 
-**What exists:**
-- `TYPOGRAPHY_QUERY_KEY = ["training-global-typography"]` shared across 3 consumers
-- `queryClient.setQueryData` for optimistic updates on change (no loading flash)
-- DB persistence via `dashboard_layouts` table, `role = 'training'`, `text_overrides.__typography`
-- `fetchGlobalTypography` defined in TrainingArticleManager, TrainingArticle, and Training — **tripled**
-- `saveGlobalTypography` does a read-then-write (two round trips per change)
-- `staleTime: 0` means every mount re-fetches from the network, but `setQueryData` means UI is instant
-- The `RichTextarea` wrapper receives `bodyPreviewStyle` via an inline `<div>` wrapper — works but doesn't reach inside the editor's `contentEditable`
-- `Training.tsx` and `TrainingArticle.tsx` each re-declare `fetchGlobalTypography` independently
+After reading all major files across pages, components, hooks, and data layers, here is what I found:
 
-**What the task is actually asking:**
+---
 
-The user wants a proper, production-quality architecture review and implementation. The existing system works but has:
-1. Duplicated `fetchGlobalTypography` in 3 files
-2. `saveGlobalTypography` does 2 DB round-trips (read + write) instead of 1 (upsert)
-3. No shared hook — logic is embedded directly in the component
-4. `staleTime: 0` on all consumers means every navigation to `/training` or `/training/:slug` refetches
+## Key Issues Identified
 
-**The plan: Refactor into a proper shared hook + eliminate duplication**
+### 1. Duplicated Unauthenticated Nav (Critical)
+The same header block (logo + nav links + MobileNav + mountain background) is copy-pasted verbatim in **4 separate files**:
+- `src/pages/Index.tsx` — always renders it
+- `src/pages/News.tsx` — renders it when `!user`
+- `src/pages/Schedule.tsx` — renders it when `!user`
+- `src/pages/Employers.tsx` — renders it when `!user`
 
-### Files to change
+`AuthenticatedNav` already exists. A `PublicNav` presentational component should be extracted and used in all four places.
 
-1. **`src/hooks/useTrainingTypography.ts`** — NEW: extract shared query fn, query key, and typed hook
-2. **`src/components/dashboard/admin/TrainingArticleManager.tsx`** — use the hook, replace inline logic
-3. **`src/pages/Training.tsx`** — use the hook (remove inline `fetchGlobalTypography`)
-4. **`src/pages/TrainingArticle.tsx`** — use the hook (remove inline `fetchGlobalTypography`)
+### 2. Duplicated Footer
+The identical footer block (`© 2025 U.S. Ski & Snowboard...`) is copy-pasted in:
+- `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx`
 
-### Architecture Design
+A `PageFooter` presentational component should be extracted.
 
-**Single source of truth:** `["training-global-typography"]` query key in one place.
+### 3. Duplicated "How It Works" + "Join Our Legacy" Sections
+`Index.tsx` and `Home.tsx` contain near-identical "How It Works" card grid and "Join Our Legacy" sections. These should become shared presentational components.
 
-**Hook interface:**
-```typescript
-// src/hooks/useTrainingTypography.ts
+### 4. Duplicated `Article` / `TrainingArticle` Interface
+The `TrainingArticle` interface is defined independently in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
+- `src/components/dashboard/admin/TrainingArticleManager.tsx` (as `Article`)
 
-export interface TrainingTypography {
-  font_family: string; // "" = inherit
-  font_size: string;   // "" = inherit, else "16" (px implied)
-}
+These should be consolidated into `src/types/training.ts`.
 
-export const TRAINING_TYPOGRAPHY_QUERY_KEY = ["training-global-typography"] as const;
+### 5. Duplicated `CATEGORY_COLORS` constant
+Defined separately in:
+- `src/pages/Training.tsx`
+- `src/pages/TrainingArticle.tsx`
 
-// Read hook — used by Training.tsx, TrainingArticle.tsx, TrainingArticleManager.tsx
-export function useTrainingTypography(): {
-  typography: TrainingTypography;
-  isLoading: boolean;
-  typographyStyle: React.CSSProperties;
-}
+Should move to `src/constants/training.ts`.
 
-// Write mutation — used only by TrainingArticleManager.tsx
-export function useUpdateTrainingTypography(): {
-  update: (next: TrainingTypography) => void; // optimistic + async persist
-}
-```
+### 6. Duplicated `CATEGORIES` array
+Defined as `TRAINING_CATEGORIES` in `Training.tsx` and as `CATEGORIES` in `TrainingArticleManager.tsx`. Should be a single export from `src/constants/training.ts`.
 
-**`typographyStyle`** is computed inside the hook and returned ready-to-use, eliminating all 3 inline style derivations.
+### 7. `loadUserRole` pattern repeated across 3 pages
+`Athletes.tsx`, `Employers.tsx`, and `Dashboard.tsx` all manually call `supabase.from("user_roles")` inline. This belongs in a `useUserRole(userId)` custom hook.
 
-**Single DB query function** lives in the hook file — all 3 consumers import from one place.
+### 8. Smart/Dumb Separation Missing
+- `Home.tsx` and `Training.tsx` are both smart (data fetching) and presentational (full JSX render) in the same component.
+- `AthleteLandingPage.tsx` has 484 lines mixing data fetching, real-time subscriptions, and deeply nested JSX. The pure card sub-sections should be dumb components.
 
-**`saveGlobalTypography` rewrite:** Use a single `upsert` with `onConflict: 'role'` instead of read-then-write. This cuts 2 DB round trips to 1.
+### 9. Missing Semantic Block Structure
+No files currently use the structured comment blocks (`// === Imports ===`, `// === State ===`, etc.) as required by the refactoring spec.
 
-**`staleTime`:** Change consumers in Training.tsx and TrainingArticle.tsx from `staleTime: 0` to `staleTime: 60_000` (1 min). The admin manager stays at `staleTime: 0` so the admin always sees current settings when opening the panel. When the admin changes settings, `queryClient.setQueryData` updates all mounted subscribers instantly — no re-fetch needed.
+### 10. Inline Auth State Listeners in Pages
+`Athletes.tsx` manually wires `supabase.auth.onAuthStateChange` — this duplicates what `AuthContext` already provides. It should use `useAuth()` instead.
 
-**Real-time propagation:** Already works via shared query key + `setQueryData`. All 3 pages that mount `useQuery` with `["training-global-typography"]` will re-render the moment `setQueryData` is called — React Query's subscriber model handles this automatically.
+### 11. `MobileNav` contains sign-out business logic
+`MobileNav` is supposed to be a presentational navigation component, but contains a full `handleSignOut` function with Supabase calls — same logic as `AuthenticatedNav`. This should be extracted to a `useSignOut` hook.
 
-**CSS variable approach (why NOT to use it here):**
-- `dangerouslySetInnerHTML` HTML is already in the DOM as static markup — CSS variables injected at the wrapper level propagate naturally via inheritance. The current `style={{ fontFamily, fontSize }}` on the wrapper div works correctly for this use case.
-- A React Context approach would add complexity without benefit since all consumers already share the same React Query cache.
-- The `RichTextarea` editor's `contentEditable` div inherits font styles from its parent — the `bodyPreviewStyle` wrapper div in the Dialog already covers this correctly.
+---
 
-### Detailed Changes
+## Proposed Changes
 
-**`src/hooks/useTrainingTypography.ts`** (new file):
-```typescript
-const TYPOGRAPHY_DB_KEY = "__typography";
-export const TRAINING_TYPOGRAPHY_QUERY_KEY = ["training-global-typography"] as const;
-
-// Single shared fetch fn
-const fetchTrainingTypography = async (): Promise<TrainingTypography> => { ... };
-
-export function useTrainingTypography(options?: { staleTime?: number }) {
-  const { data, isLoading } = useQuery({
-    queryKey: TRAINING_TYPOGRAPHY_QUERY_KEY,
-    queryFn: fetchTrainingTypography,
-    staleTime: options?.staleTime ?? 60_000,
-  });
-  const typographyStyle: React.CSSProperties = {
-    fontFamily: data?.font_family || undefined,
-    fontSize: data?.font_size ? `${data.font_size}px` : undefined,
-  };
-  return { typography: data ?? { font_family: "", font_size: "" }, isLoading, typographyStyle };
-}
-
-export function useUpdateTrainingTypography() {
-  const queryClient = useQueryClient();
-  const update = useCallback((next: TrainingTypography) => {
-    // 1. Optimistic update — all subscribers re-render instantly
-    queryClient.setQueryData(TRAINING_TYPOGRAPHY_QUERY_KEY, next);
-    // 2. Async persist — single upsert, no read-first
-    persistTypography(next).catch(() => {
-      queryClient.invalidateQueries({ queryKey: TRAINING_TYPOGRAPHY_QUERY_KEY });
-      toast.error("Failed to save typography settings");
-    });
-  }, [queryClient]);
-  return { update };
-}
-```
-
-**`TrainingArticleManager.tsx`:**
-- Remove `TYPOGRAPHY_QUERY_KEY`, `fetchGlobalTypography`, `saveGlobalTypography`, `handleFontFamilyChange`, `handleFontSizeChange` (all replaced by hook calls)
-- Replace with: `const { typography, typographyStyle } = useTrainingTypography({ staleTime: 0 });` and `const { update } = useUpdateTrainingTypography();`
-- `handleFontFamilyChange(value)` → `update({ ...typography, font_family: value === "__none" ? "" : value })`
-- `bodyPreviewStyle` → just use `typographyStyle` from the hook
-
-**`Training.tsx`:**
-- Remove inline `fetchGlobalTypography` and the `useQuery` block
-- Replace with: `const { typographyStyle } = useTrainingTypography();`
-
-**`TrainingArticle.tsx`:**
-- Same as Training.tsx
-
-### Edge Cases Handled
-
-| Case | Behavior |
-|------|----------|
-| No settings in DB | `fetchTrainingTypography` returns `{ font_family: "", font_size: "" }` — `typographyStyle` properties are `undefined`, so inherited styles apply |
-| Invalid font value | DB stores raw string; CSS ignores unknown font families gracefully |
-| Save fails | `invalidateQueries` re-fetches from DB, rolling back the optimistic update |
-| Admin changes settings in one tab | Other tabs: next navigation or focus-triggered re-fetch picks up new values. Same-session components: instant via `setQueryData` |
-
-### Files to change
+### New Files to Create
 
 ```
-src/hooks/useTrainingTypography.ts        NEW — shared hook
-src/components/dashboard/admin/TrainingArticleManager.tsx  Use hook, remove duplication
-src/pages/Training.tsx                     Use hook, remove duplication  
-src/pages/TrainingArticle.tsx              Use hook, remove duplication
+src/types/
+  training.ts          — TrainingArticle + Article interfaces
+  news.ts              — NewsArticle interface (shared between Home + News pages)
+  connections.ts       — Connection, ConnectionStats, ConnectionRequest interfaces
+  profiles.ts          — AthleteProfile, EmployerProfile interfaces
+
+src/constants/
+  training.ts          — TRAINING_CATEGORIES, CATEGORY_COLORS
+  nav.ts               — NAV_ITEMS array (used by MobileNav, AuthenticatedNav)
+
+src/hooks/
+  useUserRole.ts       — extracts the repeated user_roles query pattern
+  useSignOut.ts        — extracts the repeated signOut + clear storage pattern
+
+src/components/layout/
+  PublicNav.tsx        — dumb: renders unauthenticated header (logo, links, MobileNav)
+  PageFooter.tsx       — dumb: renders the shared copyright footer
+
+src/components/home/
+  HowItWorksSection.tsx — dumb: the "How It Works" 3-card grid (shared by Index + Home)
+  JoinLegacySection.tsx — dumb: the "Join Our Legacy" CTA section (shared by Index + Home)
 ```
 
-No DB migration needed. No new storage. No RLS changes. No new UI — the controls already exist.
+### Files to Modify
+
+| File | What Changes |
+|---|---|
+| `src/pages/Index.tsx` | Remove inline header + footer + section JSX; use `PublicNav`, `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; add semantic block comments |
+| `src/pages/Home.tsx` | Remove inline footer + section JSX; use `PageFooter`, `HowItWorksSection`, `JoinLegacySection`; extract news data-fetch into comment-labeled blocks |
+| `src/pages/News.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Schedule.tsx` | Remove inline `!user` header; use `PublicNav`; use `PageFooter`; add semantic block comments |
+| `src/pages/Athletes.tsx` | Remove manual auth listener; use `useAuth()`; extract `loadUserRole` to `useUserRole` hook; add semantic block comments |
+| `src/pages/Training.tsx` | Import types from `src/types/training.ts`; import constants from `src/constants/training.ts`; add semantic block comments |
+| `src/pages/TrainingArticle.tsx` | Import types/constants from shared files; add semantic block comments |
+| `src/components/dashboard/admin/TrainingArticleManager.tsx` | Import shared types/constants; add semantic block comments |
+| `src/components/MobileNav.tsx` | Extract `handleSignOut` into `useSignOut` hook; add semantic block comments |
+| `src/components/AuthenticatedNav.tsx` | Use `useSignOut` hook instead of inline handler; add semantic block comments |
+| `src/pages/Dashboard.tsx` | Add semantic block comments; annotate welcome content constants |
+
+### Files That Do NOT Change
+- All Supabase edge functions
+- All UI primitives in `src/components/ui/`
+- `src/components/auth/AuthContext.tsx`
+- `src/App.tsx`
+- `src/integrations/` (auto-generated)
+- All admin page files (`AllUsers`, `AllAthletes`, etc.)
+- `src/data/suggestions.ts`
+
+---
+
+## Execution Order (Safe Steps)
+
+The changes are grouped to avoid broken references at any intermediate step:
+
+**Step 1 — New shared types/constants (no existing files touched)**
+- Create `src/types/training.ts`
+- Create `src/constants/training.ts`
+
+**Step 2 — New shared hooks (no existing files touched)**
+- Create `src/hooks/useUserRole.ts`
+- Create `src/hooks/useSignOut.ts`
+
+**Step 3 — New layout/section components (no existing files touched)**
+- Create `src/components/layout/PublicNav.tsx`
+- Create `src/components/layout/PageFooter.tsx`
+- Create `src/components/home/HowItWorksSection.tsx`
+- Create `src/components/home/JoinLegacySection.tsx`
+
+**Step 4 — Update consumers (all at once to avoid stale imports)**
+- Update `Training.tsx` + `TrainingArticle.tsx` + `TrainingArticleManager.tsx` to use shared types/constants
+- Update `MobileNav.tsx` + `AuthenticatedNav.tsx` to use `useSignOut`
+- Update `Index.tsx`, `Home.tsx`, `News.tsx`, `Schedule.tsx` to use `PublicNav`, `PageFooter`, shared sections
+- Update `Athletes.tsx` to use `useAuth()` and `useUserRole`
+- Add semantic block comments to `Dashboard.tsx` and `Settings.tsx`
+
+---
+
+## What Will NOT Change
+- All visual output — identical pixels
+- All routing — same paths
+- All Supabase queries — no logic changes
+- All component APIs — props unchanged
+- All edge functions
