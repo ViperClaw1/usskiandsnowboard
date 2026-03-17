@@ -400,7 +400,7 @@ export const TrainingArticleManager = () => {
         </div>
       </CardHeader>
 
-      <CardContent style={typographyStyle}>
+      <CardContent>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading…</div>
         ) : articles.length === 0 ? (
@@ -422,7 +422,7 @@ export const TrainingArticleManager = () => {
                 <TableBody>
                   {articles.map((a) => (
                     <TableRow key={a.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate" style={typographyStyle}>{a.title}</TableCell>
                       <TableCell>{a.category || "—"}</TableCell>
                       <TableCell>
                         <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
@@ -475,7 +475,7 @@ export const TrainingArticleManager = () => {
                   </div>
 
                   {/* Title */}
-                  <p className="pr-28 font-semibold text-sm leading-snug line-clamp-2 text-foreground">{a.title}</p>
+                  <p className="pr-28 font-semibold leading-snug line-clamp-2 text-foreground" style={typographyStyle}>{a.title}</p>
 
                   {/* Meta row */}
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
