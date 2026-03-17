@@ -118,6 +118,15 @@ All colors MUST be HSL.
     --sidebar-border: 215 30% 20%;
     --sidebar-ring: 215 65% 45%;
   }
+
+  /* Override Tailwind prose child font-sizes with the dashboard-configured value */
+  .prose p,
+  .prose li,
+  .prose blockquote,
+  .prose td,
+  .prose th {
+    font-size: var(--article-font-size, inherit);
+  }
 }
 
 @layer base {
