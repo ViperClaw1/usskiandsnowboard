@@ -336,18 +336,12 @@ export const TrainingArticleManager = () => {
   // Derived Values
   // ==============================
 
-  /** Inline style applied to the RichTextarea wrapper for live font preview */
+  /** Inline style applied to the RichTextarea wrapper for live font preview.
+      CSS vars propagate into the contentEditable via inheritance. */
   const bodyPreviewStyle: React.CSSProperties = {
-    fontFamily: globalFontFamily || undefined,
-    fontSize: globalFontSize ? `${globalFontSize}px` : undefined,
+    ...typographyStyle,
     ...(globalFontFamily && { ["--rt-body-font-family" as string]: globalFontFamily }),
     ...(globalFontSize && { ["--rt-body-font-size" as string]: `${globalFontSize}px` }),
-  };
-
-  /** Typography applied to the article list (table + cards) so it matches global settings in real-time */
-  const articlesListStyle: React.CSSProperties = {
-    fontFamily: globalFontFamily || undefined,
-    fontSize: globalFontSize ? `${globalFontSize}px` : undefined,
   };
 
   // ==============================
