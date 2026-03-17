@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // ==============================
 // Types / Interfaces
