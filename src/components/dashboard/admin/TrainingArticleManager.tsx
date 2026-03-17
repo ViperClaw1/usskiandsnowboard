@@ -361,7 +361,7 @@ export const TrainingArticleManager = () => {
           <Type className="h-4 w-4 text-muted-foreground shrink-0" />
           {/* Body Font Family */}
           <Select value={globalFontFamily || "__none"} onValueChange={handleFontFamilyChange}>
-            <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectTrigger className="h-10 w-40 text-xs">
               <SelectValue placeholder="Body Font" />
             </SelectTrigger>
             <SelectContent>
