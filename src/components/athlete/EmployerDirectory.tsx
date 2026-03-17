@@ -598,22 +598,24 @@ const EmployerDirectory = () => {
               {/* Spacer pushes button to bottom */}
               <div className="flex-1" />
 
-              <Button
-                className="w-full"
-                variant={existingRequests.get(employer.id) === "accepted" ? "default" : "outline"}
-                disabled={existingRequests.has(employer.id)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedEmployer(employer);
-                  setShowRequestDialog(true);
-                }}
-              >
-                {existingRequests.get(employer.id) === "accepted"
-                  ? "✓ Connected"
-                  : existingRequests.get(employer.id) === "pending"
-                  ? "Request Sent"
-                  : "Request Connection"}
-              </Button>
+              {canSendRequest && (
+                <Button
+                  className="w-full"
+                  variant={existingRequests.get(employer.id) === "accepted" ? "default" : "outline"}
+                  disabled={existingRequests.has(employer.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedEmployer(employer);
+                    setShowRequestDialog(true);
+                  }}
+                >
+                  {existingRequests.get(employer.id) === "accepted"
+                    ? "✓ Connected"
+                    : existingRequests.get(employer.id) === "pending"
+                    ? "Request Sent"
+                    : "Request Connection"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
