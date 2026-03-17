@@ -162,7 +162,7 @@ const TrainingArticlePage = () => {
             on the container which would conflict with the inline bodyStyle.
             bodyStyle.fontSize becomes the sole controller of article body text size. */}
         <div
-          className="prose max-w-none text-foreground
+          className="article-body prose max-w-none text-foreground
             prose-headings:font-bold prose-headings:text-foreground
             prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
             prose-p:leading-relaxed prose-p:text-foreground/90
@@ -170,7 +170,11 @@ const TrainingArticlePage = () => {
             prose-strong:text-foreground
             prose-a:text-primary prose-a:underline
             prose-ul:my-4 prose-ol:my-4"
-          style={bodyStyle}
+          style={{
+            '--article-font-size': bodyStyle.fontSize ?? 'inherit',
+            '--article-font-family': bodyStyle.fontFamily ?? 'inherit',
+            fontFamily: bodyStyle.fontFamily,
+          } as React.CSSProperties}
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
       </article>
