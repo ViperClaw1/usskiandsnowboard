@@ -116,9 +116,9 @@ const TrainingArticlePage = () => {
       {/* Article content */}
       <article className="container mx-auto px-4 py-8 max-w-3xl">
         {/* Meta row — category badge, reading time, publish date */}
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
+        <div className="flex flex-wrap items-center gap-3 text-muted-foreground mb-4" style={bodyStyle}>
           {article.category && (
-            <Badge className={`${catColor} border-0 text-xs font-semibold uppercase tracking-wide`}>
+            <Badge className={`${catColor} border-0 font-semibold uppercase tracking-wide`}>
               {article.category}
             </Badge>
           )}
@@ -137,20 +137,20 @@ const TrainingArticlePage = () => {
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight mb-3">{article.title}</h1>
+        <h1 className="font-extrabold text-foreground leading-tight mb-3" style={{ ...bodyStyle, fontSize: bodyStyle.fontSize ? `calc(${bodyStyle.fontSize} * 2)` : undefined }}>{article.title}</h1>
 
         {/* Subtitle */}
-        {article.subtitle && <p className="text-lg text-muted-foreground italic mb-6">{article.subtitle}</p>}
+        {article.subtitle && <p className="text-muted-foreground italic mb-6" style={bodyStyle}>{article.subtitle}</p>}
 
         {/* Author row */}
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-border">
           <Avatar className="h-10 w-10">
             <AvatarImage src={article.author_image_url || usLogo} alt={article.author_name || "Author"} />
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+            <AvatarFallback className="bg-primary/10 text-primary font-bold" style={bodyStyle}>
               {(article.author_name || "US")[0]}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-semibold text-foreground">
+          <span className="font-semibold text-foreground" style={bodyStyle}>
             {article.author_name || "U.S. Ski & Snowboard Training & Development"}
           </span>
         </div>
