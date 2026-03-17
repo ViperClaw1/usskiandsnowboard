@@ -80,7 +80,7 @@ const Training = () => {
   // ==============================
 
   return (
-    <div className="min-h-screen bg-background" style={typographyStyle}>
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
         <div className="container mx-auto px-4 text-center">
