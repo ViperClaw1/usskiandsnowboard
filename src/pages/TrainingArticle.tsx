@@ -176,7 +176,7 @@ const TrainingArticlePage = () => {
             '--article-font-family': bodyStyle.fontFamily ?? 'inherit',
             fontFamily: bodyStyle.fontFamily,
           } as React.CSSProperties}
-          dangerouslySetInnerHTML={{ __html: article.body }}
+          dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
         />
       </article>
     </div>
