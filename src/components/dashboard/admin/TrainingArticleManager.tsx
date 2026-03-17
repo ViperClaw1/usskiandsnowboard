@@ -204,13 +204,17 @@ export const TrainingArticleManager = () => {
     setDialogOpen(true);
   };
 
-  /** Opens the dialog in "edit" mode pre-populated with the article's data */
+  /** Opens the dialog in "edit" mode pre-populated with the article's data.
+   *  body is passed through sanitizeArticleHtml so that inline font-size /
+   *  font-family styles baked in by Google Docs (or other rich text sources)
+   *  are stripped before the content is loaded into the editor — preventing
+   *  them from overriding the parent's dynamic typography settings. */
   const openEdit = (a: TrainingArticle) => {
     setEditingId(a.id);
     setForm({
       title: a.title,
       subtitle: a.subtitle || "",
-      body: a.body,
+      body: sanitizeArticleHtml(a.body),
       category: a.category || "",
       author_name: a.author_name || "",
       slug: a.slug,
