@@ -125,6 +125,19 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  /* Article body: CSS custom properties beat prose plugin's direct element rules
+     because .article-body.prose has specificity (0,2,1) vs .prose (0,1,1). */
+  .article-body.prose p,
+  .article-body.prose li,
+  .article-body.prose ul,
+  .article-body.prose ol,
+  .article-body.prose blockquote,
+  .article-body.prose td,
+  .article-body.prose th {
+    font-size: var(--article-font-size, inherit);
+    font-family: var(--article-font-family, inherit);
+  }
+
   body {
     @apply bg-background text-foreground;
     padding-right: 0 !important;
