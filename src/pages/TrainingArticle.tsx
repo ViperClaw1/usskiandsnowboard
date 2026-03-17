@@ -13,7 +13,6 @@ import usLogo from "@/assets/us-logo-new.png";
 import { TrainingArticle } from "@/types/training";
 import { getCategoryColor } from "@/constants/training";
 import { useTrainingTypography } from "@/hooks/useTrainingTypography";
-import { sanitizeArticleHtml } from "@/utils/sanitizeArticleHtml";
 
 // ==============================
 // Query Functions
@@ -119,7 +118,9 @@ const TrainingArticlePage = () => {
         {/* Meta row — category badge, reading time, publish date */}
         <div className="flex flex-wrap items-center gap-3 text-muted-foreground mb-4" style={bodyStyle}>
           {article.category && (
-            <Badge className={`${catColor} border-0 font-semibold uppercase tracking-wide`}>{article.category}</Badge>
+            <Badge className={`${catColor} border-0 font-semibold uppercase tracking-wide`}>
+              {article.category}
+            </Badge>
           )}
           {article.reading_time_minutes && (
             <span className="flex items-center gap-1">
@@ -136,19 +137,10 @@ const TrainingArticlePage = () => {
         </div>
 
         {/* Title */}
-        <h1
-          className="font-extrabold text-foreground leading-tight mb-3"
-          style={{ ...bodyStyle, fontSize: bodyStyle.fontSize ? `calc(${bodyStyle.fontSize} * 2)` : undefined }}
-        >
-          {article.title}
-        </h1>
+        <h1 className="font-extrabold text-foreground leading-tight mb-3" style={{ ...bodyStyle, fontSize: bodyStyle.fontSize ? `calc(${bodyStyle.fontSize} * 2)` : undefined }}>{article.title}</h1>
 
         {/* Subtitle */}
-        {article.subtitle && (
-          <p className="text-muted-foreground italic mb-6" style={bodyStyle}>
-            {article.subtitle}
-          </p>
-        )}
+        {article.subtitle && <p className="text-muted-foreground italic mb-6" style={bodyStyle}>{article.subtitle}</p>}
 
         {/* Author row */}
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-border">
@@ -178,14 +170,12 @@ const TrainingArticlePage = () => {
             prose-strong:text-foreground
             prose-a:text-primary prose-a:underline
             prose-ul:my-4 prose-ol:my-4"
-          style={
-            {
-              "--article-font-size": bodyStyle.fontSize ?? "inherit",
-              "--article-font-family": bodyStyle.fontFamily ?? "inherit",
-              fontFamily: bodyStyle.fontFamily,
-            } as React.CSSProperties
-          }
-          dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
+          style={{
+            '--article-font-size': bodyStyle.fontSize ?? 'inherit',
+            '--article-font-family': bodyStyle.fontFamily ?? 'inherit',
+            fontFamily: bodyStyle.fontFamily,
+          } as React.CSSProperties}
+          dangerouslySetInnerHTML={{ __html: article.body }}
         />
       </article>
     </div>
