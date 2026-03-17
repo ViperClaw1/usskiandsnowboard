@@ -157,9 +157,12 @@ const TrainingArticlePage = () => {
 
         {/* Article body — rendered as HTML from rich text editor.
             Global typography (font-family + font-size) from dashboard_layouts
-            is applied here so all articles share the same configured appearance. */}
+            is applied here so all articles share the same configured appearance.
+            NOTE: prose-lg is intentionally omitted — it sets its own font-size
+            on the container which would conflict with the inline bodyStyle.
+            bodyStyle.fontSize becomes the sole controller of article body text size. */}
         <div
-          className="prose prose-lg max-w-none text-foreground
+          className="prose max-w-none text-foreground
             prose-headings:font-bold prose-headings:text-foreground
             prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
             prose-p:leading-relaxed prose-p:text-foreground/90
