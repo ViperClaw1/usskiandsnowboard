@@ -475,7 +475,7 @@ export const TrainingArticleManager = () => {
                   </div>
 
                   {/* Title */}
-                  <p className="pr-28 font-semibold text-sm leading-snug line-clamp-2 text-foreground">{a.title}</p>
+                  <p className="pr-28 font-semibold leading-snug line-clamp-2 text-foreground" style={typographyStyle}>{a.title}</p>
 
                   {/* Meta row */}
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
