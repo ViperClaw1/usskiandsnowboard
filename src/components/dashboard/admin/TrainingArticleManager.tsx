@@ -118,24 +118,6 @@ const FONT_OPTIONS = [
 
 const FONT_SIZE_OPTIONS = ["12", "13", "14", "15", "16", "17", "18", "20"];
 
-const TYPOGRAPHY_KEY = "__typography";
-
-const TYPOGRAPHY_QUERY_KEY = ["training-global-typography"] as const;
-
-/** Fetches global typography from dashboard_layouts (role = 'training'). Same as TrainingArticle.tsx. */
-const fetchGlobalTypography = async (): Promise<{ font_family: string; font_size: string } | null> => {
-  const { data } = await supabase
-    .from("dashboard_layouts" as any)
-    .select("text_overrides")
-    .eq("role", "training")
-    .maybeSingle();
-  if (!data) return null;
-  const overrides = (data as any).text_overrides || {};
-  const typo = overrides[TYPOGRAPHY_KEY];
-  if (!typo) return null;
-  return { font_family: typo.font_family || "", font_size: typo.font_size || "" };
-};
-
 const EMPTY_FORM: ArticleForm = {
   title: "",
   subtitle: "",
@@ -149,9 +131,9 @@ const EMPTY_FORM: ArticleForm = {
 // ==============================
 // Component Definition
 // Smart component — manages full CRUD for training articles.
-// Global typography (font family + size) is stored in dashboard_layouts
-// (role = 'training') and applied to the RichTextarea preview and all
-// published article pages.
+// Global typography is driven by useTrainingTypography (staleTime: 0 so the
+// admin always reads current DB state on open) and useUpdateTrainingTypography
+// (optimistic update → all subscribers re-render instantly, then async persist).
 // ==============================
 
 export const TrainingArticleManager = () => {
@@ -171,15 +153,14 @@ export const TrainingArticleManager = () => {
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [authorPreview, setAuthorPreview] = useState<string | null>(null);
 
-  const queryClient = useQueryClient();
-  const { data: globalTypography } = useQuery({
-    queryKey: TYPOGRAPHY_QUERY_KEY,
-    queryFn: fetchGlobalTypography,
-    staleTime: 0,
-  });
+  // staleTime: 0 → admin always sees current DB value when panel opens.
+  // Optimistic updates via useUpdateTrainingTypography propagate to all
+  // mounted subscribers instantly without a network round-trip.
+  const { typography, typographyStyle } = useTrainingTypography({ staleTime: 0 });
+  const { update: updateTypography } = useUpdateTrainingTypography();
 
-  const globalFontFamily = globalTypography?.font_family ?? "";
-  const globalFontSize = globalTypography?.font_size ?? "";
+  const globalFontFamily = typography.font_family;
+  const globalFontSize = typography.font_size;
 
   // ==============================
   // Effects — Data Fetching
@@ -197,63 +178,15 @@ export const TrainingArticleManager = () => {
 
   // ==============================
   // Event Handlers — Global Typography
-  // Immediately persists a change to dashboard_layouts (role = 'training')
+  // Delegates to useUpdateTrainingTypography: optimistic update → async persist.
   // ==============================
 
-  const saveGlobalTypography = useCallback(
-    async (fontFamily: string, fontSize: string) => {
-      try {
-        const { data: existing } = await supabase
-          .from("dashboard_layouts" as any)
-          .select("id, text_overrides")
-          .eq("role", "training")
-          .maybeSingle();
-
-        const prevOverrides = (existing as any)?.text_overrides || {};
-        const nextOverrides = {
-          ...prevOverrides,
-          [TYPOGRAPHY_KEY]: { font_family: fontFamily, font_size: fontSize },
-        };
-
-        if (existing) {
-          await supabase
-            .from("dashboard_layouts" as any)
-            .update({ text_overrides: nextOverrides, updated_at: new Date().toISOString() } as any)
-            .eq("role", "training");
-        } else {
-          await supabase
-            .from("dashboard_layouts" as any)
-            .insert({ role: "training", text_overrides: nextOverrides } as any);
-        }
-      } catch (err) {
-        console.error("Failed to save global typography:", err);
-        queryClient.invalidateQueries({ queryKey: TYPOGRAPHY_QUERY_KEY });
-        toast.error("Failed to save typography settings");
-      }
-    },
-    [queryClient],
-  );
-
   const handleFontFamilyChange = (value: string) => {
-    const nextFamily = value === "__none" ? "" : value;
-    const current = queryClient.getQueryData<{ font_family: string; font_size: string }>(TYPOGRAPHY_QUERY_KEY) ?? {
-      font_family: "",
-      font_size: "",
-    };
-    const nextState = { font_family: nextFamily, font_size: current.font_size };
-    queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, nextState);
-    saveGlobalTypography(nextFamily, current.font_size);
+    updateTypography({ font_family: value === "__none" ? "" : value, font_size: typography.font_size });
   };
 
   const handleFontSizeChange = (value: string) => {
-    const nextSize = value === "__none" ? "" : value;
-    const current = queryClient.getQueryData<{ font_family: string; font_size: string }>(TYPOGRAPHY_QUERY_KEY) ?? {
-      font_family: "",
-      font_size: "",
-    };
-    const nextState = { font_family: current.font_family, font_size: nextSize };
-    queryClient.setQueryData(TYPOGRAPHY_QUERY_KEY, nextState);
-    saveGlobalTypography(current.font_family, nextSize);
+    updateTypography({ font_family: typography.font_family, font_size: value === "__none" ? "" : value });
   };
 
   // ==============================
