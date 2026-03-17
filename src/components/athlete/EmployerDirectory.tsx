@@ -140,6 +140,13 @@ const EmployerDirectory = () => {
   const queryClient = useQueryClient();
 
   // ==============================
+  // Role check — only athletes may send connection requests to employers
+  // ==============================
+  const { user } = useAuth();
+  const { role: userRole } = useUserRole(user?.id);
+  const canSendRequest = userRole === "athlete";
+
+  // ==============================
   // UI-only state — not data fetching concerns
   // ==============================
   const [selectedEmployer, setSelectedEmployer] = useState<EmployerProfile | null>(null);
