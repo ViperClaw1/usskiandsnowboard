@@ -379,7 +379,7 @@ export const TrainingArticleManager = () => {
           </Select>
           {/* Body Font Size */}
           <Select value={globalFontSize || "__none"} onValueChange={handleFontSizeChange}>
-            <SelectTrigger className="h-8 w-24 text-xs">
+            <SelectTrigger className="h-10 w-24 text-xs">
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>
