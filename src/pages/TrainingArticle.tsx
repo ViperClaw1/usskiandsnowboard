@@ -15,12 +15,6 @@ import { getCategoryColor } from "@/constants/training";
 import { useTrainingTypography } from "@/hooks/useTrainingTypography";
 
 // ==============================
-// Constants
-// ==============================
-
-const TYPOGRAPHY_KEY = "__typography";
-
-// ==============================
 // Query Functions
 // Extracted outside the component — stable references, no closure capture needed.
 // ==============================
@@ -35,30 +29,13 @@ const fetchArticleBySlug = async (slug: string): Promise<TrainingArticle | null>
   return data ? (data as TrainingArticle) : null;
 };
 
-/**
- * Fetches the global typography settings stored in dashboard_layouts
- * (role = 'training'). Returns { font_family, font_size } or null if unset.
- */
-const fetchGlobalTypography = async (): Promise<{ font_family: string; font_size: string } | null> => {
-  const { data } = await supabase
-    .from("dashboard_layouts" as any)
-    .select("text_overrides")
-    .eq("role", "training")
-    .maybeSingle();
-
-  if (!data) return null;
-  const overrides = (data as any).text_overrides || {};
-  const typo = overrides[TYPOGRAPHY_KEY];
-  if (!typo) return null;
-  return { font_family: typo.font_family || "", font_size: typo.font_size || "" };
-};
-
 // ==============================
 // Component Definition
 // Smart component — fetches a single article by slug via useQuery.
 // Result cached per-slug for 5 min — navigating back to a read article is instant.
 // Delegates category color logic to shared getCategoryColor helper.
-// Global typography is fetched from dashboard_layouts and applied to the body.
+// Global typography is applied via the shared useTrainingTypography hook
+// (staleTime: 60 s; admin changes propagate instantly via setQueryData).
 // ==============================
 
 const TrainingArticlePage = () => {
@@ -70,7 +47,6 @@ const TrainingArticlePage = () => {
   // ==============================
   // Data Fetching
   // useQuery caches the article body per slug — repeat visits render instantly.
-  // Global typography refetches on window focus (staleTime: 0) so other tabs see updates.
   // ==============================
   const { data: article, isLoading: loading } = useQuery({
     queryKey: ["training-article", slug],
@@ -79,11 +55,7 @@ const TrainingArticlePage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: globalTypography } = useQuery({
-    queryKey: ["training-global-typography"],
-    queryFn: fetchGlobalTypography,
-    staleTime: 0,
-  });
+  const { typographyStyle: bodyStyle } = useTrainingTypography();
 
   // ==============================
   // Render — Loading State

@@ -14,12 +14,6 @@ import { TRAINING_CATEGORIES, getCategoryColor } from "@/constants/training";
 import { useTrainingTypography } from "@/hooks/useTrainingTypography";
 
 // ==============================
-// Constants
-// ==============================
-
-const TYPOGRAPHY_KEY = "__typography";
-
-// ==============================
 // Utility Functions
 // ==============================
 
@@ -43,24 +37,12 @@ const fetchPublishedArticles = async (): Promise<TrainingArticle[]> => {
   return (data ?? []) as TrainingArticle[];
 };
 
-/** Fetches global typography from dashboard_layouts (role = 'training'). */
-const fetchGlobalTypography = async (): Promise<{ font_family: string; font_size: string } | null> => {
-  const { data } = await supabase
-    .from("dashboard_layouts" as any)
-    .select("text_overrides")
-    .eq("role", "training")
-    .maybeSingle();
-  if (!data) return null;
-  const overrides = (data as any).text_overrides || {};
-  const typo = overrides[TYPOGRAPHY_KEY];
-  if (!typo) return null;
-  return { font_family: typo.font_family || "", font_size: typo.font_size || "" };
-};
-
 // ==============================
 // Component Definition
 // Smart component — fetches published training articles via useQuery (cached)
 // and handles category filtering. Memoizes derived filtered list.
+// Typography is applied globally via the shared useTrainingTypography hook
+// (staleTime: 60 s — background revalidation on navigation).
 // ==============================
 
 const Training = () => {
@@ -73,6 +55,8 @@ const Training = () => {
   // Data Fetching
   // useQuery caches the article list for 5 min — repeat visits render instantly
   // while a background revalidation runs silently.
+  // Typography uses the shared hook (60 s staleTime; setQueryData in admin
+  // propagates changes instantly without a network round-trip).
   // ==============================
   const { data: articles = [], isLoading: loading } = useQuery({
     queryKey: ["training-articles"],
@@ -80,11 +64,7 @@ const Training = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: globalTypography } = useQuery({
-    queryKey: ["training-global-typography"],
-    queryFn: fetchGlobalTypography,
-    staleTime: 0,
-  });
+  const { typographyStyle } = useTrainingTypography();
 
   // ==============================
   // Derived Values
@@ -94,11 +74,6 @@ const Training = () => {
     () => (activeCategory === "All Topics" ? articles : articles.filter((a) => a.category === activeCategory)),
     [articles, activeCategory],
   );
-
-  const typographyStyle: CSSProperties = {
-    fontFamily: globalTypography?.font_family || undefined,
-    fontSize: globalTypography?.font_size ? `${globalTypography.font_size}px` : undefined,
-  };
 
   // ==============================
   // Render
