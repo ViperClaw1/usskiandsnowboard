@@ -422,14 +422,18 @@ export const TrainingArticleManager = () => {
                 <TableBody>
                   {articles.map((a) => (
                     <TableRow key={a.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate" style={typographyStyle}>{a.title}</TableCell>
-                      <TableCell>{a.category || "—"}</TableCell>
+                      <TableCell className="font-medium max-w-[200px] truncate" style={typographyStyle}>
+                        {a.title}
+                      </TableCell>
+                      <TableCell style={typographyStyle}>{a.category || "—"}</TableCell>
                       <TableCell>
                         <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
                           {a.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}</TableCell>
+                      <TableCell style={typographyStyle}>
+                        {a.published_at ? format(new Date(a.published_at), "MMM d, yyyy") : "—"}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
@@ -475,7 +479,9 @@ export const TrainingArticleManager = () => {
                   </div>
 
                   {/* Title */}
-                  <p className="pr-28 font-semibold leading-snug line-clamp-2 text-foreground" style={typographyStyle}>{a.title}</p>
+                  <p className="pr-28 font-semibold leading-snug line-clamp-2 text-foreground" style={typographyStyle}>
+                    {a.title}
+                  </p>
 
                   {/* Meta row */}
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
