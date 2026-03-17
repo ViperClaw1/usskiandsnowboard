@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // ==============================
 // Types / Interfaces
@@ -136,6 +138,13 @@ const industryOptions = [
 
 const EmployerDirectory = () => {
   const queryClient = useQueryClient();
+
+  // ==============================
+  // Role check — only athletes may send connection requests to employers
+  // ==============================
+  const { user } = useAuth();
+  const { role: userRole } = useUserRole(user?.id);
+  const canSendRequest = userRole === "athlete";
 
   // ==============================
   // UI-only state — not data fetching concerns
@@ -589,22 +598,24 @@ const EmployerDirectory = () => {
               {/* Spacer pushes button to bottom */}
               <div className="flex-1" />
 
-              <Button
-                className="w-full"
-                variant={existingRequests.get(employer.id) === "accepted" ? "default" : "outline"}
-                disabled={existingRequests.has(employer.id)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedEmployer(employer);
-                  setShowRequestDialog(true);
-                }}
-              >
-                {existingRequests.get(employer.id) === "accepted"
-                  ? "✓ Connected"
-                  : existingRequests.get(employer.id) === "pending"
-                  ? "Request Sent"
-                  : "Request Connection"}
-              </Button>
+              {canSendRequest && (
+                <Button
+                  className="w-full"
+                  variant={existingRequests.get(employer.id) === "accepted" ? "default" : "outline"}
+                  disabled={existingRequests.has(employer.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedEmployer(employer);
+                    setShowRequestDialog(true);
+                  }}
+                >
+                  {existingRequests.get(employer.id) === "accepted"
+                    ? "✓ Connected"
+                    : existingRequests.get(employer.id) === "pending"
+                    ? "Request Sent"
+                    : "Request Connection"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -707,18 +718,20 @@ const EmployerDirectory = () => {
                   )}
                 </div>
 
-                <Button
-                  onClick={() => setShowRequestDialog(true)}
-                  className="w-full"
-                  variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
-                  disabled={existingRequests.has(selectedEmployer.id)}
-                >
-                  {existingRequests.get(selectedEmployer.id) === "accepted"
-                    ? "✓ Connected"
-                    : existingRequests.get(selectedEmployer.id) === "pending"
-                    ? "Request Sent"
-                    : "Request Connection"}
-                </Button>
+                {canSendRequest && (
+                  <Button
+                    onClick={() => setShowRequestDialog(true)}
+                    className="w-full"
+                    variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
+                    disabled={existingRequests.has(selectedEmployer.id)}
+                  >
+                    {existingRequests.get(selectedEmployer.id) === "accepted"
+                      ? "✓ Connected"
+                      : existingRequests.get(selectedEmployer.id) === "pending"
+                      ? "Request Sent"
+                      : "Request Connection"}
+                  </Button>
+                )}
               </TabsContent>
 
               <TabsContent value="positions" className="mt-6">
@@ -762,18 +775,20 @@ const EmployerDirectory = () => {
                         </a>
                       </Button>
                     )}
-                    <Button
-                      onClick={() => setShowRequestDialog(true)}
-                      className="w-full mt-4"
-                      variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
-                      disabled={existingRequests.has(selectedEmployer.id)}
-                    >
-                      {existingRequests.get(selectedEmployer.id) === "accepted"
-                        ? "✓ Connected"
-                        : existingRequests.get(selectedEmployer.id) === "pending"
-                        ? "Request Sent"
-                        : "Request Connection"}
-                    </Button>
+                    {canSendRequest && (
+                      <Button
+                        onClick={() => setShowRequestDialog(true)}
+                        className="w-full mt-4"
+                        variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
+                        disabled={existingRequests.has(selectedEmployer.id)}
+                      >
+                        {existingRequests.get(selectedEmployer.id) === "accepted"
+                          ? "✓ Connected"
+                          : existingRequests.get(selectedEmployer.id) === "pending"
+                          ? "Request Sent"
+                          : "Request Connection"}
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8">

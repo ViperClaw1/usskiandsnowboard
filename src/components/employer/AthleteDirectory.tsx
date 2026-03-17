@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // ==============================
 // Types / Interfaces
@@ -176,6 +178,13 @@ const fetchExistingRequests = async (employerId: string): Promise<Set<string>> =
 
 const AthleteDirectory = () => {
   const queryClient = useQueryClient();
+
+  // ==============================
+  // Role check — only employers may send connection requests to athletes
+  // ==============================
+  const { user } = useAuth();
+  const { role: userRole } = useUserRole(user?.id);
+  const canSendRequest = userRole === "employer";
 
   // ==============================
   // UI-only state — not data fetching concerns
@@ -889,13 +898,15 @@ const AthleteDirectory = () => {
                   )}
                 </div>
 
-                <Button
-                  onClick={() => setShowRequestDialog(true)}
-                  className="w-full"
-                  disabled={existingRequests.has(selectedAthlete.id)}
-                >
-                  {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
-                </Button>
+                {canSendRequest && (
+                  <Button
+                    onClick={() => setShowRequestDialog(true)}
+                    className="w-full"
+                    disabled={existingRequests.has(selectedAthlete.id)}
+                  >
+                    {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
+                  </Button>
+                )}
               </TabsContent>
 
               <TabsContent value="portfolio" className="mt-6">
