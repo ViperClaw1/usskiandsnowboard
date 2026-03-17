@@ -775,18 +775,20 @@ const EmployerDirectory = () => {
                         </a>
                       </Button>
                     )}
-                    <Button
-                      onClick={() => setShowRequestDialog(true)}
-                      className="w-full mt-4"
-                      variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
-                      disabled={existingRequests.has(selectedEmployer.id)}
-                    >
-                      {existingRequests.get(selectedEmployer.id) === "accepted"
-                        ? "✓ Connected"
-                        : existingRequests.get(selectedEmployer.id) === "pending"
-                        ? "Request Sent"
-                        : "Request Connection"}
-                    </Button>
+                    {canSendRequest && (
+                      <Button
+                        onClick={() => setShowRequestDialog(true)}
+                        className="w-full mt-4"
+                        variant={existingRequests.get(selectedEmployer.id) === "accepted" ? "default" : "outline"}
+                        disabled={existingRequests.has(selectedEmployer.id)}
+                      >
+                        {existingRequests.get(selectedEmployer.id) === "accepted"
+                          ? "✓ Connected"
+                          : existingRequests.get(selectedEmployer.id) === "pending"
+                          ? "Request Sent"
+                          : "Request Connection"}
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8">
