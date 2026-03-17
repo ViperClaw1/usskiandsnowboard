@@ -31,6 +31,7 @@ import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type } from "lucide-react"
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { ARTICLE_CATEGORIES } from "@/constants/training";
+import { sanitizeArticleHtml } from "@/lib/sanitizeArticleHtml";
 
 // ==============================
 // Utility Functions
