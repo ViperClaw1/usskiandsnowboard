@@ -88,12 +88,6 @@ const TrainingArticlePage = () => {
   // ==============================
   const catColor = getCategoryColor(article.category).bg;
 
-  /** Global typography applied to the article body wrapper */
-  const bodyStyle: React.CSSProperties = {
-    fontFamily: globalTypography?.font_family || undefined,
-    fontSize: globalTypography?.font_size ? `${globalTypography.font_size}px` : undefined,
-  };
-
   // ==============================
   // Render — Article
   // ==============================
