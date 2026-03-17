@@ -427,7 +427,7 @@ export const TrainingArticleManager = () => {
                       </TableCell>
                       <TableCell style={typographyStyle}>{a.category || "—"}</TableCell>
                       <TableCell>
-                        <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-xs">
+                        <Badge variant={a.status === "published" ? "default" : "secondary"} style={typographyStyle}>
                           {a.status}
                         </Badge>
                       </TableCell>
