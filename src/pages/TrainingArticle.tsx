@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import usLogo from "@/assets/us-logo-new.png";
 import { TrainingArticle } from "@/types/training";
 import { getCategoryColor } from "@/constants/training";
+import { useTrainingTypography } from "@/hooks/useTrainingTypography";
 
 // ==============================
 // Constants

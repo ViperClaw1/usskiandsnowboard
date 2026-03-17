@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useState, useMemo, type CSSProperties } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Clock, User } from "lucide-react";
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { TRAINING_CATEGORIES, getCategoryColor } from "@/constants/training";
+import { useTrainingTypography } from "@/hooks/useTrainingTypography";
 
 // ==============================
 // Constants
