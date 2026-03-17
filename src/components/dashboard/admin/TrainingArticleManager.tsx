@@ -400,7 +400,7 @@ export const TrainingArticleManager = () => {
         </div>
       </CardHeader>
 
-      <CardContent style={typographyStyle}>
+      <CardContent>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading…</div>
         ) : articles.length === 0 ? (
