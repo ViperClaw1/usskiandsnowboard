@@ -13,7 +13,7 @@ interface RoleSelectionProps {
 const RoleSelection = ({ userId, onRoleSet }: RoleSelectionProps) => {
   const [loading, setLoading] = useState(false);
 
-  const setRole = async (role: "athlete" | "employer" | "admin") => {
+  const setRole = async (role: "athlete" | "employer") => {
     setLoading(true);
     try {
       const { error } = await supabase
