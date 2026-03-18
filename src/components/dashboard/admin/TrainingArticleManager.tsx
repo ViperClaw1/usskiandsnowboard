@@ -163,6 +163,21 @@ export const TrainingArticleManager = () => {
   const globalFontFamily = typography.font_family;
   const globalFontSize = typography.font_size;
 
+  // Pending (staged) typography state — updated by dropdowns but NOT persisted
+  // until the user clicks "Save Font Settings" and confirms the dialog.
+  const [pendingFontFamily, setPendingFontFamily] = useState(globalFontFamily);
+  const [pendingFontSize, setPendingFontSize] = useState(globalFontSize);
+  const [fontConfirmOpen, setFontConfirmOpen] = useState(false);
+
+  // Sync pending state whenever DB values load / change (e.g. on first mount).
+  useEffect(() => {
+    setPendingFontFamily(globalFontFamily);
+    setPendingFontSize(globalFontSize);
+  }, [globalFontFamily, globalFontSize]);
+
+  const hasFontChanges =
+    pendingFontFamily !== globalFontFamily || pendingFontSize !== globalFontSize;
+
   // ==============================
   // Effects — Data Fetching
   // ==============================
@@ -179,15 +194,21 @@ export const TrainingArticleManager = () => {
 
   // ==============================
   // Event Handlers — Global Typography
-  // Delegates to useUpdateTrainingTypography: optimistic update → async persist.
+  // Dropdowns write only to local pending state.
+  // Actual DB persist happens in handleConfirmFontApply after user confirms.
   // ==============================
 
   const handleFontFamilyChange = (value: string) => {
-    updateTypography({ font_family: value === "__none" ? "" : value, font_size: typography.font_size });
+    setPendingFontFamily(value === "__none" ? "" : value);
   };
 
   const handleFontSizeChange = (value: string) => {
-    updateTypography({ font_family: typography.font_family, font_size: value === "__none" ? "" : value });
+    setPendingFontSize(value === "__none" ? "" : value);
+  };
+
+  const handleConfirmFontApply = () => {
+    updateTypography({ font_family: pendingFontFamily, font_size: pendingFontSize });
+    setFontConfirmOpen(false);
   };
 
   // ==============================
