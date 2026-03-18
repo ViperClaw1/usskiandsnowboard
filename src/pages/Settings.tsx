@@ -39,6 +39,7 @@ interface SettingsData {
 // ==============================
 // Role-based elements visibility
 // ==============================
+const { user } = useAuth();
 const { role } = useUserRole(user?.id);
 const isAdmin = role === "admin";
 
