@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 const RejectedRequests = () => {
   const navigate = useNavigate();
+  useScrollToTop();
   const { data: requests, isLoading } = useQuery({
     queryKey: ["rejected-requests"],
     queryFn: async () => {

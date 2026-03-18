@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { FullUserManagementTable } from "@/components/dashboard/admin/FullUserManagementTable";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 const AllUsers = () => {
   const navigate = useNavigate();
+  useScrollToTop();
 
   return (
     <div className="min-h-screen bg-background">

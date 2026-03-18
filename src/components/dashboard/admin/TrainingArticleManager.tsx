@@ -424,18 +424,18 @@ export const TrainingArticleManager = () => {
           </div>
 
           {/* Action buttons row */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button
               size="sm"
               variant="outline"
               disabled={!hasFontChanges}
               onClick={() => setFontConfirmOpen(true)}
-              className="gap-1.5"
+              className="gap-1.5 w-full sm:w-auto"
             >
               <Save className="h-3.5 w-3.5" />
               Save Font Settings
             </Button>
-            <Button onClick={openCreate} size="sm">
+            <Button onClick={openCreate} size="sm" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-1" /> New Article
             </Button>
           </div>
