@@ -727,6 +727,30 @@ export const TrainingArticleManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Font Settings Confirmation Dialog */}
+      <AlertDialog open={fontConfirmOpen} onOpenChange={setFontConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply Font Settings to All Articles?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  You are about to update the global font style for <strong>all training articles</strong>. These
+                  changes will be visible immediately to every user browsing the Training section.
+                </p>
+                <p className="font-medium text-foreground">
+                  ⚠️ This cannot be automatically undone — you will need to manually revert the settings.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmFontApply}>Apply Settings</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
