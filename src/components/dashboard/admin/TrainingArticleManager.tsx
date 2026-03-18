@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save } from "lucide-react";
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { ARTICLE_CATEGORIES } from "@/constants/training";
@@ -163,6 +163,21 @@ export const TrainingArticleManager = () => {
   const globalFontFamily = typography.font_family;
   const globalFontSize = typography.font_size;
 
+  // Pending (staged) typography state — updated by dropdowns but NOT persisted
+  // until the user clicks "Save Font Settings" and confirms the dialog.
+  const [pendingFontFamily, setPendingFontFamily] = useState(globalFontFamily);
+  const [pendingFontSize, setPendingFontSize] = useState(globalFontSize);
+  const [fontConfirmOpen, setFontConfirmOpen] = useState(false);
+
+  // Sync pending state whenever DB values load / change (e.g. on first mount).
+  useEffect(() => {
+    setPendingFontFamily(globalFontFamily);
+    setPendingFontSize(globalFontSize);
+  }, [globalFontFamily, globalFontSize]);
+
+  const hasFontChanges =
+    pendingFontFamily !== globalFontFamily || pendingFontSize !== globalFontSize;
+
   // ==============================
   // Effects — Data Fetching
   // ==============================
@@ -179,15 +194,21 @@ export const TrainingArticleManager = () => {
 
   // ==============================
   // Event Handlers — Global Typography
-  // Delegates to useUpdateTrainingTypography: optimistic update → async persist.
+  // Dropdowns write only to local pending state.
+  // Actual DB persist happens in handleConfirmFontApply after user confirms.
   // ==============================
 
   const handleFontFamilyChange = (value: string) => {
-    updateTypography({ font_family: value === "__none" ? "" : value, font_size: typography.font_size });
+    setPendingFontFamily(value === "__none" ? "" : value);
   };
 
   const handleFontSizeChange = (value: string) => {
-    updateTypography({ font_family: typography.font_family, font_size: value === "__none" ? "" : value });
+    setPendingFontSize(value === "__none" ? "" : value);
+  };
+
+  const handleConfirmFontApply = () => {
+    updateTypography({ font_family: pendingFontFamily, font_size: pendingFontSize });
+    setFontConfirmOpen(false);
   };
 
   // ==============================
@@ -355,53 +376,69 @@ export const TrainingArticleManager = () => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="flex items-center gap-2 shrink-0">
           <FileText className="h-5 w-5" />
           Training Articles
         </CardTitle>
 
-        {/* Global typography controls + New Article button */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Type className="h-4 w-4 text-muted-foreground shrink-0" />
-          {/* Body Font Family */}
-          <Select value={globalFontFamily || "__none"} onValueChange={handleFontFamilyChange}>
-            <SelectTrigger className="h-10 w-40 text-xs">
-              <SelectValue placeholder="Body Font" />
-            </SelectTrigger>
-            <SelectContent>
-              {FONT_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  style={opt.value !== "__none" ? { fontFamily: opt.value } : undefined}
-                  className="text-xs"
-                >
-                  {opt.label}
+        {/* Global typography controls + Save + New Article */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+          {/* Font selects row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Type className="h-4 w-4 text-muted-foreground shrink-0" />
+            {/* Body Font Family */}
+            <Select value={pendingFontFamily || "__none"} onValueChange={handleFontFamilyChange}>
+              <SelectTrigger className="h-9 w-40 text-xs">
+                <SelectValue placeholder="Body Font" />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    style={opt.value !== "__none" ? { fontFamily: opt.value } : undefined}
+                    className="text-xs"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Body Font Size */}
+            <Select value={pendingFontSize || "__none"} onValueChange={handleFontSizeChange}>
+              <SelectTrigger className="h-9 w-24 text-xs">
+                <SelectValue placeholder="Size" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none" className="text-xs">
+                  Default
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {/* Body Font Size */}
-          <Select value={globalFontSize || "__none"} onValueChange={handleFontSizeChange}>
-            <SelectTrigger className="h-10 w-24 text-xs">
-              <SelectValue placeholder="Size" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none" className="text-xs">
-                Default
-              </SelectItem>
-              {FONT_SIZE_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s} className="text-xs">
-                  {s}px
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {FONT_SIZE_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s} className="text-xs">
+                    {s}px
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Button onClick={openCreate} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> New Article
-          </Button>
+          {/* Action buttons row */}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!hasFontChanges}
+              onClick={() => setFontConfirmOpen(true)}
+              className="gap-1.5"
+            >
+              <Save className="h-3.5 w-3.5" />
+              Save Font Settings
+            </Button>
+            <Button onClick={openCreate} size="sm">
+              <Plus className="h-4 w-4 mr-1" /> New Article
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
@@ -687,6 +724,30 @@ export const TrainingArticleManager = () => {
             >
               Delete
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Font Settings Confirmation Dialog */}
+      <AlertDialog open={fontConfirmOpen} onOpenChange={setFontConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply Font Settings to All Articles?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  You are about to update the global font style for <strong>all training articles</strong>. These
+                  changes will be visible immediately to every user browsing the Training section.
+                </p>
+                <p className="font-medium text-foreground">
+                  ⚠️ This cannot be automatically undone — you will need to manually revert the settings.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmFontApply}>Apply Settings</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
