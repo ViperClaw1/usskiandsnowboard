@@ -8,9 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 const AllRequests = () => {
   const navigate = useNavigate();
+  useScrollToTop();
   const { data: requests, isLoading } = useQuery({
     queryKey: ["all-requests"],
     queryFn: async () => {

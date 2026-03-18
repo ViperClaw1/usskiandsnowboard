@@ -6,9 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 const AllAthletes = () => {
   const navigate = useNavigate();
+  useScrollToTop();
   const { data: athletes, isLoading } = useQuery({
     queryKey: ["all-athletes"],
     queryFn: async () => {

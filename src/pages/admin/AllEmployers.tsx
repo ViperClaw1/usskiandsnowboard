@@ -6,9 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 const AllEmployers = () => {
   const navigate = useNavigate();
+  useScrollToTop();
   const { data: employers, isLoading } = useQuery({
     queryKey: ["all-employers"],
     queryFn: async () => {
