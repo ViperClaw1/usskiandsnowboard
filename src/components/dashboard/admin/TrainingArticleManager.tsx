@@ -385,11 +385,11 @@ export const TrainingArticleManager = () => {
         {/* Global typography controls + Save + New Article */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
           {/* Font selects row */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap min-[370px]:flex-nowrap">
             <Type className="h-4 w-4 text-muted-foreground shrink-0" />
             {/* Body Font Family */}
             <Select value={pendingFontFamily || "__none"} onValueChange={handleFontFamilyChange}>
-              <SelectTrigger className="h-9 w-40 text-xs">
+              <SelectTrigger className="h-9 w-40 max-[369px]:w-full text-xs">
                 <SelectValue placeholder="Body Font" />
               </SelectTrigger>
               <SelectContent>
@@ -407,7 +407,7 @@ export const TrainingArticleManager = () => {
             </Select>
             {/* Body Font Size */}
             <Select value={pendingFontSize || "__none"} onValueChange={handleFontSizeChange}>
-              <SelectTrigger className="h-9 w-24 text-xs">
+              <SelectTrigger className="h-9 w-24 max-[369px]:w-full text-xs">
                 <SelectValue placeholder="Size" />
               </SelectTrigger>
               <SelectContent>
