@@ -333,18 +333,20 @@ export default function Settings() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
-                <span>New user registrations</span>
-                <span className="text-sm font-normal text-muted-foreground">When new athletes or partners sign up</span>
-              </Label>
-              <Switch
-                id="email_new_accounts"
-                checked={preferences.email_new_accounts}
-                onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
-                disabled={saving}
-              />
-            </div>
+            {isAdmin && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
+                  <span>New user registrations</span>
+                  <span className="text-sm font-normal text-muted-foreground">When new athletes or partners sign up</span>
+                </Label>
+                <Switch
+                  id="email_new_accounts"
+                  checked={preferences.email_new_accounts}
+                  onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
+                  disabled={saving}
+                />
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <Label htmlFor="email_connections_declined" className="flex flex-col gap-1 cursor-pointer">
