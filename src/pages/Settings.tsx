@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, Phone } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // ==============================
 // Types / Interfaces
