@@ -385,7 +385,7 @@ export const TrainingArticleManager = () => {
         {/* Global typography controls + Save + New Article */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
           {/* Font selects row */}
-          <div className="flex items-center gap-2 flex-wrap min-[370px]:flex-nowrap">
+          <div className="flex items-center gap-2 max-[369px]:flex-wrap min-[370px]:flex-nowrap w-full sm:w-auto">
             <Type className="h-4 w-4 text-muted-foreground shrink-0" />
             {/* Body Font Family */}
             <Select value={pendingFontFamily || "__none"} onValueChange={handleFontFamilyChange}>
