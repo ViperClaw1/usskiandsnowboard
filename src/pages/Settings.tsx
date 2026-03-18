@@ -139,6 +139,8 @@ export default function Settings() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { role } = useUserRole(user?.id);
+  const isAdmin = role === "admin";
 
   // ==============================
   // UI-only state
