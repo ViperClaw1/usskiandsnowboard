@@ -37,6 +37,12 @@ interface SettingsData {
 }
 
 // ==============================
+// Role-based elements visibility
+// ==============================
+const { role } = useUserRole(user?.id);
+const isAdmin = role === "admin";
+
+// ==============================
 // Utilities
 // Phone formatting helpers — defined outside component to prevent recreation
 // ==============================
