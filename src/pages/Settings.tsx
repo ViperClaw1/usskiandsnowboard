@@ -37,13 +37,6 @@ interface SettingsData {
 }
 
 // ==============================
-// Role-based elements visibility
-// ==============================
-const { user } = useAuth();
-const { role } = useUserRole(user?.id);
-const isAdmin = role === "admin";
-
-// ==============================
 // Utilities
 // Phone formatting helpers — defined outside component to prevent recreation
 // ==============================
@@ -146,6 +139,8 @@ export default function Settings() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { role } = useUserRole(user?.id);
+  const isAdmin = role === "admin";
 
   // ==============================
   // UI-only state
@@ -338,6 +333,21 @@ export default function Settings() {
               />
             </div>
 
+            {isAdmin && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
+                  <span>New user registrations</span>
+                  <span className="text-sm font-normal text-muted-foreground">When new athletes or partners sign up</span>
+                </Label>
+                <Switch
+                  id="email_new_accounts"
+                  checked={preferences.email_new_accounts}
+                  onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
+                  disabled={saving}
+                />
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <Label htmlFor="email_connections_declined" className="flex flex-col gap-1 cursor-pointer">
                 <span>Declined connections</span>
@@ -350,23 +360,6 @@ export default function Settings() {
                 disabled={saving}
               />
             </div>
-
-            {isAdmin && (
-              <div className="flex items-center justify-between">
-                <Label htmlFor="email_new_accounts" className="flex flex-col gap-1 cursor-pointer">
-                  <span>New user registrations</span>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    When new athletes or partners sign up
-                  </span>
-                </Label>
-                <Switch
-                  id="email_new_accounts"
-                  checked={preferences.email_new_accounts}
-                  onCheckedChange={(checked) => savePreferences({ email_new_accounts: checked })}
-                  disabled={saving}
-                />
-              </div>
-            )}
           </div>
 
           {/* Digest Frequency */}
