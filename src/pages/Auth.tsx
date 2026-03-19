@@ -374,7 +374,7 @@ const Auth = () => {
   };
 
   // Step 3 → 4: collect form data and advance to profile-data step (no account created yet)
-  const handleNextStep = (e: React.FormEvent) => {
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
     if (!allPasswordRulesPass) {
@@ -385,6 +385,38 @@ const Auth = () => {
       setFormError("Passwords do not match.");
       return;
     }
+
+    // Check whether this email already has an account before advancing to the
+    // waitlist profile-data step. Supabase returns identities:[] (no error) when
+    // the email is already registered, so we use that as a cheap existence probe.
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName, user_type: userType } },
+      });
+
+      if (error) {
+        setFormError(mapAuthError(error.message || "Failed to verify email."));
+        return;
+      }
+
+      if (data.user?.identities?.length === 0) {
+        setFormError("An account with this email already exists. Try signing in instead.");
+        return;
+      }
+
+      // A new account was created by the probe — sign it out immediately so the
+      // waitlist flow stays clean. The user will be properly provisioned later.
+      await supabase.auth.signOut();
+    } catch (err: any) {
+      setFormError(mapAuthError(err.message || "Failed to verify email."));
+      return;
+    } finally {
+      setLoading(false);
+    }
+
     // Store basic info for waitlist submission
     setProfileData({ full_name: fullName, email, user_type: userType });
     setStep("profile-data");
