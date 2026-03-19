@@ -38,6 +38,7 @@ interface EmployerProfile {
   website: string | null;
   linkedin_url: string | null;
   job_board_url: string | null;
+  profile_views: number | null;
   individual_roles: Array<{ title: string; type: string; url: string; location: string }> | null;
 }
 
