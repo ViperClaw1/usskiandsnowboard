@@ -172,8 +172,8 @@ const Athletes = () => {
               </div>
             </section>
 
-            <section className="py-8 sm:py-12 relative">
-              <div className="container mx-auto px-4 max-w-7xl">
+            <section className="py-8 sm:py-12">
+              <div className="container mx-auto px-4 max-w-7xl relative">
                 {athletesWithSlicedSkills.length === 0 ? (
                   <EmptyState
                     icon={Users}
