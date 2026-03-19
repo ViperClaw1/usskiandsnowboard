@@ -964,6 +964,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_employer_profile_views: {
+        Args: { employer_profile_id: string }
+        Returns: undefined
+      }
       setup_admin_user: {
         Args: { user_email: string; user_password: string }
         Returns: string

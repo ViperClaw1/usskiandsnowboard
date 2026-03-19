@@ -539,10 +539,9 @@ const EmployerDirectory = () => {
             onClick={async () => {
               setSelectedEmployer(employer);
               try {
-                await supabase
-                  .from("employer_profiles")
-                  .update({ profile_views: (employer.profile_views || 0) + 1 })
-                  .eq("id", employer.id);
+                await supabase.rpc("increment_employer_profile_views", {
+                  employer_profile_id: employer.id,
+                });
               } catch (error) {
                 console.error("Error tracking employer profile view:", error);
               }
