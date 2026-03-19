@@ -141,7 +141,7 @@ export const WaitlistManager = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-green-700 border-green-300 hover:bg-green-50"
+                              className="text-green-700 border-green-300 hover:bg-green-800"
                               onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "approve" })}
                               disabled={decisionMutation.isPending}
                             >
@@ -155,7 +155,7 @@ export const WaitlistManager = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-red-700 border-red-300 hover:bg-red-50"
+                              className="text-red-700 border-red-300 hover:bg-red-800"
                               onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "decline" })}
                               disabled={decisionMutation.isPending}
                             >
