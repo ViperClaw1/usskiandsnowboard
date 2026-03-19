@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
@@ -172,96 +171,84 @@ const Athletes = () => {
               </div>
             </section>
 
-            <section className="py-8 sm:py-12">
-              <div className="container mx-auto px-4 max-w-7xl relative">
-                {athletesWithSlicedSkills.length === 0 ? (
-                  <EmptyState
-                    icon={Users}
-                    title="No Featured Athletes Yet"
-                    description="Check back soon to see our talented athletes looking for career opportunities."
-                    actionLabel="Sign In to Learn More"
-                    onAction={() => navigate("/auth")}
-                  />
-                ) : (
-                  <>
-                    {/* Blurred card grid — aria-hidden so screen readers skip */}
-                    <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
-                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                        {athletesWithSlicedSkills.map((athlete) => (
-                          <Card key={athlete.id} className="w-full">
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-12 w-12">
-                                  <AvatarImage src={athlete.photo_url || ""} />
-                                  <AvatarFallback>
-                                    {athlete.profiles?.full_name
-                                      ? athlete.profiles.full_name
-                                          .split(" ")
-                                          .map((n) => n[0])
-                                          .join("")
-                                          .toUpperCase()
-                                      : "AT"}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <CardTitle className="text-lg truncate">
-                                    {athlete.profiles?.full_name || "Athlete"}
-                                  </CardTitle>
-                                  {athlete.sport_discipline && (
-                                    <p className="text-sm text-muted-foreground truncate">{athlete.sport_discipline}</p>
-                                  )}
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              {athlete.bio && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>
+            <section className="py-8 sm:py-12 relative">
+              <div className="container mx-auto px-4 max-w-7xl">
+                {/* Blurred card grid — aria-hidden so screen readers skip */}
+                <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
+                    {athletesWithSlicedSkills.map((athlete) => (
+                      <Card key={athlete.id} className="w-full">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage src={athlete.photo_url || ""} />
+                              <AvatarFallback>
+                                {athlete.profiles?.full_name
+                                  ? athlete.profiles.full_name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .toUpperCase()
+                                  : "AT"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg truncate">
+                                {athlete.profiles?.full_name || "Athlete"}
+                              </CardTitle>
+                              {athlete.sport_discipline && (
+                                <p className="text-sm text-muted-foreground truncate">{athlete.sport_discipline}</p>
                               )}
-                              {athlete.skillsPreview.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
-                                  {athlete.skillsPreview.map((skill, index) => (
-                                    <Badge key={index} variant="secondary" className="text-xs">
-                                      {skill}
-                                    </Badge>
-                                  ))}
-                                  {athlete.extraSkills > 0 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      +{athlete.extraSkills} more
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
-                              {athlete.availability && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-medium">Availability:</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {athlete.availability}
-                                  </Badge>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Sign-in lock overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Card className="max-w-md mx-4 shadow-xl">
-                        <CardContent className="pt-6 text-center space-y-4">
-                          <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
-                          <div>
-                            <h3 className="text-lg font-semibold mb-2">Sign In to View Athletes</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Create an account or sign in to connect with talented athletes
-                            </p>
+                            </div>
                           </div>
-                          <Button onClick={() => navigate("/auth")}>Sign In</Button>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {athlete.bio && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>
+                          )}
+                          {athlete.skillsPreview.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {athlete.skillsPreview.map((skill, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {athlete.extraSkills > 0 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{athlete.extraSkills} more
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                          {athlete.availability && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium">Availability:</span>
+                              <Badge variant="outline" className="text-xs">
+                                {athlete.availability}
+                              </Badge>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
-                    </div>
-                  </>
-                )}
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sign-in lock overlay — always shown when logged out */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Card className="max-w-md mx-4 shadow-xl">
+                    <CardContent className="pt-6 text-center space-y-4">
+                      <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Sign In to View Athletes</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Create an account or sign in to connect with talented athletes
+                        </p>
+                      </div>
+                      <Button onClick={() => navigate("/auth")}>Sign In</Button>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </section>
           </>
