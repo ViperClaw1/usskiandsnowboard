@@ -536,7 +536,17 @@ const EmployerDirectory = () => {
           <Card
             key={employer.id}
             className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50 flex flex-col"
-            onClick={() => setSelectedEmployer(employer)}
+            onClick={async () => {
+              setSelectedEmployer(employer);
+              try {
+                await supabase
+                  .from("employer_profiles")
+                  .update({ profile_views: (employer.profile_views || 0) + 1 })
+                  .eq("id", employer.id);
+              } catch (error) {
+                console.error("Error tracking employer profile view:", error);
+              }
+            }}
           >
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
