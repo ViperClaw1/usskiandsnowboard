@@ -422,7 +422,7 @@ export default function Settings() {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+1 (___) ___-__-__"
+                      placeholder="+1 ___-___-____"
                       value={phoneNumber}
                       onChange={handlePhoneChange}
                       onBlur={handlePhoneBlur}
