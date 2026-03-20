@@ -245,7 +245,6 @@ const handler = async (req: Request): Promise<Response> => {
     const companyName = request.employer_profiles.company_name;
 
     // Resolve athlete name: prefer first_name/last_name, fall back to splitting full_name
-    const athleteProfiles = request.athlete_profiles.profiles as any;
     const athleteFirstName: string =
       athleteProfiles?.first_name || splitName(athleteProfiles?.full_name)[0] || "Athlete";
     const athleteLastName: string =
@@ -254,7 +253,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Resolve employer rep name: prefer contact_person, fall back to profiles.full_name
     const contactPerson: string = request.employer_profiles.contact_person || "";
-    const employerProfiles = request.employer_profiles.profiles as any;
     const repFallbackName = employerProfiles?.full_name || "";
     const [repFirstName, repLastName] = contactPerson
       ? splitName(contactPerson)
