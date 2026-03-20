@@ -729,8 +729,17 @@ const AthleteDirectory = () => {
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6 mt-6">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
+                {/* Banner */}
+                <div className="relative -mx-6 -mt-6 rounded-t-lg overflow-hidden">
+                  {selectedAthlete.background_image_url ? (
+                    <div
+                      className="h-28 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
+                  )}
+                  <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg">
                     <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
                     <AvatarFallback>
                       {selectedAthlete.profiles.full_name
@@ -742,12 +751,12 @@ const AthleteDirectory = () => {
                         : "AT"}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="font-semibold">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
-                    {selectedAthlete.sport_discipline && (
-                      <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
-                    )}
-                  </div>
+                </div>
+                <div className="pt-10 pb-2">
+                  <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
+                  {selectedAthlete.sport_discipline && (
+                    <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
+                  )}
                 </div>
 
                 {[
