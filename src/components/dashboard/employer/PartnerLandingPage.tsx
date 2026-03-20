@@ -372,7 +372,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                   </div>
                   {/* Right — completion card, only when profile is incomplete */}
                   {completeness < 100 && (
-                    <Card className="w-full sm:w-64 shrink-0 mx-4 sm:mx-0">
+                    <Card className="w-72 max-w-[calc(100%-2rem)] mx-auto sm:mx-0 sm:w-64 shrink-0">
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
