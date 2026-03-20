@@ -1,68 +1,56 @@
 
-## Problem
+## Root cause analysis
 
-In both `AthleteLandingPage.tsx` and `PartnerLandingPage.tsx`, the hero section has a two-part layout:
+### Bug 1 — Admin emails sent twice
 
-1. **Profile info block** — absolutely positioned at `sm:bottom-0 sm:translate-y-1/2`, so it hangs 50% below the banner image.
-2. **Spacer + completion card** — a `div` with `sm:pt-20` below the banner that: (a) creates vertical room for the hanging profile block, and (b) optionally renders the completion card flush-right.
+The `send-connection-notification` function is being invoked **twice** for every `new_request` event:
 
-The problem: when the completion card is visible, the `sm:pt-20` spacer creates a large empty gap between the profile block and the bottom edge of the card, since the spacer's height is fixed regardless of whether the card is present. The reference screenshot shows the desired result: the profile block and the completion card share the same bottom border line.
+1. **Database trigger** `on_connection_request_event` fires on every `INSERT` into `connection_requests` and calls `send-connection-notification` via `net.http_post`.
+2. **Client-side code** in `EmployerDirectory.tsx` (line 332) and `AthleteDirectory.tsx` (line 390) **also** calls `supabase.functions.invoke("send-connection-notification", ...)` after inserting the request.
 
-## Root cause
+Both paths reach `notifyAdmins(...)` inside `send-connection-notification`, which calls `send-admin-notification` — so admins receive two emails every time.
 
-The current design adds a fixed `pt-20` spacer under the banner and then appends the completion card below it. There's no alignment relationship between the profile block (which overflows the banner) and the completion card (which sits in the flow below).
+The logs confirm this: there are two `Processing new_request notification...` log entries and two `Notified admins about new_connection_request` entries for request `e10eb1d7-...`.
 
-## Fix — both files
+### Bug 2 — Stakeholder (athlete/employer) emails stopped
 
-Replace the current "spacer-then-card" pattern with a **flex row** that directly contains both the profile info block and the completion card, so their bottom edges are naturally aligned by flexbox.
+The `shouldSendEmail` function (lines 92–93) gates on `digest_frequency`:
 
-The profile info block currently lives inside the `relative overflow-visible` banner div as an absolutely-positioned child. The fix is to move the layout so both items sit in the same flex container, bottom-aligned (`items-end`), which removes the need for the fixed `pt-20` spacer entirely when the card is shown.
-
-### Approach
-
-**On `sm+` screens only**, change the spacer/completion area from:
-```
-fixed pt-20 spacer
-  └─ (optional) completion card right-aligned
-```
-to:
-```
-flex row, items-end, justify-end
-  └─ (optional) completion card
-     → no spacer needed; the banner's translate-y-1/2 profile block sets the height naturally
+```ts
+if (prefs.digest_frequency === "off") return false;
+if (prefs.digest_frequency !== "instant") return false;
 ```
 
-Concretely, when `completeness < 100`:
-- Keep `pb-6` on the outer wrapper but remove `pt-20` and replace it with `pt-0`
-- Wrap the completion card in a `flex justify-end items-end` div that does **not** have the artificial top padding
+The default value in the `notification_preferences` table is `'instant'`. However, the `new_request` notification is only being checked against the **employer's** preferences. If the employer's `notification_preferences` row has any value other than `'instant'` — e.g., `'daily'`, `'weekly'`, or `'off'` — the email is silently skipped. This same gate also affects the employer on accepted/declined events.
 
-When `completeness === 100` (card hidden):
-- Keep `sm:pt-20` so the banner profile block still has its spacer room below it (current behavior, unchanged)
+More critically: the `request_accepted` path sends to **both** athlete and employer emails without calling `shouldSendEmail` for either — but the real culprit is likely that `contact_email` on the employer profile or `email` on the athlete profile is `null`, causing the `toAddresses` array to be empty, so no email is sent.
 
-This is a conditional class change: `sm:pt-20` only when `completeness >= 100`, `sm:pt-0 sm:pb-6` when `completeness < 100`.
+### Fix
 
-### Files changed
-- `src/components/dashboard/athlete/AthleteLandingPage.tsx` — line ~300 spacer div
-- `src/components/dashboard/employer/PartnerLandingPage.tsx` — line ~307 spacer div
+**Remove the duplicate client-side invoke calls** — the database trigger already handles all connection events reliably. The client should just insert the row and let the trigger fire. This fixes the double admin emails and ensures a single clean flow.
 
-Both files have an identical structure; the fix is the same one-line class change in each.
+**Fix `shouldSendEmail`** — `digest_frequency` values like `'daily'` or `'weekly'` should not block instant emails to stakeholders. The preference columns (`email_new_requests`, `email_accepted_connections`) are the correct gatekeepers; `digest_frequency` is only meaningful for digest/summary delivery and should not block live event emails.
 
-### Exact change (same in both files)
+### Files to change
 
-```tsx
+1. `src/components/athlete/EmployerDirectory.tsx` — remove the `supabase.functions.invoke("send-connection-notification", ...)` call after insert (trigger handles it)
+2. `src/components/employer/AthleteDirectory.tsx` — same removal
+3. `supabase/functions/send-connection-notification/index.ts` — fix `shouldSendEmail` to not gate on `digest_frequency !== "instant"`, keeping only the specific preference columns as gates
+
+### Exact changes
+
+**`shouldSendEmail` fix** (remove the digest_frequency blocking lines):
+```ts
 // Before
-<div className="px-4 sm:px-6 pb-0 sm:pb-6 pt-0 sm:pt-20">
-  {completeness < 100 && (
-    <div className="flex justify-end">
-      <Card ...>
+if (prefs.digest_frequency === "off") return false;
+if (prefs.digest_frequency !== "instant") return false;
 
-// After
-<div className={`px-4 sm:px-6 ${completeness < 100 ? "pb-4 sm:pb-6 pt-0 sm:pt-0" : "pb-0 sm:pb-6 pt-0 sm:pt-20"}`}>
-  {completeness < 100 && (
-    <div className="flex justify-end items-end">
-      <Card ...>
+// After — only respect the explicit per-event toggles
+if (notificationType === "new_request" && !prefs.email_new_requests) return false;
+if (notificationType === "request_accepted" && !prefs.email_accepted_connections) return false;
+return true;
 ```
 
-This means:
-- **Profile < 100%**: No top padding, card sits directly below the banner — bottom of the card aligns naturally with the bottom of the profile info block (both sit at the same vertical level since the profile block is translate-y-1/2 out of the banner).
-- **Profile = 100%**: Original `sm:pt-20` spacer is preserved, no empty space issue since the card is gone.
+**`EmployerDirectory.tsx` and `AthleteDirectory.tsx`** — remove the `try { await supabase.functions.invoke("send-connection-notification", ...) }` block after the insert (the DB trigger already calls it).
+
+No migration needed — this is purely a code fix.
