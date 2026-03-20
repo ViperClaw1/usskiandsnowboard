@@ -13,9 +13,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Upload, Building2, X, Image } from "lucide-react";
 
+// ── Phone helpers (US mask: X-XXX-XXX-XXXX, 11 digits) ──────────────────────
+const formatPhone = (digits: string): string => {
+  const d = digits.replace(/\D/g, "").slice(0, 11);
+  if (d.length === 0) return "";
+  if (d.length <= 1) return d;
+  if (d.length <= 4) return `${d[0]}-${d.slice(1)}`;
+  if (d.length <= 7) return `${d[0]}-${d.slice(1, 4)}-${d.slice(4)}`;
+  if (d.length <= 10) return `${d[0]}-${d.slice(1, 4)}-${d.slice(4, 7)}-${d.slice(7)}`;
+  return `${d[0]}-${d.slice(1, 4)}-${d.slice(4, 7)}-${d.slice(7, 11)}`;
+};
+
+const unformatPhone = (value: string): string => value.replace(/\D/g, "");
+
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
-  phone: z.string().min(10, "Phone number is required"),
+  phone: z
+    .string()
+    .refine((v) => unformatPhone(v).length === 0 || unformatPhone(v).length === 11, {
+      message: "Please enter a valid 11-digit US phone number",
+    }),
   industry: z.string().optional(),
   company_size: z.string().optional(),
   hq_location: z.string().optional(),
