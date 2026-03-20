@@ -527,6 +527,9 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                             profile={{ full_name: profile.profiles?.full_name }}
                             profileData={profile}
                             viewMode="public"
+                            bgInputRef={bgInputRef}
+                            onBgUpload={handleBgUpload}
+                            uploadingBg={uploadingBg}
                           />
                         )}
                       </TabsContent>

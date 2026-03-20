@@ -1,5 +1,5 @@
 import { User } from "@supabase/supabase-js";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +81,40 @@ const EmployerDashboard = ({
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [showOpportunitiesDialog, setShowOpportunitiesDialog] = useState(false);
+
+  // Background image upload
+  const bgInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingBg, setUploadingBg] = useState(false);
+
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB");
+      return;
+    }
+    setUploadingBg(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const ts = Date.now();
+      const path = `${user.id}/bg-${ts}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("company-logos").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("company-logos").getPublicUrl(path);
+      await supabase.from("employer_profiles").update({ background_image_url: publicUrl }).eq("user_id", user.id);
+      queryClient.invalidateQueries({ queryKey: employerProfileKey(user.id) });
+      toast.success("Background image updated!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload background image");
+    } finally {
+      setUploadingBg(false);
+    }
+  };
 
   // ==============================
   // Data Fetching — Employer Profile
@@ -193,7 +227,14 @@ const EmployerDashboard = ({
                 Back to Home
               </Button>
             </div>
-            {profile && <EmployerProfilePreview profile={profile} />}
+            {profile && (
+              <EmployerProfilePreview
+                profile={profile}
+                bgInputRef={bgInputRef}
+                onBgUpload={handleBgUpload}
+                uploadingBg={uploadingBg}
+              />
+            )}
           </div>
         ) : currentView === "connections" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">

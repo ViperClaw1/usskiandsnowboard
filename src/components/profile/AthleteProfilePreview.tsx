@@ -1,15 +1,27 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RefObject } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Award, Briefcase, Mail, Instagram } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Award, Mail, Instagram, ImagePlus, Loader2 } from "lucide-react";
 
 interface AthleteProfilePreviewProps {
   profile: any;
   profileData: any;
   viewMode: "public" | "connected";
+  bgInputRef?: RefObject<HTMLInputElement>;
+  onBgUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploadingBg?: boolean;
 }
 
-export const AthleteProfilePreview = ({ profile, profileData, viewMode }: AthleteProfilePreviewProps) => {
+export const AthleteProfilePreview = ({
+  profile,
+  profileData,
+  viewMode,
+  bgInputRef,
+  onBgUpload,
+  uploadingBg,
+}: AthleteProfilePreviewProps) => {
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -19,24 +31,79 @@ export const AthleteProfilePreview = ({ profile, profileData, viewMode }: Athlet
       .slice(0, 2);
   };
 
+  const bgUrl = profileData?.background_image_url;
+  const isOwner = !!onBgUpload;
+
   return (
-    <Card>
-      <CardContent className="space-y-6 pt-6">
-        {/* Header Section */}
-        <div className="flex items-start gap-4">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src={profileData?.photo_url} />
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              {getInitials(profile?.full_name || "")}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold">{profile?.full_name || "Name not set"}</h2>
-            <p className="text-muted-foreground flex items-center gap-1 mt-1">
-              <Award className="h-4 w-4" />
-              {profileData?.sport_discipline || "Sport not specified"}
-            </p>
+    <Card className="overflow-hidden">
+      {/* Banner */}
+      <div className="relative -mx-0 -mt-0">
+        {bgInputRef && onBgUpload && (
+          <input
+            ref={bgInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onBgUpload}
+          />
+        )}
+
+        {bgUrl ? (
+          <div
+            className="h-28 bg-cover bg-center"
+            style={{ backgroundImage: `url(${bgUrl})` }}
+          />
+        ) : (
+          <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+            {isOwner && !uploadingBg && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-background/80 backdrop-blur-sm"
+                onClick={() => bgInputRef?.current?.click()}
+              >
+                <ImagePlus className="h-4 w-4 mr-2" />
+                Add background photo
+              </Button>
+            )}
+            {isOwner && uploadingBg && (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            )}
           </div>
+        )}
+
+        {isOwner && bgUrl && (
+          <button
+            className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 text-xs font-medium hover:bg-background/95 transition-colors"
+            onClick={() => bgInputRef?.current?.click()}
+            disabled={uploadingBg}
+          >
+            {uploadingBg ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <ImagePlus className="h-3 w-3" />
+            )}
+            Change photo
+          </button>
+        )}
+
+        {/* Straddling avatar */}
+        <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg">
+          <AvatarImage src={profileData?.photo_url} className="object-cover" />
+          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+            {getInitials(profile?.full_name || "")}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+
+      <CardContent className="space-y-6 pt-6">
+        {/* Name / sport — padded to clear the protruding avatar */}
+        <div className="pt-10 pb-2">
+          <h2 className="text-2xl font-bold leading-tight">{profile?.full_name || "Name not set"}</h2>
+          <p className="text-muted-foreground flex items-center gap-1 mt-1">
+            <Award className="h-4 w-4" />
+            {profileData?.sport_discipline || "Sport not specified"}
+          </p>
         </div>
 
         {/* Bio */}

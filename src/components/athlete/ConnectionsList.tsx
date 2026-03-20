@@ -21,6 +21,7 @@ interface Connection {
     contact_title: string | null;
     contact_email: string | null;
     logo_url: string | null;
+    background_image_url: string | null;
     website: string | null;
     linkedin_url: string | null;
     company_size: string | null;
@@ -90,6 +91,7 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
             contact_title,
             contact_email,
             logo_url,
+            background_image_url,
             website,
             linkedin_url,
             company_size,

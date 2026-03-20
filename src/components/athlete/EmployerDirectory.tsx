@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -33,6 +33,7 @@ interface EmployerProfile {
   contact_title: string | null;
   contact_email: string | null;
   logo_url: string | null;
+  background_image_url: string | null;
   about: string | null;
   connection_to_ussa: string | null;
   website: string | null;
@@ -638,26 +639,35 @@ const EmployerDirectory = () => {
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6 mt-6">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
+                {/* Banner */}
+                <div className="relative -mx-6 -mt-6 rounded-t-lg overflow-hidden">
+                  {selectedEmployer.background_image_url ? (
+                    <div
+                      className="h-28 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedEmployer.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
+                  )}
+                  <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg bg-background">
                     {selectedEmployer.logo_url ? (
-                      <img
+                      <AvatarImage
                         src={selectedEmployer.logo_url}
                         alt={`${selectedEmployer.company_name} logo`}
-                        className="h-full w-full object-contain p-2"
+                        className="object-contain p-1"
                       />
                     ) : (
                       <AvatarFallback>
-                        <Building2 className="h-12 w-12 text-primary" />
+                        <Building2 className="h-8 w-8 text-primary" />
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <div>
-                    <h3 className="font-semibold">{selectedEmployer.company_name}</h3>
-                    {selectedEmployer.industry && (
-                      <p className="text-sm text-muted-foreground">{selectedEmployer.industry}</p>
-                    )}
-                  </div>
+                </div>
+                <div className="pt-10 pb-2">
+                  <h3 className="font-semibold text-lg">{selectedEmployer.company_name}</h3>
+                  {selectedEmployer.industry && (
+                    <p className="text-sm text-muted-foreground">{selectedEmployer.industry}</p>
+                  )}
                 </div>
 
                 {selectedEmployer.about && (
