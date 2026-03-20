@@ -242,11 +242,14 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                 <Pencil className="h-4 w-4" />
               </Button>
 
-              {/* Profile info block
-                  <640px : flows below banner, full-width, rounded top corners; -mt-16 so avatar center sits on banner bottom
-                  >=640px: absolute, spans full width, translate-y-1/2 — left=profile info, right=completion card */}
+              {/*
+                Profile row — spans the full card width.
+                Mobile  (<640px): flows below banner, -mt-16 so avatar straddles banner edge.
+                sm+ (>=640px): absolute, translate-y-1/2 — left = profile info, right = completion card.
+              */}
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between sm:px-6 gap-4">
+                  {/* Left — profile info */}
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.logo_url || ""} />
@@ -299,42 +302,40 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                       </div>
                     </div>
                   </div>
+                  {/* Right — completion card, only when profile is incomplete */}
+                  {completeness < 100 && (
+                    <Card className="w-full sm:w-64 shrink-0 mx-4 sm:mx-0">
+                      <CardContent className="pt-6">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {getText("hero.profile_complete_label", "Profile Complete")}
+                            </span>
+                            <span className="font-semibold">{completeness}%</span>
+                          </div>
+                          <Progress value={completeness} className="h-2" />
+                          <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                            {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                            <ArrowRight className="ml-1 h-3 w-3" />
+                          </Button>
+                          <AIProfilePopulator
+                            role="employer"
+                            userId={user.id}
+                            onComplete={() => {
+                              queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
+                              onProfileUpdated?.();
+                            }}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Spacer + completion card */}
-            <div className="px-4 sm:px-6 pb-0 sm:pb-6 pt-0 sm:pt-20">
-              {completeness < 100 && (
-                <div className="flex justify-end">
-                  <Card className="w-full sm:w-64 lg:-mt-16 shrink-0">
-                    <CardContent className="pt-6">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {getText("hero.profile_complete_label", "Profile Complete")}
-                          </span>
-                          <span className="font-semibold">{completeness}%</span>
-                        </div>
-                        <Progress value={completeness} className="h-2" />
-                        <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                          {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
-                          <ArrowRight className="ml-1 h-3 w-3" />
-                        </Button>
-                        <AIProfilePopulator
-                          role="employer"
-                          userId={user.id}
-                          onComplete={() => {
-                            queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
-                            onProfileUpdated?.();
-                          }}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
+            {/* Spacer — reserves vertical room for the absolutely-positioned profile row on sm+ */}
+            <div className="sm:pt-20 sm:pb-6" />
           </Card>
         </div>
       </section>
