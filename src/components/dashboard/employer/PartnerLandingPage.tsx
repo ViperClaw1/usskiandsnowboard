@@ -244,9 +244,9 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
 
               {/* Profile info block
                   <640px : flows below banner, full-width, rounded top corners; -mt-16 so avatar center sits on banner bottom
-                  >=640px: absolute, overlaps banner centre (translate-y-1/2), content-fit width, rounded-tr only */}
+                  >=640px: absolute, spans full width, translate-y-1/2 — left=profile info, right=completion card */}
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between sm:px-6 gap-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.logo_url || ""} />
