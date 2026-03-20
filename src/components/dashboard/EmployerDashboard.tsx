@@ -227,7 +227,14 @@ const EmployerDashboard = ({
                 Back to Home
               </Button>
             </div>
-            {profile && <EmployerProfilePreview profile={profile} />}
+            {profile && (
+              <EmployerProfilePreview
+                profile={profile}
+                bgInputRef={bgInputRef}
+                onBgUpload={handleBgUpload}
+                uploadingBg={uploadingBg}
+              />
+            )}
           </div>
         ) : currentView === "connections" ? (
           <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
