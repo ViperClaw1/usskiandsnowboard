@@ -110,6 +110,19 @@ const EmployerDashboard = ({
   // Manually" is chosen in the welcome popup. Not a data concern — stays as
   // useEffect.
   // ==============================
+  // ==============================
+  // Effects — Auto-open onboarding dialog on first login
+  // ==============================
+  useEffect(() => {
+    if (!loading && profile === null && !isAdminView) {
+      const key = `onboarding_shown_${user.id}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, "true");
+        setShowProfileDialog(true);
+      }
+    }
+  }, [loading, profile, isAdminView, user.id]);
+
   useEffect(() => {
     if (openProfileDialog) {
       setShowProfileDialog(true);

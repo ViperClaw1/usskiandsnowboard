@@ -229,6 +229,21 @@ const AthleteDashboard = ({
   });
 
   // ==============================
+  // Effects — Auto-open onboarding dialog on first login
+  // When the profile fetch resolves and no profile exists yet, open the
+  // dialog once (guarded by a localStorage flag so it never re-fires).
+  // ==============================
+  useEffect(() => {
+    if (!profileLoading && profile === null && !isAdminView) {
+      const key = `onboarding_shown_${user.id}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, "true");
+        setShowProfileDialog(true);
+      }
+    }
+  }, [profileLoading, profile, isAdminView, user.id]);
+
+  // ==============================
   // Effects — Open Profile Dialog from Parent
   // ==============================
   useEffect(() => {
