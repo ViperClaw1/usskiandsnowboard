@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import usBgMountain from "@/assets/us-background-mountain.png";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,13 +23,10 @@ import {
   MapPin,
   ExternalLink,
   Linkedin,
-  ImagePlus,
-  Loader2,
 } from "lucide-react";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 interface Connection {
   id: string;
@@ -143,34 +141,6 @@ const fetchFeaturedAthletes = async (): Promise<AthleteProfile[]> => {
 
 export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: PartnerLandingPageProps) => {
   const queryClient = useQueryClient();
-  const bgInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingBg, setUploadingBg] = useState(false);
-  const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
-
-  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Please upload an image file"); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be less than 10MB"); return; }
-    setUploadingBg(true);
-    try {
-      const ext = file.name.split(".").pop();
-      const ts = Date.now();
-      const path = `${user.id}/bg-${ts}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("company-logos").upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from("company-logos").getPublicUrl(path);
-      await supabase.from("employer_profiles").update({ background_image_url: publicUrl }).eq("user_id", user.id);
-      setLocalBgUrl(publicUrl);
-      queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
-      toast.success("Background image updated!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to upload background image");
-    } finally {
-      setUploadingBg(false);
-    }
-  };
   const { getText, typography } = useDashboardTextOverrides("employer");
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardData>({
@@ -252,46 +222,14 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
             {/* Banner — relative so the sm+ absolute block is contained here; parent for avatar alignment on mobile */}
             <div className="relative overflow-visible">
               {/* Background image — on mobile avatar center aligns with this div's bottom */}
-              <input ref={bgInputRef} type="file" accept="image/*" onChange={handleBgUpload} className="hidden" />
-              {(localBgUrl || profile?.background_image_url) ? (
-                <div
-                  className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
-                  style={{
-                    backgroundImage: `url(${localBgUrl || profile?.background_image_url})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                />
-              ) : (
-                <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
-                  <button
-                    type="button"
-                    onClick={() => bgInputRef.current?.click()}
-                    disabled={uploadingBg}
-                    className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-                  >
-                    {uploadingBg ? (
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                    ) : (
-                      <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
-                    )}
-                    <span className="text-sm font-medium">
-                      {uploadingBg ? "Uploading…" : "Add background photo"}
-                    </span>
-                  </button>
-                </div>
-              )}
-              {(localBgUrl || profile?.background_image_url) && (
-                <button
-                  type="button"
-                  onClick={() => bgInputRef.current?.click()}
-                  disabled={uploadingBg}
-                  className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-background/80 hover:bg-background text-foreground shadow transition-colors"
-                >
-                  {uploadingBg ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
-                  Change photo
-                </button>
-              )}
+              <div
+                className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
+                style={{
+                  backgroundImage: `url(${profile?.background_image_url || usBgMountain})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
 
               {/* Edit button */}
               <Button
@@ -312,7 +250,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between sm:px-6 gap-4">
                   {/* Left — profile info */}
-                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-t-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.logo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
