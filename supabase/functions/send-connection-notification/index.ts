@@ -137,6 +137,35 @@ function newRequestBody(companyName: string, athleteName: string, request: any, 
     </table>`;
 }
 
+function athleteNewRequestBody(athleteName: string, companyName: string, request: any, appUrl: string): string {
+  return `
+    <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${athleteName}</strong>,</p>
+    <p style="margin: 0 0 30px; font-size: 16px;">
+      You have received a new connection request from <strong>${companyName}</strong>!
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Partner Profile</p>
+          <p style="margin: 0 0 8px; font-size: 15px;"><strong>Company:</strong> ${companyName}</p>
+          ${request.employer_profiles.industry ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Industry:</strong> ${request.employer_profiles.industry}</p>` : ""}
+          ${request.employer_profiles.about ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>About:</strong> ${request.employer_profiles.about}</p>` : ""}
+          ${request.message ? `<p style="margin: 0; font-size: 15px;"><strong>Message:</strong> ${request.message}</p>` : ""}
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0 0 30px; font-size: 16px;">
+      Log in to your dashboard to review this request and connect with ${companyName}.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <a href="${appUrl}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Request</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
 /**
  * Builds the joint introduction email body sent to both parties on connection acceptance.
  */
@@ -262,20 +291,35 @@ const handler = async (req: Request): Promise<Response> => {
     const repTitle: string = request.employer_profiles.contact_title || "";
 
     if (notification_type === "new_request") {
-      const sendEmail_ = employerUserId ? await shouldSendEmail(supabase, employerUserId, "new_request") : true;
-      if (sendEmail_ && employerEmail) {
+      // Determine recipient: the party that did NOT initiate the request
+      const recipientIsAthlete = request.initiated_by_user_id === employerUserId;
+      const recipientEmail = recipientIsAthlete ? athleteEmail : employerEmail;
+      const recipientUserId = recipientIsAthlete ? athleteUserId : employerUserId;
+      const recipientName = recipientIsAthlete ? athleteFullName : companyName;
+      const senderName = recipientIsAthlete ? companyName : athleteFullName;
+
+      console.log(`new_request — initiated_by: ${request.initiated_by_user_id}, recipientIsAthlete: ${recipientIsAthlete}, recipientEmail: ${recipientEmail ?? "NULL"}`);
+
+      const shouldSend = recipientUserId
+        ? await shouldSendEmail(supabase, recipientUserId, "new_request")
+        : true;
+
+      if (shouldSend && recipientEmail) {
+        const emailBody = recipientIsAthlete
+          ? athleteNewRequestBody(recipientName, senderName, request, appUrl)
+          : newRequestBody(companyName, athleteFullName, request, appUrl);
         await sendEmail(resend, {
           from: FROM,
-          to: [employerEmail],
-          subject: `New Connection Request from ${athleteFullName}`,
-          html: emailTemplate("New Connection Request", newRequestBody(companyName, athleteFullName, request, appUrl)),
+          to: [recipientEmail],
+          subject: `New Connection Request from ${senderName}`,
+          html: emailTemplate("New Connection Request", emailBody),
         });
-        console.log(`New request email sent to ${employerEmail}`);
+        console.log(`New request email sent to ${recipientEmail}`);
       }
-      if (employerUserId) {
-        const sms = await shouldSendSMS(supabase, employerUserId);
+      if (recipientUserId) {
+        const sms = await shouldSendSMS(supabase, recipientUserId);
         if (sms.send && sms.phone) {
-          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: New connection request from ${athleteFullName}. Log in to review.`);
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: New connection request from ${senderName}. Log in to review.`);
         }
       }
       await notifyAdmins("new_connection_request", request_id);
