@@ -291,20 +291,35 @@ const handler = async (req: Request): Promise<Response> => {
     const repTitle: string = request.employer_profiles.contact_title || "";
 
     if (notification_type === "new_request") {
-      const sendEmail_ = employerUserId ? await shouldSendEmail(supabase, employerUserId, "new_request") : true;
-      if (sendEmail_ && employerEmail) {
+      // Determine recipient: the party that did NOT initiate the request
+      const recipientIsAthlete = request.initiated_by_user_id === employerUserId;
+      const recipientEmail = recipientIsAthlete ? athleteEmail : employerEmail;
+      const recipientUserId = recipientIsAthlete ? athleteUserId : employerUserId;
+      const recipientName = recipientIsAthlete ? athleteFullName : companyName;
+      const senderName = recipientIsAthlete ? companyName : athleteFullName;
+
+      console.log(`new_request — initiated_by: ${request.initiated_by_user_id}, recipientIsAthlete: ${recipientIsAthlete}, recipientEmail: ${recipientEmail ?? "NULL"}`);
+
+      const shouldSend = recipientUserId
+        ? await shouldSendEmail(supabase, recipientUserId, "new_request")
+        : true;
+
+      if (shouldSend && recipientEmail) {
+        const emailBody = recipientIsAthlete
+          ? athleteNewRequestBody(recipientName, senderName, request, appUrl)
+          : newRequestBody(companyName, athleteFullName, request, appUrl);
         await sendEmail(resend, {
           from: FROM,
-          to: [employerEmail],
-          subject: `New Connection Request from ${athleteFullName}`,
-          html: emailTemplate("New Connection Request", newRequestBody(companyName, athleteFullName, request, appUrl)),
+          to: [recipientEmail],
+          subject: `New Connection Request from ${senderName}`,
+          html: emailTemplate("New Connection Request", emailBody),
         });
-        console.log(`New request email sent to ${employerEmail}`);
+        console.log(`New request email sent to ${recipientEmail}`);
       }
-      if (employerUserId) {
-        const sms = await shouldSendSMS(supabase, employerUserId);
+      if (recipientUserId) {
+        const sms = await shouldSendSMS(supabase, recipientUserId);
         if (sms.send && sms.phone) {
-          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: New connection request from ${athleteFullName}. Log in to review.`);
+          await sendTwilioSMS(sms.phone, `US Ski & Snowboard: New connection request from ${senderName}. Log in to review.`);
         }
       }
       await notifyAdmins("new_connection_request", request_id);
