@@ -91,6 +91,7 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
             contact_title,
             contact_email,
             logo_url,
+            background_image_url,
             website,
             linkedin_url,
             company_size,

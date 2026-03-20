@@ -96,6 +96,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
             email,
             sport_discipline,
             photo_url,
+            background_image_url,
             bio,
             skills,
             availability,
