@@ -805,6 +805,7 @@ const EmployerDirectory = () => {
                 )}
               </TabsContent>
             </Tabs>
+            </div>
           </DialogContent>
         </Dialog>
       )}

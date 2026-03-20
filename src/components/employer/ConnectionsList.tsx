@@ -532,6 +532,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
               <AthletePortfolioView athleteId={selectedConnection.athlete_profiles.user_id} />
             </TabsContent>
           </Tabs>
+            </div>
           </DialogContent>
         </Dialog>
       )}
