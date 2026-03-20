@@ -1,6 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import usBgMountain from "@/assets/us-background-mountain.png";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,8 +21,11 @@ import {
   Pencil,
   MapPin,
   Instagram,
+  ImagePlus,
+  Loader2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
