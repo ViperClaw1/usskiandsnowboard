@@ -147,6 +147,34 @@ const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
 
 export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: AthleteHomeProps) => {
   const queryClient = useQueryClient();
+  const bgInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingBg, setUploadingBg] = useState(false);
+  const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
+
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please upload an image file"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be less than 10MB"); return; }
+    setUploadingBg(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const ts = Date.now();
+      const path = `${user.id}/bg-${ts}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("athlete-assets").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("athlete-assets").getPublicUrl(path);
+      await supabase.from("athlete_profiles").update({ background_image_url: publicUrl }).eq("user_id", user.id);
+      setLocalBgUrl(publicUrl);
+      queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
+      toast.success("Background image updated!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload background image");
+    } finally {
+      setUploadingBg(false);
+    }
+  };
   const { getText, typography } = useDashboardTextOverrides("athlete");
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<AthleteDashboardData>({
