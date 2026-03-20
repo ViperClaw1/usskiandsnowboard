@@ -1,76 +1,79 @@
 
-## Root cause — complete diagnosis
+## Root cause — definitive
 
-### Two DB triggers on `connection_requests` (previously unknown)
+### Bug 1: `new_request` always sends to the employer, never to the athlete
 
-The database has TWO triggers on `connection_requests`:
-1. `connection_notification_trigger` → calls `create_connection_notification()` — only inserts in-app notifications, harmless
-2. `on_connection_request_event` → calls `notify_connection_event()` — fires `net.http_post` to `send-connection-notification`
+In `send-connection-notification/index.ts`, the `new_request` branch unconditionally sends the "new connection request" email to `employerEmail`. This is wrong when the **employer** is the initiator — in that case, the **athlete** is the recipient and should get the email.
 
-These were always both present. The `connection_notification_trigger` does NOT cause duplicate emails since it doesn't call the edge function.
+The `initiated_by_user_id` field on the request row identifies who initiated. The email must go to the **other party** (the recipient, not the initiator):
 
-### Double invocation source for `new_request`
-
-The `net._http_response` table shows request `id:1101` (from the DB trigger at `15:31:28`) **TIMED OUT** after 5000ms — but `net.http_post` is fire-and-forget: the HTTP request IS sent even if `net.http_post` times out waiting for the response. The edge function was invoked once by the DB trigger.
-
-The edge function was also invoked a second time by a **browser client-side call** (confirmed by the `OPTIONS` CORS preflight in the logs, which DB triggers never send — they make direct server-side HTTP calls). This means there is still a client-side `supabase.functions.invoke("send-connection-notification", ...)` call being made.
-
-### Three remaining client-side invoke calls NOT previously removed
-
-The previous fix only removed calls from `EmployerDirectory.tsx` and `AthleteDirectory.tsx`. Three files still call the edge function directly:
-
-1. **`src/components/connections/ConnectionActivityBoard.tsx`** line 233 — `request_accepted`
-2. **`src/components/athlete/ConnectionRequestsManager.tsx`** line 156 — `request_accepted`
-3. **`src/components/employer/ConnectionRequestsManager.tsx`** line 165 — `request_accepted`
-
-These three cause duplicate `request_accepted` emails to stakeholders and double admin emails on acceptance.
-
-Additionally, the `employer/AthleteDirectory.tsx` component is used to initiate `new_request` — the employer side can still have a stale client invoke if the file wasn't saved correctly, but the code review shows it IS cleaned up. The actual second `new_request` invocation came from `ConnectionActivityBoard.tsx`'s accept/decline path or another code path. However for the test request `5cd0d467` which is a `new_request`, the second invocation must be from elsewhere — likely a race condition where the DB trigger fires the function and separately another component is rendering and re-triggering. The OPTIONS preflight is definitive proof of a browser-side call.
-
-### Why employer email is NULL (bug 2 — stakeholder emails not delivered)
-
-For request `5cd0d467`, `employer_profiles.contact_email` is `NULL` for partner "Cardinal Lands". The edge function correctly reads `contact_email` from `employer_profiles`, which is `null` — so `employerEmail` is `null`. The email is silently skipped since `toAddresses` filters out nulls. 
-
-The fix needs to **fall back to the auth user's email** from `profiles.email` when `contact_email` is null.
-
-## Fixes
-
-### Fix 1 — Remove the three remaining client-side invoke calls
-
-Remove `supabase.functions.invoke("send-connection-notification", ...)` from:
-- `src/components/connections/ConnectionActivityBoard.tsx` (lines 232–238)
-- `src/components/athlete/ConnectionRequestsManager.tsx` (lines 155–162)
-- `src/components/employer/ConnectionRequestsManager.tsx` (lines 164–171)
-
-The DB trigger `on_connection_request_event` handles ALL three notification types (INSERT → `new_request`, UPDATE accepted → `request_accepted`, UPDATE rejected → `request_declined`) — no client-side invocation is needed.
-
-### Fix 2 — Fall back to `profiles.email` when `contact_email` is null
-
-In `supabase/functions/send-connection-notification/index.ts`, update the query to also fetch `profiles(email)` for the employer, and use it as a fallback when `contact_email` is null:
-
-```ts
-// current
-const employerEmail = request.employer_profiles.contact_email;
-
-// fix
-const employerEmail = request.employer_profiles.contact_email 
-  || request.employer_profiles.profiles?.email 
-  || null;
+```
+if employer initiated → send to athlete
+if athlete initiated  → send to employer  ← currently the only path
 ```
 
-The select query must be updated to include `profiles(email, full_name, first_name, last_name)` for employer (it already selects profiles but not `email`).
+The fix: read `initiated_by_user_id` and compare to `athleteUserId` / `employerUserId` to decide who to email.
 
-### Fix 3 — Add logging to confirm email addresses at send time
+### Bug 2: `request_accepted` was never tested with the current deployment
 
-Add `console.log` statements before each `sendEmail` call to output the resolved `athleteEmail` and `employerEmail` — makes future debugging immediate.
+All real acceptances happened before today's redeployment. There are no `request_accepted` logs for the new build, so we cannot confirm if it works. However, the code path for `request_accepted` sends to `toAddresses = [athleteEmail, employerEmail]` as a single email with both in the `to` field — which is correct for the joint introduction email. The `shouldSendEmail` check is not called for `request_accepted`, so preferences don't block it. This path looks correct in the current code.
 
-### Fix 4 — Redeploy the edge function
+### Bug 3 (contributing): `shouldSendEmail` is called for `new_request` using the employer's userId — but when the employer initiates, `shouldSendEmail` is still called on the employer, not on the athlete who is the recipient
 
-After the code change, redeploy `send-connection-notification` so the updated fallback logic is live.
+After the fix for Bug 1, we must also pass the **recipient's** userId to `shouldSendEmail`, not always the employer's.
+
+## Fix — single file change in the edge function
+
+In `supabase/functions/send-connection-notification/index.ts`, replace the `new_request` block (lines 264–281) with logic that:
+
+1. Determines the **recipient** (non-initiator) from `initiated_by_user_id`
+2. Sends the email to the recipient's email address
+3. Calls `shouldSendEmail` against the recipient's userId
+4. Adds an "athlete receives new request from employer" email body builder for when the athlete is the recipient
+
+### Specific change
+
+```ts
+// Current (always sends to employer):
+const sendEmail_ = employerUserId ? await shouldSendEmail(supabase, employerUserId, "new_request") : true;
+if (sendEmail_ && employerEmail) {
+  await sendEmail(resend, { ..., to: [employerEmail], ... });
+}
+
+// Fix (sends to the recipient — whoever did NOT initiate):
+const recipientIsAthlete = request.initiated_by_user_id === employerUserId;
+const recipientEmail    = recipientIsAthlete ? athleteEmail    : employerEmail;
+const recipientUserId   = recipientIsAthlete ? athleteUserId   : employerUserId;
+const recipientName     = recipientIsAthlete ? athleteFullName : companyName;
+const senderName        = recipientIsAthlete ? companyName     : athleteFullName;
+
+const shouldSend = recipientUserId
+  ? await shouldSendEmail(supabase, recipientUserId, "new_request")
+  : true;
+
+if (shouldSend && recipientEmail) {
+  const emailBody = recipientIsAthlete
+    ? athleteNewRequestBody(recipientName, senderName, request, appUrl)  // new helper
+    : newRequestBody(companyName, athleteFullName, request, appUrl);     // existing
+  await sendEmail(resend, {
+    from: FROM,
+    to: [recipientEmail],
+    subject: recipientIsAthlete
+      ? `New Connection Request from ${senderName}`
+      : `New Connection Request from ${athleteFullName}`,
+    html: emailTemplate("New Connection Request", emailBody),
+  });
+  console.log(`New request email sent to ${recipientEmail}`);
+}
+
+// SMS: send to recipient
+const smsUserId = recipientIsAthlete ? athleteUserId : employerUserId;
+if (smsUserId) { ... }
+```
+
+A new `athleteNewRequestBody` helper is added that greets the athlete and shows the company details (mirrors `newRequestBody` but inverted).
 
 ## Files changed
 
-- `src/components/connections/ConnectionActivityBoard.tsx` — remove client-side invoke
-- `src/components/athlete/ConnectionRequestsManager.tsx` — remove client-side invoke
-- `src/components/employer/ConnectionRequestsManager.tsx` — remove client-side invoke
-- `supabase/functions/send-connection-notification/index.ts` — add email fallback + debug logs
+- `supabase/functions/send-connection-notification/index.ts` — fix `new_request` routing + add athlete-facing email body
+- Redeploy the function after the change
