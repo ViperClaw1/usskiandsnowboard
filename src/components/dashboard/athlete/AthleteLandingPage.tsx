@@ -297,9 +297,9 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             </div>
 
             {/* Spacer + completion card */}
-            <div className="px-4 sm:px-6 pb-0 sm:pb-6 pt-0 sm:pt-20">
+            <div className={`px-4 sm:px-6 ${completeness < 100 ? "pb-4 sm:pb-6 pt-0 sm:pt-0" : "pb-0 sm:pb-6 pt-0 sm:pt-20"}`}>
               {completeness < 100 && (
-                <div className="flex justify-end">
+                <div className="flex justify-end items-end">
                   <Card className="w-full sm:w-64 shrink-0">
                     <CardContent className="pt-6">
                       <div className="space-y-2">
