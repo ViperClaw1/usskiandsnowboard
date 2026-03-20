@@ -28,6 +28,7 @@ const statusColors: Record<string, string> = {
 export const WaitlistManager = () => {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<WaitlistApplicant | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ id: string; action: "approve" | "decline" } | null>(null);
 
   const { data: applicants = [], isLoading } = useQuery({
     queryKey: ["waitlist-applicants"],
@@ -43,6 +44,7 @@ export const WaitlistManager = () => {
 
   const decisionMutation = useMutation({
     mutationFn: async ({ applicant_id, action }: { applicant_id: string; action: "approve" | "decline" }) => {
+      setPendingAction({ id: applicant_id, action });
       const { error } = await supabase.functions.invoke("handle-waitlist-decision", {
         body: { applicant_id, action },
       });
@@ -56,9 +58,11 @@ export const WaitlistManager = () => {
       );
       queryClient.invalidateQueries({ queryKey: ["waitlist-applicants"] });
       setSelected(null);
+      setPendingAction(null);
     },
     onError: (error: any) => {
       toast.error(`Failed: ${error.message}`);
+      setPendingAction(null);
     },
   });
 
@@ -145,7 +149,7 @@ export const WaitlistManager = () => {
                               onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "approve" })}
                               disabled={decisionMutation.isPending}
                             >
-                              {decisionMutation.isPending ? (
+                              {pendingAction?.id === applicant.id && pendingAction?.action === "approve" ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : (
                                 <CheckCircle className="h-3.5 w-3.5 mr-1" />
@@ -159,7 +163,7 @@ export const WaitlistManager = () => {
                               onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "decline" })}
                               disabled={decisionMutation.isPending}
                             >
-                              {decisionMutation.isPending ? (
+                              {pendingAction?.id === applicant.id && pendingAction?.action === "decline" ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : (
                                 <XCircle className="h-3.5 w-3.5 mr-1" />
@@ -228,7 +232,7 @@ export const WaitlistManager = () => {
                         onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "approve" })}
                         disabled={decisionMutation.isPending}
                       >
-                        {decisionMutation.isPending ? (
+                        {pendingAction?.id === applicant.id && pendingAction?.action === "approve" ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
                           <CheckCircle className="h-3.5 w-3.5" />
@@ -242,7 +246,7 @@ export const WaitlistManager = () => {
                         onClick={() => decisionMutation.mutate({ applicant_id: applicant.id, action: "decline" })}
                         disabled={decisionMutation.isPending}
                       >
-                        {decisionMutation.isPending ? (
+                        {pendingAction?.id === applicant.id && pendingAction?.action === "decline" ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
                           <XCircle className="h-3.5 w-3.5" />
@@ -326,7 +330,7 @@ export const WaitlistManager = () => {
                       onClick={() => decisionMutation.mutate({ applicant_id: selected.id, action: "approve" })}
                       disabled={decisionMutation.isPending}
                     >
-                      {decisionMutation.isPending ? (
+                      {pendingAction?.id === selected.id && pendingAction?.action === "approve" ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <CheckCircle className="mr-2 h-4 w-4" />
@@ -339,7 +343,7 @@ export const WaitlistManager = () => {
                       onClick={() => decisionMutation.mutate({ applicant_id: selected.id, action: "decline" })}
                       disabled={decisionMutation.isPending}
                     >
-                      {decisionMutation.isPending ? (
+                      {pendingAction?.id === selected.id && pendingAction?.action === "decline" ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <XCircle className="mr-2 h-4 w-4" />
