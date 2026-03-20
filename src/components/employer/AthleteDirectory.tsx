@@ -385,15 +385,7 @@ const AthleteDirectory = () => {
 
       if (error) throw error;
 
-      if (insertedRequest?.id) {
-        try {
-          await supabase.functions.invoke("send-connection-notification", {
-            body: { notification_type: "new_request", request_id: insertedRequest.id },
-          });
-        } catch (notificationError) {
-          console.error("Error sending notification:", notificationError);
-        }
-      }
+      // Notification is handled automatically by the database trigger
 
       toast.success("Connection request sent!");
       setRequestMessage("");
