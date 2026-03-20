@@ -229,14 +229,7 @@ export const ConnectionActivityBoard = ({
         .eq("id", actionRow.id);
       if (error) throw error;
 
-      try {
-        await supabase.functions.invoke("send-connection-notification", {
-          body: { notification_type: "request_accepted", request_id: actionRow.id },
-        });
-      } catch (e) {
-        console.error("Notification error:", e);
-      }
-
+      // DB trigger on_connection_request_event fires send-connection-notification automatically
       toast.success(`Connected with ${actionRow.counterpartName}`);
       queryClient.invalidateQueries({ queryKey });
       onActionComplete?.();

@@ -161,14 +161,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
 
       if (error) throw error;
 
-      if (data?.id) {
-        await supabase.functions.invoke('send-connection-notification', {
-          body: {
-            notification_type: 'request_accepted',
-            request_id: data.id,
-          }
-        });
-      }
+      // DB trigger on_connection_request_event fires send-connection-notification automatically
 
       // Get user email
       const { data: { user } } = await supabase.auth.getUser();

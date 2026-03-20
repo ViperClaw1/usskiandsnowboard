@@ -216,8 +216,8 @@ const handler = async (req: Request): Promise<Response> => {
       .from("connection_requests")
       .select(`
         *,
-        athlete_profiles (email, sport_discipline, bio, user_id, phone, profiles (full_name, first_name, last_name)),
-        employer_profiles (company_name, industry, about, contact_email, contact_person, contact_title, user_id, phone, profiles (full_name, first_name, last_name))
+        athlete_profiles (email, sport_discipline, bio, user_id, phone, profiles (full_name, first_name, last_name, email)),
+        employer_profiles (company_name, industry, about, contact_email, contact_person, contact_title, user_id, phone, profiles (full_name, first_name, last_name, email))
       `)
       .eq("id", request_id)
       .single();
@@ -227,14 +227,24 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Connection request not found");
     }
 
-    const athleteEmail = request.athlete_profiles.email;
-    const employerEmail = request.employer_profiles.contact_email;
+    const athleteProfiles = request.athlete_profiles.profiles as any;
+    const employerProfiles = request.employer_profiles.profiles as any;
+
+    // Athlete email: prefer athlete_profiles.email, fall back to auth profile email
+    const athleteEmail: string | null =
+      request.athlete_profiles.email || athleteProfiles?.email || null;
+
+    // Employer email: prefer contact_email, fall back to auth profile email
+    const employerEmail: string | null =
+      request.employer_profiles.contact_email || employerProfiles?.email || null;
+
+    console.log(`Resolved emails — athlete: ${athleteEmail ?? "NULL"}, employer: ${employerEmail ?? "NULL"}`);
+
     const athleteUserId = request.athlete_profiles.user_id;
     const employerUserId = request.employer_profiles.user_id;
     const companyName = request.employer_profiles.company_name;
 
     // Resolve athlete name: prefer first_name/last_name, fall back to splitting full_name
-    const athleteProfiles = request.athlete_profiles.profiles as any;
     const athleteFirstName: string =
       athleteProfiles?.first_name || splitName(athleteProfiles?.full_name)[0] || "Athlete";
     const athleteLastName: string =
@@ -243,7 +253,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Resolve employer rep name: prefer contact_person, fall back to profiles.full_name
     const contactPerson: string = request.employer_profiles.contact_person || "";
-    const employerProfiles = request.employer_profiles.profiles as any;
     const repFallbackName = employerProfiles?.full_name || "";
     const [repFirstName, repLastName] = contactPerson
       ? splitName(contactPerson)
