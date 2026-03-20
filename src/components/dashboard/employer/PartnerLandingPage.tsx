@@ -150,8 +150,14 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Please upload an image file"); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be less than 10MB"); return; }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB");
+      return;
+    }
     setUploadingBg(true);
     try {
       const ext = file.name.split(".").pop();
@@ -159,7 +165,9 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
       const path = `${user.id}/bg-${ts}.${ext}`;
       const { error: upErr } = await supabase.storage.from("company-logos").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from("company-logos").getPublicUrl(path);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("company-logos").getPublicUrl(path);
       await supabase.from("employer_profiles").update({ background_image_url: publicUrl }).eq("user_id", user.id);
       setLocalBgUrl(publicUrl);
       queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
@@ -253,7 +261,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
             <div className="relative overflow-visible">
               {/* Background image — on mobile avatar center aligns with this div's bottom */}
               <input ref={bgInputRef} type="file" accept="image/*" onChange={handleBgUpload} className="hidden" />
-              {(localBgUrl || profile?.background_image_url) ? (
+              {localBgUrl || profile?.background_image_url ? (
                 <div
                   className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
                   style={{
@@ -275,9 +283,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                     ) : (
                       <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
-                    <span className="text-sm font-medium">
-                      {uploadingBg ? "Uploading…" : "Add background photo"}
-                    </span>
+                    <span className="text-sm font-medium">{uploadingBg ? "Uploading…" : "Add background photo"}</span>
                   </button>
                 </div>
               )}
@@ -312,7 +318,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between sm:px-6 gap-4">
                   {/* Left — profile info */}
-                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-t-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.logo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
