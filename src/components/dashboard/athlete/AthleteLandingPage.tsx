@@ -154,8 +154,14 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Please upload an image file"); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Image must be less than 10MB"); return; }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB");
+      return;
+    }
     setUploadingBg(true);
     try {
       const ext = file.name.split(".").pop();
@@ -163,7 +169,9 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
       const path = `${user.id}/bg-${ts}.${ext}`;
       const { error: upErr } = await supabase.storage.from("athlete-assets").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from("athlete-assets").getPublicUrl(path);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("athlete-assets").getPublicUrl(path);
       await supabase.from("athlete_profiles").update({ background_image_url: publicUrl }).eq("user_id", user.id);
       setLocalBgUrl(publicUrl);
       queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
@@ -238,11 +246,11 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
           <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
-            {/* Banner — relative so the sm+ absolute block is contained here; parent for avatar alignment on mobile */}
+            {/* Banner — relative container for the absolute profile row on sm+ */}
             <div className="relative overflow-visible">
-              {/* Background image / gradient — on mobile avatar center aligns with this div's bottom */}
+              {/* Background image / gradient */}
               <input ref={bgInputRef} type="file" accept="image/*" onChange={handleBgUpload} className="hidden" />
-              {(localBgUrl || profile?.background_image_url) ? (
+              {localBgUrl || profile?.background_image_url ? (
                 <div
                   className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
                   style={{
@@ -265,7 +273,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
                     <span className="text-sm font-medium">
-                      {uploadingBg ? "Uploading…" : "Add background photo"}
+                      {uploadingBg ? "Uploading\u2026" : "Add background photo"}
                     </span>
                   </button>
                 </div>
@@ -293,11 +301,14 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <Pencil className="h-4 w-4 text-blue-500" />
               </Button>
 
-              {/* Profile info block
-                  <640px : flows below banner, full-width, rounded top corners; -mt-16 so avatar center sits on banner bottom
-                  >=640px: absolute, overlaps banner centre (translate-y-1/2), content-fit width, rounded-tr only */}
+              {/*
+                Profile row — spans the full card width.
+                Mobile  (<640px): flows below banner, -mt-16 so avatar straddles banner edge.
+                sm+ (>=640px): absolute, translate-y-1/2 — left = profile info, right = completion card.
+              */}
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between sm:px-6 gap-4">
+                  {/* Left — profile info */}
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.photo_url || ""} />
@@ -320,7 +331,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       {(profile?.geographic_preferences?.length || profile?.home_mountain) && (
                         <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
-                          {profile?.geographic_preferences?.[0] || profile?.home_mountain || "—"}
+                          {profile?.geographic_preferences?.[0] || profile?.home_mountain || "\u2014"}
                         </p>
                       )}
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -354,42 +365,41 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       )}
                     </div>
                   </div>
+
+                  {/* Right — completion card, only when profile is incomplete */}
+                  {completeness < 100 && (
+                    <Card className="w-full sm:w-64 shrink-0 mx-4 sm:mx-0">
+                      <CardContent className="pt-6">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {getText("hero.profile_complete_label", "Profile Complete")}
+                            </span>
+                            <span className="font-semibold">{completeness}%</span>
+                          </div>
+                          <Progress value={completeness} className="h-2" />
+                          <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                            {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                            <ArrowRight className="ml-1 h-3 w-3" />
+                          </Button>
+                          <AIProfilePopulator
+                            role="athlete"
+                            userId={user.id}
+                            onComplete={() => {
+                              queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
+                              onProfileUpdated?.();
+                            }}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Spacer + completion card */}
-            <div className={`px-4 sm:px-6 pt-0 ${completeness < 100 ? "pb-0 sm:pb-6 sm:pt-0" : "pb-0 sm:pb-6 sm:pt-20"}`}>
-              {completeness < 100 && (
-                <div className="flex justify-end items-end">
-                  <Card className="w-full sm:w-64 shrink-0">
-                    <CardContent className="pt-6">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {getText("hero.profile_complete_label", "Profile Complete")}
-                          </span>
-                          <span className="font-semibold">{completeness}%</span>
-                        </div>
-                        <Progress value={completeness} className="h-2" />
-                        <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                          {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
-                          <ArrowRight className="ml-1 h-3 w-3" />
-                        </Button>
-                        <AIProfilePopulator
-                          role="athlete"
-                          userId={user.id}
-                          onComplete={() => {
-                            queryClient.invalidateQueries({ queryKey: athleteDashboardKey(user.id) });
-                            onProfileUpdated?.();
-                          }}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
+            {/* Spacer — reserves vertical room for the absolutely-positioned profile row on sm+ */}
+            <div className="sm:pt-20 sm:pb-6" />
           </Card>
         </div>
       </section>
