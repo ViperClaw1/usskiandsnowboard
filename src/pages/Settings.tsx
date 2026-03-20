@@ -44,11 +44,10 @@ interface SettingsData {
 const formatPhone = (digits: string): string => {
   const d = digits.replace(/\D/g, "").slice(0, 11);
   if (d.length === 0) return "";
-  if (d.length <= 1) return `+${d}`;
-  if (d.length <= 4) return `+${d[0]} (${d.slice(1)}`;
-  if (d.length <= 7) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4)}`;
-  if (d.length <= 9) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
-  return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9)}`;
+  if (d.length <= 1) return d;
+  if (d.length <= 4) return `${d[0]}-${d.slice(1)}`;
+  if (d.length <= 7) return `${d[0]}-${d.slice(1, 4)}-${d.slice(4)}`;
+  return `${d[0]}-${d.slice(1, 4)}-${d.slice(4, 7)}-${d.slice(7)}`;
 };
 
 const unformatPhone = (value: string): string => value.replace(/\D/g, "");
