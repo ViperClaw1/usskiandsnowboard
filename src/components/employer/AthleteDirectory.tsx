@@ -718,7 +718,7 @@ const AthleteDirectory = () => {
           }}
         >
           <DialogContent className="max-w-3xl">
-            <div className="max-h-[85vh] overflow-y-auto">
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
             <DialogHeader>
               <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
             </DialogHeader>
