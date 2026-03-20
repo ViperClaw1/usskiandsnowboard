@@ -512,28 +512,30 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       {getText("quick_actions.preview_profile", "Preview Profile")}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Profile Preview - How Partners See You</DialogTitle>
-                    </DialogHeader>
-                    <Tabs defaultValue="profile" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="profile">Profile</TabsTrigger>
-                        <TabsTrigger value="achievements">Athlete Content</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="profile" className="mt-4">
-                        {profile && (
-                          <AthleteProfilePreview
-                            profile={{ full_name: profile.profiles?.full_name }}
-                            profileData={profile}
-                            viewMode="public"
-                          />
-                        )}
-                      </TabsContent>
-                      <TabsContent value="achievements" className="mt-4">
-                        {profile && <AthletePortfolioView athleteId={profile.id} />}
-                      </TabsContent>
-                    </Tabs>
+                  <DialogContent className="max-w-4xl">
+                    <div className="max-h-[85vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Profile Preview - How Partners See You</DialogTitle>
+                      </DialogHeader>
+                      <Tabs defaultValue="profile" className="w-full mt-2">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="profile">Profile</TabsTrigger>
+                          <TabsTrigger value="achievements">Athlete Content</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="profile" className="mt-4">
+                          {profile && (
+                            <AthleteProfilePreview
+                              profile={{ full_name: profile.profiles?.full_name }}
+                              profileData={profile}
+                              viewMode="public"
+                            />
+                          )}
+                        </TabsContent>
+                        <TabsContent value="achievements" className="mt-4">
+                          {profile && <AthletePortfolioView athleteId={profile.id} />}
+                        </TabsContent>
+                      </Tabs>
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
