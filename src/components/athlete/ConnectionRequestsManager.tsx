@@ -152,14 +152,7 @@ const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManag
 
       if (error) throw error;
 
-      if (data?.id) {
-        await supabase.functions.invoke('send-connection-notification', {
-          body: {
-            notification_type: 'request_accepted',
-            request_id: data.id,
-          }
-        });
-      }
+      // DB trigger on_connection_request_event fires send-connection-notification automatically
 
       if (selectedRequest) {
         const { data: { user } } = await supabase.auth.getUser();
