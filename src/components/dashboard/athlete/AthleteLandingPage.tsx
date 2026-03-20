@@ -513,7 +513,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl">
-                    <div className="max-h-[85vh] overflow-y-auto">
+                    <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
                       <DialogHeader>
                         <DialogTitle>Profile Preview - How Partners See You</DialogTitle>
                       </DialogHeader>

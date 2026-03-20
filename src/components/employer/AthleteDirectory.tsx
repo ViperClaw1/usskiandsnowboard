@@ -736,7 +736,7 @@ const AthleteDirectory = () => {
                     className={`h-28 rounded-t-lg overflow-hidden ${selectedAthlete.background_image_url ? "bg-cover bg-center" : "bg-gradient-to-br from-primary/20 via-primary/10 to-muted"}`}
                     style={selectedAthlete.background_image_url ? { backgroundImage: `url(${selectedAthlete.background_image_url})` } : undefined}
                   />
-                  <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg">
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
                     <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
                     <AvatarFallback>
                       {selectedAthlete.profiles.full_name
