@@ -44,6 +44,7 @@ export const WaitlistManager = () => {
 
   const decisionMutation = useMutation({
     mutationFn: async ({ applicant_id, action }: { applicant_id: string; action: "approve" | "decline" }) => {
+      setPendingAction({ id: applicant_id, action });
       const { error } = await supabase.functions.invoke("handle-waitlist-decision", {
         body: { applicant_id, action },
       });
@@ -57,9 +58,11 @@ export const WaitlistManager = () => {
       );
       queryClient.invalidateQueries({ queryKey: ["waitlist-applicants"] });
       setSelected(null);
+      setPendingAction(null);
     },
     onError: (error: any) => {
       toast.error(`Failed: ${error.message}`);
+      setPendingAction(null);
     },
   });
 
