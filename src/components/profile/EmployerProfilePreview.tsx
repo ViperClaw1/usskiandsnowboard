@@ -1,14 +1,24 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RefObject } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, MapPin, Users, Globe, Linkedin, Mail, Briefcase } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, MapPin, Users, Globe, Linkedin, Mail, ImagePlus, Loader2 } from "lucide-react";
 
 interface EmployerProfilePreviewProps {
   profile: any;
+  bgInputRef?: RefObject<HTMLInputElement>;
+  onBgUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploadingBg?: boolean;
 }
 
-export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps) => {
+export const EmployerProfilePreview = ({
+  profile,
+  bgInputRef,
+  onBgUpload,
+  uploadingBg,
+}: EmployerProfilePreviewProps) => {
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -18,25 +28,82 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
       .slice(0, 2);
   };
 
+  const bgUrl = profile?.background_image_url;
+  const isOwner = !!onBgUpload;
+
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex items-start gap-4 mb-4">
-        <Avatar className="h-20 w-20">
-          <AvatarImage src={profile?.logo_url} />
-          <AvatarFallback className="bg-primary/10 text-primary text-lg">
+      {/* Banner */}
+      <div className="relative -mx-0 -mt-0 rounded-t-lg overflow-hidden">
+        {bgInputRef && onBgUpload && (
+          <input
+            ref={bgInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onBgUpload}
+          />
+        )}
+
+        {bgUrl ? (
+          <div
+            className="h-28 bg-cover bg-center"
+            style={{ backgroundImage: `url(${bgUrl})` }}
+          />
+        ) : (
+          <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+            {isOwner && !uploadingBg && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-background/80 backdrop-blur-sm"
+                onClick={() => bgInputRef?.current?.click()}
+              >
+                <ImagePlus className="h-4 w-4 mr-2" />
+                Add background photo
+              </Button>
+            )}
+            {isOwner && uploadingBg && (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            )}
+          </div>
+        )}
+
+        {isOwner && bgUrl && (
+          <button
+            className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 text-xs font-medium hover:bg-background/95 transition-colors"
+            onClick={() => bgInputRef?.current?.click()}
+            disabled={uploadingBg}
+          >
+            {uploadingBg ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <ImagePlus className="h-3 w-3" />
+            )}
+            Change photo
+          </button>
+        )}
+
+        {/* Straddling logo avatar */}
+        <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg bg-background">
+          {profile?.logo_url ? (
+            <AvatarImage src={profile.logo_url} className="object-contain p-1" />
+          ) : null}
+          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
             {getInitials(profile?.company_name || "")}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold">{profile?.company_name}</h2>
-          {profile?.industry && (
-            <p className="text-muted-foreground flex items-center gap-1 mt-1">
-              <Building2 className="h-4 w-4" />
-              {profile.industry}
-            </p>
-          )}
-        </div>
+      </div>
+
+      {/* Name / industry — padded to clear the protruding avatar */}
+      <div className="pt-10 pb-2">
+        <h2 className="text-2xl font-bold leading-tight">{profile?.company_name}</h2>
+        {profile?.industry && (
+          <p className="text-muted-foreground flex items-center gap-1 mt-1">
+            <Building2 className="h-4 w-4" />
+            {profile.industry}
+          </p>
+        )}
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
@@ -140,9 +207,9 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
                   {profile.job_board_url && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1">Company Job Board</p>
-                      <a 
-                        href={profile.job_board_url} 
-                        target="_blank" 
+                      <a
+                        href={profile.job_board_url}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-primary hover:underline break-all"
                       >
@@ -150,7 +217,7 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
                       </a>
                     </div>
                   )}
-                  
+
                   {profile.individual_roles && profile.individual_roles.length > 0 && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-2">Featured Roles</p>
@@ -166,9 +233,9 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
                               </div>
                               <span className="text-xs text-muted-foreground shrink-0">{role.type}</span>
                             </div>
-                            <a 
-                              href={role.url} 
-                              target="_blank" 
+                            <a
+                              href={role.url}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-primary hover:underline break-all"
                             >
@@ -179,14 +246,14 @@ export const EmployerProfilePreview = ({ profile }: EmployerProfilePreviewProps)
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="border-t pt-4 mt-4">
                     <p className="text-sm text-muted-foreground">
                       View all opportunities on the{" "}
                       {profile.job_board_url ? (
-                        <a 
-                          href={profile.job_board_url} 
-                          target="_blank" 
+                        <a
+                          href={profile.job_board_url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline font-medium"
                         >
