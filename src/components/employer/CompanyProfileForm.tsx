@@ -99,7 +99,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
     resolver: zodResolver(formSchema),
     defaultValues: {
       company_name: existingProfile?.company_name || "",
-      phone: existingProfile?.phone || "",
+      phone: formatPhone(unformatPhone(existingProfile?.phone || "")),
       industry: existingProfile?.industry || "",
       company_size: existingProfile?.company_size || "",
       hq_location: existingProfile?.hq_location || "",
