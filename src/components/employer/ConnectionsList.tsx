@@ -362,7 +362,8 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
 
       {selectedConnection && (
         <Dialog open={!!selectedConnection} onOpenChange={() => setSelectedConnection(null)}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
+            <div className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {selectedConnection.athlete_profiles.profiles?.full_name || "Athlete Profile"}
@@ -377,15 +378,11 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
 
               <TabsContent value="profile" className="space-y-6 mt-4">
                 {/* Banner */}
-                <div className="relative -mx-6 -mt-4 rounded-t-lg overflow-hidden">
-                  {selectedConnection.athlete_profiles.background_image_url ? (
-                    <div
-                      className="h-28 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${selectedConnection.athlete_profiles.background_image_url})` }}
-                    />
-                  ) : (
-                    <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
-                  )}
+                <div className="relative -mx-6 -mt-4">
+                  <div
+                    className={`h-28 rounded-t-lg overflow-hidden ${selectedConnection.athlete_profiles.background_image_url ? "bg-cover bg-center" : "bg-gradient-to-br from-primary/20 via-primary/10 to-muted"}`}
+                    style={selectedConnection.athlete_profiles.background_image_url ? { backgroundImage: `url(${selectedConnection.athlete_profiles.background_image_url})` } : undefined}
+                  />
                   <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg">
                     <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
                     <AvatarFallback>AT</AvatarFallback>

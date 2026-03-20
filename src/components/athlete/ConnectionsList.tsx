@@ -254,8 +254,10 @@ const ConnectionsList = ({ athleteProfileId, status }: ConnectionsListProps) => 
 
       {selectedConnection && (
         <Dialog open={!!selectedConnection} onOpenChange={() => setSelectedConnection(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <EmployerProfilePreview profile={selectedConnection.employer_profiles} />
+          <DialogContent className="max-w-4xl">
+            <div className="max-h-[85vh] overflow-y-auto">
+              <EmployerProfilePreview profile={selectedConnection.employer_profiles} />
+            </div>
           </DialogContent>
         </Dialog>
       )}
