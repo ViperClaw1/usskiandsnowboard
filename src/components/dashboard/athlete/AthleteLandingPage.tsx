@@ -309,7 +309,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between sm:px-6 gap-4">
                   {/* Left — profile info */}
-                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-t-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.photo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
@@ -512,30 +512,28 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       {getText("quick_actions.preview_profile", "Preview Profile")}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-                      <DialogHeader>
-                        <DialogTitle>Profile Preview - How Partners See You</DialogTitle>
-                      </DialogHeader>
-                      <Tabs defaultValue="profile" className="w-full mt-2">
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="profile">Profile</TabsTrigger>
-                          <TabsTrigger value="achievements">Athlete Content</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="profile" className="mt-4">
-                          {profile && (
-                            <AthleteProfilePreview
-                              profile={{ full_name: profile.profiles?.full_name }}
-                              profileData={profile}
-                              viewMode="public"
-                            />
-                          )}
-                        </TabsContent>
-                        <TabsContent value="achievements" className="mt-4">
-                          {profile && <AthletePortfolioView athleteId={profile.id} />}
-                        </TabsContent>
-                      </Tabs>
-                    </div>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Profile Preview - How Partners See You</DialogTitle>
+                    </DialogHeader>
+                    <Tabs defaultValue="profile" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="profile">Profile</TabsTrigger>
+                        <TabsTrigger value="achievements">Athlete Content</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="profile" className="mt-4">
+                        {profile && (
+                          <AthleteProfilePreview
+                            profile={{ full_name: profile.profiles?.full_name }}
+                            profileData={profile}
+                            viewMode="public"
+                          />
+                        )}
+                      </TabsContent>
+                      <TabsContent value="achievements" className="mt-4">
+                        {profile && <AthletePortfolioView athleteId={profile.id} />}
+                      </TabsContent>
+                    </Tabs>
                   </DialogContent>
                 </Dialog>
               </div>
