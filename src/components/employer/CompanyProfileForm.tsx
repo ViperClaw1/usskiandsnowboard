@@ -224,7 +224,7 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
       const profileData = {
         user_id: userId,
         company_name: values.company_name,
-        phone: values.phone || null,
+        phone: values.phone ? unformatPhone(values.phone) || null : null,
         industry: values.industry || null,
         company_size: values.company_size || null,
         hq_location: values.hq_location || null,
