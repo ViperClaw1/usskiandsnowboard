@@ -1,79 +1,53 @@
 
-## Root cause — definitive
+## Background banners in profile dialogs — final plan
 
-### Bug 1: `new_request` always sends to the employer, never to the athlete
+### Behaviour summary
 
-In `send-connection-notification/index.ts`, the `new_request` branch unconditionally sends the "new connection request" email to `employerEmail`. This is wrong when the **employer** is the initiator — in that case, the **athlete** is the recipient and should get the email.
+Every profile dialog header gets a `h-28` background image banner. Avatar/logo straddles the banner's bottom edge (`absolute -bottom-8 left-6 h-16 w-16 border-4 border-background`). When `background_image_url` is null: show the gradient placeholder. When the viewer is the owner: show the "Add background photo" CTA inside the gradient and the "Change photo" pill when an image exists.
 
-The `initiated_by_user_id` field on the request row identifies who initiated. The email must go to the **other party** (the recipient, not the initiator):
+---
 
-```
-if employer initiated → send to athlete
-if athlete initiated  → send to employer  ← currently the only path
-```
+### Files to change (8)
 
-The fix: read `initiated_by_user_id` and compare to `athleteUserId` / `employerUserId` to decide who to email.
+#### 1. `src/components/profile/AthleteProfilePreview.tsx`
+Add 3 optional props (`bgInputRef`, `onBgUpload`, `uploadingBg`). Replace the flat header block (lines 22–40) with:
+- Outer `div relative -mx-6 -mt-6` flush to dialog edges
+- Banner div `h-28` — either bg image or gradient + optional "Add background photo" CTA
+- Optional "Change photo" pill `absolute top-2 left-2`
+- Avatar `absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg`
+- Name/sport in a `pt-10 pb-2 px-6` block below
 
-### Bug 2: `request_accepted` was never tested with the current deployment
+Imports to add: `ImagePlus`, `Loader2`.
 
-All real acceptances happened before today's redeployment. There are no `request_accepted` logs for the new build, so we cannot confirm if it works. However, the code path for `request_accepted` sends to `toAddresses = [athleteEmail, employerEmail]` as a single email with both in the `to` field — which is correct for the joint introduction email. The `shouldSendEmail` check is not called for `request_accepted`, so preferences don't block it. This path looks correct in the current code.
+#### 2. `src/components/dashboard/athlete/AthleteLandingPage.tsx`
+In the "Preview Profile" dialog (~line 526), pass the already-existing `bgInputRef`, `handleBgUpload`, `uploadingBg` to `<AthleteProfilePreview>` as upload props.
 
-### Bug 3 (contributing): `shouldSendEmail` is called for `new_request` using the employer's userId — but when the employer initiates, `shouldSendEmail` is still called on the employer, not on the athlete who is the recipient
+#### 3. `src/components/profile/EmployerProfilePreview.tsx`
+Same 3 optional props. Replace the flat header block (lines 22–40) with the same banner + straddling-logo-avatar pattern. The rest of the component (Tabs, about section, etc.) stays unchanged but content gains `pt-10` clearance.
 
-After the fix for Bug 1, we must also pass the **recipient's** userId to `shouldSendEmail`, not always the employer's.
+#### 4. `src/components/dashboard/EmployerDashboard.tsx`
+Add `bgInputRef`, `uploadingBg` state, and `handleBgUpload` (upload to `company-logos` bucket, update `employer_profiles.background_image_url`, invalidate the employer profile query). Pass these to `<EmployerProfilePreview>` at line ~196. Imports: `useRef`, `useState`, `ImagePlus`, `Loader2`.
 
-## Fix — single file change in the edge function
+#### 5. `src/components/employer/AthleteDirectory.tsx`
+- Add `background_image_url: string | null` to the `AthleteProfile` interface
+- In the athlete detail dialog (~lines 730–750), replace the plain flex header with the display-only banner (gradient or image, no upload controls)
 
-In `supabase/functions/send-connection-notification/index.ts`, replace the `new_request` block (lines 264–281) with logic that:
+#### 6. `src/components/employer/ConnectionsList.tsx`
+- Add `background_image_url: string | null` to the `Connection.athlete_profiles` nested interface
+- Add `background_image_url` to the Supabase `.select()` around line 94
+- In the dialog header (~lines 376–390), replace with the display-only banner
 
-1. Determines the **recipient** (non-initiator) from `initiated_by_user_id`
-2. Sends the email to the recipient's email address
-3. Calls `shouldSendEmail` against the recipient's userId
-4. Adds an "athlete receives new request from employer" email body builder for when the athlete is the recipient
+#### 7. `src/components/athlete/EmployerDirectory.tsx`
+- Add `background_image_url: string | null` to `EmployerProfile` interface
+- In the employer detail dialog (~lines 641–660), replace the plain flex header with display-only banner
 
-### Specific change
+#### 8. `src/components/athlete/ConnectionsList.tsx`
+- Add `background_image_url: string | null` to the inline `employer_profiles` type inside `Connection`
+- Add `background_image_url` to the Supabase `.select()` around line 80
+- The `<EmployerProfilePreview>` used here (line 256) renders display-only automatically (no upload props passed) — covered by change 3
 
-```ts
-// Current (always sends to employer):
-const sendEmail_ = employerUserId ? await shouldSendEmail(supabase, employerUserId, "new_request") : true;
-if (sendEmail_ && employerEmail) {
-  await sendEmail(resend, { ..., to: [employerEmail], ... });
-}
+---
 
-// Fix (sends to the recipient — whoever did NOT initiate):
-const recipientIsAthlete = request.initiated_by_user_id === employerUserId;
-const recipientEmail    = recipientIsAthlete ? athleteEmail    : employerEmail;
-const recipientUserId   = recipientIsAthlete ? athleteUserId   : employerUserId;
-const recipientName     = recipientIsAthlete ? athleteFullName : companyName;
-const senderName        = recipientIsAthlete ? companyName     : athleteFullName;
+### No DB migrations needed
 
-const shouldSend = recipientUserId
-  ? await shouldSendEmail(supabase, recipientUserId, "new_request")
-  : true;
-
-if (shouldSend && recipientEmail) {
-  const emailBody = recipientIsAthlete
-    ? athleteNewRequestBody(recipientName, senderName, request, appUrl)  // new helper
-    : newRequestBody(companyName, athleteFullName, request, appUrl);     // existing
-  await sendEmail(resend, {
-    from: FROM,
-    to: [recipientEmail],
-    subject: recipientIsAthlete
-      ? `New Connection Request from ${senderName}`
-      : `New Connection Request from ${athleteFullName}`,
-    html: emailTemplate("New Connection Request", emailBody),
-  });
-  console.log(`New request email sent to ${recipientEmail}`);
-}
-
-// SMS: send to recipient
-const smsUserId = recipientIsAthlete ? athleteUserId : employerUserId;
-if (smsUserId) { ... }
-```
-
-A new `athleteNewRequestBody` helper is added that greets the athlete and shows the company details (mirrors `newRequestBody` but inverted).
-
-## Files changed
-
-- `supabase/functions/send-connection-notification/index.ts` — fix `new_request` routing + add athlete-facing email body
-- Redeploy the function after the change
+`background_image_url` already exists on both `athlete_profiles` and `employer_profiles`.
