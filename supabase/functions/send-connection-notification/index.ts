@@ -89,8 +89,7 @@ async function shouldSendEmail(
     .eq("user_id", userId)
     .maybeSingle();
   if (!prefs) return true;
-  if (prefs.digest_frequency === "off") return false;
-  if (prefs.digest_frequency !== "instant") return false;
+  // Only gate on explicit per-event toggles; digest_frequency is for digest delivery only
   if (notificationType === "new_request" && !prefs.email_new_requests) return false;
   if (notificationType === "request_accepted" && !prefs.email_accepted_connections) return false;
   return true;
