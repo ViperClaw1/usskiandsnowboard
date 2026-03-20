@@ -137,6 +137,35 @@ function newRequestBody(companyName: string, athleteName: string, request: any, 
     </table>`;
 }
 
+function athleteNewRequestBody(athleteName: string, companyName: string, request: any, appUrl: string): string {
+  return `
+    <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>${athleteName}</strong>,</p>
+    <p style="margin: 0 0 30px; font-size: 16px;">
+      You have received a new connection request from <strong>${companyName}</strong>!
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 12px; font-size: 15px; font-weight: bold; color: #0066cc;">Partner Profile</p>
+          <p style="margin: 0 0 8px; font-size: 15px;"><strong>Company:</strong> ${companyName}</p>
+          ${request.employer_profiles.industry ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>Industry:</strong> ${request.employer_profiles.industry}</p>` : ""}
+          ${request.employer_profiles.about ? `<p style="margin: 0 0 8px; font-size: 15px;"><strong>About:</strong> ${request.employer_profiles.about}</p>` : ""}
+          ${request.message ? `<p style="margin: 0; font-size: 15px;"><strong>Message:</strong> ${request.message}</p>` : ""}
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0 0 30px; font-size: 16px;">
+      Log in to your dashboard to review this request and connect with ${companyName}.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <a href="${appUrl}/dashboard" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Request</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
 /**
  * Builds the joint introduction email body sent to both parties on connection acceptance.
  */
