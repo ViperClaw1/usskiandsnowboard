@@ -252,14 +252,46 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
             {/* Banner — relative so the sm+ absolute block is contained here; parent for avatar alignment on mobile */}
             <div className="relative overflow-visible">
               {/* Background image — on mobile avatar center aligns with this div's bottom */}
-              <div
-                className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
-                style={{
-                  backgroundImage: `url(${profile?.background_image_url || usBgMountain})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              />
+              <input ref={bgInputRef} type="file" accept="image/*" onChange={handleBgUpload} className="hidden" />
+              {(localBgUrl || profile?.background_image_url) ? (
+                <div
+                  className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
+                  style={{
+                    backgroundImage: `url(${localBgUrl || profile?.background_image_url})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+              ) : (
+                <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => bgInputRef.current?.click()}
+                    disabled={uploadingBg}
+                    className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+                  >
+                    {uploadingBg ? (
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {uploadingBg ? "Uploading…" : "Add background photo"}
+                    </span>
+                  </button>
+                </div>
+              )}
+              {(localBgUrl || profile?.background_image_url) && (
+                <button
+                  type="button"
+                  onClick={() => bgInputRef.current?.click()}
+                  disabled={uploadingBg}
+                  className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-background/80 hover:bg-background text-foreground shadow transition-colors"
+                >
+                  {uploadingBg ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                  Change photo
+                </button>
+              )}
 
               {/* Edit button */}
               <Button
