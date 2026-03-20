@@ -27,7 +27,7 @@ export const TypographyControls = ({ typography, onUpdate, disabled }: Typograph
         onValueChange={(v) => onUpdate({ ...typography, fontFamily: v })}
         disabled={disabled}
       >
-        <SelectTrigger className="h-8 w-36 text-xs">
+        <SelectTrigger className="h-9 w-36 text-xs">
           <SelectValue placeholder="Font" />
         </SelectTrigger>
         <SelectContent>
@@ -43,7 +43,7 @@ export const TypographyControls = ({ typography, onUpdate, disabled }: Typograph
         onValueChange={(v) => onUpdate({ ...typography, fontSize: v })}
         disabled={disabled}
       >
-        <SelectTrigger className="h-8 w-20 text-xs">
+        <SelectTrigger className="h-9 w-20 text-xs">
           <SelectValue placeholder="Size" />
         </SelectTrigger>
         <SelectContent>
