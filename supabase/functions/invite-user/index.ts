@@ -28,7 +28,10 @@ serve(async (req) => {
     if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
     // Check admin role
@@ -59,21 +62,26 @@ serve(async (req) => {
           user_metadata: {
             first_name: firstName || existingUser.user_metadata?.first_name || "",
             last_name: lastName || existingUser.user_metadata?.last_name || "",
-            full_name: `${firstName || existingUser.user_metadata?.first_name || ""} ${lastName || existingUser.user_metadata?.last_name || ""}`.trim(),
+            full_name:
+              `${firstName || existingUser.user_metadata?.first_name || ""} ${lastName || existingUser.user_metadata?.last_name || ""}`.trim(),
           },
         });
       }
 
       const { data: existingProfile } = await supabaseAdmin.from("profiles").select("id").eq("id", userId).single();
       if (existingProfile) {
-        await supabaseAdmin.from("profiles").update({
-          first_name: firstName || null,
-          last_name: lastName || null,
-          full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
-        }).eq("id", userId);
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            first_name: firstName || null,
+            last_name: lastName || null,
+            full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
+          })
+          .eq("id", userId);
       } else {
         await supabaseAdmin.from("profiles").insert({
-          id: userId, email,
+          id: userId,
+          email,
           first_name: firstName || null,
           last_name: lastName || null,
           full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
@@ -81,7 +89,11 @@ serve(async (req) => {
       }
 
       const { data: existingRole } = await supabaseAdmin
-        .from("user_roles").select("role").eq("user_id", userId).eq("role", role).single();
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", role)
+        .single();
       if (!existingRole) {
         await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
       }
@@ -97,25 +109,48 @@ serve(async (req) => {
           full_name: `${firstName || ""} ${lastName || ""}`.trim(),
         },
       });
-      if (createError) { console.error("Error creating user:", createError); throw createError; }
+      if (createError) {
+        console.error("Error creating user:", createError);
+        throw createError;
+      }
 
       console.log("User created successfully:", newUser.user.id);
       userId = newUser.user.id;
 
-      const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
-        { id: userId, email, first_name: firstName || null, last_name: lastName || null, full_name: `${firstName || ""} ${lastName || ""}`.trim() || null },
-        { onConflict: "id" },
-      );
-      if (profileError) { await supabaseAdmin.auth.admin.deleteUser(userId); throw profileError; }
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .upsert(
+          {
+            id: userId,
+            email,
+            first_name: firstName || null,
+            last_name: lastName || null,
+            full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
+          },
+          { onConflict: "id" },
+        );
+      if (profileError) {
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        throw profileError;
+      }
 
       const { error: roleAssignError } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
-      if (roleAssignError) { await supabaseAdmin.auth.admin.deleteUser(userId); throw roleAssignError; }
+      if (roleAssignError) {
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        throw roleAssignError;
+      }
     }
 
     // Generate password-set link
-    const appUrl = "https://usskiandsnowboard.lovable.app";
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email });
-    if (resetError) { console.error("Error generating reset link:", resetError); throw resetError; }
+    const appUrl = "https://athleteconnection.org/";
+    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "recovery",
+      email,
+    });
+    if (resetError) {
+      console.error("Error generating reset link:", resetError);
+      throw resetError;
+    }
 
     const directLink = `${appUrl}/reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
     console.log("Sending invitation email to:", email);
