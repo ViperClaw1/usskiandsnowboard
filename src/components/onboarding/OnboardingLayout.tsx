@@ -40,7 +40,7 @@ export const OnboardingLayout = ({
       <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 pt-16">
-        <div className="w-full max-w-1xl">
+        <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
             <p className="text-sm text-muted-foreground">
               Step {currentStep + 1} of {totalSteps}
