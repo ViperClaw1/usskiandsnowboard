@@ -28,6 +28,7 @@ const statusColors: Record<string, string> = {
 export const WaitlistManager = () => {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<WaitlistApplicant | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ id: string; action: "approve" | "decline" } | null>(null);
 
   const { data: applicants = [], isLoading } = useQuery({
     queryKey: ["waitlist-applicants"],
