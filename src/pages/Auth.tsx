@@ -311,7 +311,7 @@ const Auth = () => {
       setInviteCodeError("Please enter your invite code.");
       return;
     }
-    if (inviteCodeInput.trim().toUpperCase() !== "GOBIG25") {
+    if (inviteCodeInput.trim().toUpperCase() !== "USSS26") {
       setInviteCodeError("Invalid invite code. Please check and try again.");
       return;
     }
@@ -335,7 +335,7 @@ const Auth = () => {
     setLoading(true);
     try {
       if (step === "signup-with-code") {
-        const validInviteCode = "GOBIG25";
+        const validInviteCode = "USSS26";
         if (inviteCode.trim().toLowerCase() !== validInviteCode.toLowerCase()) {
           setFormError("Invalid invite code.");
           setLoading(false);
@@ -550,7 +550,7 @@ const Auth = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
         <Card className="w-full max-w-md shadow-2xl border-border/50">
-          <LogoHeader title="Please, enter your invite code" description="Enter your 7-digit invite code" />
+          <LogoHeader title="Please, enter your invite code" description="Enter your invite code" />
           <CardContent className="space-y-6">
             <BackButton onClick={() => setStep("landing")} />
 
