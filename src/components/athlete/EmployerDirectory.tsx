@@ -628,7 +628,7 @@ const EmployerDirectory = () => {
       {selectedEmployer && !showRequestDialog && (
         <Dialog open={!!selectedEmployer} onOpenChange={(open) => !open && setSelectedEmployer(null)}>
           <DialogContent className="max-w-3xl">
-            <div className="max-h-[85vh] overflow-y-auto">
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
             <DialogHeader>
               <DialogTitle>{selectedEmployer.company_name}</DialogTitle>
             </DialogHeader>
