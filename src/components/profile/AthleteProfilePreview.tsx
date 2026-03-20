@@ -35,9 +35,9 @@ export const AthleteProfilePreview = ({
   const isOwner = !!onBgUpload;
 
   return (
-    <Card className="overflow-hidden">
+    <Card>
       {/* Banner */}
-      <div className="relative -mx-0 -mt-0">
+      <div className="relative">
         {bgInputRef && onBgUpload && (
           <input
             ref={bgInputRef}
@@ -48,13 +48,14 @@ export const AthleteProfilePreview = ({
           />
         )}
 
+        {/* Image box — overflow-hidden stays here only */}
         {bgUrl ? (
           <div
-            className="h-28 bg-cover bg-center"
+            className="h-28 overflow-hidden rounded-t-lg bg-cover bg-center"
             style={{ backgroundImage: `url(${bgUrl})` }}
           />
         ) : (
-          <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+          <div className="h-28 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
             {isOwner && !uploadingBg && (
               <Button
                 variant="outline"
@@ -72,6 +73,7 @@ export const AthleteProfilePreview = ({
           </div>
         )}
 
+        {/* Change photo pill — outside the clipping box */}
         {isOwner && bgUrl && (
           <button
             className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 text-xs font-medium hover:bg-background/95 transition-colors"
@@ -87,7 +89,7 @@ export const AthleteProfilePreview = ({
           </button>
         )}
 
-        {/* Straddling avatar */}
+        {/* Straddling avatar — outside clipping box, free to overflow */}
         <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg">
           <AvatarImage src={profileData?.photo_url} className="object-cover" />
           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">

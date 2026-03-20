@@ -34,7 +34,7 @@ export const EmployerProfilePreview = ({
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="relative -mx-0 -mt-0 rounded-t-lg overflow-hidden">
+      <div className="relative">
         {bgInputRef && onBgUpload && (
           <input
             ref={bgInputRef}
@@ -45,13 +45,14 @@ export const EmployerProfilePreview = ({
           />
         )}
 
+        {/* Image box — overflow-hidden only here */}
         {bgUrl ? (
           <div
-            className="h-28 bg-cover bg-center"
+            className="h-28 overflow-hidden rounded-t-lg bg-cover bg-center"
             style={{ backgroundImage: `url(${bgUrl})` }}
           />
         ) : (
-          <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+          <div className="h-28 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
             {isOwner && !uploadingBg && (
               <Button
                 variant="outline"
@@ -69,6 +70,7 @@ export const EmployerProfilePreview = ({
           </div>
         )}
 
+        {/* Change photo pill — outside clipping box */}
         {isOwner && bgUrl && (
           <button
             className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-sm px-2 py-1 text-xs font-medium hover:bg-background/95 transition-colors"
@@ -84,7 +86,7 @@ export const EmployerProfilePreview = ({
           </button>
         )}
 
-        {/* Straddling logo avatar */}
+        {/* Straddling logo avatar — outside clipping box, free to overflow */}
         <Avatar className="absolute -bottom-8 left-6 h-16 w-16 border-4 border-background shadow-lg bg-background">
           {profile?.logo_url ? (
             <AvatarImage src={profile.logo_url} className="object-contain p-1" />
