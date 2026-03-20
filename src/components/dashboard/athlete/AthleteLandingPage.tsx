@@ -309,7 +309,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between sm:px-6 gap-4">
                   {/* Left — profile info */}
-                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-t-xl sm:w-fit">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-tr-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.photo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
@@ -368,7 +368,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
 
                   {/* Right — completion card, only when profile is incomplete */}
                   {completeness < 100 && (
-                    <Card className="w-full sm:w-64 shrink-0 mx-4 sm:mx-0">
+                    <Card className="w-72 max-w-[calc(100%-2rem)] mx-auto sm:mx-0 sm:w-64 shrink-0">
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
@@ -527,9 +527,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                             profile={{ full_name: profile.profiles?.full_name }}
                             profileData={profile}
                             viewMode="public"
-                            bgInputRef={bgInputRef}
-                            onBgUpload={handleBgUpload}
-                            uploadingBg={uploadingBg}
                           />
                         )}
                       </TabsContent>
