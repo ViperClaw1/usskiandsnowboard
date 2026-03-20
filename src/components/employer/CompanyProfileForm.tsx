@@ -392,7 +392,16 @@ const CompanyProfileForm = ({ userId, existingProfile, onSuccess }: CompanyProfi
             <FormItem>
               <FormLabel>Phone Number *</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+                <Input
+                  type="tel"
+                  placeholder="1-XXX-XXX-XXXX"
+                  {...field}
+                  value={field.value}
+                  onChange={(e) => {
+                    const digits = unformatPhone(e.target.value);
+                    field.onChange(formatPhone(digits));
+                  }}
+                />
               </FormControl>
               <p className="text-xs text-muted-foreground">
                 Used for account recovery and optional SMS notifications (private, not displayed publicly)
