@@ -18,6 +18,7 @@ interface Connection {
     email: string | null;
     sport_discipline: string | null;
     photo_url: string | null;
+    background_image_url: string | null;
     bio: string | null;
     skills: string[] | null;
     availability: string | null;

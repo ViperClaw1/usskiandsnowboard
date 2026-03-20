@@ -33,6 +33,7 @@ interface EmployerProfile {
   contact_title: string | null;
   contact_email: string | null;
   logo_url: string | null;
+  background_image_url: string | null;
   about: string | null;
   connection_to_ussa: string | null;
   website: string | null;

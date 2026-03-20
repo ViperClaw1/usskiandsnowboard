@@ -33,6 +33,7 @@ interface AthleteProfile {
   sport_discipline: string | null;
   skills: string[] | null;
   photo_url: string | null;
+  background_image_url: string | null;
   availability: string | null;
   career_interests: string[] | null;
   geographic_preferences: string[] | null;
