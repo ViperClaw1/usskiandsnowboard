@@ -47,6 +47,7 @@ interface AthleteDashboardProps {
   onProfileUpdated?: () => void;
   openProfileDialog?: boolean;
   onProfileDialogOpened?: () => void;
+  onRequestAI?: () => void;
 }
 
 // ==============================

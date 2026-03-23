@@ -28,6 +28,7 @@ interface EmployerDashboardProps {
   onProfileUpdated?: () => void;
   openProfileDialog?: boolean;
   onProfileDialogOpened?: () => void;
+  onRequestAI?: () => void;
 }
 
 // ==============================
