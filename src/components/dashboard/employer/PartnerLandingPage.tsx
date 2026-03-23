@@ -86,7 +86,7 @@ interface PartnerLandingPageProps {
   onProfileUpdated?: () => void;
 }
 
-const partnerDashboardKey = (userId: string) => ["partner-landing-dashboard", userId];
+export const partnerDashboardKey = (userId: string) => ["partner-landing-dashboard", userId];
 const partnerFeaturedAthletesKey = ["partner-landing-featured-athletes"];
 
 const fetchPartnerDashboard = async (userId: string): Promise<DashboardData> => {

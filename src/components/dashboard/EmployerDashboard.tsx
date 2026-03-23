@@ -12,7 +12,7 @@ import ConnectionRequestsManager from "@/components/employer/ConnectionRequestsM
 import ConnectionsList from "@/components/employer/ConnectionsList";
 import { ConnectionActivityBoard } from "@/components/connections/ConnectionActivityBoard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
+import { PartnerLandingPage, partnerDashboardKey } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, ClipboardList } from "lucide-react";
