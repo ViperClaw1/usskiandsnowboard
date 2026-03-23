@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X, RefreshCw } from "lucide-react";
+import { Building2, Loader2, FilterX, Link as LinkIcon, Search, X, RefreshCw, ImagePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -644,26 +644,33 @@ const EmployerDirectory = () => {
               <TabsContent value="profile" className="space-y-6 mt-6">
                 {/* Banner */}
                 <div className="relative -mx-6 -mt-6">
-                  <div className={`h-28 rounded-t-lg overflow-hidden ${selectedEmployer.background_image_url ? "bg-cover bg-center" : "bg-gradient-to-br from-primary/20 via-primary/10 to-muted"}`}
-                    style={selectedEmployer.background_image_url ? { backgroundImage: `url(${selectedEmployer.background_image_url})` } : undefined}
-                  />
-                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg bg-background">
-                    {selectedEmployer.logo_url ? (
-                      <AvatarImage
-                        src={selectedEmployer.logo_url}
-                        alt={`${selectedEmployer.company_name} logo`}
-                        className="object-contain p-1"
-                      />
-                    ) : (
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                        {selectedEmployer.company_name
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2)}
-                      </AvatarFallback>
-                    )}
+                  {selectedEmployer.background_image_url ? (
+                    <div
+                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedEmployer.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <ImagePlus className="h-8 w-8" />
+                        <span className="text-sm font-medium">No background photo</span>
+                      </div>
+                    </div>
+                  )}
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                    <AvatarImage
+                      src={selectedEmployer.logo_url ?? undefined}
+                      alt={`${selectedEmployer.company_name} logo`}
+                      className="object-contain p-1"
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                      {selectedEmployer.company_name
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="pt-10 pb-2">
