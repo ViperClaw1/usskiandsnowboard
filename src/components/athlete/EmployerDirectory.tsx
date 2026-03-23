@@ -658,8 +658,13 @@ const EmployerDirectory = () => {
                         className="object-contain p-1"
                       />
                     ) : (
-                      <AvatarFallback>
-                        <Building2 className="h-8 w-8 text-primary" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                        {selectedEmployer.company_name
+                          .split(" ")
+                          .map((w) => w[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
                       </AvatarFallback>
                     )}
                   </Avatar>
