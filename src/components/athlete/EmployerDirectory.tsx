@@ -550,8 +550,13 @@ const EmployerDirectory = () => {
                       className="h-full w-full object-contain p-2"
                     />
                   ) : (
-                    <AvatarFallback>
-                      <Building2 className="h-12 w-12 text-primary" />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                      {employer.company_name
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
                     </AvatarFallback>
                   )}
                 </Avatar>
@@ -653,8 +658,13 @@ const EmployerDirectory = () => {
                         className="object-contain p-1"
                       />
                     ) : (
-                      <AvatarFallback>
-                        <Building2 className="h-8 w-8 text-primary" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                        {selectedEmployer.company_name
+                          .split(" ")
+                          .map((w) => w[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
                       </AvatarFallback>
                     )}
                   </Avatar>
