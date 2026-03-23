@@ -178,6 +178,7 @@ const EmployerDashboard = ({
   const handleProfileComplete = () => {
     setShowProfileDialog(false);
     invalidateProfile();
+    queryClient.invalidateQueries({ queryKey: partnerDashboardKey(user.id) });
     onProfileUpdated?.();
     toast.success("Profile updated successfully!");
   };
