@@ -613,13 +613,14 @@ const AthleteDirectory = () => {
                     alt={athlete.profiles.full_name ?? "Athlete"}
                     className="object-cover"
                   />
-                  <AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
                     {athlete.profiles.full_name
                       ? athlete.profiles.full_name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")
                           .toUpperCase()
+                          .slice(0, 2)
                       : "AT"}
                   </AvatarFallback>
                 </Avatar>
