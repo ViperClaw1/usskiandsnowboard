@@ -171,6 +171,7 @@ const Dashboard = () => {
             onProfileUpdated={() => setRefreshKey((k) => k + 1)}
             openProfileDialog={pendingManualProfile}
             onProfileDialogOpened={() => setPendingManualProfile(false)}
+            onRequestAI={() => setShowAIPopulator(true)}
           />
         );
       case "employer":
@@ -181,6 +182,7 @@ const Dashboard = () => {
             onProfileUpdated={() => setRefreshKey((k) => k + 1)}
             openProfileDialog={pendingManualProfile}
             onProfileDialogOpened={() => setPendingManualProfile(false)}
+            onRequestAI={() => setShowAIPopulator(true)}
           />
         );
       case "admin":
