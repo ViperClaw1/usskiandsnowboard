@@ -733,11 +733,20 @@ const AthleteDirectory = () => {
               <TabsContent value="profile" className="space-y-6 mt-6">
                 {/* Banner */}
                 <div className="relative -mx-6 -mt-6">
-                  <div
-                    className={`h-28 rounded-t-lg overflow-hidden ${selectedAthlete.background_image_url ? "bg-cover bg-center" : "bg-gradient-to-br from-primary/20 via-primary/10 to-muted"}`}
-                    style={selectedAthlete.background_image_url ? { backgroundImage: `url(${selectedAthlete.background_image_url})` } : undefined}
-                  />
-                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg bg-background">
+                  {selectedAthlete.background_image_url ? (
+                    <div
+                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <ImagePlus className="h-8 w-8" />
+                        <span className="text-sm font-medium">No background photo</span>
+                      </div>
+                    </div>
+                  )}
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
                     <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
                     <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                       {selectedAthlete.profiles.full_name
