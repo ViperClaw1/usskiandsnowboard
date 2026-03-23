@@ -316,6 +316,8 @@ const Dashboard = () => {
               userId={user.id}
               onComplete={() => {
                 setShowAIPopulator(false);
+                queryClient.invalidateQueries({ queryKey: ["athlete-landing-dashboard", user.id] });
+                queryClient.invalidateQueries({ queryKey: ["partner-landing-dashboard", user.id] });
                 setRefreshKey((k) => k + 1);
               }}
             />
