@@ -543,22 +543,19 @@ const EmployerDirectory = () => {
             <CardHeader className="pb-3">
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-24 w-24">
-                  {employer.logo_url ? (
-                    <img
-                      src={employer.logo_url}
-                      alt={`${employer.company_name} logo`}
-                      className="h-full w-full object-contain p-2"
-                    />
-                  ) : (
-                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
-                      {employer.company_name
-                        .split(" ")
-                        .map((w) => w[0])
-                        .join("")
-                        .toUpperCase()
-                        .slice(0, 2)}
-                    </AvatarFallback>
-                  )}
+                  <AvatarImage
+                    src={employer.logo_url ?? undefined}
+                    alt={`${employer.company_name} logo`}
+                    className="object-contain p-2"
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                    {employer.company_name
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{employer.company_name}</CardTitle>

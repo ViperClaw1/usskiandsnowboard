@@ -613,13 +613,14 @@ const AthleteDirectory = () => {
                     alt={athlete.profiles.full_name ?? "Athlete"}
                     className="object-cover"
                   />
-                  <AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
                     {athlete.profiles.full_name
                       ? athlete.profiles.full_name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")
                           .toUpperCase()
+                          .slice(0, 2)
                       : "AT"}
                   </AvatarFallback>
                 </Avatar>
@@ -736,15 +737,16 @@ const AthleteDirectory = () => {
                     className={`h-28 rounded-t-lg overflow-hidden ${selectedAthlete.background_image_url ? "bg-cover bg-center" : "bg-gradient-to-br from-primary/20 via-primary/10 to-muted"}`}
                     style={selectedAthlete.background_image_url ? { backgroundImage: `url(${selectedAthlete.background_image_url})` } : undefined}
                   />
-                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg bg-background">
                     <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                       {selectedAthlete.profiles.full_name
                         ? selectedAthlete.profiles.full_name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")
                             .toUpperCase()
+                            .slice(0, 2)
                         : "AT"}
                     </AvatarFallback>
                   </Avatar>
