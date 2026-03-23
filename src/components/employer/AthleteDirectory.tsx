@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw } from "lucide-react";
+import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw, ImagePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
