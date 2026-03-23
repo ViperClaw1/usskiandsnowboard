@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Sparkles, ClipboardList } from "lucide-react";
 
 // ==============================
 // Types

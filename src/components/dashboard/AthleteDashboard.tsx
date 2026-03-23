@@ -15,6 +15,7 @@ import { AthleteLandingPage, athleteDashboardKey } from "@/components/dashboard/
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Sparkles, ClipboardList } from "lucide-react";
 
 // ==============================
 // Global Keyframe Injection
