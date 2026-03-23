@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartnerLandingPage } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Sparkles, ClipboardList } from "lucide-react";
 
 // ==============================
 // Types
@@ -28,6 +29,7 @@ interface EmployerDashboardProps {
   onProfileUpdated?: () => void;
   openProfileDialog?: boolean;
   onProfileDialogOpened?: () => void;
+  onRequestAI?: () => void;
 }
 
 // ==============================
@@ -72,6 +74,7 @@ const EmployerDashboard = ({
   onProfileUpdated,
   openProfileDialog,
   onProfileDialogOpened,
+  onRequestAI,
 }: EmployerDashboardProps) => {
   const queryClient = useQueryClient();
 
@@ -80,6 +83,7 @@ const EmployerDashboard = ({
   // ==============================
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [dialogStep, setDialogStep] = useState<"choice" | "wizard">("choice");
   const [showOpportunitiesDialog, setShowOpportunitiesDialog] = useState(false);
 
   // Background image upload
@@ -272,20 +276,65 @@ const EmployerDashboard = ({
 
       {!isAdminView && (
         <>
-          <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+          <Dialog
+            open={showProfileDialog}
+            onOpenChange={(open) => {
+              setShowProfileDialog(open);
+              if (!open) setDialogStep("choice");
+            }}
+          >
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
-              <DialogHeader>
-                <DialogTitle>{profile ? "Edit Your Company Profile" : "Complete Your Company Profile"}</DialogTitle>
-                <DialogDescription>
-                  {profile
-                    ? "Update your company information and opportunities"
-                    : "Share information about your company and the opportunities you offer"}
-                </DialogDescription>
-              </DialogHeader>
               {profile ? (
-                <CompanyProfileForm userId={user.id} existingProfile={profile} onSuccess={handleProfileComplete} />
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Edit Your Company Profile</DialogTitle>
+                    <DialogDescription>Update your company information and opportunities</DialogDescription>
+                  </DialogHeader>
+                  <CompanyProfileForm userId={user.id} existingProfile={profile} onSuccess={handleProfileComplete} />
+                </>
+              ) : dialogStep === "choice" ? (
+                <>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Complete Your Company Profile
+                    </DialogTitle>
+                    <DialogDescription>Choose how you'd like to get started</DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col gap-3 pt-2">
+                    <Button
+                      onClick={() => {
+                        setShowProfileDialog(false);
+                        setDialogStep("choice");
+                        onRequestAI?.();
+                      }}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Complete with AI
+                    </Button>
+                    <Button variant="outline" onClick={() => setDialogStep("wizard")}>
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Complete Manually
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowProfileDialog(false);
+                        setDialogStep("choice");
+                      }}
+                    >
+                      Skip for now
+                    </Button>
+                  </div>
+                </>
               ) : (
-                <EmployerOnboardingWizard user={user} onComplete={handleProfileComplete} />
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Complete Your Company Profile</DialogTitle>
+                    <DialogDescription>Share information about your company and the opportunities you offer</DialogDescription>
+                  </DialogHeader>
+                  <EmployerOnboardingWizard user={user} onComplete={handleProfileComplete} />
+                </>
               )}
             </DialogContent>
           </Dialog>

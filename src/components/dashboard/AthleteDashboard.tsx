@@ -15,6 +15,7 @@ import { AthleteLandingPage, athleteDashboardKey } from "@/components/dashboard/
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Sparkles, ClipboardList } from "lucide-react";
 
 // ==============================
 // Global Keyframe Injection
@@ -47,6 +48,7 @@ interface AthleteDashboardProps {
   onProfileUpdated?: () => void;
   openProfileDialog?: boolean;
   onProfileDialogOpened?: () => void;
+  onRequestAI?: () => void;
 }
 
 // ==============================
@@ -198,6 +200,7 @@ const AthleteDashboard = ({
   onProfileUpdated,
   openProfileDialog,
   onProfileDialogOpened,
+  onRequestAI,
 }: AthleteDashboardProps) => {
   const queryClient = useQueryClient();
 
@@ -206,6 +209,7 @@ const AthleteDashboard = ({
   // ==============================
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [dialogStep, setDialogStep] = useState<"choice" | "wizard">("choice");
   const [viewKey, setViewKey] = useState(0);
 
   // ==============================
@@ -377,20 +381,65 @@ const AthleteDashboard = ({
         <main>{renderContent()}</main>
 
         {!isAdminView && (
-          <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+          <Dialog
+            open={showProfileDialog}
+            onOpenChange={(open) => {
+              setShowProfileDialog(open);
+              if (!open) setDialogStep("choice");
+            }}
+          >
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
-              <DialogHeader>
-                <DialogTitle>{profile ? "Edit Your Profile" : "Complete Your Athlete Profile"}</DialogTitle>
-                <DialogDescription>
-                  {profile
-                    ? "Update your athletic background and career interests"
-                    : "Share your athletic background, skills, and career interests"}
-                </DialogDescription>
-              </DialogHeader>
               {profile ? (
-                <ProfileForm userId={user.id} onComplete={handleProfileComplete} />
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Edit Your Profile</DialogTitle>
+                    <DialogDescription>Update your athletic background and career interests</DialogDescription>
+                  </DialogHeader>
+                  <ProfileForm userId={user.id} onComplete={handleProfileComplete} />
+                </>
+              ) : dialogStep === "choice" ? (
+                <>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Complete Your Athlete Profile
+                    </DialogTitle>
+                    <DialogDescription>Choose how you'd like to get started</DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col gap-3 pt-2">
+                    <Button
+                      onClick={() => {
+                        setShowProfileDialog(false);
+                        setDialogStep("choice");
+                        onRequestAI?.();
+                      }}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Complete with AI
+                    </Button>
+                    <Button variant="outline" onClick={() => setDialogStep("wizard")}>
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Complete Manually
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowProfileDialog(false);
+                        setDialogStep("choice");
+                      }}
+                    >
+                      Skip for now
+                    </Button>
+                  </div>
+                </>
               ) : (
-                <AthleteOnboardingWizard user={user} onComplete={handleProfileComplete} />
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Complete Your Athlete Profile</DialogTitle>
+                    <DialogDescription>Share your athletic background, skills, and career interests</DialogDescription>
+                  </DialogHeader>
+                  <AthleteOnboardingWizard user={user} onComplete={handleProfileComplete} />
+                </>
               )}
             </DialogContent>
           </Dialog>
