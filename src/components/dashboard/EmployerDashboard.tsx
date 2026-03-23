@@ -73,6 +73,7 @@ const EmployerDashboard = ({
   onProfileUpdated,
   openProfileDialog,
   onProfileDialogOpened,
+  onRequestAI,
 }: EmployerDashboardProps) => {
   const queryClient = useQueryClient();
 
@@ -81,6 +82,7 @@ const EmployerDashboard = ({
   // ==============================
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [dialogStep, setDialogStep] = useState<"choice" | "wizard">("choice");
   const [showOpportunitiesDialog, setShowOpportunitiesDialog] = useState(false);
 
   // Background image upload

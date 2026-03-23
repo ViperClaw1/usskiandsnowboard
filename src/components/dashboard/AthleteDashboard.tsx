@@ -199,6 +199,7 @@ const AthleteDashboard = ({
   onProfileUpdated,
   openProfileDialog,
   onProfileDialogOpened,
+  onRequestAI,
 }: AthleteDashboardProps) => {
   const queryClient = useQueryClient();
 
@@ -207,6 +208,7 @@ const AthleteDashboard = ({
   // ==============================
   const [currentView, setCurrentView] = useState<string>("home");
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [dialogStep, setDialogStep] = useState<"choice" | "wizard">("choice");
   const [viewKey, setViewKey] = useState(0);
 
   // ==============================
