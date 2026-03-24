@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MultiSelect } from "@/components/ui/multi-select";
 import PhotoUploader from "./PhotoUploader";
 import { Sparkles, Upload, X } from "lucide-react";
-import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
+import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS, SPONSORS_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 
 interface AthleteOnboardingWizardProps {
   user: User;
