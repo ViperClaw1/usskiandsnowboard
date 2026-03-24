@@ -814,7 +814,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
               canGoBack={true}
               canGoNext={true}
               onBack={prevStep}
-              onNext={handleSubmit(onSubmit)}
+              onNext={handleSubmit(onSubmit as any)}
               isLoading={isSubmitting}
               nextLabel="Complete Profile"
             />
