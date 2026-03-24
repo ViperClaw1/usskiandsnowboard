@@ -476,20 +476,14 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       case 7:
         return (
-          <OnboardingStep title="What's your primary sport?">
-            <Select value={formValues.sport} onValueChange={(value) => setValue("sport", value)}>
-              <SelectTrigger className="h-14 text-lg border-2 bg-background">
-                <SelectValue placeholder="Select your sport" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="Alpine Skiing">Alpine Skiing</SelectItem>
-                <SelectItem value="Freestyle Skiing">Freestyle Skiing</SelectItem>
-                <SelectItem value="Snowboarding">Snowboarding</SelectItem>
-                <SelectItem value="Cross Country">Cross Country</SelectItem>
-                <SelectItem value="Nordic Combined">Nordic Combined</SelectItem>
-                <SelectItem value="Ski Jumping">Ski Jumping</SelectItem>
-              </SelectContent>
-            </Select>
+          <OnboardingStep title="What's your primary sport discipline?" description="Select all that apply">
+            <MultiSelect
+              groups={SPORT_DISCIPLINE_GROUPS}
+              selected={formValues.sport}
+              onChange={(values) => setValue("sport", values)}
+              placeholder="Search sport disciplines..."
+              className="min-h-[56px]"
+            />
             <StepNavigation
               currentStep={currentStep}
               totalSteps={TOTAL_STEPS}
