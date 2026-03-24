@@ -183,7 +183,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         connection.athlete_profiles.bio?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSport = !filterSport || 
-        connection.athlete_profiles.sport_discipline === filterSport;
+        connection.athlete_profiles.sport_discipline?.includes(filterSport);
       
       const matchesAvailability = !filterAvailability || 
         connection.athlete_profiles.availability === filterAvailability;
@@ -193,7 +193,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
   }, [connections, searchTerm, filterSport, filterAvailability]);
 
   const uniqueSports = useMemo(() => {
-    return Array.from(new Set(connections.map(c => c.athlete_profiles.sport_discipline).filter(Boolean)));
+    return Array.from(new Set(connections.flatMap(c => c.athlete_profiles.sport_discipline ?? []).filter(Boolean)));
   }, [connections]);
 
   const uniqueAvailability = useMemo(() => {
