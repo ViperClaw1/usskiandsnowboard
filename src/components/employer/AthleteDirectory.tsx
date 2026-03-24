@@ -627,7 +627,7 @@ const AthleteDirectory = () => {
                 </Avatar>
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
+                  <p className="text-sm text-muted-foreground">{athlete.sport_discipline?.join(", ") || "Sport not specified"}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {athlete.years_of_membership
                       ? `${athlete.years_of_membership} years U.S. Ski & Snowboard`
