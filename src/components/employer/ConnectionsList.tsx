@@ -183,7 +183,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
         connection.athlete_profiles.bio?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSport = !filterSport || 
-        connection.athlete_profiles.sport_discipline === filterSport;
+        connection.athlete_profiles.sport_discipline?.includes(filterSport);
       
       const matchesAvailability = !filterAvailability || 
         connection.athlete_profiles.availability === filterAvailability;
