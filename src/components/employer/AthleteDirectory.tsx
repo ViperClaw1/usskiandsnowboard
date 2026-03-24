@@ -284,7 +284,7 @@ const AthleteDirectory = () => {
     }
 
     if (filterSport && filterSport !== "all") {
-      result = result.filter((a) => a.sport_discipline === filterSport);
+      result = result.filter((a) => a.sport_discipline?.includes(filterSport));
     }
     if (filterAvailability && filterAvailability !== "all") {
       result = result.filter((a) => a.availability === filterAvailability);
