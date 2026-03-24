@@ -9,7 +9,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from "sonner";
 import { Loader2, Upload, X, Instagram, Phone, Image } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { SKILLS_OPTIONS, CAREER_INTERESTS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
+import { SKILLS_OPTIONS, CAREER_INTERESTS_OPTIONS, SPONSORS_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 import usBgMountain from "@/assets/us-background-mountain.png";
 
 interface ProfileFormProps {
