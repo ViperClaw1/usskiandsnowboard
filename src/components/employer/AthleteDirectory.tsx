@@ -211,7 +211,7 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [filterSport, setFilterSport] = useState<string>("all");
+  const [filterSport, setFilterSport] = useState<string[]>([]);
   const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterSkills, setFilterSkills] = useState<string>("");
   const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
