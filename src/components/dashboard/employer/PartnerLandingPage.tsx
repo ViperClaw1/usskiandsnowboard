@@ -35,7 +35,7 @@ interface Connection {
   athlete_id: string;
   athlete_profiles: {
     photo_url: string | null;
-    sport_discipline: string | null;
+    sport_discipline: string[] | null;
     profiles: {
       full_name: string;
     } | null;
