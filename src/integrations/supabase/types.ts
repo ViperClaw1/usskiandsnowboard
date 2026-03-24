@@ -193,7 +193,7 @@ export type Database = {
           profile_views: number | null
           skills: string[] | null
           sponsors: string[] | null
-          sport_discipline: string | null
+          sport_discipline: string[] | null
           updated_at: string
           user_id: string
           years_of_membership: number | null
@@ -220,7 +220,7 @@ export type Database = {
           profile_views?: number | null
           skills?: string[] | null
           sponsors?: string[] | null
-          sport_discipline?: string | null
+          sport_discipline?: string[] | null
           updated_at?: string
           user_id: string
           years_of_membership?: number | null
@@ -247,7 +247,7 @@ export type Database = {
           profile_views?: number | null
           skills?: string[] | null
           sponsors?: string[] | null
-          sport_discipline?: string | null
+          sport_discipline?: string[] | null
           updated_at?: string
           user_id?: string
           years_of_membership?: number | null
@@ -930,7 +930,7 @@ export type Database = {
           id: string | null
           profile_completeness: number | null
           profile_views: number | null
-          sport_discipline: string | null
+          sport_discipline: string[] | null
         }
         Relationships: []
       }
