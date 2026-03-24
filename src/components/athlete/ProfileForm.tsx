@@ -521,22 +521,12 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       <div className="space-y-2">
         <Label htmlFor="sport">Sport Discipline *</Label>
-        <Select
-          value={formData.sport_discipline}
-          onValueChange={(value) => setFormData({ ...formData, sport_discipline: value })}
-          required
-        >
-          <SelectTrigger id="sport">
-            <SelectValue placeholder="Select your sport" />
-          </SelectTrigger>
-          <SelectContent>
-            {SPORTS.map((sport) => (
-              <SelectItem key={sport} value={sport}>
-                {sport}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          groups={SPORT_DISCIPLINE_GROUPS}
+          selected={Array.isArray(formData.sport_discipline) ? formData.sport_discipline : (formData.sport_discipline ? [formData.sport_discipline as unknown as string] : [])}
+          onChange={(values) => setFormData({ ...formData, sport_discipline: values })}
+          placeholder="Select sport disciplines..."
+        />
       </div>
 
       <div className="space-y-2">

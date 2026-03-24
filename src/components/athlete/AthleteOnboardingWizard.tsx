@@ -225,10 +225,8 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       const { error: athleteError } = await supabase
         .from("athlete_profiles")
-        .upsert({
-          ...athleteData,
-          profile_completeness: completeness,
-        } as Parameters<ReturnType<typeof supabase.from<"athlete_profiles">>["upsert"]>[0]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .upsert({ ...athleteData, profile_completeness: completeness } as any);
 
       if (athleteError) throw athleteError;
 
