@@ -302,7 +302,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                     {request.athlete_profiles.profiles?.full_name || "Athlete"}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {request.athlete_profiles.sport_discipline || "Sport not specified"}
+                    {Array.isArray(request.athlete_profiles.sport_discipline) ? request.athlete_profiles.sport_discipline.join(", ") : (request.athlete_profiles.sport_discipline || "Sport not specified")}
                   </p>
                 </div>
                 <Badge variant="secondary">Pending</Badge>
