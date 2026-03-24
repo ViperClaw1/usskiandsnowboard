@@ -519,16 +519,7 @@ const AthleteDirectory = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <CommandPrimitive.Input
-            ref={inputRef}
-            value={inputValue}
-            onValueChange={setInputValue}
-            onBlur={() => setOpen(false)}
-            onFocus={() => setOpen(true)}
-            placeholder={selected.length === 0 ? placeholder : undefined}
-            className="ml-0 flex-1 min-w-[120px] bg-transparent outline-none placeholder:text-muted-foreground border-0 px-0 py-0 h-auto min-h-[24px]"
-          />
-          {/* <Select value={filterSport} onValueChange={setFilterSport}>
+          <Select value={filterSport} onValueChange={setFilterSport}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by Sport" />
             </SelectTrigger>
@@ -540,7 +531,7 @@ const AthleteDirectory = () => {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select> */}
+          </Select>
 
           <Select value={filterAvailability} onValueChange={setFilterAvailability}>
             <SelectTrigger>
