@@ -193,7 +193,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
   }, [connections, searchTerm, filterSport, filterAvailability]);
 
   const uniqueSports = useMemo(() => {
-    return Array.from(new Set(connections.map(c => c.athlete_profiles.sport_discipline).filter(Boolean)));
+    return Array.from(new Set(connections.flatMap(c => c.athlete_profiles.sport_discipline ?? []).filter(Boolean)));
   }, [connections]);
 
   const uniqueAvailability = useMemo(() => {
