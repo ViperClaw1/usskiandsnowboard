@@ -225,7 +225,12 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
   }, [requests, searchTerm, filterSport, filterAvailability]);
 
   const uniqueSports = useMemo(() => {
-    return Array.from(new Set(requests.map(r => r.athlete_profiles.sport_discipline).filter(Boolean)));
+    const allSports = requests.flatMap(r =>
+      Array.isArray(r.athlete_profiles.sport_discipline)
+        ? r.athlete_profiles.sport_discipline
+        : r.athlete_profiles.sport_discipline ? [r.athlete_profiles.sport_discipline] : []
+    );
+    return Array.from(new Set(allSports));
   }, [requests]);
 
   const uniqueAvailability = useMemo(() => {

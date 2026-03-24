@@ -524,9 +524,9 @@ const AthleteDirectory = () => {
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectItem value="all">All Sports</SelectItem>
-              {Array.from(new Set(athletes.map((a) => a.sport_discipline).filter(Boolean))).map((sport) => (
-                <SelectItem key={sport} value={sport!}>
-                  {sport}
+              {SPORT_DISCIPLINES_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>
