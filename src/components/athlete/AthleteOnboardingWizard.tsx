@@ -115,7 +115,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       case 4: return formValues.lastName.trim().length > 0;
       case 5: return formValues.email.trim().length > 0 && formValues.email.includes("@");
       case 6: return formValues.affiliation.trim().length > 0;
-      case 7: return formValues.sport.trim().length > 0;
+      case 7: return formValues.sport.length > 0;
       case 8: return true; // Home mountain (optional)
       case 9: return formValues.bio.trim().length > 0;
       case 10: return formValues.careerInterests.length > 0;
