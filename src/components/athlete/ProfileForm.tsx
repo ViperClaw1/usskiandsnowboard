@@ -326,19 +326,21 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .maybeSingle();
 
       if (existingProfile) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await supabase
           .from("athlete_profiles")
-          .update(profileData)
+          .update(profileData as any)
           .eq("user_id", userId);
 
         if (error) throw error;
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await supabase
           .from("athlete_profiles")
           .insert({
             user_id: userId,
             ...profileData
-          });
+          } as any);
 
         if (error) throw error;
       }
