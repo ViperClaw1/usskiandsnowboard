@@ -212,8 +212,10 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
         request.athlete_profiles.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.athlete_profiles.bio?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesSport = !filterSport || 
-        request.athlete_profiles.sport_discipline === filterSport;
+      const matchesSport = !filterSport ||
+        (Array.isArray(request.athlete_profiles.sport_discipline)
+          ? request.athlete_profiles.sport_discipline.includes(filterSport)
+          : request.athlete_profiles.sport_discipline === filterSport);
       
       const matchesAvailability = !filterAvailability || 
         request.athlete_profiles.availability === filterAvailability;
