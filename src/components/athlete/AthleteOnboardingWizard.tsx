@@ -26,7 +26,7 @@ interface FormData {
   lastName: string;
   email: string;
   affiliation: string;
-  sport: string;
+  sport: string[];
   homeMountain: string;
   bio: string;
   careerInterests: string[];
