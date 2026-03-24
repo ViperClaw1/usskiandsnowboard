@@ -783,7 +783,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Sport</p>
-                <p className="text-lg font-medium">{formValues.sport}</p>
+                <p className="text-lg font-medium">{formValues.sport.join(", ")}</p>
               </div>
               {formValues.homeMountain && (
                 <div>
