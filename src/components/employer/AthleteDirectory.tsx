@@ -295,8 +295,8 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
       result = result.filter((a) => filterDisciplines.some((d) => a.sport_discipline?.includes(d)));
     }
 
-    if (filterSport && filterSport !== "all") {
-      result = result.filter((a) => a.sport_discipline?.includes(filterSport));
+    if (filterSport.length > 0) {
+      result = result.filter((a) => filterSport.some((s) => a.sport_discipline?.includes(s)));
     }
     if (filterAvailability && filterAvailability !== "all") {
       result = result.filter((a) => a.availability === filterAvailability);
