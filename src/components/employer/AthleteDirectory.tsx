@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +21,7 @@ import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
-import { SPORT_DISCIPLINES_OPTIONS } from "@/data/suggestions";
+import { SPORT_DISCIPLINES_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 
 // ==============================
 // Types / Interfaces
@@ -210,7 +211,7 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [filterSport, setFilterSport] = useState<string>("all");
+  const [filterSport, setFilterSport] = useState<string[]>([]);
   const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterSkills, setFilterSkills] = useState<string>("");
   const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
@@ -294,8 +295,8 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
       result = result.filter((a) => filterDisciplines.some((d) => a.sport_discipline?.includes(d)));
     }
 
-    if (filterSport && filterSport !== "all") {
-      result = result.filter((a) => a.sport_discipline?.includes(filterSport));
+    if (filterSport.length > 0) {
+      result = result.filter((a) => filterSport.some((s) => a.sport_discipline?.includes(s)));
     }
     if (filterAvailability && filterAvailability !== "all") {
       result = result.filter((a) => a.availability === filterAvailability);
@@ -529,19 +530,12 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Select value={filterSport} onValueChange={setFilterSport}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by Sport" />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">All Sports</SelectItem>
-              {SPORT_DISCIPLINES_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelect
+            groups={SPORT_DISCIPLINE_GROUPS}
+            selected={filterSport}
+            onChange={setFilterSport}
+            placeholder="Filter by Sport..."
+          />
 
           <Select value={filterAvailability} onValueChange={setFilterAvailability}>
             <SelectTrigger>
@@ -571,7 +565,7 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
           />
         </div>
 
-        {(filterSport !== "all" ||
+        {(filterSport.length > 0 ||
           filterAvailability !== "all" ||
           filterSkills ||
           filterCareerInterests ||
@@ -585,7 +579,7 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
               size="sm"
               onClick={() => {
                 setSearchTerm("");
-                setFilterSport("all");
+                setFilterSport([]);
                 setFilterAvailability("all");
                 setFilterSkills("");
                 setFilterCareerInterests("");
