@@ -16,7 +16,7 @@ interface Connection {
   id: string;
   athlete_profiles: {
     email: string | null;
-    sport_discipline: string | null;
+    sport_discipline: string[] | null;
     photo_url: string | null;
     background_image_url: string | null;
     bio: string | null;
