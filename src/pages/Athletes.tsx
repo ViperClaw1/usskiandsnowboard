@@ -16,8 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 
 // ==============================
 // Types / Interfaces
@@ -74,9 +72,6 @@ const Athletes = () => {
   const { user, loading: authLoading } = useAuth();
   const { role: userRole } = useUserRole(user?.id);
   const queryClient = useQueryClient();
-
-  // Sport discipline multi-select filter (authenticated view only)
-  const [filterDisciplines, setFilterDisciplines] = useState<string[]>([]);
 
   // ==============================
   // Data Fetching — Public Athlete Preview
@@ -140,18 +135,7 @@ const Athletes = () => {
               )}
             </div>
 
-            {/* Sport discipline multi-select filter */}
-            <div className="mb-6">
-              <MultiSelect
-                groups={SPORT_DISCIPLINE_GROUPS}
-                selected={filterDisciplines}
-                onChange={setFilterDisciplines}
-                placeholder="Filter by sport discipline..."
-                className="max-w-xl"
-              />
-            </div>
-
-            <AthleteDirectory filterDisciplines={filterDisciplines} />
+            <AthleteDirectory />
           </div>
         ) : (
           /* ── Public / unauthenticated view: blurred preview + lock overlay ── */
@@ -201,9 +185,7 @@ const Athletes = () => {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          {athlete.bio && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>
-                          )}
+                          {athlete.bio && <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>}
                           {athlete.skillsPreview.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
                               {athlete.skillsPreview.map((skill, index) => (
