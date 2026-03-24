@@ -2,7 +2,7 @@
 // Imports
 // ==============================
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 
 // ==============================
 // Types / Interfaces
@@ -60,11 +62,6 @@ const PageSkeleton = () => (
 
 // ==============================
 // Component Definition
-// Smart component — fetches athletes for the public preview and delegates
-// the authenticated directory view to AthleteDirectory.
-// Auth state comes from AuthContext (useAuth) instead of inline listeners.
-// Data fetching uses React Query for automatic caching — the athlete list is
-// fetched once and served from cache on subsequent visits until stale.
 // ==============================
 
 const ATHLETES_QUERY_KEY = ["public-athletes-preview"];
@@ -78,16 +75,11 @@ const Athletes = () => {
   const { role: userRole } = useUserRole(user?.id);
   const queryClient = useQueryClient();
 
+  // Sport discipline multi-select filter (authenticated view only)
+  const [filterDisciplines, setFilterDisciplines] = useState<string[]>([]);
+
   // ==============================
   // Data Fetching — Public Athlete Preview
-  // Fetches top 3 public athletes for the unauthenticated blurred-card preview.
-  //
-  // initialData reads whatever is already sitting in the QueryClient cache
-  // synchronously before this render commits. On the very first visit the cache
-  // is empty so initialData is undefined and isLoading behaves normally. On
-  // every subsequent visit the cache already holds the athlete list, so
-  // initialData is populated immediately and isLoading is false from the first
-  // render — no intermediate opacity-0 / skeleton flash.
   // ==============================
   const { data: athletes = [], isLoading: athletesLoading } = useQuery<AthleteProfile[]>({
     queryKey: ATHLETES_QUERY_KEY,
@@ -104,24 +96,16 @@ const Athletes = () => {
       if (error) throw error;
       return data ?? [];
     },
-    // Serve cached data synchronously on repeated mounts — eliminates the
-    // isLoading:true → isLoading:false re-render cycle entirely on repeat visits.
     initialData: () => queryClient.getQueryData<AthleteProfile[]>(ATHLETES_QUERY_KEY),
-    // Keep data fresh for 5 minutes before allowing a background re-fetch.
     staleTime: 5 * 60 * 1000,
   });
 
   // ==============================
   // Derived Values
-  // authLoading is only ever true on the very first app load (AuthProvider
-  // resolves from the Supabase local cache synchronously on repeat visits).
-  // athletesLoading is only ever true on the very first visit (initialData
-  // populates from cache on all subsequent mounts).
-  // Together, isLoading is false from the first render on all repeat visits.
   // ==============================
   const isLoading = authLoading || athletesLoading;
 
-  /** Stable sliced skills list per athlete — avoids re-slicing on unrelated re-renders */
+  /** Stable sliced skills list per athlete */
   const athletesWithSlicedSkills = useMemo(
     () =>
       athletes.map((a) => ({
@@ -155,7 +139,19 @@ const Athletes = () => {
                 </p>
               )}
             </div>
-            <AthleteDirectory />
+
+            {/* Sport discipline multi-select filter */}
+            <div className="mb-6">
+              <MultiSelect
+                groups={SPORT_DISCIPLINE_GROUPS}
+                selected={filterDisciplines}
+                onChange={setFilterDisciplines}
+                placeholder="Filter by sport discipline..."
+                className="max-w-xl"
+              />
+            </div>
+
+            <AthleteDirectory filterDisciplines={filterDisciplines} />
           </div>
         ) : (
           /* ── Public / unauthenticated view: blurred preview + lock overlay ── */
@@ -197,7 +193,9 @@ const Athletes = () => {
                                 {athlete.profiles?.full_name || "Athlete"}
                               </CardTitle>
                               {athlete.sport_discipline && (
-                                <p className="text-sm text-muted-foreground truncate">{athlete.sport_discipline}</p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {athlete.sport_discipline.join(", ")}
+                                </p>
                               )}
                             </div>
                           </div>

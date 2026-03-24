@@ -178,7 +178,12 @@ const fetchExistingRequests = async (employerId: string): Promise<Set<string>> =
 // cache so loading is false from the very first render — no spinner, no flash.
 // ==============================
 
-const AthleteDirectory = () => {
+interface AthleteDirectoryProps {
+  /** Optional external discipline filter from parent page (array of values) */
+  filterDisciplines?: string[];
+}
+
+const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => {
   const queryClient = useQueryClient();
 
   // ==============================
@@ -270,7 +275,7 @@ const AthleteDirectory = () => {
       result = result.filter((athlete) => {
         const searchableFields = [
           athlete.profiles.full_name,
-          athlete.sport_discipline,
+          ...(athlete.sport_discipline || []),
           athlete.bio,
           athlete.professional_highlights,
           athlete.availability,
@@ -282,6 +287,11 @@ const AthleteDirectory = () => {
           .toLowerCase();
         return searchableFields.includes(search);
       });
+    }
+
+    // External multi-discipline filter from Athletes page (any match)
+    if (filterDisciplines.length > 0) {
+      result = result.filter((a) => filterDisciplines.some((d) => a.sport_discipline?.includes(d)));
     }
 
     if (filterSport && filterSport !== "all") {
@@ -300,7 +310,7 @@ const AthleteDirectory = () => {
     }
 
     return result;
-  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
+  }, [athletes, searchTerm, filterDisciplines, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
 
   // ==============================
   // Handlers

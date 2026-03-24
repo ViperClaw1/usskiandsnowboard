@@ -116,7 +116,14 @@ export function MultiSelect({
                       const filteredOpts = grp.options.filter(filterOption);
                       if (filteredOpts.length === 0) return null;
                       return (
-                        <CommandGroup key={grp.group} heading={grp.group}>
+                        <CommandGroup
+                          key={grp.group}
+                          heading={
+                            <span className="inline-flex items-center rounded-sm bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                              {grp.group}
+                            </span>
+                          }
+                        >
                           {filteredOpts.map((option) => (
                             <CommandItem
                               key={option.value}
