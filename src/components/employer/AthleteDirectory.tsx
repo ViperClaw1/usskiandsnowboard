@@ -179,12 +179,7 @@ const fetchExistingRequests = async (employerId: string): Promise<Set<string>> =
 // cache so loading is false from the very first render — no spinner, no flash.
 // ==============================
 
-interface AthleteDirectoryProps {
-  /** Optional external discipline filter from parent page (array of values) */
-  filterDisciplines?: string[];
-}
-
-const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => {
+const AthleteDirectory = () => {
   const queryClient = useQueryClient();
 
   // ==============================
@@ -290,11 +285,6 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
       });
     }
 
-    // External multi-discipline filter from Athletes page (any match)
-    if (filterDisciplines.length > 0) {
-      result = result.filter((a) => filterDisciplines.some((d) => a.sport_discipline?.includes(d)));
-    }
-
     if (filterSport.length > 0) {
       result = result.filter((a) => filterSport.some((s) => a.sport_discipline?.includes(s)));
     }
@@ -311,7 +301,7 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
     }
 
     return result;
-  }, [athletes, searchTerm, filterDisciplines, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
+  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
 
   // ==============================
   // Handlers
@@ -631,7 +621,9 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
                 </Avatar>
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{athlete.sport_discipline?.join(", ") || "Sport not specified"}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {athlete.sport_discipline?.join(", ") || "Sport not specified"}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {athlete.years_of_membership
                       ? `${athlete.years_of_membership} years U.S. Ski & Snowboard`
@@ -725,258 +717,263 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
         >
           <DialogContent className="max-w-3xl">
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-            <DialogHeader>
-              <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
-            </DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
+              </DialogHeader>
 
-            <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="portfolio">Athlete Content</TabsTrigger>
-              </TabsList>
+              <Tabs defaultValue="profile" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="profile">Profile</TabsTrigger>
+                  <TabsTrigger value="portfolio">Athlete Content</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="profile" className="space-y-6 mt-6">
-                {/* Banner */}
-                <div className="relative -mx-6 -mt-6">
-                  {selectedAthlete.background_image_url ? (
-                    <div
-                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
-                      style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
-                    />
-                  ) : (
-                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <ImagePlus className="h-8 w-8" />
-                        <span className="text-sm font-medium">No background photo</span>
+                <TabsContent value="profile" className="space-y-6 mt-6">
+                  {/* Banner */}
+                  <div className="relative -mx-6 -mt-6">
+                    {selectedAthlete.background_image_url ? (
+                      <div
+                        className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                        style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
+                      />
+                    ) : (
+                      <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <ImagePlus className="h-8 w-8" />
+                          <span className="text-sm font-medium">No background photo</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
-                    <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                      {selectedAthlete.profiles.full_name
-                        ? selectedAthlete.profiles.full_name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()
-                            .slice(0, 2)
-                        : "AT"}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="pt-10 pb-2">
-                  <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
-                  {selectedAthlete.sport_discipline && (
-                    <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
-                  )}
-                </div>
-
-                {[
-                  { label: "Bio", value: selectedAthlete.bio },
-                  { label: "Professional Highlights", value: selectedAthlete.professional_highlights },
-                  { label: "Availability", value: selectedAthlete.availability },
-                  { label: "Email", value: selectedAthlete.email },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <h4 className="font-medium mb-2">{label}</h4>
-                    <p className="text-sm text-muted-foreground">{value || "Not specified"}</p>
+                    )}
+                    <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                      <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                        {selectedAthlete.profiles.full_name
+                          ? selectedAthlete.profiles.full_name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2)
+                          : "AT"}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
-                ))}
+                  <div className="pt-10 pb-2">
+                    <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
+                    {selectedAthlete.sport_discipline && (
+                      <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
+                    )}
+                  </div>
 
-                <div>
-                  <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedAthlete.years_of_membership
-                      ? `${selectedAthlete.years_of_membership} years`
-                      : "Not specified"}
-                  </p>
-                </div>
+                  {[
+                    { label: "Bio", value: selectedAthlete.bio },
+                    { label: "Professional Highlights", value: selectedAthlete.professional_highlights },
+                    { label: "Availability", value: selectedAthlete.availability },
+                    { label: "Email", value: selectedAthlete.email },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <h4 className="font-medium mb-2">{label}</h4>
+                      <p className="text-sm text-muted-foreground">{value || "Not specified"}</p>
+                    </div>
+                  ))}
 
-                <div>
-                  <h4 className="font-medium mb-2">Instagram</h4>
-                  {selectedAthlete.instagram_url ? (
-                    <a
-                      href={selectedAthlete.instagram_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline flex items-center gap-2"
-                    >
-                      <Instagram className="h-4 w-4" /> View Profile
-                    </a>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedAthlete.years_of_membership
+                        ? `${selectedAthlete.years_of_membership} years`
+                        : "Not specified"}
+                    </p>
+                  </div>
 
-                {[
-                  { label: "Sponsors", items: selectedAthlete.sponsors },
-                  { label: "Skills", items: selectedAthlete.skills },
-                  { label: "Career Interests", items: selectedAthlete.career_interests },
-                ].map(({ label, items }) => (
-                  <div key={label}>
-                    <h4 className="font-medium mb-2">{label}</h4>
-                    {items && items.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {items.map((item, i) => (
-                          <Badge key={i} variant="secondary">
-                            {item}
-                          </Badge>
+                  <div>
+                    <h4 className="font-medium mb-2">Instagram</h4>
+                    {selectedAthlete.instagram_url ? (
+                      <a
+                        href={selectedAthlete.instagram_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline flex items-center gap-2"
+                      >
+                        <Instagram className="h-4 w-4" /> View Profile
+                      </a>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Not specified</p>
+                    )}
+                  </div>
+
+                  {[
+                    { label: "Sponsors", items: selectedAthlete.sponsors },
+                    { label: "Skills", items: selectedAthlete.skills },
+                    { label: "Career Interests", items: selectedAthlete.career_interests },
+                  ].map(({ label, items }) => (
+                    <div key={label}>
+                      <h4 className="font-medium mb-2">{label}</h4>
+                      {items && items.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {items.map((item, i) => (
+                            <Badge key={i} variant="secondary">
+                              {item}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Not specified</p>
+                      )}
+                    </div>
+                  ))}
+
+                  <div>
+                    <h4 className="font-medium mb-2">Geographic Preferences</h4>
+                    {selectedAthlete.geographic_preferences?.length ? (
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAthlete.geographic_preferences.join(", ")}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Not specified</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-2">Education</h4>
+                    {athleteEducation.length > 0 ? (
+                      <div className="space-y-3">
+                        {athleteEducation.map((edu) => (
+                          <div key={edu.id} className="border-l-2 border-primary/20 pl-3">
+                            <p className="font-medium text-sm">{edu.school}</p>
+                            {edu.degree && <p className="text-sm text-muted-foreground">{edu.degree}</p>}
+                            {edu.graduation_year && (
+                              <p className="text-xs text-muted-foreground">Graduated {edu.graduation_year}</p>
+                            )}
+                          </div>
                         ))}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Not specified</p>
                     )}
                   </div>
-                ))}
 
-                <div>
-                  <h4 className="font-medium mb-2">Geographic Preferences</h4>
-                  {selectedAthlete.geographic_preferences?.length ? (
-                    <p className="text-sm text-muted-foreground">{selectedAthlete.geographic_preferences.join(", ")}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Education</h4>
-                  {athleteEducation.length > 0 ? (
-                    <div className="space-y-3">
-                      {athleteEducation.map((edu) => (
-                        <div key={edu.id} className="border-l-2 border-primary/20 pl-3">
-                          <p className="font-medium text-sm">{edu.school}</p>
-                          {edu.degree && <p className="text-sm text-muted-foreground">{edu.degree}</p>}
-                          {edu.graduation_year && (
-                            <p className="text-xs text-muted-foreground">Graduated {edu.graduation_year}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Experience</h4>
-                  {athleteExperience.length > 0 ? (
-                    <div className="space-y-3">
-                      {athleteExperience.map((exp) => (
-                        <div key={exp.id} className="border-l-2 border-primary/20 pl-3">
-                          <p className="font-medium text-sm">{exp.title}</p>
-                          {exp.organization && <p className="text-sm text-muted-foreground">{exp.organization}</p>}
-                          {exp.description && <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {exp.start_date &&
-                              new Date(exp.start_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                            {" - "}
-                            {exp.is_current
-                              ? "Present"
-                              : exp.end_date
-                                ? new Date(exp.end_date).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    year: "numeric",
-                                  })
-                                : "Present"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Certifications</h4>
-                  {athleteCertifications.length > 0 ? (
-                    <div className="space-y-2">
-                      {athleteCertifications.map((cert) => (
-                        <div key={cert.id} className="border-l-2 border-primary/20 pl-3">
-                          <p className="font-medium text-sm">{cert.name}</p>
-                          {cert.issuer && <p className="text-sm text-muted-foreground">{cert.issuer}</p>}
-                          {cert.issue_date && (
-                            <p className="text-xs text-muted-foreground">
-                              Issued{" "}
-                              {new Date(cert.issue_date).toLocaleDateString("en-US", {
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Not specified</p>
-                  )}
-                </div>
-
-                {canSendRequest && (
-                  <Button
-                    onClick={() => setShowRequestDialog(true)}
-                    className="w-full"
-                    disabled={existingRequests.has(selectedAthlete.id)}
-                  >
-                    {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
-                  </Button>
-                )}
-              </TabsContent>
-
-              <TabsContent value="portfolio" className="mt-6">
-                <div className="space-y-6">
                   <div>
-                    <h4 className="font-medium mb-2">Lifestyle Photos</h4>
-                    {athletePhotos.length > 0 ? (
-                      <div className="relative touch-pan-y" {...photoSwipeHandlers}>
-                        <img
-                          src={athletePhotos[currentPhotoIndex]}
-                          alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
-                          className="w-full h-64 object-cover rounded-lg select-none"
-                          draggable={false}
-                        />
-                        {athletePhotos.length > 1 && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentPhotoIndex((p) => (p === 0 ? athletePhotos.length - 1 : p - 1));
-                              }}
-                            >
-                              <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentPhotoIndex((p) => (p === athletePhotos.length - 1 ? 0 : p + 1));
-                              }}
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
-                              {currentPhotoIndex + 1} / {athletePhotos.length}
-                            </div>
-                            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground md:hidden">
-                              Swipe to navigate
-                            </div>
-                          </>
-                        )}
+                    <h4 className="font-medium mb-2">Experience</h4>
+                    {athleteExperience.length > 0 ? (
+                      <div className="space-y-3">
+                        {athleteExperience.map((exp) => (
+                          <div key={exp.id} className="border-l-2 border-primary/20 pl-3">
+                            <p className="font-medium text-sm">{exp.title}</p>
+                            {exp.organization && <p className="text-sm text-muted-foreground">{exp.organization}</p>}
+                            {exp.description && <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {exp.start_date &&
+                                new Date(exp.start_date).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              {" - "}
+                              {exp.is_current
+                                ? "Present"
+                                : exp.end_date
+                                  ? new Date(exp.end_date).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                  : "Present"}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Not specified</p>
                     )}
                   </div>
-                  <AthletePortfolioView athleteId={selectedAthlete.id} />
-                </div>
-              </TabsContent>
-            </Tabs>
+
+                  <div>
+                    <h4 className="font-medium mb-2">Certifications</h4>
+                    {athleteCertifications.length > 0 ? (
+                      <div className="space-y-2">
+                        {athleteCertifications.map((cert) => (
+                          <div key={cert.id} className="border-l-2 border-primary/20 pl-3">
+                            <p className="font-medium text-sm">{cert.name}</p>
+                            {cert.issuer && <p className="text-sm text-muted-foreground">{cert.issuer}</p>}
+                            {cert.issue_date && (
+                              <p className="text-xs text-muted-foreground">
+                                Issued{" "}
+                                {new Date(cert.issue_date).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Not specified</p>
+                    )}
+                  </div>
+
+                  {canSendRequest && (
+                    <Button
+                      onClick={() => setShowRequestDialog(true)}
+                      className="w-full"
+                      disabled={existingRequests.has(selectedAthlete.id)}
+                    >
+                      {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
+                    </Button>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="portfolio" className="mt-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="font-medium mb-2">Lifestyle Photos</h4>
+                      {athletePhotos.length > 0 ? (
+                        <div className="relative touch-pan-y" {...photoSwipeHandlers}>
+                          <img
+                            src={athletePhotos[currentPhotoIndex]}
+                            alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
+                            className="w-full h-64 object-cover rounded-lg select-none"
+                            draggable={false}
+                          />
+                          {athletePhotos.length > 1 && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentPhotoIndex((p) => (p === 0 ? athletePhotos.length - 1 : p - 1));
+                                }}
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentPhotoIndex((p) => (p === athletePhotos.length - 1 ? 0 : p + 1));
+                                }}
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
+                                {currentPhotoIndex + 1} / {athletePhotos.length}
+                              </div>
+                              <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground md:hidden">
+                                Swipe to navigate
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Not specified</p>
+                      )}
+                    </div>
+                    <AthletePortfolioView athleteId={selectedAthlete.id} />
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </DialogContent>
         </Dialog>
