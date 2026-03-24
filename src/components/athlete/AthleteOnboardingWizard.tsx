@@ -56,7 +56,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       lastName: "",
       email: user.email || "",
       affiliation: "",
-      sport: "",
+      sport: [] as string[],
       homeMountain: "",
       bio: "",
       careerInterests: [],
