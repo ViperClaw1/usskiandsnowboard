@@ -530,19 +530,12 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Select value={filterSport} onValueChange={setFilterSport}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by Sport" />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              <SelectItem value="all">All Sports</SelectItem>
-              {SPORT_DISCIPLINES_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelect
+            groups={SPORT_DISCIPLINE_GROUPS}
+            selected={filterSport}
+            onChange={setFilterSport}
+            placeholder="Filter by Sport..."
+          />
 
           <Select value={filterAvailability} onValueChange={setFilterAvailability}>
             <SelectTrigger>
@@ -572,7 +565,7 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
           />
         </div>
 
-        {(filterSport !== "all" ||
+        {(filterSport.length > 0 ||
           filterAvailability !== "all" ||
           filterSkills ||
           filterCareerInterests ||
@@ -586,7 +579,7 @@ const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => 
               size="sm"
               onClick={() => {
                 setSearchTerm("");
-                setFilterSport("all");
+                setFilterSport([]);
                 setFilterAvailability("all");
                 setFilterSkills("");
                 setFilterCareerInterests("");
