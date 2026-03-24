@@ -9,7 +9,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { toast } from "sonner";
 import { Loader2, Upload, X, Instagram, Phone, Image } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { SKILLS_OPTIONS, CAREER_INTERESTS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
+import { SKILLS_OPTIONS, CAREER_INTERESTS_OPTIONS, SPONSORS_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 import usBgMountain from "@/assets/us-background-mountain.png";
 
 interface ProfileFormProps {
@@ -69,7 +69,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     last_name: "",
     email: "",
     phone: "",
-    sport_discipline: "",
+    sport_discipline: [] as string[],
     home_mountain: "",
     bio: "",
     career_interests: "",
@@ -111,7 +111,9 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           last_name: profileData?.last_name || "",
           email: athleteData.email || profileData?.email || "",
           phone: athleteData.phone ? formatPhone(unformatPhone(athleteData.phone)) : "",
-          sport_discipline: athleteData.sport_discipline || "",
+          sport_discipline: Array.isArray(athleteData.sport_discipline)
+            ? athleteData.sport_discipline
+            : (athleteData.sport_discipline ? [athleteData.sport_discipline] : []) as string[],
           home_mountain: athleteData.home_mountain || "",
           bio: athleteData.bio || "",
           career_interests: athleteData.career_interests?.join(", ") || "",
@@ -324,19 +326,21 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
         .maybeSingle();
 
       if (existingProfile) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await supabase
           .from("athlete_profiles")
-          .update(profileData)
+          .update(profileData as any)
           .eq("user_id", userId);
 
         if (error) throw error;
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await supabase
           .from("athlete_profiles")
           .insert({
             user_id: userId,
             ...profileData
-          });
+          } as any);
 
         if (error) throw error;
       }
@@ -519,22 +523,12 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
 
       <div className="space-y-2">
         <Label htmlFor="sport">Sport Discipline *</Label>
-        <Select
-          value={formData.sport_discipline}
-          onValueChange={(value) => setFormData({ ...formData, sport_discipline: value })}
-          required
-        >
-          <SelectTrigger id="sport">
-            <SelectValue placeholder="Select your sport" />
-          </SelectTrigger>
-          <SelectContent>
-            {SPORTS.map((sport) => (
-              <SelectItem key={sport} value={sport}>
-                {sport}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          groups={SPORT_DISCIPLINE_GROUPS}
+          selected={Array.isArray(formData.sport_discipline) ? formData.sport_discipline : (formData.sport_discipline ? [formData.sport_discipline as unknown as string] : [])}
+          onChange={(values) => setFormData({ ...formData, sport_discipline: values })}
+          placeholder="Select sport disciplines..."
+        />
       </div>
 
       <div className="space-y-2">

@@ -1,3 +1,45 @@
+export const SPORT_DISCIPLINE_GROUPS = [
+  {
+    group: "Alpine",
+    options: [{ label: "Alpine Skiing", value: "Alpine Skiing" }],
+  },
+  {
+    group: "Freestyle",
+    options: [
+      { label: "Moguls", value: "Moguls" },
+      { label: "Aerials", value: "Aerials" },
+      { label: "Ski Cross", value: "Ski Cross" },
+      { label: "Halfpipe", value: "Halfpipe" },
+      { label: "Slopestyle", value: "Slopestyle" },
+      { label: "Big Air", value: "Big Air" },
+    ],
+  },
+  {
+    group: "Nordic",
+    options: [
+      { label: "Cross-Country Skiing", value: "Cross-Country Skiing" },
+      { label: "Para Cross-Country Skiing", value: "Para Cross-Country Skiing" },
+      { label: "Biathlon", value: "Biathlon" },
+      { label: "Para Biathlon", value: "Para Biathlon" },
+      { label: "Ski Jumping", value: "Ski Jumping" },
+      { label: "Nordic Combined", value: "Nordic Combined" },
+    ],
+  },
+  {
+    group: "Snowboard",
+    options: [
+      { label: "Halfpipe", value: "Snowboard Halfpipe" },
+      { label: "Slopestyle", value: "Snowboard Slopestyle" },
+      { label: "Big Air", value: "Snowboard Big Air" },
+      { label: "Snowboard Cross", value: "Snowboard Cross" },
+      { label: "Parallel Giant Slalom", value: "Parallel Giant Slalom" },
+      { label: "Para Snowboard", value: "Para Snowboard" },
+    ],
+  },
+];
+
+export const SPORT_DISCIPLINES_OPTIONS = SPORT_DISCIPLINE_GROUPS.flatMap((g) => g.options);
+
 export const CAREER_INTERESTS_OPTIONS = [
   { label: "Marketing", value: "Marketing" },
   { label: "Coaching", value: "Coaching" },

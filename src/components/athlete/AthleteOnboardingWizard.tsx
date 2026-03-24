@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MultiSelect } from "@/components/ui/multi-select";
 import PhotoUploader from "./PhotoUploader";
 import { Sparkles, Upload, X } from "lucide-react";
-import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS, SPONSORS_OPTIONS } from "@/data/suggestions";
+import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS, SPONSORS_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 
 interface AthleteOnboardingWizardProps {
   user: User;
@@ -26,7 +26,7 @@ interface FormData {
   lastName: string;
   email: string;
   affiliation: string;
-  sport: string;
+  sport: string[];
   homeMountain: string;
   bio: string;
   careerInterests: string[];
@@ -56,7 +56,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       lastName: "",
       email: user.email || "",
       affiliation: "",
-      sport: "",
+      sport: [] as string[],
       homeMountain: "",
       bio: "",
       careerInterests: [],
@@ -115,7 +115,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       case 4: return formValues.lastName.trim().length > 0;
       case 5: return formValues.email.trim().length > 0 && formValues.email.includes("@");
       case 6: return formValues.affiliation.trim().length > 0;
-      case 7: return formValues.sport.trim().length > 0;
+      case 7: return formValues.sport.length > 0;
       case 8: return true; // Home mountain (optional)
       case 9: return formValues.bio.trim().length > 0;
       case 10: return formValues.careerInterests.length > 0;
@@ -202,7 +202,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       const athleteData = {
         user_id: user.id,
         affiliation: data.affiliation,
-        sport_discipline: data.sport,
+        sport_discipline: Array.isArray(data.sport) ? data.sport : (data.sport ? [data.sport] : []),
         home_mountain: data.homeMountain || null,
         bio: data.bio,
         career_interests: careerInterestsArray,
@@ -225,10 +225,8 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       const { error: athleteError } = await supabase
         .from("athlete_profiles")
-        .upsert({
-          ...athleteData,
-          profile_completeness: completeness,
-        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .upsert({ ...athleteData, profile_completeness: completeness } as any);
 
       if (athleteError) throw athleteError;
 
@@ -478,20 +476,14 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       case 7:
         return (
-          <OnboardingStep title="What's your primary sport?">
-            <Select value={formValues.sport} onValueChange={(value) => setValue("sport", value)}>
-              <SelectTrigger className="h-14 text-lg border-2 bg-background">
-                <SelectValue placeholder="Select your sport" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="Alpine Skiing">Alpine Skiing</SelectItem>
-                <SelectItem value="Freestyle Skiing">Freestyle Skiing</SelectItem>
-                <SelectItem value="Snowboarding">Snowboarding</SelectItem>
-                <SelectItem value="Cross Country">Cross Country</SelectItem>
-                <SelectItem value="Nordic Combined">Nordic Combined</SelectItem>
-                <SelectItem value="Ski Jumping">Ski Jumping</SelectItem>
-              </SelectContent>
-            </Select>
+          <OnboardingStep title="What's your primary sport discipline?" description="Select all that apply">
+            <MultiSelect
+              groups={SPORT_DISCIPLINE_GROUPS}
+              selected={formValues.sport}
+              onChange={(values) => setValue("sport", values)}
+              placeholder="Search sport disciplines..."
+              className="min-h-[56px]"
+            />
             <StepNavigation
               currentStep={currentStep}
               totalSteps={TOTAL_STEPS}
@@ -791,7 +783,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Sport</p>
-                <p className="text-lg font-medium">{formValues.sport}</p>
+                <p className="text-lg font-medium">{formValues.sport.join(", ")}</p>
               </div>
               {formValues.homeMountain && (
                 <div>
@@ -822,7 +814,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
               canGoBack={true}
               canGoNext={true}
               onBack={prevStep}
-              onNext={handleSubmit(onSubmit)}
+              onNext={handleSubmit(onSubmit as any)}
               isLoading={isSubmitting}
               nextLabel="Complete Profile"
             />

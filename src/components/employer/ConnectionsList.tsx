@@ -16,7 +16,7 @@ interface Connection {
   id: string;
   athlete_profiles: {
     email: string | null;
-    sport_discipline: string | null;
+    sport_discipline: string[] | null;
     photo_url: string | null;
     background_image_url: string | null;
     bio: string | null;
@@ -270,7 +270,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                 </Avatar>
                 <div className="text-center w-full">
                   <h3 className="text-lg font-semibold">{connection.athlete_profiles.profiles?.full_name || "Athlete"}</h3>
-                  <p className="text-sm text-muted-foreground">{connection.athlete_profiles.sport_discipline || "Sport not specified"}</p>
+                  <p className="text-sm text-muted-foreground">{connection.athlete_profiles.sport_discipline?.join(", ") || "Sport not specified"}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {connection.athlete_profiles.years_of_membership ? `${connection.athlete_profiles.years_of_membership} years U.S. Ski & Snowboard` : "\u00A0"}
                   </p>

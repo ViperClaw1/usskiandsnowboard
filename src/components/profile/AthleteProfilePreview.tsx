@@ -104,7 +104,7 @@ export const AthleteProfilePreview = ({
           <h2 className="text-2xl font-bold leading-tight">{profile?.full_name || "Name not set"}</h2>
           <p className="text-muted-foreground flex items-center gap-1 mt-1">
             <Award className="h-4 w-4" />
-            {profileData?.sport_discipline || "Sport not specified"}
+            {(Array.isArray(profileData?.sport_discipline) ? profileData.sport_discipline.join(", ") : profileData?.sport_discipline) || "Sport not specified"}
           </p>
         </div>
 

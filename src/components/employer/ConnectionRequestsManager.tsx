@@ -23,7 +23,7 @@ interface ConnectionRequest {
   athlete_profiles: {
     email: string | null;
     bio: string | null;
-    sport_discipline: string | null;
+    sport_discipline: string[] | null;
     skills: string[] | null;
     photo_url: string | null;
     professional_highlights: string | null;
@@ -212,8 +212,10 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
         request.athlete_profiles.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.athlete_profiles.bio?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesSport = !filterSport || 
-        request.athlete_profiles.sport_discipline === filterSport;
+      const matchesSport = !filterSport ||
+        (Array.isArray(request.athlete_profiles.sport_discipline)
+          ? request.athlete_profiles.sport_discipline.includes(filterSport)
+          : request.athlete_profiles.sport_discipline === filterSport);
       
       const matchesAvailability = !filterAvailability || 
         request.athlete_profiles.availability === filterAvailability;
@@ -223,7 +225,12 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
   }, [requests, searchTerm, filterSport, filterAvailability]);
 
   const uniqueSports = useMemo(() => {
-    return Array.from(new Set(requests.map(r => r.athlete_profiles.sport_discipline).filter(Boolean)));
+    const allSports = requests.flatMap(r =>
+      Array.isArray(r.athlete_profiles.sport_discipline)
+        ? r.athlete_profiles.sport_discipline
+        : r.athlete_profiles.sport_discipline ? [r.athlete_profiles.sport_discipline] : []
+    );
+    return Array.from(new Set(allSports));
   }, [requests]);
 
   const uniqueAvailability = useMemo(() => {
@@ -295,7 +302,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                     {request.athlete_profiles.profiles?.full_name || "Athlete"}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {request.athlete_profiles.sport_discipline || "Sport not specified"}
+                    {Array.isArray(request.athlete_profiles.sport_discipline) ? request.athlete_profiles.sport_discipline.join(", ") : (request.athlete_profiles.sport_discipline || "Sport not specified")}
                   </p>
                 </div>
                 <Badge variant="secondary">Pending</Badge>

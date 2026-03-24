@@ -20,6 +20,7 @@ import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { SPORT_DISCIPLINES_OPTIONS } from "@/data/suggestions";
 
 // ==============================
 // Types / Interfaces
@@ -30,7 +31,7 @@ interface AthleteProfile {
   user_id: string;
   email: string | null;
   bio: string | null;
-  sport_discipline: string | null;
+  sport_discipline: string[] | null;
   skills: string[] | null;
   photo_url: string | null;
   background_image_url: string | null;
@@ -284,7 +285,7 @@ const AthleteDirectory = () => {
     }
 
     if (filterSport && filterSport !== "all") {
-      result = result.filter((a) => a.sport_discipline === filterSport);
+      result = result.filter((a) => a.sport_discipline?.includes(filterSport));
     }
     if (filterAvailability && filterAvailability !== "all") {
       result = result.filter((a) => a.availability === filterAvailability);
@@ -524,9 +525,9 @@ const AthleteDirectory = () => {
             </SelectTrigger>
             <SelectContent position="popper">
               <SelectItem value="all">All Sports</SelectItem>
-              {Array.from(new Set(athletes.map((a) => a.sport_discipline).filter(Boolean))).map((sport) => (
-                <SelectItem key={sport} value={sport!}>
-                  {sport}
+              {SPORT_DISCIPLINES_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -626,7 +627,7 @@ const AthleteDirectory = () => {
                 </Avatar>
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{athlete.sport_discipline || "Sport not specified"}</p>
+                  <p className="text-sm text-muted-foreground">{athlete.sport_discipline?.join(", ") || "Sport not specified"}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {athlete.years_of_membership
                       ? `${athlete.years_of_membership} years U.S. Ski & Snowboard`
