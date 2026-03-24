@@ -111,7 +111,9 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           last_name: profileData?.last_name || "",
           email: athleteData.email || profileData?.email || "",
           phone: athleteData.phone ? formatPhone(unformatPhone(athleteData.phone)) : "",
-          sport_discipline: athleteData.sport_discipline || "",
+          sport_discipline: Array.isArray(athleteData.sport_discipline)
+            ? athleteData.sport_discipline
+            : (athleteData.sport_discipline ? [athleteData.sport_discipline] : []) as string[],
           home_mountain: athleteData.home_mountain || "",
           bio: athleteData.bio || "",
           career_interests: athleteData.career_interests?.join(", ") || "",
