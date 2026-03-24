@@ -20,6 +20,7 @@ import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { SPORT_DISCIPLINES_OPTIONS } from "@/data/suggestions";
 
 // ==============================
 // Types / Interfaces
