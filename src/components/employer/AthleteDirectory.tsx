@@ -178,7 +178,12 @@ const fetchExistingRequests = async (employerId: string): Promise<Set<string>> =
 // cache so loading is false from the very first render — no spinner, no flash.
 // ==============================
 
-const AthleteDirectory = () => {
+interface AthleteDirectoryProps {
+  /** Optional external discipline filter from parent page (array of values) */
+  filterDisciplines?: string[];
+}
+
+const AthleteDirectory = ({ filterDisciplines = [] }: AthleteDirectoryProps) => {
   const queryClient = useQueryClient();
 
   // ==============================
