@@ -46,7 +46,7 @@ interface Connection {
 interface AthleteProfile {
   id: string;
   photo_url: string | null;
-  sport_discipline: string | null;
+  sport_discipline: string[] | null;
   profile_completeness: number;
   profile_views: number;
   bio: string | null;

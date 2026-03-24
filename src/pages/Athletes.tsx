@@ -25,7 +25,7 @@ interface AthleteProfile {
   id: string;
   user_id: string;
   photo_url: string | null;
-  sport_discipline: string | null;
+  sport_discipline: string[] | null;
   bio: string | null;
   skills: string[] | null;
   availability: string | null;

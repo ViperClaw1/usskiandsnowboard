@@ -23,7 +23,7 @@ interface ConnectionRequest {
   athlete_profiles: {
     email: string | null;
     bio: string | null;
-    sport_discipline: string | null;
+    sport_discipline: string[] | null;
     skills: string[] | null;
     photo_url: string | null;
     professional_highlights: string | null;

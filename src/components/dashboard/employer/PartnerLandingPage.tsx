@@ -59,7 +59,7 @@ interface EmployerProfile {
 interface AthleteProfile {
   id: string;
   photo_url: string | null;
-  sport_discipline: string | null;
+  sport_discipline: string[] | null;
   skills: string[] | null;
   availability: string | null;
   profiles: {
