@@ -69,7 +69,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
     last_name: "",
     email: "",
     phone: "",
-    sport_discipline: "",
+    sport_discipline: [] as string[],
     home_mountain: "",
     bio: "",
     career_interests: "",

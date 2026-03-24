@@ -202,7 +202,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
       const athleteData = {
         user_id: user.id,
         affiliation: data.affiliation,
-        sport_discipline: data.sport,
+        sport_discipline: Array.isArray(data.sport) ? data.sport : (data.sport ? [data.sport] : []),
         home_mountain: data.homeMountain || null,
         bio: data.bio,
         career_interests: careerInterestsArray,
@@ -228,7 +228,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
         .upsert({
           ...athleteData,
           profile_completeness: completeness,
-        });
+        } as Parameters<ReturnType<typeof supabase.from<"athlete_profiles">>["upsert"]>[0]);
 
       if (athleteError) throw athleteError;
 
