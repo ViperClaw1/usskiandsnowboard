@@ -6,6 +6,27 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const EXPERT_TOOL = {
+  type: "function",
+  function: {
+    name: "populate_expert_profile",
+    description: "Populate an expert professional profile with extracted data from LinkedIn.",
+    parameters: {
+      type: "object",
+      properties: {
+        full_name: { type: "string" },
+        job_title: { type: "string", description: "Current role/title" },
+        area_of_expertise: { type: "string", description: "Primary area of professional expertise" },
+        bio: { type: "string", description: "Professional bio, 2-4 sentences" },
+        photo_url: { type: "string", description: "URL to profile headshot" },
+        linkedin_url: { type: "string" },
+      },
+      required: ["full_name"],
+      additionalProperties: false,
+    },
+  },
+};
+
 const EMPLOYER_TOOL = {
   type: "function",
   function: {
