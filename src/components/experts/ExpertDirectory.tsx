@@ -1,0 +1,350 @@
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Search, X, Linkedin, ImagePlus } from "lucide-react";
+import { ExpertConnectionRequestDialog } from "./ExpertConnectionRequestDialog";
+import { INDUSTRY_OPTIONS } from "@/data/suggestions";
+
+// ==============================
+// Types
+// ==============================
+export interface ExpertProfile {
+  id: string;
+  user_id: string;
+  full_name: string;
+  job_title: string | null;
+  area_of_expertise: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  background_image_url: string | null;
+  industry: string | null;
+  is_alum: boolean | null;
+  linkedin_url: string | null;
+  email: string | null;
+  is_public: boolean | null;
+}
+
+// ==============================
+// Helpers
+// ==============================
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0].toUpperCase())
+    .join("");
+}
+
+// ==============================
+// Fetch
+// ==============================
+const fetchExperts = async (): Promise<ExpertProfile[]> => {
+  const { data, error } = await supabase
+    .from("expert_profiles")
+    .select("*")
+    .eq("is_public", true)
+    .order("full_name");
+  if (error) throw error;
+  return (data ?? []) as ExpertProfile[];
+};
+
+// ==============================
+// Component
+// ==============================
+interface ExpertDirectoryProps {
+  adminMode?: boolean;
+  onAddExpert?: () => void;
+}
+
+export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirectoryProps) => {
+  const { user } = useAuth();
+  const { role } = useUserRole(user?.id);
+
+  const [search, setSearch] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("all");
+  const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
+  const [connectionDialogExpert, setConnectionDialogExpert] = useState<ExpertProfile | null>(null);
+
+  const { data: experts = [], isLoading } = useQuery({
+    queryKey: ["expert-profiles"],
+    queryFn: fetchExperts,
+  });
+
+  // Existing requests by this athlete
+  const { data: existingRequests = [] } = useQuery({
+    queryKey: ["expert-requests", user?.id],
+    queryFn: async () => {
+      if (!user || role !== "athlete") return [];
+      const { data: ap } = await supabase
+        .from("athlete_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!ap) return [];
+      const { data } = await supabase
+        .from("expert_connection_requests")
+        .select("expert_id, status")
+        .eq("athlete_id", ap.id);
+      return data ?? [];
+    },
+    enabled: !!user && role === "athlete",
+  });
+
+  const requestStatusMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    existingRequests.forEach((r: { expert_id: string; status: string }) => {
+      m[r.expert_id] = r.status;
+    });
+    return m;
+  }, [existingRequests]);
+
+  const filtered = useMemo(() => {
+    let res = experts;
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      res = res.filter(
+        (e) =>
+          e.full_name.toLowerCase().includes(s) ||
+          e.job_title?.toLowerCase().includes(s) ||
+          e.area_of_expertise?.toLowerCase().includes(s)
+      );
+    }
+    if (filterIndustry === "alum") {
+      res = res.filter((e) => e.is_alum);
+    } else if (filterIndustry !== "all") {
+      res = res.filter((e) => e.industry === filterIndustry);
+    }
+    return res;
+  }, [experts, search, filterIndustry]);
+
+  const canRequest = role === "athlete";
+
+  if (isLoading) return <LoadingSpinner />;
+
+  return (
+    <div className="space-y-6">
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search experts by name or expertise..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={filterIndustry} onValueChange={setFilterIndustry}>
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Filter by industry" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Industries</SelectItem>
+            <SelectItem value="alum">🏔️ US Ski &amp; Snowboard Alum</SelectItem>
+            {INDUSTRY_OPTIONS.map((ind) => (
+              <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(filterIndustry !== "all" || search) && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => { setSearch(""); setFilterIndustry("all"); }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+        {adminMode && onAddExpert && (
+          <Button onClick={onAddExpert}>+ Add Expert</Button>
+        )}
+      </div>
+
+      {/* Grid */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">No experts found.</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((expert) => {
+            const requestStatus = requestStatusMap[expert.id];
+            return (
+              <Card
+                key={expert.id}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedExpert(expert)}
+              >
+                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={expert.photo_url ?? undefined} alt={expert.full_name} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                      {getInitials(expert.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-foreground">{expert.full_name}</p>
+                    {expert.job_title && (
+                      <p className="text-sm text-muted-foreground">{expert.job_title}</p>
+                    )}
+                    {expert.area_of_expertise && (
+                      <p className="text-xs text-primary font-medium">{expert.area_of_expertise}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {expert.industry && (
+                      <Badge variant="secondary" className="text-xs">{expert.industry}</Badge>
+                    )}
+                    {expert.is_alum && (
+                      <Badge className="text-xs bg-primary/10 text-primary border-primary/20">🏔️ US Ski &amp; Snowboard Alum</Badge>
+                    )}
+                  </div>
+                  {expert.bio && (
+                    <p className="text-xs text-muted-foreground line-clamp-2">{expert.bio}</p>
+                  )}
+                  {canRequest && (
+                    <Button
+                      size="sm"
+                      className="w-full mt-1"
+                      variant={requestStatus === "pending" ? "outline" : requestStatus === "accepted" ? "secondary" : "default"}
+                      disabled={!!requestStatus}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!requestStatus) setConnectionDialogExpert(expert);
+                      }}
+                    >
+                      {requestStatus === "pending"
+                        ? "Request Sent"
+                        : requestStatus === "accepted"
+                        ? "✓ Connected"
+                        : "Request a Connection"}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Expert Detail Dialog */}
+      {selectedExpert && (
+        <Dialog open={!!selectedExpert} onOpenChange={(o) => !o && setSelectedExpert(null)}>
+          <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+            {/* Banner */}
+            {selectedExpert.background_image_url ? (
+              <div
+                className="h-28 bg-cover bg-center"
+                style={{ backgroundImage: `url(${selectedExpert.background_image_url})` }}
+              />
+            ) : (
+              <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <ImagePlus className="h-7 w-7" />
+                  <span className="text-xs font-medium">No background photo</span>
+                </div>
+              </div>
+            )}
+
+            <div className="px-6 pb-6 -mt-8 space-y-4">
+              <div className="flex items-end gap-4">
+                <Avatar className="h-16 w-16 border-4 border-background shadow">
+                  <AvatarImage src={selectedExpert.photo_url ?? undefined} alt={selectedExpert.full_name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                    {getInitials(selectedExpert.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="pb-1">
+                  <DialogHeader>
+                    <DialogTitle className="text-lg leading-tight">{selectedExpert.full_name}</DialogTitle>
+                  </DialogHeader>
+                  {selectedExpert.job_title && (
+                    <p className="text-sm text-muted-foreground">{selectedExpert.job_title}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {selectedExpert.industry && (
+                  <Badge variant="secondary">{selectedExpert.industry}</Badge>
+                )}
+                {selectedExpert.is_alum && (
+                  <Badge className="bg-primary/10 text-primary border-primary/20">🏔️ US Ski &amp; Snowboard Alum</Badge>
+                )}
+              </div>
+
+              {selectedExpert.area_of_expertise && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Area of Expertise</p>
+                  <p className="text-sm text-foreground">{selectedExpert.area_of_expertise}</p>
+                </div>
+              )}
+
+              {selectedExpert.bio && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">About</p>
+                  <p className="text-sm text-foreground leading-relaxed">{selectedExpert.bio}</p>
+                </div>
+              )}
+
+              {selectedExpert.linkedin_url && (
+                <a
+                  href={selectedExpert.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <Linkedin className="h-4 w-4" />
+                  LinkedIn Profile
+                </a>
+              )}
+
+              {canRequest && (() => {
+                const rs = requestStatusMap[selectedExpert.id];
+                return (
+                  <Button
+                    className="w-full"
+                    variant={rs === "pending" ? "outline" : rs === "accepted" ? "secondary" : "default"}
+                    disabled={!!rs}
+                    onClick={() => {
+                      if (!rs) {
+                        setSelectedExpert(null);
+                        setConnectionDialogExpert(selectedExpert);
+                      }
+                    }}
+                  >
+                    {rs === "pending"
+                      ? "Request Sent"
+                      : rs === "accepted"
+                      ? "✓ Connected"
+                      : "Request a Connection"}
+                  </Button>
+                );
+              })()}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Connection Request Dialog */}
+      {connectionDialogExpert && user && (
+        <ExpertConnectionRequestDialog
+          expert={connectionDialogExpert}
+          userId={user.id}
+          open={!!connectionDialogExpert}
+          onOpenChange={(o) => !o && setConnectionDialogExpert(null)}
+          onSuccess={() => setConnectionDialogExpert(null)}
+        />
+      )}
+    </div>
+  );
+};
