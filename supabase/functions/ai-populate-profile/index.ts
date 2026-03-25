@@ -153,10 +153,12 @@ Deno.serve(async (req) => {
     const isEmployer = role === "employer";
     const systemPrompt = isEmployer
       ? `You are extracting company profile information from a website for a U.S. Ski & Snowboard partner directory. The company name is "${name}". Extract all available fields from the scraped content. For any field that cannot be determined from the content, make a reasonable suggestion based on the company name, industry context, and any other available information. Every field should have a value - do not leave fields empty.`
+      : role === "expert"
+      ? `You are extracting professional profile information from a LinkedIn profile for a U.S. Ski & Snowboard expert directory. The person's name is "${name}". Extract all available fields from the scraped content. Focus on their current role, area of expertise, and professional bio.`
       : `You are extracting athlete profile information from an Instagram profile for a U.S. Ski & Snowboard athlete directory. The athlete's name is "${name}". Extract all available fields from the scraped content. For any field that cannot be determined from the content, make a reasonable suggestion based on the person's name, their background, and winter sports context. Every field should have a value - do not leave fields empty. The athlete is associated with U.S. Ski & Snowboard.`;
 
-    const tool = isEmployer ? EMPLOYER_TOOL : ATHLETE_TOOL;
-    const toolName = isEmployer ? "populate_employer_profile" : "populate_athlete_profile";
+    const tool = role === "expert" ? EXPERT_TOOL : isEmployer ? EMPLOYER_TOOL : ATHLETE_TOOL;
+    const toolName = role === "expert" ? "populate_expert_profile" : isEmployer ? "populate_employer_profile" : "populate_athlete_profile";
 
     console.log("Calling Lovable AI for extraction...");
 
