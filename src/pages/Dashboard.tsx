@@ -9,6 +9,7 @@ import RoleSelection from "@/components/dashboard/RoleSelection";
 import AthleteDashboard from "@/components/dashboard/AthleteDashboard";
 import EmployerDashboard from "@/components/dashboard/EmployerDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
+import ExpertDashboard from "@/components/dashboard/ExpertDashboard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
