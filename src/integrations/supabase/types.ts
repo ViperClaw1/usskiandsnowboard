@@ -626,6 +626,121 @@ export type Database = {
           },
         ]
       }
+      expert_connection_requests: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          expert_id: string
+          id: string
+          initiated_by_user_id: string | null
+          message: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          expert_id: string
+          id?: string
+          initiated_by_user_id?: string | null
+          message?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          expert_id?: string
+          id?: string
+          initiated_by_user_id?: string | null
+          message?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_connection_requests_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expert_connection_requests_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "top_athlete_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expert_connection_requests_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "expert_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expert_profiles: {
+        Row: {
+          area_of_expertise: string | null
+          background_image_url: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          industry: string | null
+          is_alum: boolean | null
+          is_public: boolean | null
+          job_title: string | null
+          linkedin_url: string | null
+          photo_url: string | null
+          profile_completeness: number | null
+          profile_views: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area_of_expertise?: string | null
+          background_image_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          industry?: string | null
+          is_alum?: boolean | null
+          is_public?: boolean | null
+          job_title?: string | null
+          linkedin_url?: string | null
+          photo_url?: string | null
+          profile_completeness?: number | null
+          profile_views?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area_of_expertise?: string | null
+          background_image_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          industry?: string | null
+          is_alum?: boolean | null
+          is_public?: boolean | null
+          job_title?: string | null
+          linkedin_url?: string | null
+          photo_url?: string | null
+          profile_completeness?: number | null
+          profile_views?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       news_articles: {
         Row: {
           created_at: string
@@ -974,7 +1089,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "athlete" | "employer" | "admin"
+      app_role: "athlete" | "employer" | "admin" | "expert"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1102,7 +1217,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["athlete", "employer", "admin"],
+      app_role: ["athlete", "employer", "admin", "expert"],
     },
   },
 } as const
