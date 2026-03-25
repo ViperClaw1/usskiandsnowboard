@@ -31,11 +31,7 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["expert-own-profile", user.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("expert_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data, error } = await supabase.from("expert_profiles").select("*").eq("user_id", user.id).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -47,14 +43,16 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
       if (!profile) return [];
       const { data, error } = await supabase
         .from("expert_connection_requests")
-        .select(`
+        .select(
+          `
           id,
           message,
           status,
           created_at,
           athlete_id,
           athlete_profiles!inner(id, user_id, profiles!inner(full_name, email))
-        `)
+        `,
+        )
         .eq("expert_id", profile.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -79,9 +77,7 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
             </Avatar>
             <div className="flex-1">
               <CardTitle>{profile?.full_name ?? "Expert Profile"}</CardTitle>
-              {profile?.job_title && (
-                <p className="text-sm text-muted-foreground">{profile.job_title}</p>
-              )}
+              {profile?.job_title && <p className="text-sm text-muted-foreground">{profile.job_title}</p>}
               <div className="flex flex-wrap gap-2 mt-2">
                 {profile?.industry && <Badge variant="secondary">{profile.industry}</Badge>}
                 {profile?.is_alum && (
@@ -112,9 +108,7 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               Connection Requests
-              {requests.length > 0 && (
-                <Badge variant="secondary">{requests.length}</Badge>
-              )}
+              {requests.length > 0 && <Badge variant="secondary">{requests.length}</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -131,14 +125,14 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
                       <p className="font-medium text-sm text-foreground">
                         {req.athlete_profiles?.profiles?.full_name ?? "Unknown Athlete"}
                       </p>
-                      {req.message && (
-                        <p className="text-xs text-muted-foreground mt-1 italic">"{req.message}"</p>
-                      )}
+                      {req.message && <p className="text-xs text-muted-foreground mt-1 italic">"{req.message}"</p>}
                       <p className="text-xs text-muted-foreground mt-1">
                         {new Date(req.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <Badge variant="outline" className="shrink-0 text-xs">{req.status}</Badge>
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {req.status}
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -154,17 +148,21 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
             <DialogTitle>{profile ? "Edit Expert Profile" : "Create Expert Profile"}</DialogTitle>
           </DialogHeader>
           <ExpertProfileForm
-            initialData={profile ? {
-              full_name: profile.full_name,
-              job_title: profile.job_title ?? "",
-              area_of_expertise: profile.area_of_expertise ?? "",
-              bio: profile.bio ?? "",
-              industry: profile.industry ?? "",
-              is_alum: profile.is_alum ?? false,
-              linkedin_url: profile.linkedin_url ?? "",
-              email: profile.email ?? "",
-              photo_url: profile.photo_url ?? "",
-            } : undefined}
+            initialData={
+              profile
+                ? {
+                    full_name: profile.full_name,
+                    job_title: profile.job_title ?? "",
+                    area_of_expertise: profile.area_of_expertise ?? "",
+                    bio: profile.bio ?? "",
+                    industry: profile.industry ?? "",
+                    is_alum: profile.is_alum ?? false,
+                    linkedin_url: profile.linkedin_url ?? "",
+                    email: profile.email ?? "",
+                    photo_url: profile.photo_url ?? "",
+                  }
+                : undefined
+            }
             expertId={profile?.id}
             adminUserId={!profile ? user.id : undefined}
             onSaved={() => {
