@@ -21,13 +21,14 @@ import { WaitlistManager } from "./admin/WaitlistManager";
 import { ExpertDirectory } from "@/components/experts/ExpertDirectory";
 import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState as useDialogState } from "react";
+// Note: useState already imported above, useDialogState alias removed
 
 interface AdminDashboardProps {
   user: User;
 }
 
 const AdminDashboard = ({ user }: AdminDashboardProps) => {
+  const [addExpertOpen, setAddExpertOpen] = useState(false);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("analytics");
 
