@@ -103,39 +103,28 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl space-y-6">
         {/* Profile Card */}
         <Card>
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={profile?.photo_url ?? undefined} alt={profile?.full_name} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
-                  {profile ? getInitials(profile.full_name) : "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <CardTitle>{profile?.full_name ?? "Expert Profile"}</CardTitle>
-                {profile?.job_title && <p className="text-sm text-muted-foreground">{profile.job_title}</p>}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {profile?.industry && <Badge variant="secondary">{profile.industry}</Badge>}
-                  {profile?.is_alum && (
-                    <Badge className="bg-primary/10 text-primary border-primary/20">
-                      🏔️ US Ski &amp; Snowboard Alum
-                    </Badge>
-                  )}
-                </div>
+          <CardHeader className="flex flex-row items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={profile?.photo_url ?? undefined} alt={profile?.full_name} />
+              <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                {profile ? getInitials(profile.full_name) : "?"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <CardTitle>{profile?.full_name ?? "Expert Profile"}</CardTitle>
+              {profile?.job_title && (
+                <p className="text-sm text-muted-foreground">{profile.job_title}</p>
+              )}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {profile?.industry && <Badge variant="secondary">{profile.industry}</Badge>}
+                {profile?.is_alum && (
+                  <Badge className="bg-primary/10 text-primary border-primary/20">🏔️ US Ski &amp; Snowboard Alum</Badge>
+                )}
               </div>
             </div>
-
-            <div className="w-full sm:w-auto sm:ml-auto flex flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => setEditOpen(true)} className="w-full sm:w-auto">
-                {profile ? "Edit Profile" : "Create Profile"}
-              </Button>
-              <Button variant="outline" onClick={() => setCurrentView("athletes")} className="w-full sm:w-auto">
-                Browse Athletes
-              </Button>
-              <Button variant="outline" onClick={() => setCurrentView("employers")} className="w-full sm:w-auto">
-                Browse Partners
-              </Button>
-            </div>
+            <Button variant="outline" onClick={() => setEditOpen(true)}>
+              Edit Profile
+            </Button>
           </CardHeader>
           {profile?.bio && (
             <CardContent>
