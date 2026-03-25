@@ -14,6 +14,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { to: "/athletes", label: "Athletes" },
   { to: "/employers", label: "Partners" },
+  { to: "/experts", label: "Experts" },
   { to: "/schedule", label: "Schedule" },
   { to: "/news", label: "News" },
   { to: "/training", label: "Training", allowedRoles: ["athlete", "admin"] },

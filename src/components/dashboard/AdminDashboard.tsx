@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, Shield, Settings, Users, Building2, BarChart3, Bell, FileText, Clock } from "lucide-react";
+import { LogOut, Shield, Settings, Users, Building2, BarChart3, Bell, FileText, Clock, UserCheck } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useNavigate } from "react-router-dom";
 import { AdminStatsCards } from "./admin/AdminStatsCards";
@@ -18,12 +18,17 @@ import { AthleteLayoutEditor } from "./admin/AthleteLayoutEditor";
 import { PartnerLayoutEditor } from "./admin/PartnerLayoutEditor";
 import { TrainingArticleManager } from "./admin/TrainingArticleManager";
 import { WaitlistManager } from "./admin/WaitlistManager";
+import { ExpertDirectory } from "@/components/experts/ExpertDirectory";
+import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+// Note: useState already imported above, useDialogState alias removed
 
 interface AdminDashboardProps {
   user: User;
 }
 
 const AdminDashboard = ({ user }: AdminDashboardProps) => {
+  const [addExpertOpen, setAddExpertOpen] = useState(false);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("analytics");
 
@@ -67,7 +72,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto">
+          <TabsList className="grid w-full max-w-3xl grid-cols-6 mx-auto">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
@@ -79,6 +84,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <TabsTrigger value="employer" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Partner View</span>
+            </TabsTrigger>
+            <TabsTrigger value="experts" className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Experts</span>
             </TabsTrigger>
             <TabsTrigger value="training" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -158,8 +167,25 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <TabsContent value="waitlist" forceMount className="mt-6">
             <WaitlistManager />
           </TabsContent>
+
+          <TabsContent value="experts" forceMount className="mt-6">
+            <ExpertDirectory adminMode onAddExpert={() => setAddExpertOpen(true)} />
+          </TabsContent>
         </Tabs>
       </main>
+
+      <Dialog open={addExpertOpen} onOpenChange={setAddExpertOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Expert Profile</DialogTitle>
+          </DialogHeader>
+          <ExpertProfileForm
+            adminUserId={user.id}
+            onSaved={() => setAddExpertOpen(false)}
+            onCancel={() => setAddExpertOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -9,6 +9,7 @@ import RoleSelection from "@/components/dashboard/RoleSelection";
 import AthleteDashboard from "@/components/dashboard/AthleteDashboard";
 import EmployerDashboard from "@/components/dashboard/EmployerDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
+import ExpertDashboard from "@/components/dashboard/ExpertDashboard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
@@ -187,6 +188,8 @@ const Dashboard = () => {
         );
       case "admin":
         return <AdminDashboard user={user!} />;
+      case "expert":
+        return <ExpertDashboard user={user!} />;
       default:
         return (
           <RoleSelection
@@ -301,7 +304,7 @@ const Dashboard = () => {
       </Dialog>
 
       {/* AI Profile Populator — hidden trigger element auto-clicked when activated */}
-      {showAIPopulator && (role === "athlete" || role === "employer") && (
+      {showAIPopulator && (role === "athlete" || role === "employer" || role === "expert") && (
         <div className="hidden">
           <div
             ref={(el) => {
@@ -312,7 +315,7 @@ const Dashboard = () => {
             }}
           >
             <AIProfilePopulator
-              role={role as "athlete" | "employer"}
+              role={role as "athlete" | "employer" | "expert"}
               userId={user.id}
               onComplete={() => {
                 setShowAIPopulator(false);
