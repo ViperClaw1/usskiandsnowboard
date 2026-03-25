@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AIProfilePopulatorProps {
-  role: "athlete" | "employer";
+  role: "athlete" | "employer" | "expert";
   userId: string;
   onComplete: () => void;
 }
