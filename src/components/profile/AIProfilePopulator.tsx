@@ -82,7 +82,36 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
       setProgress(92);
 
       // Upsert profile data
-      if (isEmployer) {
+      if (isExpert) {
+        // Expert profile upsert
+        const { data: existing } = await supabase
+          .from("expert_profiles")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        const expertFields = {
+          full_name: profileData.full_name || name.trim(),
+          job_title: profileData.job_title || null,
+          area_of_expertise: profileData.area_of_expertise || null,
+          bio: profileData.bio || null,
+          photo_url: profileData.photo_url || null,
+          linkedin_url: profileData.linkedin_url || url.trim(),
+        };
+
+        if (existing) {
+          const { error: updateErr } = await supabase
+            .from("expert_profiles")
+            .update(expertFields)
+            .eq("user_id", userId);
+          if (updateErr) throw updateErr;
+        } else {
+          const { error: insertErr } = await supabase
+            .from("expert_profiles")
+            .insert({ user_id: userId, ...expertFields });
+          if (insertErr) throw insertErr;
+        }
+      } else if (isEmployer) {
         // Check if employer profile exists first
         const { data: existing } = await supabase
           .from("employer_profiles")
