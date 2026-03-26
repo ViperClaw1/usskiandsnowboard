@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
+import { toast } from "sonner";
 import {
   ArrowRight,
   Briefcase,
@@ -17,6 +19,7 @@ import {
   Eye,
   EyeIcon,
   ImagePlus,
+  Loader2,
   Pencil,
   TrendingUp,
   UserCircle,
@@ -40,6 +43,7 @@ interface ExpertProfile {
   is_alum: boolean | null;
   profile_views: number | null;
   profile_completeness: number | null;
+  background_image_url: string | null;
 }
 
 interface ConnectionStats {
@@ -152,6 +156,9 @@ const fetchFeaturedPartners = async (): Promise<FeaturedPartner[]> => {
 export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: ExpertLandingPageProps) => {
   const queryClient = useQueryClient();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
+  const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
+  const bgInputRef = useRef<HTMLInputElement>(null);
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<ExpertDashboardData>({
     queryKey: expertDashboardKey(user.id),
@@ -174,6 +181,29 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
     staleTime: 5 * 60 * 1000,
   });
 
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBg(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/bg-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("company-logos").upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("company-logos").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+      setLocalBgUrl(publicUrl);
+      await supabase.from("expert_profiles").update({ background_image_url: publicUrl }).eq("user_id", user.id);
+      queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
+      toast.success("Background photo updated");
+      onProfileUpdated?.();
+    } catch {
+      toast.error("Failed to upload background photo");
+    } finally {
+      setUploadingBg(false);
+    }
+  };
+
   if (dashboardLoading || athletesLoading || partnersLoading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -188,6 +218,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
   const completeness = profile?.profile_completeness ?? 0;
   const profileViews = profile?.profile_views ?? 0;
   const profileName = profile?.full_name || "Expert";
+  const bgUrl = localBgUrl ?? profile?.background_image_url ?? null;
 
   const disciplinePreview = useMemo(() => {
     if (!profile?.area_of_expertise) return null;
@@ -200,12 +231,41 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
         <div className="max-w-7xl mx-auto">
           <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
             <div className="relative overflow-visible">
-              <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
-                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <ImagePlus className="h-8 w-8" />
-                  <span className="text-sm font-medium">Add background photo</span>
-                </div>
+              {/* Background image area */}
+              <div
+                className="h-40 sm:h-48 relative group cursor-pointer"
+                onClick={() => !bgUrl && bgInputRef.current?.click()}
+              >
+                {bgUrl ? (
+                  <>
+                    <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="bg-background/80 hover:bg-background"
+                        onClick={(e) => { e.stopPropagation(); bgInputRef.current?.click(); }}
+                        disabled={uploadingBg}
+                      >
+                        {uploadingBg ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImagePlus className="h-4 w-4 mr-2" />}
+                        Change photo
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                    {uploadingBg ? (
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <ImagePlus className="h-8 w-8" />
+                        <span className="text-sm font-medium">Add background photo</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
+              <input ref={bgInputRef} type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
 
               <Button
                 variant="secondary"
@@ -214,7 +274,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 onClick={() => onNavigate("profile")}
                 aria-label="Edit profile"
               >
-                <Pencil className="h-4 w-4 text-blue-500" />
+                <Pencil className="h-4 w-4" />
               </Button>
 
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
@@ -226,7 +286,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                     </Avatar>
                     <div className="space-y-1">
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">{profileName}</h1>
-                      {disciplinePreview && <p className="text-base text-muted-foreground">{disciplinePreview}</p>}
+                      {profile?.job_title && <p className="text-base text-muted-foreground">{profile.job_title}</p>}
                       <Button
                         variant="link"
                         size="sm"
@@ -235,11 +295,18 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                       >
                         Edit profile
                       </Button>
-                      {profile?.industry && (
-                        <Badge variant="secondary" className="mt-2 w-fit">
-                          {profile.industry}
-                        </Badge>
-                      )}
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {profile?.industry && (
+                          <Badge variant="secondary" className="w-fit">
+                            {profile.industry}
+                          </Badge>
+                        )}
+                        {disciplinePreview && (
+                          <Badge variant="outline" className="w-fit">
+                            {disciplinePreview}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -255,6 +322,14 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
                             Complete your profile <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
+                          <AIProfilePopulator
+                            role="expert"
+                            userId={user.id}
+                            onComplete={() => {
+                              queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
+                              onProfileUpdated?.();
+                            }}
+                          />
                         </div>
                       </CardContent>
                     </Card>
@@ -518,4 +593,3 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
     </div>
   );
 };
-
