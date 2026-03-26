@@ -19,6 +19,14 @@ const DEFAULT_TYPOGRAPHY: TypographySettings = {
   fontSize: "16",
 };
 
+const isMissingTypographyColumnError = (err: unknown) =>
+  typeof err === "object" &&
+  err !== null &&
+  "code" in err &&
+  (err as { code?: string }).code === "PGRST204" &&
+  "message" in err &&
+  String((err as { message?: string }).message || "").includes("typography");
+
 export const useDashboardLayout = (role: DashboardLayoutRole) => {
   const [layout, setLayout] = useState<DashboardLayout>({
     text_overrides: {},
@@ -29,11 +37,7 @@ export const useDashboardLayout = (role: DashboardLayoutRole) => {
 
   const fetchLayout = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from("dashboard_layouts" as any)
-        .select("*")
-        .eq("role", role)
-        .maybeSingle();
+      const { data, error } = await supabase.from("dashboard_layouts" as any).select("*").eq("role", role).maybeSingle();
 
       if (error) throw error;
 
@@ -75,7 +79,7 @@ export const useDashboardLayout = (role: DashboardLayoutRole) => {
         .maybeSingle();
 
       if (existing) {
-        const { error } = await supabase
+        let { error } = await supabase
           .from("dashboard_layouts" as any)
           .update({
             text_overrides: layout.text_overrides,
@@ -83,13 +87,33 @@ export const useDashboardLayout = (role: DashboardLayoutRole) => {
             updated_at: new Date().toISOString(),
           } as any)
           .eq("role", role);
+
+        // Backward-compatible fallback if the DB schema hasn't received the typography column yet.
+        if (error && isMissingTypographyColumnError(error)) {
+          const fallback = await supabase
+            .from("dashboard_layouts" as any)
+            .update({
+              text_overrides: layout.text_overrides,
+              updated_at: new Date().toISOString(),
+            } as any)
+            .eq("role", role);
+          error = fallback.error;
+        }
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("dashboard_layouts" as any).insert({
+        let { error } = await supabase.from("dashboard_layouts" as any).insert({
           role,
           text_overrides: layout.text_overrides,
           typography: layout.typography,
         } as any);
+
+        if (error && isMissingTypographyColumnError(error)) {
+          const fallback = await supabase.from("dashboard_layouts" as any).insert({
+            role,
+            text_overrides: layout.text_overrides,
+          } as any);
+          error = fallback.error;
+        }
         if (error) throw error;
       }
 
@@ -126,11 +150,21 @@ export const useDashboardTextOverrides = (role: DashboardLayoutRole) => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from("dashboard_layouts" as any)
           .select("text_overrides, typography")
           .eq("role", role)
           .maybeSingle();
+
+        if (error && isMissingTypographyColumnError(error)) {
+          const fallback = await supabase
+            .from("dashboard_layouts" as any)
+            .select("text_overrides")
+            .eq("role", role)
+            .maybeSingle();
+          data = fallback.data;
+          error = fallback.error;
+        }
 
         if (error) throw error;
 
