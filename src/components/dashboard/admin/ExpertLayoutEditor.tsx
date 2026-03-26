@@ -65,6 +65,7 @@ export const ExpertLayoutEditor = () => {
             Click any text with a <span className="text-primary font-medium">pencil icon</span> to edit it. Changes
             apply to all expert dashboards.
           </p>
+          
           <TypographyControls typography={layout.typography} onUpdate={updateTypography} disabled={saving} />
         </div>
         <div className="flex gap-2 shrink-0">

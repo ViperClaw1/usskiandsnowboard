@@ -83,7 +83,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </TabsTrigger>
             <TabsTrigger value="experts" className="flex items-center gap-2">
               <UserCheck className="h-4 w-4" />
-              <span className="hidden sm:inline">Experts</span>
+              <span className="hidden sm:inline">Expert View</span>
             </TabsTrigger>
             <TabsTrigger value="training" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
