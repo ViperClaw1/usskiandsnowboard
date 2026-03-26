@@ -204,14 +204,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
     }
   };
 
-  if (dashboardLoading || athletesLoading || partnersLoading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
+  // All derived values and hooks must be above any early returns
   const profile = dashboardData?.profile ?? null;
   const connectionStats = dashboardData?.connectionStats ?? { pending: 0, accepted: 0, rejected: 0 };
   const connections = dashboardData?.connections ?? [];
@@ -224,6 +217,14 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
     if (!profile?.area_of_expertise) return null;
     return profile.area_of_expertise.split(",")[0]?.trim() || null;
   }, [profile?.area_of_expertise]);
+
+  if (dashboardLoading || athletesLoading || partnersLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-b from-background to-muted/30">
