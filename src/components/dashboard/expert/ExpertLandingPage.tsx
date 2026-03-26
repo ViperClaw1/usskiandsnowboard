@@ -281,7 +281,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 onClick={() => onNavigate("profile")}
                 aria-label="Edit profile"
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-4 w-4 text-gray-950" />
               </Button>
 
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
