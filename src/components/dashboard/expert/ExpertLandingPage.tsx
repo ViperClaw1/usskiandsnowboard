@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
+import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { toast } from "sonner";
 import {
   ArrowRight,
@@ -24,6 +25,7 @@ import {
   TrendingUp,
   UserCircle,
   Users,
+  XCircle,
 } from "lucide-react";
 
 interface ExpertLandingPageProps {
@@ -155,6 +157,7 @@ const fetchFeaturedPartners = async (): Promise<FeaturedPartner[]> => {
 
 export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: ExpertLandingPageProps) => {
   const queryClient = useQueryClient();
+  const { getText, typography } = useDashboardTextOverrides("expert");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
@@ -227,7 +230,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
   }
 
   return (
-    <div className="bg-gradient-to-b from-background to-muted/30">
+    <div
+      className="bg-gradient-to-b from-background to-muted/30"
+      style={{ fontFamily: typography.fontFamily, fontSize: `${typography.fontSize}px` }}
+    >
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
           <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
@@ -260,7 +266,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                     ) : (
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <ImagePlus className="h-8 w-8" />
-                        <span className="text-sm font-medium">Add background photo</span>
+                        <span className="text-sm font-medium">{getText("hero.add_background_photo", "Add background photo")}</span>
                       </div>
                     )}
                   </div>
@@ -294,7 +300,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                         className="h-auto p-0 text-muted-foreground"
                         onClick={() => onNavigate("profile")}
                       >
-                        Edit profile
+                        {getText("hero.edit_profile", "Edit profile")}
                       </Button>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {profile?.industry && (
@@ -316,12 +322,14 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Profile Complete</span>
+                            <span className="text-muted-foreground">
+                              {getText("hero.profile_complete_label", "Profile Complete")}
+                            </span>
                             <span className="font-semibold">{completeness}%</span>
                           </div>
                           <Progress value={completeness} className="h-2" />
                           <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                            Complete your profile <ArrowRight className="ml-1 h-3 w-3" />
+                            {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
                           <AIProfilePopulator
                             role="expert"
@@ -350,7 +358,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                Connection Activity
+                {getText("connection_activity.title", "Connection Activity")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -358,19 +366,32 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-amber-500" />
-                    <span className="text-sm text-muted-foreground">Requests</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.pending", "Pending")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.pending}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-muted-foreground">Connections</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.accepted", "Accepted")}
+                    </span>
                   </div>
                   <span className="text-2xl font-bold">{connectionStats.accepted}</span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-4 w-4 text-red-500" />
+                    <span className="text-sm text-muted-foreground">
+                      {getText("connection_activity.declined", "Declined")}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">{connectionStats.rejected}</span>
+                </div>
                 <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("connections")}>
-                  View Activity Board
+                  {getText("connection_activity.button", "Manage Connections")}
                 </Button>
               </div>
             </CardContent>
@@ -380,7 +401,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                Profile Performance
+                {getText("profile_performance.title", "Profile Performance")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -388,21 +409,27 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Profile Views</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("profile_performance.views_label", "Profile Views")}
+                    </span>
                   </div>
                   <span className="text-4xl font-bold">{profileViews}</span>
-                  <p className="text-xs text-muted-foreground mt-1">All time</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {getText("profile_performance.views_subtitle", "All time")}
+                  </p>
                 </div>
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">Completeness</span>
+                    <span className="text-sm text-muted-foreground">
+                      {getText("profile_performance.completeness_label", "Completeness")}
+                    </span>
                     <span className="text-sm font-semibold">{completeness}%</span>
                   </div>
                   <Progress value={completeness} className="h-2" />
                 </div>
                 {completeness < 100 && (
                   <Button variant="outline" className="w-full mt-2" onClick={() => onNavigate("profile")}>
-                    Improve Profile
+                    {getText("profile_performance.button", "Improve Profile")}
                   </Button>
                 )}
               </div>
@@ -413,32 +440,32 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-primary" />
-                Quick Actions
+                {getText("quick_actions.title", "Quick Actions")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("employers")}>
                   <Users className="mr-2 h-4 w-4" />
-                  Browse Partner Directory
+                  {getText("quick_actions.browse_partners", "Browse Partner Directory")}
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("athletes")}>
                   <Users className="mr-2 h-4 w-4" />
-                  Browse Athlete Directory
+                  {getText("quick_actions.browse_athletes", "Browse Athlete Directory")}
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("profile")}>
                   <UserCircle className="mr-2 h-4 w-4" />
-                  Update Profile
+                  {getText("quick_actions.update_profile", "Update Profile")}
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("connections")}>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  View Connections
+                  {getText("quick_actions.view_connections", "View Connections")}
                 </Button>
                 <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start">
                       <EyeIcon className="mr-2 h-4 w-4" />
-                      Preview Profile
+                      {getText("quick_actions.preview_profile", "Preview Profile")}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-xl">
@@ -474,9 +501,9 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           <Card className="mb-8">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>My Connections</CardTitle>
+                <CardTitle>{getText("my_connections.title", "My Connections")}</CardTitle>
                 <Button variant="link" onClick={() => onNavigate("connections")}>
-                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                  {getText("my_connections.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
@@ -516,9 +543,9 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
         <Card className="mb-8">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Featured Athletes</CardTitle>
+              <CardTitle>{getText("featured_athletes.title", "Featured Athletes")}</CardTitle>
               <Button variant="link" onClick={() => onNavigate("athletes")}>
-                View All <ArrowRight className="ml-1 h-4 w-4" />
+                {getText("featured_athletes.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
@@ -555,9 +582,9 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Featured Partners</CardTitle>
+              <CardTitle>{getText("featured_partners.title", "Featured Partners")}</CardTitle>
               <Button variant="link" onClick={() => onNavigate("employers")}>
-                View All <ArrowRight className="ml-1 h-4 w-4" />
+                {getText("featured_partners.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </CardHeader>

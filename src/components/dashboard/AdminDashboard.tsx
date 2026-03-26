@@ -16,19 +16,15 @@ import { UserManagementTable } from "./admin/UserManagementTable";
 import { TopProfilesTable } from "./admin/TopProfilesTable";
 import { AthleteLayoutEditor } from "./admin/AthleteLayoutEditor";
 import { PartnerLayoutEditor } from "./admin/PartnerLayoutEditor";
+import { ExpertLayoutEditor } from "./admin/ExpertLayoutEditor";
 import { TrainingArticleManager } from "./admin/TrainingArticleManager";
 import { WaitlistManager } from "./admin/WaitlistManager";
-import { ExpertDirectory } from "@/components/experts/ExpertDirectory";
-import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-// Note: useState already imported above, useDialogState alias removed
 
 interface AdminDashboardProps {
   user: User;
 }
 
 const AdminDashboard = ({ user }: AdminDashboardProps) => {
-  const [addExpertOpen, setAddExpertOpen] = useState(false);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("analytics");
 
@@ -169,23 +165,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </TabsContent>
 
           <TabsContent value="experts" forceMount className="mt-6">
-            <ExpertDirectory adminMode onAddExpert={() => setAddExpertOpen(true)} />
+            <ExpertLayoutEditor />
           </TabsContent>
         </Tabs>
       </main>
-
-      <Dialog open={addExpertOpen} onOpenChange={setAddExpertOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Expert Profile</DialogTitle>
-          </DialogHeader>
-          <ExpertProfileForm
-            adminUserId={user.id}
-            onSaved={() => setAddExpertOpen(false)}
-            onCancel={() => setAddExpertOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

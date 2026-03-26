@@ -12,12 +12,14 @@ export interface DashboardLayout {
   typography: TypographySettings;
 }
 
+export type DashboardLayoutRole = "athlete" | "employer" | "expert";
+
 const DEFAULT_TYPOGRAPHY: TypographySettings = {
   fontFamily: "Montserrat, sans-serif",
   fontSize: "16",
 };
 
-export const useDashboardLayout = (role: "athlete" | "employer") => {
+export const useDashboardLayout = (role: DashboardLayoutRole) => {
   const [layout, setLayout] = useState<DashboardLayout>({
     text_overrides: {},
     typography: DEFAULT_TYPOGRAPHY,
@@ -116,7 +118,7 @@ export const useDashboardLayout = (role: "athlete" | "employer") => {
 };
 
 // Read-only hook for actual dashboards
-export const useDashboardTextOverrides = (role: "athlete" | "employer") => {
+export const useDashboardTextOverrides = (role: DashboardLayoutRole) => {
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [typography, setTypography] = useState<TypographySettings>(DEFAULT_TYPOGRAPHY);
   const [loading, setLoading] = useState(true);
