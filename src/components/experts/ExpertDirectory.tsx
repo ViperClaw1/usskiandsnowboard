@@ -53,7 +53,8 @@ const fetchExperts = async (): Promise<ExpertProfile[]> => {
   const { data, error } = await supabase
     .from("expert_profiles")
     .select("*")
-    .eq("is_public", true)
+    // Legacy expert rows may have is_public = null. Treat null as public.
+    .or("is_public.is.true,is_public.is.null")
     .order("full_name");
   if (error) throw error;
   return (data ?? []) as ExpertProfile[];
@@ -86,11 +87,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     queryKey: ["expert-requests", user?.id],
     queryFn: async () => {
       if (!user || role !== "athlete") return [];
-      const { data: ap } = await supabase
-        .from("athlete_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data: ap } = await supabase.from("athlete_profiles").select("id").eq("user_id", user.id).maybeSingle();
       if (!ap) return [];
       const { data } = await supabase
         .from("expert_connection_requests")
@@ -117,7 +114,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
         (e) =>
           e.full_name.toLowerCase().includes(s) ||
           e.job_title?.toLowerCase().includes(s) ||
-          e.area_of_expertise?.toLowerCase().includes(s)
+          e.area_of_expertise?.toLowerCase().includes(s),
       );
     }
     if (filterIndustry === "alum") {
@@ -153,7 +150,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
             <SelectItem value="all">All Industries</SelectItem>
             <SelectItem value="alum">🏔️ US Ski &amp; Snowboard Alum</SelectItem>
             {INDUSTRY_OPTIONS.map((ind) => (
-              <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+              <SelectItem key={ind} value={ind}>
+                {ind}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -161,14 +160,15 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           <Button
             variant="outline"
             size="icon"
-            onClick={() => { setSearch(""); setFilterIndustry("all"); }}
+            onClick={() => {
+              setSearch("");
+              setFilterIndustry("all");
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
         )}
-        {adminMode && onAddExpert && (
-          <Button onClick={onAddExpert}>+ Add Expert</Button>
-        )}
+        {adminMode && onAddExpert && <Button onClick={onAddExpert}>+ Add Expert</Button>}
       </div>
 
       {/* Grid */}
@@ -193,29 +193,31 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   </Avatar>
                   <div className="space-y-1">
                     <p className="font-semibold text-foreground">{expert.full_name}</p>
-                    {expert.job_title && (
-                      <p className="text-sm text-muted-foreground">{expert.job_title}</p>
-                    )}
+                    {expert.job_title && <p className="text-sm text-muted-foreground">{expert.job_title}</p>}
                     {expert.area_of_expertise && (
                       <p className="text-xs text-primary font-medium">{expert.area_of_expertise}</p>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 justify-center">
                     {expert.industry && (
-                      <Badge variant="secondary" className="text-xs">{expert.industry}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {expert.industry}
+                      </Badge>
                     )}
                     {expert.is_alum && (
-                      <Badge className="text-xs bg-primary/10 text-primary border-primary/20">🏔️ US Ski &amp; Snowboard Alum</Badge>
+                      <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
+                        🏔️ US Ski &amp; Snowboard Alum
+                      </Badge>
                     )}
                   </div>
-                  {expert.bio && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{expert.bio}</p>
-                  )}
+                  {expert.bio && <p className="text-xs text-muted-foreground line-clamp-2">{expert.bio}</p>}
                   {canRequest && (
                     <Button
                       size="sm"
                       className="w-full mt-1"
-                      variant={requestStatus === "pending" ? "outline" : requestStatus === "accepted" ? "secondary" : "default"}
+                      variant={
+                        requestStatus === "pending" ? "outline" : requestStatus === "accepted" ? "secondary" : "default"
+                      }
                       disabled={!!requestStatus}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -225,8 +227,8 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                       {requestStatus === "pending"
                         ? "Request Sent"
                         : requestStatus === "accepted"
-                        ? "✓ Connected"
-                        : "Request a Connection"}
+                          ? "✓ Connected"
+                          : "Request a Connection"}
                     </Button>
                   )}
                 </CardContent>
@@ -274,9 +276,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {selectedExpert.industry && (
-                  <Badge variant="secondary">{selectedExpert.industry}</Badge>
-                )}
+                {selectedExpert.industry && <Badge variant="secondary">{selectedExpert.industry}</Badge>}
                 {selectedExpert.is_alum && (
                   <Badge className="bg-primary/10 text-primary border-primary/20">🏔️ US Ski &amp; Snowboard Alum</Badge>
                 )}
@@ -284,7 +284,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
               {selectedExpert.area_of_expertise && (
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Area of Expertise</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                    Area of Expertise
+                  </p>
                   <p className="text-sm text-foreground">{selectedExpert.area_of_expertise}</p>
                 </div>
               )}
@@ -308,28 +310,25 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                 </a>
               )}
 
-              {canRequest && (() => {
-                const rs = requestStatusMap[selectedExpert.id];
-                return (
-                  <Button
-                    className="w-full"
-                    variant={rs === "pending" ? "outline" : rs === "accepted" ? "secondary" : "default"}
-                    disabled={!!rs}
-                    onClick={() => {
-                      if (!rs) {
-                        setSelectedExpert(null);
-                        setConnectionDialogExpert(selectedExpert);
-                      }
-                    }}
-                  >
-                    {rs === "pending"
-                      ? "Request Sent"
-                      : rs === "accepted"
-                      ? "✓ Connected"
-                      : "Request a Connection"}
-                  </Button>
-                );
-              })()}
+              {canRequest &&
+                (() => {
+                  const rs = requestStatusMap[selectedExpert.id];
+                  return (
+                    <Button
+                      className="w-full"
+                      variant={rs === "pending" ? "outline" : rs === "accepted" ? "secondary" : "default"}
+                      disabled={!!rs}
+                      onClick={() => {
+                        if (!rs) {
+                          setSelectedExpert(null);
+                          setConnectionDialogExpert(selectedExpert);
+                        }
+                      }}
+                    >
+                      {rs === "pending" ? "Request Sent" : rs === "accepted" ? "✓ Connected" : "Request a Connection"}
+                    </Button>
+                  );
+                })()}
             </div>
           </DialogContent>
         </Dialog>
