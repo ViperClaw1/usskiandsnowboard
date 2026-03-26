@@ -307,7 +307,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                 onClick={() => onNavigate("profile")}
                 aria-label="Edit profile"
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-4 w-4 text-gray-950" />
               </Button>
 
               {/*
