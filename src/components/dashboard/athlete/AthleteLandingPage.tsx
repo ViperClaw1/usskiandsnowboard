@@ -298,7 +298,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 onClick={() => onNavigate("profile")}
                 aria-label="Edit profile"
               >
-                <Pencil className="h-4 w-4 text-blue-500" />
+                <Pencil className="h-4 w-4 text-gray-950" />
               </Button>
 
               {/*
