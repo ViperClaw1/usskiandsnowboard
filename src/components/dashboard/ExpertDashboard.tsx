@@ -91,6 +91,7 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
                       full_name: profile.full_name,
                       job_title: profile.job_title ?? "",
                       area_of_expertise: profile.area_of_expertise ?? "",
+                      headshot: profile.headshot ?? "",
                       bio: profile.bio ?? "",
                       industry: profile.industry ?? "",
                       is_alum: profile.is_alum ?? false,

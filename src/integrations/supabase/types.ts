@@ -689,6 +689,7 @@ export type Database = {
           created_at: string
           email: string | null
           full_name: string
+          headshot: string | null
           id: string
           industry: string | null
           is_alum: boolean | null
@@ -708,6 +709,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name: string
+          headshot?: string | null
           id?: string
           industry?: string | null
           is_alum?: boolean | null
@@ -727,6 +729,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name?: string
+          headshot?: string | null
           id?: string
           industry?: string | null
           is_alum?: boolean | null

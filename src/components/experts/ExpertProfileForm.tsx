@@ -27,6 +27,7 @@ interface ExpertFormState {
   full_name: string;
   job_title: string;
   area_of_expertise: string;
+  headshot: string;
   bio: string;
   industry: string;
   is_alum: boolean;
@@ -39,6 +40,7 @@ const EMPTY: ExpertFormState = {
   full_name: "",
   job_title: "",
   area_of_expertise: "",
+  headshot: "",
   bio: "",
   industry: "",
   is_alum: false,
@@ -154,6 +156,7 @@ export const ExpertProfileForm = ({
         full_name: form.full_name.trim(),
         job_title: form.job_title.trim() || null,
         area_of_expertise: form.area_of_expertise.trim() || null,
+        headshot: form.headshot.trim() || null,
         bio: form.bio.trim() || null,
         industry: form.industry || null,
         is_alum: form.is_alum,
@@ -305,6 +308,16 @@ export const ExpertProfileForm = ({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>Headshot</Label>
+        <Textarea
+          value={form.headshot}
+          onChange={(e) => set("headshot", e.target.value)}
+          placeholder="Add headshot details (for example: profile image notes, source links, preferred crop/style)..."
+          rows={3}
+        />
       </div>
 
       <div className="space-y-1.5">
