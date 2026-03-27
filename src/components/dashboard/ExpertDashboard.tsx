@@ -102,6 +102,7 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
               }
               expertId={profile?.id}
               adminUserId={!profile ? user.id : undefined}
+              userId={user.id}
               onSaved={() => {
                 setEditOpen(false);
                 queryClient.invalidateQueries({ queryKey: ["expert-own-profile", user.id] });
