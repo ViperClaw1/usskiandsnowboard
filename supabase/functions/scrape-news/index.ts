@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
   const token = authHeader.replace("Bearer ", "");
 
   // Allow service role key to bypass user/admin checks (trusted server calls like cron jobs)
-  console.log("Token length:", token.length, "Service key length:", serviceRoleKey?.length, "Match:", token === serviceRoleKey);
+  
   const isServiceRoleCall = token === serviceRoleKey;
 
   if (!isServiceRoleCall) {
