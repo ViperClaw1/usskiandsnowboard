@@ -150,7 +150,7 @@ serve(async (req) => {
       throw resetError;
     }
 
-    const directLink = `${appUrl}reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
+    const directLink = `${appUrl}/reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
     console.log("Sending invitation email to:", email);
 
     const bodyHtml = `
