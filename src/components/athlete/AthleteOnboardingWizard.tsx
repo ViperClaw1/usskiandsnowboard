@@ -529,7 +529,7 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
             <Textarea
               {...register("bio", { required: true })}
               placeholder="I'm a passionate athlete who..."
-              className="min-h-32 text-lg px-4 py-3 border-2 resize-none"
+              className="min-h-32 text-lg px-4 py-3 border-2"
               maxLength={500}
               autoFocus
             />

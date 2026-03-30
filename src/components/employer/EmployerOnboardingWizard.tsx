@@ -483,7 +483,7 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
             <Textarea
               {...register("about", { required: true })}
               placeholder="We're a leading company that..."
-              className="min-h-32 text-lg px-4 py-3 border-2 resize-none"
+              className="min-h-32 text-lg px-4 py-3 border-2"
               autoFocus
             />
             <StepNavigation
