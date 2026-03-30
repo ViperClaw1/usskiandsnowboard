@@ -89,14 +89,10 @@ export const ExpertProfileForm = ({
         }
       }
 
-      const { error } = await supabase.storage
-        .from("expert-photos")
-        .upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from("expert-photos").upload(path, file, { upsert: true });
       if (error) throw error;
 
-      const { data: urlData } = supabase.storage
-        .from("expert-photos")
-        .getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("expert-photos").getPublicUrl(path);
       set("photo_url", urlData.publicUrl);
       toast.success("Photo uploaded!");
     } catch (err: unknown) {
@@ -138,16 +134,11 @@ export const ExpertProfileForm = ({
       };
 
       if (expertId) {
-        const { error } = await supabase
-          .from("expert_profiles")
-          .update(payload)
-          .eq("id", expertId);
+        const { error } = await supabase.from("expert_profiles").update(payload).eq("id", expertId);
         if (error) throw error;
       } else {
         if (!adminUserId) throw new Error("Missing user_id for new expert profile");
-        const { error } = await supabase
-          .from("expert_profiles")
-          .insert({ ...payload, user_id: adminUserId });
+        const { error } = await supabase.from("expert_profiles").insert({ ...payload, user_id: adminUserId });
         if (error) throw error;
       }
 
@@ -183,11 +174,19 @@ export const ExpertProfileForm = ({
         </div>
         <div className="space-y-1.5">
           <Label>Current Role / Title</Label>
-          <Input value={form.job_title} onChange={(e) => set("job_title", e.target.value)} placeholder="VP of Marketing" />
+          <Input
+            value={form.job_title}
+            onChange={(e) => set("job_title", e.target.value)}
+            placeholder="VP of Marketing"
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Area of Expertise</Label>
-          <Input value={form.area_of_expertise} onChange={(e) => set("area_of_expertise", e.target.value)} placeholder="Brand Development, Marketing" />
+          <Input
+            value={form.area_of_expertise}
+            onChange={(e) => set("area_of_expertise", e.target.value)}
+            placeholder="Brand Development, Marketing"
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Email</Label>
@@ -207,7 +206,9 @@ export const ExpertProfileForm = ({
             </SelectTrigger>
             <SelectContent>
               {INDUSTRY_OPTIONS.map((ind) => (
-                <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                <SelectItem key={ind} value={ind}>
+                  {ind}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -219,21 +220,13 @@ export const ExpertProfileForm = ({
         <Label>Profile Photo</Label>
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            {form.photo_url ? (
-              <AvatarImage src={form.photo_url} alt="Profile photo" />
-            ) : null}
+            {form.photo_url ? <AvatarImage src={form.photo_url} alt="Profile photo" /> : null}
             <AvatarFallback className="text-lg">
               {form.full_name ? form.full_name.charAt(0).toUpperCase() : "?"}
             </AvatarFallback>
           </Avatar>
           <div className="flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoUpload}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             <Button
               type="button"
               variant="outline"
@@ -241,20 +234,11 @@ export const ExpertProfileForm = ({
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingPhoto}
             >
-              {uploadingPhoto ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
-              ) : (
-                <Upload className="h-4 w-4 mr-1" />
-              )}
+              {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
               {uploadingPhoto ? "Uploading..." : "Upload Photo"}
             </Button>
             {form.photo_url && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleRemovePhoto}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={handleRemovePhoto}>
                 <X className="h-4 w-4 mr-1" />
                 Remove
               </Button>
@@ -284,11 +268,7 @@ export const ExpertProfileForm = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <Checkbox
-          id="is_alum"
-          checked={form.is_alum}
-          onCheckedChange={(checked) => set("is_alum", !!checked)}
-        />
+        <Checkbox id="is_alum" checked={form.is_alum} onCheckedChange={(checked) => set("is_alum", !!checked)} />
         <Label htmlFor="is_alum" className="cursor-pointer flex items-center gap-1.5">
           <img src={usLogo} alt="US Ski & Snowboard" className="h-4 w-4 object-contain" />
           US Ski &amp; Snowboard Alum
