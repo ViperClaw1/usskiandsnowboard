@@ -140,7 +140,7 @@ serve(async (req) => {
     }
 
     // Generate password-set link
-    const appUrl = "https://athleteconnection.org/";
+    const appUrl = "https://athleteconnection.org";
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
@@ -150,7 +150,7 @@ serve(async (req) => {
       throw resetError;
     }
 
-    const directLink = `${appUrl}reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
+    const directLink = `${appUrl}/reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
     console.log("Sending invitation email to:", email);
 
     const bodyHtml = `
