@@ -5,9 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Sparkles, Globe, Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,38 +59,11 @@ export const ExpertProfileForm = ({
   const queryClient = useQueryClient();
   const [form, setForm] = useState<ExpertFormState>({ ...EMPTY, ...initialData });
   const [saving, setSaving] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const set = (field: keyof ExpertFormState, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-
-  const handleAIPopulate = async () => {
-    if (!form.linkedin_url.trim() || !form.full_name.trim()) return;
-    setAiLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("ai-populate-profile", {
-        body: { role: "expert", url: form.linkedin_url.trim(), name: form.full_name.trim() },
-      });
-      if (error || !data?.success) throw new Error(data?.error || "AI extraction failed");
-      const d = data.data;
-      setForm((prev) => ({
-        ...prev,
-        full_name: d.full_name || prev.full_name,
-        job_title: d.job_title || prev.job_title,
-        area_of_expertise: d.area_of_expertise || prev.area_of_expertise,
-        bio: d.bio || prev.bio,
-        photo_url: d.photo_url || prev.photo_url,
-        linkedin_url: d.linkedin_url || prev.linkedin_url,
-      }));
-      toast.success("Profile auto-filled from LinkedIn!");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "AI import failed");
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -189,51 +161,14 @@ export const ExpertProfileForm = ({
     }
   };
 
-  const canAutoFill = form.full_name.trim().length > 0 && form.linkedin_url.trim().length > 0;
-
   return (
     <div className="space-y-5">
-      {/* Auto-fill from LinkedIn section */}
-      <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
-        <p className="text-sm font-medium text-foreground flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Auto-fill from LinkedIn
-        </p>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label>Full Name *</Label>
-            <Input
-              value={form.full_name}
-              onChange={(e) => set("full_name", e.target.value)}
-              placeholder="Jane Smith"
-            />
-          </div>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="https://linkedin.com/in/username"
-                value={form.linkedin_url}
-                onChange={(e) => set("linkedin_url", e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleAIPopulate}
-              disabled={aiLoading || !canAutoFill}
-            >
-              {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Auto-fill
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <Separator />
-
       {/* Manual fields */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>Full Name *</Label>
+          <Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} placeholder="Jane Smith" />
+        </div>
         <div className="space-y-1.5">
           <Label>Current Role / Title</Label>
           <Input value={form.job_title} onChange={(e) => set("job_title", e.target.value)} placeholder="VP of Marketing" />
@@ -244,7 +179,13 @@ export const ExpertProfileForm = ({
         </div>
         <div className="space-y-1.5">
           <Label>Email</Label>
-          <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane@example.com" />
+          <Input
+            type="email"
+            value={form.email}
+            placeholder="jane@example.com"
+            disabled
+            className="bg-muted text-muted-foreground cursor-not-allowed opacity-100"
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Industry</Label>
