@@ -239,7 +239,7 @@ const AthleteDashboard = ({
   // ==============================
   useEffect(() => {
     if (!profileLoading && profile === null && !isAdminView) {
-      const key = `onboarding_shown_${user.id}`;
+      const key = `onboarding_shown_athlete_${user.id}`;
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, "true");
         setShowProfileDialog(true);
@@ -402,7 +402,7 @@ const AthleteDashboard = ({
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-primary" />
-                      Complete Your Athlete Profile
+                      Complete Your Profile
                     </DialogTitle>
                     <DialogDescription>Choose how you'd like to get started</DialogDescription>
                   </DialogHeader>
@@ -435,7 +435,7 @@ const AthleteDashboard = ({
               ) : (
                 <>
                   <DialogHeader>
-                    <DialogTitle>Complete Your Athlete Profile</DialogTitle>
+                    <DialogTitle>Complete Your Profile</DialogTitle>
                     <DialogDescription>Share your athletic background, skills, and career interests</DialogDescription>
                   </DialogHeader>
                   <AthleteOnboardingWizard user={user} onComplete={handleProfileComplete} />

@@ -153,7 +153,7 @@ const EmployerDashboard = ({
   // ==============================
   useEffect(() => {
     if (!loading && profile === null && !isAdminView) {
-      const key = `onboarding_shown_${user.id}`;
+      const key = `onboarding_shown_employer_${user.id}`;
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, "true");
         setShowProfileDialog(true);
@@ -298,7 +298,7 @@ const EmployerDashboard = ({
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-primary" />
-                      Complete Your Company Profile
+                      Complete Your Profile
                     </DialogTitle>
                     <DialogDescription>Choose how you'd like to get started</DialogDescription>
                   </DialogHeader>
@@ -331,7 +331,7 @@ const EmployerDashboard = ({
               ) : (
                 <>
                   <DialogHeader>
-                    <DialogTitle>Complete Your Company Profile</DialogTitle>
+                    <DialogTitle>Complete Your Profile</DialogTitle>
                     <DialogDescription>Share information about your company and the opportunities you offer</DialogDescription>
                   </DialogHeader>
                   <EmployerOnboardingWizard user={user} onComplete={handleProfileComplete} />

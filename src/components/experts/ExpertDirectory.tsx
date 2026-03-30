@@ -14,6 +14,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Search, X, Linkedin, ImagePlus } from "lucide-react";
 import { ExpertConnectionRequestDialog } from "./ExpertConnectionRequestDialog";
 import { INDUSTRY_OPTIONS } from "@/data/suggestions";
+import usLogo from "@/assets/us-logo-new.png";
 
 // ==============================
 // Types
@@ -148,7 +149,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Industries</SelectItem>
-            <SelectItem value="alum">🏔️ US Ski &amp; Snowboard Alum</SelectItem>
+            <SelectItem value="alum"><img src={usLogo} alt="" className="inline h-4 w-4 object-contain mr-1 align-middle" />US Ski &amp; Snowboard Alum</SelectItem>
             {INDUSTRY_OPTIONS.map((ind) => (
               <SelectItem key={ind} value={ind}>
                 {ind}
@@ -206,7 +207,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                     )}
                     {expert.is_alum && (
                       <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
-                        🏔️ US Ski &amp; Snowboard Alum
+                        <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />US Ski &amp; Snowboard Alum
                       </Badge>
                     )}
                   </div>
@@ -278,7 +279,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               <div className="flex flex-wrap gap-2">
                 {selectedExpert.industry && <Badge variant="secondary">{selectedExpert.industry}</Badge>}
                 {selectedExpert.is_alum && (
-                  <Badge className="bg-primary/10 text-primary border-primary/20">🏔️ US Ski &amp; Snowboard Alum</Badge>
+                  <Badge className="bg-primary/10 text-primary border-primary/20"><img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />US Ski &amp; Snowboard Alum</Badge>
                 )}
               </div>
 

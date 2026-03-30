@@ -1,26 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import { ExpertLandingPage, expertDashboardKey } from "@/components/dashboard/expert/ExpertLandingPage";
-import { UserCheck, Users } from "lucide-react";
+import { ClipboardList, Sparkles, UserCheck, Users } from "lucide-react";
 
 interface ExpertDashboardProps {
   user: User;
+  onRequestAI?: () => void;
 }
 
-const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
+const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
   const queryClient = useQueryClient();
   const [currentView, setCurrentView] = useState<"home" | "athletes" | "employers" | "connections">("home");
   const [editOpen, setEditOpen] = useState(false);
+  const [dialogStep, setDialogStep] = useState<"choice" | "manual">("choice");
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["expert-own-profile", user.id],
@@ -55,11 +57,23 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
     enabled: !!profile,
   });
 
+  useEffect(() => {
+    if (!profileLoading && !profile) {
+      const key = `onboarding_shown_expert_${user.id}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, "true");
+        setEditOpen(true);
+        setDialogStep("choice");
+      }
+    }
+  }, [profileLoading, profile, user.id]);
+
   if (profileLoading) return <LoadingSpinner fullScreen />;
 
   const handleNavigate = (view: string) => {
     if (view === "profile") {
       setEditOpen(true);
+      setDialogStep("manual");
       return;
     }
 
@@ -79,39 +93,88 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
           />
         </main>
 
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <Dialog
+          open={editOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) setDialogStep("choice");
+          }}
+        >
           <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{profile ? "Edit Expert Profile" : "Create Expert Profile"}</DialogTitle>
-            </DialogHeader>
-            <ExpertProfileForm
-              initialData={
-                profile
-                  ? {
-                      full_name: profile.full_name,
-                      job_title: profile.job_title ?? "",
-                      area_of_expertise: profile.area_of_expertise ?? "",
-                      headshot: profile.headshot ?? "",
-                      bio: profile.bio ?? "",
-                      industry: profile.industry ?? "",
-                      is_alum: profile.is_alum ?? false,
-                      linkedin_url: profile.linkedin_url ?? "",
-                      email: profile.email ?? "",
-                      photo_url: profile.photo_url ?? "",
-                    }
-                  : undefined
-              }
-              expertId={profile?.id}
-              adminUserId={!profile ? user.id : undefined}
-              userId={user.id}
-              onSaved={() => {
-                setEditOpen(false);
-                queryClient.invalidateQueries({ queryKey: ["expert-own-profile", user.id] });
-                queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
-                queryClient.refetchQueries({ queryKey: expertDashboardKey(user.id), type: "active" });
-              }}
-              onCancel={() => setEditOpen(false)}
-            />
+            {profile || dialogStep === "manual" ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{profile ? "Edit Expert Profile" : "Create Expert Profile"}</DialogTitle>
+                </DialogHeader>
+                <ExpertProfileForm
+                  initialData={
+                    profile
+                      ? {
+                          full_name: profile.full_name,
+                          job_title: profile.job_title ?? "",
+                          area_of_expertise: profile.area_of_expertise ?? "",
+                          headshot: profile.headshot ?? "",
+                          bio: profile.bio ?? "",
+                          industry: profile.industry ?? "",
+                          is_alum: profile.is_alum ?? false,
+                          linkedin_url: profile.linkedin_url ?? "",
+                          email: profile.email ?? "",
+                          photo_url: profile.photo_url ?? "",
+                        }
+                      : undefined
+                  }
+                  expertId={profile?.id}
+                  adminUserId={!profile ? user.id : undefined}
+                  userId={user.id}
+                  onSaved={() => {
+                    setEditOpen(false);
+                    setDialogStep("choice");
+                    queryClient.invalidateQueries({ queryKey: ["expert-own-profile", user.id] });
+                    queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
+                    queryClient.refetchQueries({ queryKey: expertDashboardKey(user.id), type: "active" });
+                  }}
+                  onCancel={() => {
+                    setEditOpen(false);
+                    setDialogStep("choice");
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Complete Your Profile
+                  </DialogTitle>
+                  <DialogDescription>Choose how you'd like to get started</DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3 pt-2">
+                  <Button
+                    onClick={() => {
+                      setEditOpen(false);
+                      setDialogStep("choice");
+                      onRequestAI?.();
+                    }}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Complete with AI
+                  </Button>
+                  <Button variant="outline" onClick={() => setDialogStep("manual")}>
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Complete Manually
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setEditOpen(false);
+                      setDialogStep("choice");
+                    }}
+                  >
+                    Skip for now
+                  </Button>
+                </div>
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </div>
