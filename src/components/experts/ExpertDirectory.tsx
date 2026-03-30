@@ -14,6 +14,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Search, X, Linkedin, ImagePlus } from "lucide-react";
 import { ExpertConnectionRequestDialog } from "./ExpertConnectionRequestDialog";
 import { INDUSTRY_OPTIONS } from "@/data/suggestions";
+import usLogo from "@/assets/us-logo-new.png";
 
 // ==============================
 // Types
