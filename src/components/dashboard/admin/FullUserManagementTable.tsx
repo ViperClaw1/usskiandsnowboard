@@ -41,7 +41,7 @@ export const FullUserManagementTable = () => {
     email: "",
     firstName: "",
     lastName: "",
-    role: "athlete" as "athlete" | "employer" | "admin",
+    role: "athlete" as "athlete" | "employer" | "admin" | "expert",
   });
   const queryClient = useQueryClient();
 
@@ -482,7 +482,7 @@ export const FullUserManagementTable = () => {
               <Label htmlFor="role">Role *</Label>
               <Select
                 value={inviteForm.role}
-                onValueChange={(value: "athlete" | "employer" | "admin") =>
+                onValueChange={(value: "athlete" | "employer" | "admin" | "expert") =>
                   setInviteForm({ ...inviteForm, role: value })
                 }
               >
@@ -492,6 +492,7 @@ export const FullUserManagementTable = () => {
                 <SelectContent>
                   <SelectItem value="athlete">Athlete</SelectItem>
                   <SelectItem value="employer">Employer</SelectItem>
+                  <SelectItem value="expert">Expert</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
