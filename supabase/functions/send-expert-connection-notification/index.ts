@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { request_id } = await req.json();
+    const { request_id, notification_type = "request_accepted" } = await req.json();
     if (!request_id) {
       return new Response(JSON.stringify({ error: "Missing request_id" }), {
         status: 400,
@@ -79,66 +79,100 @@ Deno.serve(async (req) => {
     const expertEmail = expert.email;
     const athleteEmail = athlete.email || athleteProfile?.email;
 
-    const subject = `${athleteFullName} <> ${expert.full_name} — Athlete Connection Introduction`;
+    if (notification_type === "request_declined") {
+      const subject = "Connection Request Update";
+      const bodyHtml = `
+        <p style="font-size:16px; color:#333; margin:0 0 20px;">
+          Hello <strong>${athleteFirstName}</strong>,
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          <strong>${expert.full_name}</strong> has declined your connection request at this time.
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
+          Please keep exploring other experts and opportunities on Athlete Connection.
+        </p>
+        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
+          Cheers,<br/>
+          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
+        </p>
+      `;
+      const html = emailTemplate("Connection Request Update", bodyHtml);
 
-    const bodyHtml = `
-      <p style="font-size:16px; color:#333; margin:0 0 20px;">
-        <strong>${expertFirstName},</strong>
-      </p>
-      <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-        Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
-      </p>
-      <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-        <strong>${athleteFirstName},</strong> Please meet <strong>${expert.full_name}</strong>, an expert in <strong>${expert.area_of_expertise ?? expert.job_title ?? "their field"}</strong> who is happy to speak to you about their professional experience.
-      </p>
-      ${ecr.message ? `
-      <div style="background:#f8f9fa; border-left:4px solid #0066cc; padding:12px 16px; margin:0 0 16px; border-radius:0 4px 4px 0;">
-        <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Message from ${athleteFirstName}</p>
-        <p style="font-size:14px; color:#333; margin:0; font-style:italic;">"${ecr.message}"</p>
-      </div>
-      ` : ""}
-      <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-        <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
-      </p>
-      <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
-        Cheers,<br/>
-        <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
-      </p>
-    `;
+      if (athleteEmail) {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [athleteEmail],
+          cc: [CC_ADDRESS],
+          subject,
+          html,
+        });
+      } else {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [CC_ADDRESS],
+          subject: `[Missing Athlete Email] ${subject}`,
+          html,
+        });
+      }
+    } else {
+      const subject = `${athleteFullName} <> ${expert.full_name} — Athlete Connection Introduction`;
 
-    const html = emailTemplate("Athlete Connection Introduction", bodyHtml);
+      const bodyHtml = `
+        <p style="font-size:16px; color:#333; margin:0 0 20px;">
+          <strong>${expertFirstName},</strong>
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          <strong>${athleteFirstName},</strong> Please meet <strong>${expert.full_name}</strong>, an expert in <strong>${expert.area_of_expertise ?? expert.job_title ?? "their field"}</strong> who is happy to speak to you about their professional experience.
+        </p>
+        ${ecr.message ? `
+        <div style="background:#f8f9fa; border-left:4px solid #0066cc; padding:12px 16px; margin:0 0 16px; border-radius:0 4px 4px 0;">
+          <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Message from ${athleteFirstName}</p>
+          <p style="font-size:14px; color:#333; margin:0; font-style:italic;">"${ecr.message}"</p>
+        </div>
+        ` : ""}
+        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
+          <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
+        </p>
+        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
+          Cheers,<br/>
+          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
+        </p>
+      `;
 
-    // Send to expert (if email available)
-    if (expertEmail) {
-      await sendEmail(resend, {
-        from: FROM_ADDRESS,
-        to: [expertEmail],
-        cc: [CC_ADDRESS],
-        subject,
-        html,
-      });
-      await sleep(1000);
-    }
+      const html = emailTemplate("Athlete Connection Introduction", bodyHtml);
 
-    // Send to athlete (if email available)
-    if (athleteEmail && athleteEmail !== expertEmail) {
-      await sendEmail(resend, {
-        from: FROM_ADDRESS,
-        to: [athleteEmail],
-        cc: [CC_ADDRESS],
-        subject,
-        html,
-      });
-    }
+      if (expertEmail) {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [expertEmail],
+          cc: [CC_ADDRESS],
+          subject,
+          html,
+        });
+        await sleep(1000);
+      }
 
-    // If neither email found, still CC Michele
-    if (!expertEmail && !athleteEmail) {
-      await sendEmail(resend, {
-        from: FROM_ADDRESS,
-        to: [CC_ADDRESS],
-        subject: `[No Expert/Athlete Email] ${subject}`,
-        html,
-      });
+      if (athleteEmail && athleteEmail !== expertEmail) {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [athleteEmail],
+          cc: [CC_ADDRESS],
+          subject,
+          html,
+        });
+      }
+
+      if (!expertEmail && !athleteEmail) {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [CC_ADDRESS],
+          subject: `[No Expert/Athlete Email] ${subject}`,
+          html,
+        });
+      }
     }
 
     console.log("Expert connection notification sent for request:", request_id);

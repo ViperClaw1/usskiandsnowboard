@@ -12,6 +12,7 @@ import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import { ExpertLandingPage, expertDashboardKey } from "@/components/dashboard/expert/ExpertLandingPage";
 import { ClipboardList, Sparkles, UserCheck, Users } from "lucide-react";
+import { toast } from "sonner";
 
 interface ExpertDashboardProps {
   user: User;
@@ -23,6 +24,7 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
   const [currentView, setCurrentView] = useState<"home" | "athletes" | "employers" | "connections">("home");
   const [editOpen, setEditOpen] = useState(false);
   const [dialogStep, setDialogStep] = useState<"choice" | "manual">("choice");
+  const [updatingRequestId, setUpdatingRequestId] = useState<string | null>(null);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["expert-own-profile", user.id],
@@ -79,6 +81,31 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
 
     if (view === "athletes" || view === "employers" || view === "connections" || view === "home") {
       setCurrentView(view);
+    }
+  };
+
+  const handleRequestDecision = async (requestId: string, status: "accepted" | "rejected") => {
+    setUpdatingRequestId(requestId);
+    try {
+      const { error } = await supabase.from("expert_connection_requests").update({ status }).eq("id", requestId);
+      if (error) throw error;
+
+      await supabase.functions.invoke("send-expert-connection-notification", {
+        body: {
+          request_id: requestId,
+          notification_type: status === "accepted" ? "request_accepted" : "request_declined",
+        },
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["expert-inbound-requests", profile?.id] });
+      queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
+
+      toast.success(status === "accepted" ? "Connection approved." : "Connection rejected.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to update request";
+      toast.error(msg);
+    } finally {
+      setUpdatingRequestId(null);
     }
   };
 
@@ -248,9 +275,29 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
                         {req.message && <p className="text-xs text-muted-foreground mt-1 italic">"{req.message}"</p>}
                         <p className="text-xs text-muted-foreground mt-1">{new Date(req.created_at).toLocaleDateString()}</p>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-xs">
-                        {req.status}
-                      </Badge>
+                      {req.status === "pending" ? (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            onClick={() => handleRequestDecision(req.id, "accepted")}
+                            disabled={updatingRequestId === req.id}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRequestDecision(req.id, "rejected")}
+                            disabled={updatingRequestId === req.id}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <Badge variant="outline" className="shrink-0 text-xs">
+                          {req.status}
+                        </Badge>
+                      )}
                     </div>
                   ))}
                 </div>
