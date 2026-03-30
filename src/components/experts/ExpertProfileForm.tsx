@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -160,6 +160,18 @@ export const ExpertProfileForm = ({
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    const loadCurrentUserEmail = async () => {
+      if (form.email.trim()) return;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user?.email) return;
+      setForm((prev) => (prev.email.trim() ? prev : { ...prev, email: user.email ?? "" }));
+    };
+    void loadCurrentUserEmail();
+  }, [form.email]);
 
   return (
     <div className="space-y-5">
