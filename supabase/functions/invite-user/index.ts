@@ -117,18 +117,16 @@ serve(async (req) => {
       console.log("User created successfully:", newUser.user.id);
       userId = newUser.user.id;
 
-      const { error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .upsert(
-          {
-            id: userId,
-            email,
-            first_name: firstName || null,
-            last_name: lastName || null,
-            full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
-          },
-          { onConflict: "id" },
-        );
+      const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
+        {
+          id: userId,
+          email,
+          first_name: firstName || null,
+          last_name: lastName || null,
+          full_name: `${firstName || ""} ${lastName || ""}`.trim() || null,
+        },
+        { onConflict: "id" },
+      );
       if (profileError) {
         await supabaseAdmin.auth.admin.deleteUser(userId);
         throw profileError;
