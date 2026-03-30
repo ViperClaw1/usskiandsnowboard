@@ -153,16 +153,24 @@ export const ExpertProfileForm = ({
   };
 
   useEffect(() => {
-    const loadCurrentUserEmail = async () => {
-      if (form.email.trim()) return;
+    const loadCurrentUserDefaults = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user?.email) return;
-      setForm((prev) => (prev.email.trim() ? prev : { ...prev, email: user.email ?? "" }));
+      if (!user) return;
+
+      const metadataFullName =
+        (user.user_metadata?.full_name as string | undefined)?.trim() ||
+        `${user.user_metadata?.first_name ?? ""} ${user.user_metadata?.last_name ?? ""}`.trim();
+
+      setForm((prev) => ({
+        ...prev,
+        full_name: prev.full_name.trim() || metadataFullName || prev.full_name,
+        email: prev.email.trim() || user.email || prev.email,
+      }));
     };
-    void loadCurrentUserEmail();
-  }, [form.email]);
+    void loadCurrentUserDefaults();
+  }, [userId]);
 
   return (
     <div className="space-y-5">
@@ -170,7 +178,7 @@ export const ExpertProfileForm = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5 sm:col-span-2">
           <Label>Full Name *</Label>
-          <Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} placeholder="Jane Smith" />
+          <Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <Label>Current Role / Title</Label>
