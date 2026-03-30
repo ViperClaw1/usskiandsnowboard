@@ -10,7 +10,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
-import { ExpertLandingPage } from "@/components/dashboard/expert/ExpertLandingPage";
+import { ExpertLandingPage, expertDashboardKey } from "@/components/dashboard/expert/ExpertLandingPage";
 import { UserCheck, Users } from "lucide-react";
 
 interface ExpertDashboardProps {
@@ -107,6 +107,8 @@ const ExpertDashboard = ({ user }: ExpertDashboardProps) => {
               onSaved={() => {
                 setEditOpen(false);
                 queryClient.invalidateQueries({ queryKey: ["expert-own-profile", user.id] });
+                queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
+                queryClient.refetchQueries({ queryKey: expertDashboardKey(user.id), type: "active" });
               }}
               onCancel={() => setEditOpen(false)}
             />
