@@ -150,11 +150,15 @@ const Dashboard = () => {
   // Depends on role + user — unchanged from original.
   // ==============================
   useEffect(() => {
-    if (role && role !== "admin" && user) {
-      if (localStorage.getItem("pending_ai_profile") === "true") {
-        localStorage.removeItem("pending_ai_profile");
-        setShowWelcomePopup(true);
-      }
+    if (!role || !user || role === "admin") return;
+
+    if (localStorage.getItem("pending_ai_profile") !== "true") return;
+    // Always clear the flag once consumed so it doesn't leak across sessions/roles.
+    localStorage.removeItem("pending_ai_profile");
+
+    // Experts should only see the "Complete Your Profile" onboarding from ExpertDashboard.
+    if (role === "athlete" || role === "employer") {
+      setShowWelcomePopup(true);
     }
   }, [role, user]);
 
