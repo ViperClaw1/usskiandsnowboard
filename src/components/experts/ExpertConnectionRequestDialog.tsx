@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ExpertProfile } from "./ExpertDirectory";
+import { useUserRole } from "@/hooks/useUserRole";
 
 function getInitials(name: string) {
   return name
@@ -34,10 +35,16 @@ export const ExpertConnectionRequestDialog = ({
   onSuccess,
 }: ExpertConnectionRequestDialogProps) => {
   const queryClient = useQueryClient();
+  const { role, loading: roleLoading } = useUserRole(userId);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (role !== "athlete") {
+      toast.error("Only athletes can send connection requests to experts.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Get athlete profile id
@@ -121,7 +128,7 @@ export const ExpertConnectionRequestDialog = ({
           <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button className="flex-1" onClick={handleSubmit} disabled={submitting}>
+          <Button className="flex-1" onClick={handleSubmit} disabled={submitting || roleLoading || role !== "athlete"}>
             {submitting ? "Sending..." : "Send Request"}
           </Button>
         </div>

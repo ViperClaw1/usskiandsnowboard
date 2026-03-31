@@ -5,7 +5,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Users, Briefcase } from "lucide-react";
+import { Users, Briefcase, GraduationCap } from "lucide-react";
 import heroMainImage from "@/assets/hero-main.webp";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { PageFooter } from "@/components/layout/PageFooter";
@@ -66,6 +66,16 @@ const Index = () => {
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                   <Briefcase className="mr-2 h-5 w-5" />
                   I'm a Partner
+                </Button>
+              </Link>
+              <Link to="/auth?type=expert" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto border-white/50 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                >
+                  <GraduationCap className="mr-2 h-5 w-5" />
+                  I'm an Expert
                 </Button>
               </Link>
             </div>
