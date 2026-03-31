@@ -58,6 +58,50 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
     };
   }, [step]);
 
+  // Prefill name from existing profile data when dialog opens.
+  useEffect(() => {
+    if (!open || step !== "input") return;
+
+    let isMounted = true;
+    const loadDefaultName = async () => {
+      try {
+        if (isEmployer) {
+          const { data } = await supabase
+            .from("employer_profiles")
+            .select("company_name")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (isMounted && data?.company_name) setName(data.company_name);
+          return;
+        }
+
+        if (isExpert) {
+          const { data } = await supabase
+            .from("expert_profiles")
+            .select("full_name")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (isMounted && data?.full_name) setName(data.full_name);
+          return;
+        }
+
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", userId)
+          .maybeSingle();
+        if (isMounted && data?.full_name) setName(data.full_name);
+      } catch {
+        // Silent fallback: keep manual entry/placeholder behavior if lookup fails.
+      }
+    };
+
+    void loadDefaultName();
+    return () => {
+      isMounted = false;
+    };
+  }, [open, step, userId, isEmployer, isExpert]);
+
   const handleSubmit = async () => {
     if (!name.trim() || !url.trim()) {
       setError("Please fill in both fields.");
