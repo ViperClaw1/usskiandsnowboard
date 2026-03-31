@@ -114,7 +114,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const typeParam = searchParams.get("type");
-  const initialType = typeParam === "athlete" || typeParam === "employer" ? typeParam : null;
+  const initialType = typeParam === "athlete" || typeParam === "employer" || typeParam === "expert" ? typeParam : null;
 
   // ---- Step machine ----
   const [step, setStep] = useState<AuthStep>("landing");
@@ -126,7 +126,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
-  const [userType, setUserType] = useState<"athlete" | "employer">(initialType || "athlete");
+  const [userType, setUserType] = useState<"athlete" | "employer" | "expert">(initialType || "athlete");
   const [showPassword, setShowPassword] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [formError, setFormError] = useState("");
@@ -384,6 +384,40 @@ const Auth = () => {
     if (!passwordsMatch) {
       setFormError("Passwords do not match.");
       return;
+    }
+
+    // Experts should self-sign up directly and use their existing dashboard onboarding.
+    if (userType === "expert") {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName, user_type: userType },
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+          },
+        });
+
+        if (error) throw error;
+        if (data.user?.identities?.length === 0) {
+          setFormError("An account with this email already exists. Try signing in instead.");
+          return;
+        }
+
+        toast.success("Account created! Please check your email to verify your account.");
+        navigate("/email-verification");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setFullName("");
+        return;
+      } catch (err: any) {
+        setFormError(mapAuthError(err.message || "Failed to create account"));
+        return;
+      } finally {
+        setLoading(false);
+      }
     }
 
     // Check whether this email already has an account before advancing to the
@@ -733,6 +767,16 @@ const Auth = () => {
               >
                 Partner
               </Button>
+              <div className="col-span-2 flex justify-center">
+                <Button
+                  type="button"
+                  variant={userType === "expert" ? "default" : "outline"}
+                  onClick={() => setUserType("expert")}
+                  className="w-[calc(50%-0.375rem)]"
+                >
+                  Expert
+                </Button>
+              </div>
             </div>
           )}
 
