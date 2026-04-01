@@ -114,7 +114,10 @@ const fetchExpertDashboard = async (userId: string): Promise<ExpertDashboardData
     };
   }
 
-  const { data: allRequests } = await supabase.from("expert_connection_requests").select("status").eq("expert_id", profileData.id);
+  const { data: allRequests } = await supabase
+    .from("expert_connection_requests")
+    .select("status")
+    .eq("expert_id", profileData.id);
 
   const { data: acceptedConnections } = await supabase
     .from("expert_connection_requests")
@@ -295,7 +298,9 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-t-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.photo_url || ""} />
-                      <AvatarFallback className="text-xl sm:text-2xl">{getInitials(profileName) || "EX"}</AvatarFallback>
+                      <AvatarFallback className="text-xl sm:text-2xl">
+                        {getInitials(profileName) || "EX"}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="space-y-1">
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">{profileName}</h1>
@@ -335,7 +340,8 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           </div>
                           <Progress value={completeness} className="h-2" />
                           <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                            {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
+                            {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                            <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
                           <AIProfilePopulator
                             role="expert"
@@ -530,7 +536,9 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-semibold text-sm">{connection.athlete_profiles?.profiles?.full_name || "Athlete"}</p>
+                          <p className="font-semibold text-sm">
+                            {connection.athlete_profiles?.profiles?.full_name || "Athlete"}
+                          </p>
                           {connection.athlete_profiles?.sport_discipline && (
                             <Badge variant="secondary" className="mt-2 text-xs">
                               {connection.athlete_profiles.sport_discipline.join(", ")}
