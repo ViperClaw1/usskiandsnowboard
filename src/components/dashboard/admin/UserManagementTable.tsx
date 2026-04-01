@@ -9,7 +9,7 @@ import { Building2 } from "lucide-react";
 
 export const UserManagementTable = () => {
   const { data: users, isLoading } = useQuery({
-    queryKey: ["all-users"],
+    queryKey: ["recent-users"],
     queryFn: async () => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")

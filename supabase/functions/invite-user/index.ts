@@ -140,17 +140,12 @@ serve(async (req) => {
     }
 
     // Generate password-set link
-<<<<<<< HEAD
     const configuredAppUrl = Deno.env.get("APP_URL") || "https://athleteconnection.org";
     const appBaseUrl = new URL(configuredAppUrl);
-    // Normalize host/path to prevent malformed invite links like ".//reset-password".
     appBaseUrl.hostname = appBaseUrl.hostname.replace(/\.+$/, "");
     appBaseUrl.pathname = "/";
     appBaseUrl.search = "";
     appBaseUrl.hash = "";
-=======
-    const appUrl = "https://athleteconnection.org";
->>>>>>> 5e7e52dfc879fb9d98c32655e7377ebf86d10397
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
@@ -160,15 +155,11 @@ serve(async (req) => {
       throw resetError;
     }
 
-<<<<<<< HEAD
     const directLinkUrl = new URL("/reset-password", appBaseUrl);
     directLinkUrl.searchParams.set("invited", "true");
     directLinkUrl.searchParams.set("token_hash", resetData.properties.hashed_token);
     directLinkUrl.searchParams.set("type", "recovery");
     const directLink = directLinkUrl.toString();
-=======
-    const directLink = `${appUrl}/reset-password?invited=true&token_hash=${resetData.properties.hashed_token}&type=recovery`;
->>>>>>> 5e7e52dfc879fb9d98c32655e7377ebf86d10397
     console.log("Sending invitation email to:", email);
 
     const bodyHtml = `
