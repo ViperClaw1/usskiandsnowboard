@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Briefcase, ArrowRight, Newspaper, Loader2, ExternalLink } from "lucide-react";
+import { Users, Briefcase, ArrowRight, Newspaper, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import heroImage from "@/assets/hero-skiing.jpg";
@@ -16,6 +16,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
 import { JoinLegacySection } from "@/components/home/JoinLegacySection";
 import { PageFooter } from "@/components/layout/PageFooter";
+import { FeaturedNewsSkeletonCards } from "@/components/home/FeaturedNewsSkeletonCards";
 
 // ==============================
 // Query Function
@@ -170,9 +171,7 @@ const Home = () => {
             </div>
 
             {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+              <FeaturedNewsSkeletonCards count={3} />
             ) : articles && articles.length > 0 ? (
               <div className="grid md:grid-cols-3 gap-6">
                 {articles.map((article) => (
