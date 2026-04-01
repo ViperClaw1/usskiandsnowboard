@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
 
     // Generate confirmation link
     let linkData: any, linkError: any;
-    ({ data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({ type: "signup", email }));
+    ({ data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({ type: "signup", email, password: crypto.randomUUID() }));
 
     if (linkError && linkError.message?.includes("already been registered")) {
       ({ data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({ type: "magiclink", email }));

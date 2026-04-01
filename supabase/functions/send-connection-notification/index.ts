@@ -79,7 +79,7 @@ async function notifyAdmins(notificationType: string, requestId: string) {
 }
 
 async function shouldSendEmail(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   userId: string,
   notificationType: string,
 ): Promise<boolean> {
