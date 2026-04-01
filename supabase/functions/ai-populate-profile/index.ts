@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
 
     if (!aiResp || !aiResp.ok) {
       const status = aiResp?.status || 0;
-      const errText = await aiResp.text();
+      const errText = aiResp ? await aiResp.text() : "No response";
       console.error("AI error:", status, errText);
       if (status === 429) {
         return new Response(JSON.stringify({ error: "AI rate limit exceeded. Please try again in a moment." }), {
