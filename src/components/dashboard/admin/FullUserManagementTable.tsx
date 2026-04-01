@@ -146,7 +146,7 @@ export const FullUserManagementTable = () => {
     },
     onSuccess: () => {
       toast.success("User deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
       setUserToDelete(null);
     },
     onError: (error: Error) => {
