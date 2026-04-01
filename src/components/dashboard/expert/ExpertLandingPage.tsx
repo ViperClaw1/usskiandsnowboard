@@ -238,40 +238,46 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
         <div className="max-w-7xl mx-auto">
           <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
             <div className="relative overflow-visible">
-              {/* Background image area */}
-              <div
-                className="h-40 sm:h-48 relative group cursor-pointer"
-                onClick={() => !bgUrl && bgInputRef.current?.click()}
-              >
-                {bgUrl ? (
-                  <>
-                    <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="bg-background/80 hover:bg-background"
-                        onClick={(e) => { e.stopPropagation(); bgInputRef.current?.click(); }}
-                        disabled={uploadingBg}
-                      >
-                        {uploadingBg ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImagePlus className="h-4 w-4 mr-2" />}
-                        Change photo
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+              {/* Background image / gradient */}
+              {bgUrl ? (
+                <div
+                  className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted"
+                  style={{
+                    backgroundImage: `url(${bgUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+              ) : (
+                <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => bgInputRef.current?.click()}
+                    disabled={uploadingBg}
+                    className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+                  >
                     {uploadingBg ? (
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      <Loader2 className="h-8 w-8 animate-spin" />
                     ) : (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <ImagePlus className="h-8 w-8" />
-                        <span className="text-sm font-medium">{getText("hero.add_background_photo", "Add background photo")}</span>
-                      </div>
+                      <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
-                  </div>
-                )}
-              </div>
+                    <span className="text-sm font-medium">
+                      {uploadingBg ? "Uploading..." : getText("hero.add_background_photo", "Add background photo")}
+                    </span>
+                  </button>
+                </div>
+              )}
+              {bgUrl && (
+                <button
+                  type="button"
+                  onClick={() => bgInputRef.current?.click()}
+                  disabled={uploadingBg}
+                  className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-background/80 hover:bg-background text-foreground shadow transition-colors"
+                >
+                  {uploadingBg ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                  Change photo
+                </button>
+              )}
               <input ref={bgInputRef} type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
 
               <Button
@@ -281,7 +287,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 onClick={() => onNavigate("profile")}
                 aria-label="Edit profile"
               >
-                <Pencil className="h-4 w-4 text-gray-950" />
+                <Pencil className="h-4 w-4 text-foreground" />
               </Button>
 
               <div className="-mt-16 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:translate-y-1/2 z-10">
