@@ -109,7 +109,7 @@ export function MultiSelect({
       <div className="relative mt-2">
         {open && hasResults ? (
           <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-            <ScrollArea className="max-h-64">
+            <ScrollArea className="h-fit max-h-[min(24rem,calc(100vh-12rem))]">
               <CommandList>
                 {groups
                   ? groups.map((grp) => {
