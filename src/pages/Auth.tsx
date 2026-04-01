@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
@@ -752,16 +753,16 @@ const Auth = () => {
           {isSignUpStep && (
             <div className="space-y-2">
               <Label htmlFor="userType">Role</Label>
-              <select
-                id="userType"
-                value={userType}
-                onChange={(e) => setUserType(e.target.value as "athlete" | "employer" | "expert")}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="athlete">Athlete</option>
-                <option value="employer">Partner</option>
-                <option value="expert">Expert</option>
-              </select>
+              <Select value={userType} onValueChange={(v) => setUserType(v as "athlete" | "employer" | "expert")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="athlete">Athlete</SelectItem>
+                  <SelectItem value="employer">Partner</SelectItem>
+                  <SelectItem value="expert">Expert</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
 
