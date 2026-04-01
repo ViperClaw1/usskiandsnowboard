@@ -1,32 +1,46 @@
 
 
-## Create Expert Profile Dialog — UI Improvements
+## Investigation Summary
 
-### Changes to `src/components/experts/ExpertProfileForm.tsx`
+The root cause is that **18 TypeScript errors in edge functions are blocking the build**, which means the migration (`normalize_expert_user_links_and_roles`) that backfills missing expert roles in `user_roles` never deployed. The `FullUserManagementTable` code itself is correct — it queries `profiles` joined with `user_roles`, so experts will appear once they have rows in both tables.
 
-**1. Separate Auto-fill and manual sections with a visual divider**
-- Add a horizontal `<Separator />` between the Auto-fill section and the manual fields section.
+### Why experts are missing
+- The table query logic is: fetch all `profiles`, then match each profile's `id` against `user_roles` to get roles
+- Expert users created via signup DO get a `profiles` row and a `user_roles` row (via `handle_new_user` trigger), so they should appear
+- However, the backfill migration for any legacy experts without `user_roles` entries never ran because the build is broken
 
-**2. Move Full Name into the Auto-fill section**
-- Move the Full Name input (required, with `*`) into the Auto-fill background-colored section, placed above the LinkedIn URL input.
-- The Auto-fill button is disabled until both `full_name` and `linkedin_url` are non-empty.
-- Remove the duplicate Full Name field from the manual fields grid below.
+### Build errors to fix (all in edge functions)
 
-**3. Replace Photo URL text input with an image uploader**
-- Replace the plain `<Input>` for photo_url with a file input that:
-  - Shows a clickable upload area (small, inline — avatar-sized thumbnail + upload icon)
-  - Uploads the selected image to Supabase storage bucket `expert-photos` under `{userId}/profile/` path
-  - Sets `photo_url` to the resulting public URL
-  - Shows a preview thumbnail when a photo is set, with a remove button
-- Requires passing a `userId` prop (already available via `adminUserId` or from the expert profile's `user_id`). Will add a `userId` prop to the form.
+**1. `ai-populate-profile/index.ts` (line 219)** — `aiResp` possibly null
+- Add null guard before `.text()` call
 
-**4. Replace emoji icon on "US Ski & Snowboard Alum" checkbox with app logo**
-- Replace `🏔️` with `<img src={usLogo} className="h-4 w-4 object-contain" />` using the existing `src/assets/us-logo-new.png` asset.
+**2. `resend-confirmation/index.ts` (line 67)** — missing `password` in `generateLink({ type: "signup" })`
+- Add a dummy `password` field (e.g., `crypto.randomUUID()`) to satisfy the type
 
-### Storage bucket
-- Need to ensure an `expert-photos` storage bucket exists. Will create via migration if needed, or reuse existing `athlete-photos` bucket pattern.
+**3. `scrape-news/index.ts` (lines 31-35)** — `authHeader` possibly null + `getClaims` doesn't exist
+- Add null check for `authHeader`
+- Replace `getClaims(token)` with `getUser(token)` (the correct Supabase Auth API)
 
-### Files Modified
-- `src/components/experts/ExpertProfileForm.tsx` — all four changes above
-- `src/components/dashboard/ExpertDashboard.tsx` — pass `userId` prop to `ExpertProfileForm`
+**4. `send-admin-summary/index.ts` (line 33)** — same `getClaims` issue
+- Replace with `getUser(token)`
+
+**5. `send-connection-notification/index.ts` (lines 53-97, 304-397)** — type mismatch on `createClient` return type used in helper functions
+- Change helper function parameter types from the strict generic to `any` (e.g., `supabase: any`)
+- This resolves all ~10 related errors in one change
+
+**6. `send-role-notification/index.ts` (line 36)** — same `getClaims` issue
+- Replace with `getUser(token)`
+
+### Files to modify (6 edge functions)
+
+| File | Changes |
+|------|---------|
+| `supabase/functions/ai-populate-profile/index.ts` | Null-guard `aiResp` before `.text()` |
+| `supabase/functions/resend-confirmation/index.ts` | Add `password` to `generateLink` call |
+| `supabase/functions/scrape-news/index.ts` | Null-check `authHeader`, replace `getClaims` → `getUser` |
+| `supabase/functions/send-admin-summary/index.ts` | Replace `getClaims` → `getUser` |
+| `supabase/functions/send-connection-notification/index.ts` | Relax helper function parameter types to `any` |
+| `supabase/functions/send-role-notification/index.ts` | Replace `getClaims` → `getUser` |
+
+Once these build errors are fixed, the migration will deploy and backfill expert roles, making experts visible in the admin User Management table.
 
