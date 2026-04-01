@@ -1,7 +1,10 @@
 export const SPORT_DISCIPLINE_GROUPS = [
   {
     group: "Alpine",
-    options: [{ label: "Alpine Skiing", value: "Alpine Skiing" }],
+    options: [
+      { label: "Alpine Skiing", value: "Alpine Skiing" },
+      { label: "Para Alpine", value: "Para Alpine" },
+    ],
   },
   {
     group: "Freestyle",
@@ -23,6 +26,7 @@ export const SPORT_DISCIPLINE_GROUPS = [
       { label: "Para Biathlon", value: "Para Biathlon" },
       { label: "Ski Jumping", value: "Ski Jumping" },
       { label: "Nordic Combined", value: "Nordic Combined" },
+      { label: "Para Nordic", value: "Para Nordic" },
     ],
   },
   {

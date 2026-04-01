@@ -17,16 +17,6 @@ interface ProfileFormProps {
   onComplete: () => void;
 }
 
-const SPORTS = [
-  "Alpine Skiing",
-  "Cross Country",
-  "Freestyle Skiing",
-  "Snowboarding",
-  "Ski Jumping",
-  "Nordic Combined",
-  "Freeskiing"
-];
-
 const AVAILABILITY = [
   "Available Now",
   "Off-Season Only",

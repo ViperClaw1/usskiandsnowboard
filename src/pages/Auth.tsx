@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
+import { SPORT_DISCIPLINES_OPTIONS } from "@/data/suggestions";
 
 // ==============================
 // Utilities
@@ -1219,15 +1220,6 @@ const WaitlistAthleteForm = ({
   formData: Record<string, any>;
   updateField: (k: string, v: any) => void;
 }) => {
-  const SPORTS = [
-    "Alpine Skiing",
-    "Cross Country",
-    "Freestyle Skiing",
-    "Snowboarding",
-    "Ski Jumping",
-    "Nordic Combined",
-    "Freeskiing",
-  ];
   const AVAILABILITY = ["Available Now", "Off-Season Only", "Post-Retirement", "Part-Time", "Flexible"];
 
   return (
@@ -1241,9 +1233,9 @@ const WaitlistAthleteForm = ({
             onChange={(e) => updateField("sport_discipline", e.target.value)}
           >
             <option value="">Select sport</option>
-            {SPORTS.map((s) => (
-              <option key={s} value={s}>
-                {s}
+            {SPORT_DISCIPLINES_OPTIONS.map((discipline) => (
+              <option key={discipline.value} value={discipline.value}>
+                {discipline.label}
               </option>
             ))}
           </select>
