@@ -93,7 +93,7 @@ export const UserRoleManager = ({
       return { role, conflictingRoles };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
       const message = data.conflictingRoles.length > 0
         ? `Switched from ${data.conflictingRoles.join(', ')} to ${data.role} for ${userName || userEmail}`
         : `${data.role} role granted to ${userName || userEmail}`;
@@ -133,7 +133,7 @@ export const UserRoleManager = ({
       if (error) throw error;
     },
     onSuccess: (_, role) => {
-      queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
       toast({
         title: "Role revoked",
         description: `${role} role revoked from ${userName || userEmail}`,

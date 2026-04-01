@@ -75,24 +75,52 @@ export const FullUserManagementTable = () => {
 
       if (employersError) throw employersError;
 
+      const { data: experts, error: expertsError } = await supabase
+        .from("expert_profiles")
+        .select("user_id, full_name, email, created_at");
+
+      if (expertsError) throw expertsError;
+
       const employerByUserId = (employers ?? []).reduce<Record<string, string>>((acc, row) => {
         acc[row.user_id] = row.company_name ?? "";
         return acc;
       }, {});
 
-      return (
-        profiles?.map((profile) => {
-          const userRoles = allRoles.filter((r) => r.user_id === profile.id).map((r) => r.role);
+      const profilesByUserId = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+      const expertsByUserId = new Map((experts ?? []).map((expert) => [expert.user_id, expert]));
+      const rolesByUserId = new Map<string, string[]>();
+
+      for (const roleRow of allRoles ?? []) {
+        const existing = rolesByUserId.get(roleRow.user_id) ?? [];
+        existing.push(roleRow.role);
+        rolesByUserId.set(roleRow.user_id, existing);
+      }
+
+      // Build from the union so users remain visible even when one profile table lags.
+      const allUserIds = new Set<string>([
+        ...(profiles ?? []).map((profile) => profile.id),
+        ...(allRoles ?? []).map((roleRow) => roleRow.user_id),
+        ...(experts ?? []).map((expert) => expert.user_id),
+      ]);
+
+      return Array.from(allUserIds)
+        .map((userId) => {
+          const profile = profilesByUserId.get(userId);
+          const expert = expertsByUserId.get(userId);
+          const userRoles = rolesByUserId.get(userId) ?? [];
           const isEmployer = userRoles.includes("employer");
 
           return {
-            ...profile,
+            id: userId,
+            full_name: profile?.full_name ?? expert?.full_name ?? null,
+            email: profile?.email ?? expert?.email ?? "No email available",
+            created_at: profile?.created_at ?? expert?.created_at ?? new Date(0).toISOString(),
             roles: userRoles as string[],
             emailConfirmed: false,
-            companyName: isEmployer ? (employerByUserId[profile.id] ?? null) : null,
+            companyName: isEmployer ? (employerByUserId[userId] ?? null) : null,
           };
-        }) || []
-      );
+        })
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     },
   });
 
