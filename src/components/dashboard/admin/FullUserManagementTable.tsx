@@ -75,8 +75,18 @@ export const FullUserManagementTable = () => {
 
       if (employersError) throw employersError;
 
+      const { data: experts, error: expertsError } = await supabase
+        .from("expert_profiles")
+        .select("user_id, full_name");
+
+      if (expertsError) throw expertsError;
+
       const employerByUserId = (employers ?? []).reduce<Record<string, string>>((acc, row) => {
         acc[row.user_id] = row.company_name ?? "";
+        return acc;
+      }, {});
+      const expertNameByUserId = (experts ?? []).reduce<Record<string, string>>((acc, row) => {
+        acc[row.user_id] = row.full_name?.trim() ?? "";
         return acc;
       }, {});
 
@@ -84,9 +94,14 @@ export const FullUserManagementTable = () => {
         profiles?.map((profile) => {
           const userRoles = allRoles.filter((r) => r.user_id === profile.id).map((r) => r.role);
           const isEmployer = userRoles.includes("employer");
+          const fullNameFromProfile = profile.full_name?.trim() || null;
+          const fullNameFromParts = `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || null;
+          const fullNameFromExpertProfile = expertNameByUserId[profile.id] || null;
+          const resolvedFullName = fullNameFromProfile ?? fullNameFromParts ?? fullNameFromExpertProfile;
 
           return {
             ...profile,
+            full_name: resolvedFullName,
             roles: userRoles as string[],
             emailConfirmed: false,
             companyName: isEmployer ? (employerByUserId[profile.id] ?? null) : null,
