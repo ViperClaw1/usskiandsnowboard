@@ -51,7 +51,7 @@ async function sendTwilioSMS(toPhone: string, message: string): Promise<void> {
 }
 
 async function shouldSendSMS(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   userId: string,
 ): Promise<{ send: boolean; phone: string | null }> {
   const { data: prefs } = await supabase
