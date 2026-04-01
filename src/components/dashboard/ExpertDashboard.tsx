@@ -19,10 +19,12 @@ import { DashboardSectionLayout } from "@/components/dashboard/DashboardSectionL
 
 interface ExpertDashboardProps {
   user: User;
+  openProfileDialog?: boolean;
+  onProfileDialogOpened?: () => void;
   onRequestAI?: () => void;
 }
 
-const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
+const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onRequestAI }: ExpertDashboardProps) => {
   const queryClient = useQueryClient();
   const [currentView, setCurrentView] = useState<"home" | "athletes" | "employers" | "connections">("home");
   const [editOpen, setEditOpen] = useState(false);
@@ -72,6 +74,14 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
       }
     }
   }, [profileLoading, profile, hasShown, markShown]);
+
+  useEffect(() => {
+    if (openProfileDialog) {
+      setEditOpen(true);
+      setDialogStep("choice");
+      onProfileDialogOpened?.();
+    }
+  }, [openProfileDialog, onProfileDialogOpened]);
 
   if (profileLoading) return <LoadingSpinner fullScreen />;
 
