@@ -7,7 +7,6 @@ import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OnboardingStep } from "@/components/onboarding/OnboardingStep";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +14,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import PhotoUploader from "./PhotoUploader";
 import { Sparkles, Upload, X } from "lucide-react";
 import { CAREER_INTERESTS_OPTIONS, SKILLS_OPTIONS, SPONSORS_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
+import { OnboardingTextareaStep } from "@/components/onboarding/OnboardingTextareaStep";
 
 interface AthleteOnboardingWizardProps {
   user: User;
@@ -522,29 +522,24 @@ export const AthleteOnboardingWizard = ({ user, onComplete }: AthleteOnboardingW
 
       case 9:
         return (
-          <OnboardingStep
+          <OnboardingTextareaStep
             title="Tell us about yourself"
             description="Share your story, achievements, and what makes you unique"
-          >
-            <Textarea
-              {...register("bio", { required: true })}
-              placeholder="I'm a passionate athlete who..."
-              className="min-h-32 text-lg px-4 py-3 border-2"
-              maxLength={500}
-              autoFocus
-            />
-            <p className="text-sm text-muted-foreground mt-2">
-              {formValues.bio.length}/500 characters
-            </p>
-            <StepNavigation
-              currentStep={currentStep}
-              totalSteps={TOTAL_STEPS}
-              canGoBack={true}
-              canGoNext={canGoNext}
-              onBack={prevStep}
-              onNext={nextStep}
-            />
-          </OnboardingStep>
+            placeholder="I'm a passionate athlete who..."
+            textareaProps={{
+              ...register("bio", { required: true }),
+              maxLength: 500,
+              autoFocus: true,
+            }}
+            showCharCount
+            charCount={formValues.bio.length}
+            charLimit={500}
+            currentStep={currentStep}
+            totalSteps={TOTAL_STEPS}
+            canGoNext={canGoNext}
+            onBack={prevStep}
+            onNext={nextStep}
+          />
         );
 
       case 10:

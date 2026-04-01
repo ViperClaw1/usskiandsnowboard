@@ -5,14 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
 import EmployerDirectory from "@/components/athlete/EmployerDirectory";
 import { ExpertLandingPage, expertDashboardKey } from "@/components/dashboard/expert/ExpertLandingPage";
-import { ClipboardList, Sparkles, UserCheck, Users } from "lucide-react";
+import { UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
+import { ProfileCompletionChoiceDialog } from "@/components/dashboard/ProfileCompletionChoiceDialog";
+import { useOneTimeOnboardingFlag } from "@/hooks/useOneTimeOnboardingFlag";
+import { DashboardSectionLayout } from "@/components/dashboard/DashboardSectionLayout";
 
 interface ExpertDashboardProps {
   user: User;
@@ -25,6 +28,7 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
   const [editOpen, setEditOpen] = useState(false);
   const [dialogStep, setDialogStep] = useState<"choice" | "manual">("choice");
   const [updatingRequestId, setUpdatingRequestId] = useState<string | null>(null);
+  const { hasShown, markShown } = useOneTimeOnboardingFlag(`onboarding_shown_expert_${user.id}`);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["expert-own-profile", user.id],
@@ -61,14 +65,13 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
 
   useEffect(() => {
     if (!profileLoading && !profile) {
-      const key = `onboarding_shown_expert_${user.id}`;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, "true");
+      if (!hasShown()) {
+        markShown();
         setEditOpen(true);
         setDialogStep("choice");
       }
     }
-  }, [profileLoading, profile, user.id]);
+  }, [profileLoading, profile, hasShown, markShown]);
 
   if (profileLoading) return <LoadingSpinner fullScreen />;
 
@@ -167,40 +170,18 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
                 />
               </>
             ) : (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    Complete Your Profile
-                  </DialogTitle>
-                  <DialogDescription>Choose how you'd like to get started</DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col gap-3 pt-2">
-                  <Button
-                    onClick={() => {
-                      setEditOpen(false);
-                      setDialogStep("choice");
-                      onRequestAI?.();
-                    }}
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Complete with AI
-                  </Button>
-                  <Button variant="outline" onClick={() => setDialogStep("manual")}>
-                    <ClipboardList className="mr-2 h-4 w-4" />
-                    Complete Manually
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setEditOpen(false);
-                      setDialogStep("choice");
-                    }}
-                  >
-                    Skip for now
-                  </Button>
-                </div>
-              </>
+              <ProfileCompletionChoiceDialog
+                onChooseAI={() => {
+                  setEditOpen(false);
+                  setDialogStep("choice");
+                  onRequestAI?.();
+                }}
+                onChooseManual={() => setDialogStep("manual")}
+                onSkip={() => {
+                  setEditOpen(false);
+                  setDialogStep("choice");
+                }}
+              />
             )}
           </DialogContent>
         </Dialog>
@@ -211,14 +192,10 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
   if (currentView === "athletes") {
     return (
       <div className="min-h-screen bg-background overflow-x-hidden">
-        <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold">Athlete Directory</h2>
-            <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
-              Back to Home
-            </Button>
-          </div>
+        <main>
+          <DashboardSectionLayout title="Athlete Directory" onBack={() => setCurrentView("home")}>
           <AthleteDirectory />
+          </DashboardSectionLayout>
         </main>
       </div>
     );
@@ -227,14 +204,10 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
   if (currentView === "employers") {
     return (
       <div className="min-h-screen bg-background overflow-x-hidden">
-        <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold">Partners Directory</h2>
-            <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
-              Back to Home
-            </Button>
-          </div>
+        <main>
+          <DashboardSectionLayout title="Partners Directory" onBack={() => setCurrentView("home")}>
           <EmployerDirectory />
+          </DashboardSectionLayout>
         </main>
       </div>
     );
@@ -243,13 +216,8 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
   if (currentView === "connections") {
     return (
       <div className="min-h-screen bg-background overflow-x-hidden">
-        <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold">My Connections</h2>
-            <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
-              Back to Home
-            </Button>
-          </div>
+        <main>
+          <DashboardSectionLayout title="My Connections" onBack={() => setCurrentView("home")}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -304,6 +272,7 @@ const ExpertDashboard = ({ user, onRequestAI }: ExpertDashboardProps) => {
               )}
             </CardContent>
           </Card>
+          </DashboardSectionLayout>
         </main>
       </div>
     );

@@ -13,7 +13,7 @@ import { Shield, UserPlus, UserMinus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { RoleChangeDialog } from "./RoleChangeDialog";
 
-type AppRole = "admin" | "athlete" | "employer";
+type AppRole = "admin" | "athlete" | "employer" | "expert";
 
 interface UserRoleManagerProps {
   userId: string;
@@ -47,18 +47,26 @@ export const UserRoleManager = ({
       
       const conflictingRoles: AppRole[] = [];
       
-      // Admin is mutually exclusive with athlete and employer
+      // Admin is mutually exclusive with non-admin roles.
       if (role === 'admin') {
         if (roles.includes('athlete')) conflictingRoles.push('athlete');
         if (roles.includes('employer')) conflictingRoles.push('employer');
+        if (roles.includes('expert')) conflictingRoles.push('expert');
       }
-      // Athlete and employer are mutually exclusive with each other AND with admin
+      // Non-admin roles are mutually exclusive with each other and admin.
       else if (role === 'athlete') {
         if (roles.includes('employer')) conflictingRoles.push('employer');
+        if (roles.includes('expert')) conflictingRoles.push('expert');
         if (roles.includes('admin')) conflictingRoles.push('admin');
       }
       else if (role === 'employer') {
         if (roles.includes('athlete')) conflictingRoles.push('athlete');
+        if (roles.includes('expert')) conflictingRoles.push('expert');
+        if (roles.includes('admin')) conflictingRoles.push('admin');
+      }
+      else if (role === 'expert') {
+        if (roles.includes('athlete')) conflictingRoles.push('athlete');
+        if (roles.includes('employer')) conflictingRoles.push('employer');
         if (roles.includes('admin')) conflictingRoles.push('admin');
       }
       
@@ -148,9 +156,10 @@ export const UserRoleManager = ({
   const handleRoleAction = (role: AppRole, action: 'grant' | 'revoke') => {
     // Check if granting a conflicting role
     const hasConflictingRole = 
-      (role === 'admin' && (roles.includes('athlete') || roles.includes('employer'))) ||
-      (role === 'athlete' && (roles.includes('employer') || roles.includes('admin'))) ||
-      (role === 'employer' && (roles.includes('athlete') || roles.includes('admin')));
+      (role === 'admin' && (roles.includes('athlete') || roles.includes('employer') || roles.includes('expert'))) ||
+      (role === 'athlete' && (roles.includes('employer') || roles.includes('expert') || roles.includes('admin'))) ||
+      (role === 'employer' && (roles.includes('athlete') || roles.includes('expert') || roles.includes('admin'))) ||
+      (role === 'expert' && (roles.includes('athlete') || roles.includes('employer') || roles.includes('admin')));
     
     // Always show dialog for admin changes, self-changes, or conflicting roles
     if (role === 'admin' || isSelf || (action === 'grant' && hasConflictingRole)) {
@@ -178,7 +187,7 @@ export const UserRoleManager = ({
     setPendingAction(null);
   };
 
-  const availableRoles: AppRole[] = ['admin', 'athlete', 'employer'];
+  const availableRoles: AppRole[] = ['admin', 'athlete', 'employer', 'expert'];
 
   return (
     <>

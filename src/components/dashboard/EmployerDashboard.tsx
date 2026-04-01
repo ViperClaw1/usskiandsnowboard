@@ -15,7 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartnerLandingPage, partnerDashboardKey } from "@/components/dashboard/employer/PartnerLandingPage";
 import { EmployerProfilePreview } from "@/components/profile/EmployerProfilePreview";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, ClipboardList } from "lucide-react";
+import { ProfileCompletionChoiceDialog } from "@/components/dashboard/ProfileCompletionChoiceDialog";
+import { useOneTimeOnboardingFlag } from "@/hooks/useOneTimeOnboardingFlag";
+import { DashboardSectionLayout } from "@/components/dashboard/DashboardSectionLayout";
 
 // ==============================
 // Types
@@ -85,6 +87,7 @@ const EmployerDashboard = ({
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [dialogStep, setDialogStep] = useState<"choice" | "wizard">("choice");
   const [showOpportunitiesDialog, setShowOpportunitiesDialog] = useState(false);
+  const { hasShown, markShown } = useOneTimeOnboardingFlag(`onboarding_shown_employer_${user.id}`);
 
   // Background image upload
   const bgInputRef = useRef<HTMLInputElement>(null);
@@ -153,13 +156,12 @@ const EmployerDashboard = ({
   // ==============================
   useEffect(() => {
     if (!loading && profile === null && !isAdminView) {
-      const key = `onboarding_shown_employer_${user.id}`;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, "true");
+      if (!hasShown()) {
+        markShown();
         setShowProfileDialog(true);
       }
     }
-  }, [loading, profile, isAdminView, user.id]);
+  }, [loading, profile, isAdminView, hasShown, markShown]);
 
   useEffect(() => {
     if (openProfileDialog) {
@@ -215,23 +217,11 @@ const EmployerDashboard = ({
             }}
           />
         ) : currentView === "directory" ? (
-          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold">Athlete Directory</h2>
-              <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
-                Back to Home
-              </Button>
-            </div>
+          <DashboardSectionLayout title="Athlete Directory" onBack={() => setCurrentView("home")}>
             <AthleteDirectory />
-          </div>
+          </DashboardSectionLayout>
         ) : currentView === "preview" ? (
-          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold">Profile Preview</h2>
-              <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
-                Back to Home
-              </Button>
-            </div>
+          <DashboardSectionLayout title="Profile Preview" onBack={() => setCurrentView("home")}>
             {profile && (
               <EmployerProfilePreview
                 profile={profile}
@@ -240,15 +230,9 @@ const EmployerDashboard = ({
                 uploadingBg={uploadingBg}
               />
             )}
-          </div>
+          </DashboardSectionLayout>
         ) : currentView === "connections" ? (
-          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold">My Connections</h2>
-              <Button variant="outline" onClick={() => setCurrentView("home")} className="w-full sm:w-auto">
-                Back to Home
-              </Button>
-            </div>
+          <DashboardSectionLayout title="My Connections" onBack={() => setCurrentView("home")}>
             {profile?.id && (
               <Tabs defaultValue="activity">
                 <TabsList className="mb-6">
@@ -271,7 +255,7 @@ const EmployerDashboard = ({
                 </TabsContent>
               </Tabs>
             )}
-          </div>
+          </DashboardSectionLayout>
         ) : null}
       </main>
 
@@ -295,38 +279,18 @@ const EmployerDashboard = ({
                 </>
               ) : dialogStep === "choice" ? (
                 <>
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Complete Your Profile
-                    </DialogTitle>
-                    <DialogDescription>Choose how you'd like to get started</DialogDescription>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-3 pt-2">
-                    <Button
-                      onClick={() => {
-                        setShowProfileDialog(false);
-                        setDialogStep("choice");
-                        onRequestAI?.();
-                      }}
-                    >
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Complete with AI
-                    </Button>
-                    <Button variant="outline" onClick={() => setDialogStep("wizard")}>
-                      <ClipboardList className="mr-2 h-4 w-4" />
-                      Complete Manually
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setShowProfileDialog(false);
-                        setDialogStep("choice");
-                      }}
-                    >
-                      Skip for now
-                    </Button>
-                  </div>
+                  <ProfileCompletionChoiceDialog
+                    onChooseAI={() => {
+                      setShowProfileDialog(false);
+                      setDialogStep("choice");
+                      onRequestAI?.();
+                    }}
+                    onChooseManual={() => setDialogStep("wizard")}
+                    onSkip={() => {
+                      setShowProfileDialog(false);
+                      setDialogStep("choice");
+                    }}
+                  />
                 </>
               ) : (
                 <>

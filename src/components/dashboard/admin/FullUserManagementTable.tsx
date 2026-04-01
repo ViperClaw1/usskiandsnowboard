@@ -244,6 +244,7 @@ export const FullUserManagementTable = () => {
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="athlete">Athlete</SelectItem>
               <SelectItem value="employer">Employer</SelectItem>
+              <SelectItem value="expert">Expert</SelectItem>
               <SelectItem value="none">No Role</SelectItem>
             </SelectContent>
           </Select>
@@ -316,7 +317,7 @@ export const FullUserManagementTable = () => {
                           currentUserId={currentUser.id}
                           userEmail={user.email}
                           userName={user.full_name || ""}
-                          roles={user.roles as ("admin" | "athlete" | "employer")[]}
+                          roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
                         />
                       )}
                     </TableCell>
@@ -393,7 +394,7 @@ export const FullUserManagementTable = () => {
                         currentUserId={currentUser.id}
                         userEmail={user.email}
                         userName={user.full_name || ""}
-                        roles={user.roles as ("admin" | "athlete" | "employer")[]}
+                        roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
                       />
                     </div>
                   )}

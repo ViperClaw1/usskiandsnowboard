@@ -7,12 +7,12 @@ import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OnboardingStep } from "@/components/onboarding/OnboardingStep";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building2, Upload, X } from "lucide-react";
 import { LocationSearch } from "@/components/ui/location-search";
+import { OnboardingTextareaStep } from "@/components/onboarding/OnboardingTextareaStep";
 
 interface EmployerOnboardingWizardProps {
   user: User;
@@ -476,71 +476,47 @@ export const EmployerOnboardingWizard = ({ user, onComplete }: EmployerOnboardin
 
       case 7:
         return (
-          <OnboardingStep
+          <OnboardingTextareaStep
             title="Tell athletes about your company"
             description="Share your mission, culture, and what makes you unique"
-          >
-            <Textarea
-              {...register("about", { required: true })}
-              placeholder="We're a leading company that..."
-              className="min-h-32 text-lg px-4 py-3 border-2"
-              autoFocus
-            />
-            <StepNavigation
-              currentStep={currentStep}
-              totalSteps={TOTAL_STEPS}
-              canGoBack={true}
-              canGoNext={canGoNext}
-              onBack={prevStep}
-              onNext={nextStep}
-            />
-          </OnboardingStep>
+            placeholder="We're a leading company that..."
+            textareaProps={{ ...register("about", { required: true }), autoFocus: true }}
+            currentStep={currentStep}
+            totalSteps={TOTAL_STEPS}
+            canGoNext={canGoNext}
+            onBack={prevStep}
+            onNext={nextStep}
+          />
         );
 
       case 8:
         return (
-          <OnboardingStep
+          <OnboardingTextareaStep
             title="What's your connection to US Ski & Snowboard?"
             description="Describe your relationship with the US Ski & Snowboard community"
-          >
-            <Textarea
-              {...register("connectionToUssa", { required: true })}
-              placeholder="We've been a proud sponsor for..."
-              className="min-h-32 text-lg px-4 py-3 border-2 resize-none"
-              autoFocus
-            />
-            <StepNavigation
-              currentStep={currentStep}
-              totalSteps={TOTAL_STEPS}
-              canGoBack={true}
-              canGoNext={canGoNext}
-              onBack={prevStep}
-              onNext={nextStep}
-            />
-          </OnboardingStep>
+            placeholder="We've been a proud sponsor for..."
+            textareaProps={{ ...register("connectionToUssa", { required: true }), autoFocus: true }}
+            currentStep={currentStep}
+            totalSteps={TOTAL_STEPS}
+            canGoNext={canGoNext}
+            onBack={prevStep}
+            onNext={nextStep}
+          />
         );
 
       case 9:
         return (
-          <OnboardingStep
+          <OnboardingTextareaStep
             title="What opportunities do you offer?"
             description="Describe the roles, internships, or partnerships available"
-          >
-            <Textarea
-              {...register("opportunities", { required: true })}
-              placeholder="We offer internships, full-time positions, brand ambassadorships..."
-              className="min-h-32 text-lg px-4 py-3 border-2 resize-none"
-              autoFocus
-            />
-            <StepNavigation
-              currentStep={currentStep}
-              totalSteps={TOTAL_STEPS}
-              canGoBack={true}
-              canGoNext={canGoNext}
-              onBack={prevStep}
-              onNext={nextStep}
-            />
-          </OnboardingStep>
+            placeholder="We offer internships, full-time positions, brand ambassadorships..."
+            textareaProps={{ ...register("opportunities", { required: true }), autoFocus: true }}
+            currentStep={currentStep}
+            totalSteps={TOTAL_STEPS}
+            canGoNext={canGoNext}
+            onBack={prevStep}
+            onNext={nextStep}
+          />
         );
 
       case 10:

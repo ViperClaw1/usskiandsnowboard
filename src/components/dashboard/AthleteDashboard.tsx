@@ -15,7 +15,9 @@ import { AthleteLandingPage, athleteDashboardKey } from "@/components/dashboard/
 import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, ClipboardList } from "lucide-react";
+import { ProfileCompletionChoiceDialog } from "@/components/dashboard/ProfileCompletionChoiceDialog";
+import { useOneTimeOnboardingFlag } from "@/hooks/useOneTimeOnboardingFlag";
+import { DashboardSectionLayout } from "@/components/dashboard/DashboardSectionLayout";
 
 // ==============================
 // Global Keyframe Injection
@@ -211,6 +213,7 @@ const AthleteDashboard = ({
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [dialogStep, setDialogStep] = useState<"choice" | "wizard">("choice");
   const [viewKey, setViewKey] = useState(0);
+  const { hasShown, markShown } = useOneTimeOnboardingFlag(`onboarding_shown_athlete_${user.id}`);
 
   // ==============================
   // Data Fetching — Athlete Profile
@@ -239,13 +242,12 @@ const AthleteDashboard = ({
   // ==============================
   useEffect(() => {
     if (!profileLoading && profile === null && !isAdminView) {
-      const key = `onboarding_shown_athlete_${user.id}`;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, "true");
+      if (!hasShown()) {
+        markShown();
         setShowProfileDialog(true);
       }
     }
-  }, [profileLoading, profile, isAdminView, user.id]);
+  }, [profileLoading, profile, isAdminView, hasShown, markShown]);
 
   // ==============================
   // Effects — Open Profile Dialog from Parent
@@ -306,42 +308,25 @@ const AthleteDashboard = ({
       case "directory":
         return (
           <FadeIn key={viewKey}>
-            <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold">Partners Directory</h2>
-                <Button variant="outline" onClick={() => handleNavigate("home")} className="w-full sm:w-auto">
-                  Back to Home
-                </Button>
-              </div>
+            <DashboardSectionLayout title="Partners Directory" onBack={() => handleNavigate("home")}>
               <EmployerDirectory />
-            </div>
+            </DashboardSectionLayout>
           </FadeIn>
         );
 
       case "portfolio":
         return (
           <FadeIn key={viewKey}>
-            <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-                <Button variant="outline" onClick={() => handleNavigate("home")} className="w-full sm:w-auto">
-                  Back to Home
-                </Button>
-              </div>
+            <DashboardSectionLayout title="Portfolio" onBack={() => handleNavigate("home")}>
               {profile?.id ? <AthletePortfolio athleteId={profile.id} /> : <PortfolioSkeleton />}
-            </div>
+            </DashboardSectionLayout>
           </FadeIn>
         );
 
       case "connections":
         return (
           <FadeIn key={viewKey}>
-            <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold">My Connections</h2>
-                <Button variant="outline" onClick={() => handleNavigate("home")} className="w-full sm:w-auto">
-                  Back to Home
-                </Button>
-              </div>
+            <DashboardSectionLayout title="My Connections" onBack={() => handleNavigate("home")}>
               {profile?.id ? (
                 <Tabs defaultValue="activity">
                   <TabsList className="mb-6">
@@ -366,7 +351,7 @@ const AthleteDashboard = ({
               ) : (
                 <ConnectionsSkeleton />
               )}
-            </div>
+            </DashboardSectionLayout>
           </FadeIn>
         );
 
@@ -399,38 +384,18 @@ const AthleteDashboard = ({
                 </>
               ) : dialogStep === "choice" ? (
                 <>
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Complete Your Profile
-                    </DialogTitle>
-                    <DialogDescription>Choose how you'd like to get started</DialogDescription>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-3 pt-2">
-                    <Button
-                      onClick={() => {
-                        setShowProfileDialog(false);
-                        setDialogStep("choice");
-                        onRequestAI?.();
-                      }}
-                    >
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Complete with AI
-                    </Button>
-                    <Button variant="outline" onClick={() => setDialogStep("wizard")}>
-                      <ClipboardList className="mr-2 h-4 w-4" />
-                      Complete Manually
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setShowProfileDialog(false);
-                        setDialogStep("choice");
-                      }}
-                    >
-                      Skip for now
-                    </Button>
-                  </div>
+                  <ProfileCompletionChoiceDialog
+                    onChooseAI={() => {
+                      setShowProfileDialog(false);
+                      setDialogStep("choice");
+                      onRequestAI?.();
+                    }}
+                    onChooseManual={() => setDialogStep("wizard")}
+                    onSkip={() => {
+                      setShowProfileDialog(false);
+                      setDialogStep("choice");
+                    }}
+                  />
                 </>
               ) : (
                 <>

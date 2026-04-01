@@ -18,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, ClipboardEdit } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/components/auth/AuthContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { dashboardRoleKey, useDashboardRole } from "@/hooks/useDashboardRole";
 
 // ==============================
 // Constants — Welcome Content
@@ -59,33 +60,6 @@ To get started, complete your profile so athletes can understand your background
 };
 
 // ==============================
-// Query Key
-// ==============================
-const dashboardRoleKey = (userId: string) => ["dashboard-role", userId];
-
-// ==============================
-// Query Function
-// Extracted outside the component — stable reference, not recreated per render.
-// Retry logic is delegated to useQuery's built-in retry option below, so this
-// function is kept pure: throw on error, return null when no role is assigned yet.
-// ==============================
-const fetchDashboardRole = async (userId: string): Promise<string | null> => {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .order("role", { ascending: false });
-
-  if (error) throw error;
-
-  if (!data || data.length === 0) return null;
-
-  // Prioritize admin if the user holds multiple roles
-  const adminRole = data.find((r) => r.role === "admin");
-  return adminRole ? adminRole.role : data[0].role;
-};
-
-// ==============================
 // Component Definition
 // Auth state delegated to AuthContext — no local onAuthStateChange or getSession.
 // Role fetching uses useQuery with retry so the role is cached across navigations
@@ -121,17 +95,7 @@ const Dashboard = () => {
   // mounts — roleLoading is false from render zero on repeat visits.
   // Only enabled once we have a confirmed authenticated user.
   // ==============================
-  const { data: role = null, isLoading: roleLoading } = useQuery<string | null>({
-    queryKey: dashboardRoleKey(user?.id ?? ""),
-    queryFn: () => fetchDashboardRole(user!.id),
-    enabled: !!user && !authLoading,
-    initialData: () => (user ? queryClient.getQueryData<string | null>(dashboardRoleKey(user.id)) : undefined),
-    staleTime: 5 * 60 * 1000,
-    // Replaces the manual setTimeout retry loop — retries up to 3 times with
-    // exponential backoff (1s, 2s, 4s) handled automatically by React Query.
-    retry: 3,
-    retryDelay: (attempt) => 1000 * (attempt + 1),
-  });
+  const { role, roleLoading } = useDashboardRole(user?.id, !authLoading);
 
   // ==============================
   // Effects — Redirect Unauthenticated Users
