@@ -293,8 +293,8 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 <Pencil className="h-4 w-4 text-foreground" />
               </Button>
 
-              <div className="-mt-16 [@media(min-width:950px)]:mt-0 [@media(min-width:950px)]:absolute [@media(min-width:950px)]:bottom-0 [@media(min-width:950px)]:left-0 [@media(min-width:950px)]:right-0 [@media(min-width:950px)]:translate-y-1/2 z-10">
-                <div className="flex flex-col [@media(min-width:950px)]:flex-row [@media(min-width:950px)]:items-end [@media(min-width:950px)]:justify-between [@media(min-width:950px)]:px-6 gap-4">
+              <div className="-mt-16 [@media(min-width:930px)]:mt-0 [@media(min-width:930px)]:absolute [@media(min-width:930px)]:bottom-0 [@media(min-width:930px)]:left-0 [@media(min-width:930px)]:right-0 [@media(min-width:930px)]:translate-y-1/2 z-10">
+                <div className="flex flex-col [@media(min-width:930px)]:flex-row [@media(min-width:930px)]:items-end [@media(min-width:930px)]:justify-between [@media(min-width:930px)]:px-6 gap-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-background w-full rounded-t-xl sm:rounded-t-none sm:rounded-t-xl sm:w-fit">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.photo_url || ""} />
@@ -329,7 +329,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   </div>
 
                   {completeness < 100 && (
-                    <Card className="w-full max-w-none [@media(min-width:950px)]:w-64 [@media(min-width:950px)]:max-w-[calc(100%-2rem)] shrink-0">
+                    <Card className="w-auto mx-3 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
@@ -339,18 +339,21 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                             <span className="font-semibold">{completeness}%</span>
                           </div>
                           <Progress value={completeness} className="h-2" />
-                          <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                            {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
-                            <ArrowRight className="ml-1 h-3 w-3" />
-                          </Button>
-                          <AIProfilePopulator
-                            role="expert"
-                            userId={user.id}
-                            onComplete={() => {
-                              queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
-                              onProfileUpdated?.();
-                            }}
-                          />
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                              {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
+                            </Button>
+                            <div className="basis-full [@media(min-width:930px)]:basis-auto">
+                              <AIProfilePopulator
+                                role="expert"
+                                userId={user.id}
+                                onComplete={() => {
+                                  queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
+                                  onProfileUpdated?.();
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -359,7 +362,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
               </div>
             </div>
 
-            <div className="sm:pt-20 sm:pb-6" />
+            <div className="[@media(min-width:930px)]:pt-20 [@media(min-width:930px)]:pb-6" />
           </Card>
         </div>
       </section>
