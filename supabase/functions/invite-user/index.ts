@@ -140,17 +140,12 @@ serve(async (req) => {
     }
 
     // Generate password-set link
-<<<<<<< HEAD
     const configuredAppUrl = Deno.env.get("APP_URL") || "https://athleteconnection.org";
     const appBaseUrl = new URL(configuredAppUrl);
-    // Normalize host/path to prevent malformed invite links like ".//reset-password".
     appBaseUrl.hostname = appBaseUrl.hostname.replace(/\.+$/, "");
     appBaseUrl.pathname = "/";
     appBaseUrl.search = "";
     appBaseUrl.hash = "";
-=======
-    const appUrl = "https://athleteconnection.org";
->>>>>>> 5e7e52dfc879fb9d98c32655e7377ebf86d10397
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
