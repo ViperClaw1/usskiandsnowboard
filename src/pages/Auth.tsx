@@ -751,7 +751,7 @@ const Auth = () => {
           {/* Role selector — signup only */}
           {isSignUpStep && (
             <div className="space-y-2">
-              <Label htmlFor="userType">I am a...</Label>
+              <Label htmlFor="userType">Role</Label>
               <select
                 id="userType"
                 value={userType}
