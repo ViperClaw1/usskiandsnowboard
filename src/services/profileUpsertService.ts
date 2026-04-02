@@ -45,6 +45,9 @@ const ensureProfileRow = async (userId: string, fullName?: string) => {
 };
 
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
+  // Ensure the parent profiles row exists to satisfy FK constraints in role tables.
+  await ensureProfileRow(userId, profileData.full_name || name);
+
   const { data: existing } = await supabase
     .from("expert_profiles")
     .select("id")
@@ -106,6 +109,9 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
 };
 
 export const upsertAthleteProfile = async (userId: string, profileData: any) => {
+  const derivedFullName = [profileData.first_name, profileData.last_name].filter(Boolean).join(" ").trim();
+  await ensureProfileRow(userId, derivedFullName || undefined);
+
   if (profileData.first_name || profileData.last_name) {
     await supabase
       .from("profiles")
