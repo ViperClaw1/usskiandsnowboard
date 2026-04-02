@@ -379,7 +379,7 @@ const EmployerDirectory = () => {
     return (
       <div className="text-center p-8">
         <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-muted-foreground">No partners found</p>
+        <p className="text-muted-foreground">No employers found</p>
       </div>
     );
   }
