@@ -19,35 +19,6 @@ const toStringArray = (value: unknown): string[] => {
   return [];
 };
 
-const ensureProfileRow = async (userId: string, fullName?: string) => {
-  const { data: existingProfile, error: profileCheckError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (profileCheckError) throw profileCheckError;
-  if (existingProfile) return;
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError) throw userError;
-
-  const email = user?.email;
-  if (!email) {
-    throw new Error("Missing profile record and user email; cannot create profile row.");
-  }
-
-  const { error: insertProfileError } = await supabase.from("profiles").insert({
-    id: userId,
-    email,
-    full_name: fullName?.trim() || null,
-  });
-  if (insertProfileError) throw insertProfileError;
-};
-
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
   const { data: existing } = await supabase
     .from("expert_profiles")
