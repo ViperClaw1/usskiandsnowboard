@@ -65,8 +65,8 @@ export const ExpertProfileForm = ({
     const merged = { ...EMPTY, ...initialData };
     const normalizedIndustry = Array.isArray(merged.industry)
       ? merged.industry
-      : typeof merged.industry === "string"
-        ? merged.industry
+      : typeof (merged.industry as any) === "string"
+        ? (merged.industry as any)
             .split(",")
             .map((v) => v.trim())
             .filter(Boolean)
