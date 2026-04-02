@@ -48,6 +48,15 @@ function getInitials(name: string) {
     .join("");
 }
 
+function getPrimaryIndustry(industry: string | null): string | null {
+  if (!industry) return null;
+  const first = industry
+    .split(",")
+    .map((v) => v.trim())
+    .find(Boolean);
+  return first || null;
+}
+
 // ==============================
 // Fetch
 // ==============================
@@ -201,9 +210,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 justify-center">
-                    {expert.industry && (
+                    {getPrimaryIndustry(expert.industry) && (
                       <Badge variant="secondary" className="text-xs">
-                        {expert.industry}
+                        {getPrimaryIndustry(expert.industry)}
                       </Badge>
                     )}
                     {expert.ussa_affiliate && (
