@@ -227,7 +227,7 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
     return (
       <div className="min-h-screen bg-background overflow-x-hidden">
         <main>
-          <DashboardSectionLayout title="Partners Directory" onBack={() => setCurrentView("home")}>
+          <DashboardSectionLayout title="Employers Directory" onBack={() => setCurrentView("home")}>
           <EmployerDirectory />
           </DashboardSectionLayout>
         </main>

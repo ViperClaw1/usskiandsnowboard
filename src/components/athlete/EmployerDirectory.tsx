@@ -514,7 +514,7 @@ const EmployerDirectory = () => {
 
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredEmployers.length} of {employers.length} partners
+          Showing {filteredEmployers.length} of {employers.length} employers
         </p>
         {(searchTerm || filterCompanySize !== "all" || filterLocation !== "all" || filterIndustry !== "all") && (
           <Button variant="outline" size="sm" onClick={clearFilters}>
