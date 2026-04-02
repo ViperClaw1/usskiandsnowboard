@@ -1,46 +1,38 @@
 
 
-## Investigation Summary
+## Problem Analysis
 
-The root cause is that **18 TypeScript errors in edge functions are blocking the build**, which means the migration (`normalize_expert_user_links_and_roles`) that backfills missing expert roles in `user_roles` never deployed. The `FullUserManagementTable` code itself is correct — it queries `profiles` joined with `user_roles`, so experts will appear once they have rows in both tables.
+The edge function logs reveal the **deployed version is outdated** — it still uses the old prompt text (`"Use the URL as the instagram_url..."`) and lacks the content-fallback parsing added in the latest diff. The 422 error occurs because:
 
-### Why experts are missing
-- The table query logic is: fetch all `profiles`, then match each profile's `id` against `user_roles` to get roles
-- Expert users created via signup DO get a `profiles` row and a `user_roles` row (via `handle_new_user` trigger), so they should appear
-- However, the backfill migration for any legacy experts without `user_roles` entries never ran because the build is broken
+1. **Firecrawl can't scrape LinkedIn** (blocked site) → falls back to AI-only mode
+2. **Gemini 2.5 Flash ignores `tool_choice`** when given no scraped content — it returns conversational text instead of calling the tool function
+3. **The old deployed code has no fallback** for when the model returns content instead of a tool call → immediate 422
 
-### Build errors to fix (all in edge functions)
+Even after redeployment, the current code has a reliability issue: Gemini models sometimes ignore forced `tool_choice` and return text asking for clarification instead.
 
-**1. `ai-populate-profile/index.ts` (line 219)** — `aiResp` possibly null
-- Add null guard before `.text()` call
+## Plan
 
-**2. `resend-confirmation/index.ts` (line 67)** — missing `password` in `generateLink({ type: "signup" })`
-- Add a dummy `password` field (e.g., `crypto.randomUUID()`) to satisfy the type
+### 1. Fix the system prompt to be more forceful (ai-populate-profile/index.ts)
 
-**3. `scrape-news/index.ts` (lines 31-35)** — `authHeader` possibly null + `getClaims` doesn't exist
-- Add null check for `authHeader`
-- Replace `getClaims(token)` with `getUser(token)` (the correct Supabase Auth API)
+Update the expert system prompt to explicitly instruct: "You MUST call the function. Do not ask clarifying questions. Fill in all fields with your best guesses."
 
-**4. `send-admin-summary/index.ts` (line 33)** — same `getClaims` issue
-- Replace with `getUser(token)`
+### 2. Change model fallback order
 
-**5. `send-connection-notification/index.ts` (lines 53-97, 304-397)** — type mismatch on `createClient` return type used in helper functions
-- Change helper function parameter types from the strict generic to `any` (e.g., `supabase: any`)
-- This resolves all ~10 related errors in one change
+Put `openai/gpt-5-mini` first in the models array — OpenAI models are significantly more reliable with `tool_choice` enforcement. Keep Gemini as fallback.
 
-**6. `send-role-notification/index.ts` (line 36)** — same `getClaims` issue
-- Replace with `getUser(token)`
+```text
+Current:  ["google/gemini-2.5-flash", "openai/gpt-5-mini", "google/gemini-2.5-flash-lite"]
+Proposed: ["openai/gpt-5-mini", "google/gemini-2.5-flash", "google/gemini-2.5-flash-lite"]
+```
 
-### Files to modify (6 edge functions)
+### 3. Redeploy the edge function
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/ai-populate-profile/index.ts` | Null-guard `aiResp` before `.text()` |
-| `supabase/functions/resend-confirmation/index.ts` | Add `password` to `generateLink` call |
-| `supabase/functions/scrape-news/index.ts` | Null-check `authHeader`, replace `getClaims` → `getUser` |
-| `supabase/functions/send-admin-summary/index.ts` | Replace `getClaims` → `getUser` |
-| `supabase/functions/send-connection-notification/index.ts` | Relax helper function parameter types to `any` |
-| `supabase/functions/send-role-notification/index.ts` | Replace `getClaims` → `getUser` |
+Use the deploy tool to push the updated code so the latest version (with content fallback + forced tool_choice + improved prompt) is live.
 
-Once these build errors are fixed, the migration will deploy and backfill expert roles, making experts visible in the admin User Management table.
+### 4. Test the function
+
+Invoke the edge function with the same test data (Bryan Dunn + LinkedIn URL) and verify it returns extracted profile data instead of 422.
+
+### Files Modified
+- `supabase/functions/ai-populate-profile/index.ts` — prompt update + model order change
 
