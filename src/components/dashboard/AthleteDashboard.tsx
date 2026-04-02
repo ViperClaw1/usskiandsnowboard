@@ -308,7 +308,7 @@ const AthleteDashboard = ({
       case "directory":
         return (
           <FadeIn key={viewKey}>
-            <DashboardSectionLayout title="Partners Directory" onBack={() => handleNavigate("home")}>
+            <DashboardSectionLayout title="Employers Directory" onBack={() => handleNavigate("home")}>
               <EmployerDirectory />
             </DashboardSectionLayout>
           </FadeIn>

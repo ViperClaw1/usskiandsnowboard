@@ -379,7 +379,7 @@ const EmployerDirectory = () => {
     return (
       <div className="text-center p-8">
         <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-muted-foreground">No partners found</p>
+        <p className="text-muted-foreground">No employers found</p>
       </div>
     );
   }
@@ -493,7 +493,7 @@ const EmployerDirectory = () => {
         {searchBar}
         {filterPanel}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-muted-foreground">No partners match your filters</p>
+          <p className="text-sm text-muted-foreground">No employers match your filters</p>
           <Button variant="outline" size="sm" onClick={clearFilters}>
             <FilterX className="h-4 w-4 mr-2" />
             Clear Filters
@@ -514,7 +514,7 @@ const EmployerDirectory = () => {
 
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredEmployers.length} of {employers.length} partners
+          Showing {filteredEmployers.length} of {employers.length} employers
         </p>
         {(searchTerm || filterCompanySize !== "all" || filterLocation !== "all" || filterIndustry !== "all") && (
           <Button variant="outline" size="sm" onClick={clearFilters}>
