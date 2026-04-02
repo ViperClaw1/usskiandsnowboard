@@ -255,7 +255,7 @@ export const ExpertProfileForm = ({
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      {/* <div className="space-y-1.5">
         <Label>Headshot</Label>
         <Textarea
           value={form.headshot}
@@ -263,7 +263,7 @@ export const ExpertProfileForm = ({
           placeholder="Add headshot details (for example: profile image notes, source links, preferred crop/style)..."
           rows={3}
         />
-      </div>
+      </div> */}
 
       <div className="space-y-1.5">
         <Label>Bio</Label>
