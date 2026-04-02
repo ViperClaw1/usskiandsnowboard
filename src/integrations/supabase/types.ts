@@ -699,6 +699,7 @@ export type Database = {
           photo_url: string | null
           profile_completeness: number | null
           profile_views: number | null
+          ussa_affiliate: string | null
           updated_at: string
           user_id: string
         }
@@ -719,6 +720,7 @@ export type Database = {
           photo_url?: string | null
           profile_completeness?: number | null
           profile_views?: number | null
+          ussa_affiliate?: string | null
           updated_at?: string
           user_id: string
         }
@@ -739,6 +741,7 @@ export type Database = {
           photo_url?: string | null
           profile_completeness?: number | null
           profile_views?: number | null
+          ussa_affiliate?: string | null
           updated_at?: string
           user_id?: string
         }

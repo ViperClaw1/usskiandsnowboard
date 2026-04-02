@@ -30,6 +30,7 @@ export interface ExpertProfile {
   background_image_url: string | null;
   industry: string | null;
   is_alum: boolean | null;
+  ussa_affiliate: string | null;
   linkedin_url: string | null;
   email: string | null;
   is_public: boolean | null;
@@ -205,9 +206,10 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                         {expert.industry}
                       </Badge>
                     )}
-                    {expert.is_alum && (
+                    {expert.ussa_affiliate && (
                       <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
-                        <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />US Ski &amp; Snowboard Alum
+                        <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
+                        {expert.ussa_affiliate}
                       </Badge>
                     )}
                   </div>
@@ -278,8 +280,11 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
               <div className="flex flex-wrap gap-2">
                 {selectedExpert.industry && <Badge variant="secondary">{selectedExpert.industry}</Badge>}
-                {selectedExpert.is_alum && (
-                  <Badge className="bg-primary/10 text-primary border-primary/20"><img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />US Ski &amp; Snowboard Alum</Badge>
+                {selectedExpert.ussa_affiliate && (
+                  <Badge className="bg-primary/10 text-primary border-primary/20">
+                    <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
+                    {selectedExpert.ussa_affiliate}
+                  </Badge>
                 )}
               </div>
 

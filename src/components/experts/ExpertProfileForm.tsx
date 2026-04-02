@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,29 +24,33 @@ interface ExpertProfileFormProps {
 
 interface ExpertFormState {
   full_name: string;
+  linkedin_url: string;
   job_title: string;
   area_of_expertise: string;
   headshot: string;
   bio: string;
-  industry: string;
+  industry: string[];
+  ussa_affiliate: "" | "Athlete Alum" | "Trustee" | "Ambassador" | "Next Gen";
   is_alum: boolean;
-  linkedin_url: string;
   email: string;
   photo_url: string;
 }
 
 const EMPTY: ExpertFormState = {
   full_name: "",
+  linkedin_url: "",
   job_title: "",
   area_of_expertise: "",
   headshot: "",
   bio: "",
-  industry: "",
+  industry: [],
+  ussa_affiliate: "",
   is_alum: false,
-  linkedin_url: "",
   email: "",
   photo_url: "",
 };
+
+const AFFILIATE_OPTIONS = ["Athlete Alum", "Trustee", "Ambassador", "Next Gen"] as const;
 
 export const ExpertProfileForm = ({
   initialData,
@@ -57,12 +61,28 @@ export const ExpertProfileForm = ({
   onCancel,
 }: ExpertProfileFormProps) => {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState<ExpertFormState>({ ...EMPTY, ...initialData });
+  const [form, setForm] = useState<ExpertFormState>(() => {
+    const merged = { ...EMPTY, ...initialData };
+    const normalizedIndustry = Array.isArray(merged.industry)
+      ? merged.industry
+      : typeof merged.industry === "string"
+        ? merged.industry
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : [];
+
+    return {
+      ...merged,
+      industry: normalizedIndustry,
+      ussa_affiliate: (merged.ussa_affiliate as ExpertFormState["ussa_affiliate"]) ?? "",
+    };
+  });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const set = (field: keyof ExpertFormState, value: string | boolean) =>
+  const set = (field: keyof ExpertFormState, value: string | boolean | string[]) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,6 +138,17 @@ export const ExpertProfileForm = ({
       toast.error("Full name is required.");
       return;
     }
+    if (form.linkedin_url.trim()) {
+      try {
+        const parsed = new URL(form.linkedin_url.trim());
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+          throw new Error("invalid protocol");
+        }
+      } catch {
+        toast.error("Please enter a valid LinkedIn URL.");
+        return;
+      }
+    }
     setSaving(true);
     try {
       const payload = {
@@ -126,8 +157,9 @@ export const ExpertProfileForm = ({
         area_of_expertise: form.area_of_expertise.trim() || null,
         headshot: form.headshot.trim() || null,
         bio: form.bio.trim() || null,
-        industry: form.industry || null,
-        is_alum: form.is_alum,
+        industry: form.industry.length ? form.industry.join(", ") : null,
+        ussa_affiliate: form.ussa_affiliate || null,
+        is_alum: form.ussa_affiliate === "Athlete Alum",
         linkedin_url: form.linkedin_url.trim() || null,
         email: form.email.trim() || null,
         photo_url: form.photo_url.trim() || null,
@@ -176,9 +208,18 @@ export const ExpertProfileForm = ({
     <div className="space-y-5">
       {/* Manual fields */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="space-y-1.5">
           <Label>Full Name *</Label>
           <Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>LinkedIn Profile URL</Label>
+          <Input
+            type="url"
+            value={form.linkedin_url}
+            onChange={(e) => set("linkedin_url", e.target.value)}
+            placeholder="https://www.linkedin.com/in/your-profile/"
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Current Role / Title</Label>
@@ -208,14 +249,26 @@ export const ExpertProfileForm = ({
         </div>
         <div className="space-y-1.5">
           <Label>Industry</Label>
-          <Select value={form.industry} onValueChange={(v) => set("industry", v)}>
+          <MultiSelect
+            options={INDUSTRY_OPTIONS.map((ind) => ({ label: ind, value: ind }))}
+            selected={form.industry}
+            onChange={(values) => set("industry", values)}
+            placeholder="Select one or more industries..."
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="flex items-center gap-1.5">
+            <img src={usLogo} alt="US Ski & Snowboard" className="h-4 w-4 object-contain" />
+            US Ski &amp; Snowboard Affiliate
+          </Label>
+          <Select value={form.ussa_affiliate} onValueChange={(v) => set("ussa_affiliate", v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select industry" />
+              <SelectValue placeholder="Select affiliate type" />
             </SelectTrigger>
             <SelectContent>
-              {INDUSTRY_OPTIONS.map((ind) => (
-                <SelectItem key={ind} value={ind}>
-                  {ind}
+              {AFFILIATE_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -273,14 +326,6 @@ export const ExpertProfileForm = ({
           placeholder="A brief professional bio..."
           rows={4}
         />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Checkbox id="is_alum" checked={form.is_alum} onCheckedChange={(checked) => set("is_alum", !!checked)} />
-        <Label htmlFor="is_alum" className="cursor-pointer flex items-center gap-1.5">
-          <img src={usLogo} alt="US Ski & Snowboard" className="h-4 w-4 object-contain" />
-          US Ski &amp; Snowboard Alum
-        </Label>
       </div>
 
       {/* Actions */}

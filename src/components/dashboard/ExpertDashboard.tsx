@@ -150,12 +150,24 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
                   initialData={
                     profile
                       ? {
+                          ussa_affiliate:
+                            profile.ussa_affiliate === "Athlete Alum" ||
+                            profile.ussa_affiliate === "Trustee" ||
+                            profile.ussa_affiliate === "Ambassador" ||
+                            profile.ussa_affiliate === "Next Gen"
+                              ? profile.ussa_affiliate
+                              : "",
                           full_name: profile.full_name,
                           job_title: profile.job_title ?? "",
                           area_of_expertise: profile.area_of_expertise ?? "",
                           headshot: profile.headshot ?? "",
                           bio: profile.bio ?? "",
-                          industry: profile.industry ?? "",
+                          industry: profile.industry
+                            ? profile.industry
+                                .split(",")
+                                .map((v) => v.trim())
+                                .filter(Boolean)
+                            : [],
                           is_alum: profile.is_alum ?? false,
                           linkedin_url: profile.linkedin_url ?? "",
                           email: profile.email ?? "",
