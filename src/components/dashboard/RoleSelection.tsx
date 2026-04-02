@@ -54,7 +54,7 @@ const RoleSelection = ({ userId, onRoleSet }: RoleSelectionProps) => {
               <ul className="space-y-2 text-sm text-muted-foreground mb-4">
                 <li>• Build your professional profile</li>
                 <li>• Showcase skills and experience</li>
-                <li>• Connect with partners</li>
+                <li>• Connect with employers</li>
                 <li>• Receive opportunity requests</li>
               </ul>
               <Button className="w-full" disabled={loading}>
