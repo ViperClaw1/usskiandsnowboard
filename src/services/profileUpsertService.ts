@@ -1,5 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const toStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.map((v) => String(v).trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    // Allow both single values and comma-separated values from AI responses.
+    if (trimmed.includes(",")) {
+      return trimmed
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    return [trimmed];
+  }
+  return [];
+};
+
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
   const { data: existing } = await supabase
     .from("expert_profiles")
@@ -73,10 +92,10 @@ export const upsertAthleteProfile = async (userId: string, profileData: any) => 
   const { data: existing } = await supabase.from("athlete_profiles").select("id").eq("user_id", userId).maybeSingle();
 
   const athleteFields = {
-    sport_discipline: profileData.sport_discipline || null,
+    sport_discipline: toStringArray(profileData.sport_discipline),
     bio: profileData.bio || null,
-    career_interests: profileData.career_interests || [],
-    skills: profileData.skills || [],
+    career_interests: toStringArray(profileData.career_interests),
+    skills: toStringArray(profileData.skills),
     availability: profileData.availability || null,
     affiliation: ["Current Team Member", "Former Team Member"].includes(profileData.affiliation)
       ? profileData.affiliation
@@ -84,7 +103,7 @@ export const upsertAthleteProfile = async (userId: string, profileData: any) => 
     home_mountain: profileData.home_mountain || null,
     photo_url: profileData.photo_url || null,
     instagram_url: profileData.instagram_url || null,
-    sponsors: profileData.sponsors || [],
+    sponsors: toStringArray(profileData.sponsors),
     professional_highlights: profileData.professional_highlights || null,
     is_public: true,
   };
