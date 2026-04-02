@@ -699,9 +699,9 @@ export type Database = {
           photo_url: string | null
           profile_completeness: number | null
           profile_views: number | null
-          ussa_affiliate: string | null
           updated_at: string
           user_id: string
+          ussa_affiliate: string | null
         }
         Insert: {
           area_of_expertise?: string | null
@@ -720,9 +720,9 @@ export type Database = {
           photo_url?: string | null
           profile_completeness?: number | null
           profile_views?: number | null
-          ussa_affiliate?: string | null
           updated_at?: string
           user_id: string
+          ussa_affiliate?: string | null
         }
         Update: {
           area_of_expertise?: string | null
@@ -741,9 +741,9 @@ export type Database = {
           photo_url?: string | null
           profile_completeness?: number | null
           profile_views?: number | null
-          ussa_affiliate?: string | null
           updated_at?: string
           user_id?: string
+          ussa_affiliate?: string | null
         }
         Relationships: []
       }

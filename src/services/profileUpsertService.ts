@@ -45,7 +45,6 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
 };
 
 export const upsertEmployerProfile = async (userId: string, profileData: any, url: string) => {
-  await ensureProfileRow(userId, profileData.company_name);
 
   const { data: existing } = await supabase
     .from("employer_profiles")
