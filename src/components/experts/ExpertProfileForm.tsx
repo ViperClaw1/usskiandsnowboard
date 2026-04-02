@@ -262,7 +262,7 @@ export const ExpertProfileForm = ({
             US Ski &amp; Snowboard Affiliate
           </Label>
           <Select value={form.ussa_affiliate} onValueChange={(v) => set("ussa_affiliate", v)}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select affiliate type" />
             </SelectTrigger>
             <SelectContent>
