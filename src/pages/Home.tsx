@@ -99,7 +99,7 @@ const Home = () => {
               {userRole === "employer" ? "Connect With Olympians" : "Launch Your Next Chapter"}
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-              Connecting US Ski &amp; Snowboard athletes with careers that honor their dedication,
+              Connecting U.S. Ski and Snowboard athletes with careers that honor their dedication,
               drive, and extraordinary talent.
             </p>
             <Link to="/dashboard">
