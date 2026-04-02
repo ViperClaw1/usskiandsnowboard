@@ -181,6 +181,7 @@ Deno.serve(async (req) => {
 
     const tool = role === "expert" ? EXPERT_TOOL : isEmployer ? EMPLOYER_TOOL : ATHLETE_TOOL;
     const toolName = role === "expert" ? "populate_expert_profile" : isEmployer ? "populate_employer_profile" : "populate_athlete_profile";
+    const urlFieldName = role === "expert" ? "linkedin_url" : isEmployer ? "website" : "instagram_url";
 
     console.log("Calling Lovable AI for extraction...");
 
@@ -197,10 +198,10 @@ Deno.serve(async (req) => {
             { role: "system", content: systemPrompt },
             { role: "user", content: truncatedMarkdown
               ? `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}\n\nPlease call the ${toolName} function with all extracted data.`
-              : `I could not scrape the URL ${formattedUrl}. Based on the name "${name}" and the URL provided, please call the ${toolName} function with your best suggestions for all fields. Use the URL as the instagram_url if it looks like an Instagram profile.` },
+              : `I could not scrape the URL ${formattedUrl}. Based on the name "${name}" and the URL provided, please call the ${toolName} function with your best suggestions for all fields. Use the URL as the ${urlFieldName} value when relevant.` },
           ],
           tools: [tool],
-          tool_choice: "auto",
+          tool_choice: { type: "function", function: { name: toolName } },
         }),
       });
     };
@@ -237,24 +238,50 @@ Deno.serve(async (req) => {
     }
 
     const aiData = await aiResp.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      console.error("No tool call in AI response:", JSON.stringify(aiData));
-      return new Response(JSON.stringify({ error: "AI could not extract profile data. Please try a different URL." }), {
-        status: 422,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     let profileData: Record<string, unknown>;
-    try {
-      profileData = JSON.parse(toolCall.function.arguments);
-    } catch {
-      console.error("Failed to parse tool args:", toolCall.function.arguments);
-      return new Response(JSON.stringify({ error: "AI returned invalid data. Please try again." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    const toolArgs = toolCall?.function?.arguments;
+
+    if (toolArgs) {
+      try {
+        profileData = JSON.parse(toolArgs);
+      } catch {
+        console.error("Failed to parse tool args:", toolArgs);
+        return new Response(JSON.stringify({ error: "AI returned invalid data. Please try again." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      // Fallback: some model/provider paths occasionally return JSON in content
+      // instead of tool_calls even when tools are requested.
+      const content = aiData.choices?.[0]?.message?.content;
+      if (typeof content !== "string") {
+        console.error("No tool call/content in AI response:", JSON.stringify(aiData));
+        return new Response(JSON.stringify({ error: "AI could not extract profile data. Please try a different URL." }), {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error("No JSON object in AI content:", content);
+        return new Response(JSON.stringify({ error: "AI could not extract profile data. Please try a different URL." }), {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      try {
+        profileData = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+      } catch {
+        console.error("Failed to parse JSON content:", content);
+        return new Response(JSON.stringify({ error: "AI returned invalid data. Please try again." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     console.log("Extracted profile data:", JSON.stringify(profileData));
