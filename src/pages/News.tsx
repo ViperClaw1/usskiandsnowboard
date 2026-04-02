@@ -37,6 +37,7 @@ const News = () => {
         .from("news_articles")
         .select("*")
         .order("date", { ascending: false, nullsFirst: false })
+        .order("source_order", { ascending: true })
         .limit(20);
       if (error) throw error;
       return data;
