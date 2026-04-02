@@ -19,6 +19,31 @@ const toStringArray = (value: unknown): string[] => {
   return [];
 };
 
+const ensureProfileRow = async (userId: string, fullName?: string) => {
+  const { data: existing, error: selectErr } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (selectErr) throw selectErr;
+  if (existing) return;
+
+  const { data: userRes, error: userErr } = await supabase.auth.getUser();
+  if (userErr) throw userErr;
+
+  const email = userRes.user?.email ?? null;
+
+  const { error: insertErr } = await supabase.from("profiles").insert({
+    id: userId,
+    email,
+    full_name: fullName?.trim() ? fullName.trim() : null,
+  });
+
+  // If another request created the profile concurrently, treat it as success.
+  if (insertErr && insertErr.code !== "23505") throw insertErr;
+};
+
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
   const { data: existing } = await supabase
     .from("expert_profiles")
@@ -45,6 +70,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
 };
 
 export const upsertEmployerProfile = async (userId: string, profileData: any, url: string) => {
+  await ensureProfileRow(userId, profileData.company_name);
 
   const { data: existing } = await supabase
     .from("employer_profiles")
