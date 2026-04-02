@@ -493,7 +493,7 @@ const EmployerDirectory = () => {
         {searchBar}
         {filterPanel}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-muted-foreground">No partners match your filters</p>
+          <p className="text-sm text-muted-foreground">No employers match your filters</p>
           <Button variant="outline" size="sm" onClick={clearFilters}>
             <FilterX className="h-4 w-4 mr-2" />
             Clear Filters
