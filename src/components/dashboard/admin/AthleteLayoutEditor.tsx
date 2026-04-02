@@ -369,7 +369,7 @@ export const AthleteLayoutEditor = () => {
             <div className="flex items-center justify-between">
               <CardTitle>
                 <EditableText
-                  value="Featured Partners"
+                  value="Featured Employers"
                   textKey="featured.title"
                   overrides={o}
                   onUpdate={updateTextOverride}
