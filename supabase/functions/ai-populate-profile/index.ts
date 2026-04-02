@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
       });
     };
 
-    const models = ["google/gemini-2.5-flash", "openai/gpt-5-mini", "google/gemini-2.5-flash-lite"];
+    const models = ["openai/gpt-5-mini", "google/gemini-2.5-flash", "google/gemini-2.5-flash-lite"];
     let aiResp: Response | null = null;
     for (const model of models) {
       console.log("Trying model:", model);
