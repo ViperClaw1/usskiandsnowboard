@@ -103,6 +103,15 @@ const getInitials = (name: string) =>
     .map((n) => n[0].toUpperCase())
     .join("");
 
+const getPrimaryIndustry = (industry: string | null) => {
+  if (!industry) return null;
+  const first = industry
+    .split(",")
+    .map((v) => v.trim())
+    .find(Boolean);
+  return first || null;
+};
+
 const fetchExpertDashboard = async (userId: string): Promise<ExpertDashboardData> => {
   const { data: profileData } = await supabase.from("expert_profiles").select("*").eq("user_id", userId).maybeSingle();
 
@@ -314,9 +323,9 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                         {getText("hero.edit_profile", "Edit profile")}
                       </Button>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {profile?.industry && (
+                        {getPrimaryIndustry(profile?.industry ?? null) && (
                           <Badge variant="secondary" className="w-fit">
-                            {profile.industry}
+                            {getPrimaryIndustry(profile?.industry ?? null)}
                           </Badge>
                         )}
                         {disciplinePreview && (
