@@ -13,7 +13,7 @@ export interface NavItem {
 /** Primary nav links shown in both mobile and desktop headers */
 export const NAV_ITEMS: NavItem[] = [
   { to: "/athletes", label: "Athletes" },
-  { to: "/employers", label: "Partners" },
+  { to: "/employers", label: "Employers" },
   { to: "/experts", label: "Experts" },
   { to: "/schedule", label: "Schedule" },
   { to: "/news", label: "News" },
