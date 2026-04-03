@@ -77,13 +77,31 @@ Deno.serve(async (req) => {
 
     console.log('Attempting to delete user:', userId)
 
-    // Note: Database triggers will automatically:
-    // 1. Set initiated_by_user_id to NULL in connection_requests (ON DELETE SET NULL)
-    // 2. Delete athlete_profiles and employer_profiles (CASCADE from profiles)
-    // 3. Delete all connection_requests via triggers when profiles are deleted
-    // 4. Delete all related data (videos, documents, achievements, etc.) via CASCADE
+    // Explicitly clean profile tables first (defensive).
+    // This keeps behavior correct even if some FK cascade migrations are missing
+    // in a given environment.
+    const roleTables = ['athlete_profiles', 'employer_profiles', 'expert_profiles'] as const
+    for (const table of roleTables) {
+      const { error } = await supabaseAdmin.from(table).delete().eq('user_id', userId)
+      if (error) {
+        console.error(`Error deleting from ${table} for user ${userId}:`, error)
+        return new Response(JSON.stringify({ error: `Failed deleting ${table} row: ${error.message}` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        })
+      }
+    }
 
-    // Delete the user from auth - this cascades through the entire system
+    const { error: profilesDeleteError } = await supabaseAdmin.from('profiles').delete().eq('id', userId)
+    if (profilesDeleteError) {
+      console.error(`Error deleting from profiles for user ${userId}:`, profilesDeleteError)
+      return new Response(JSON.stringify({ error: `Failed deleting profiles row: ${profilesDeleteError.message}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      })
+    }
+
+    // Delete the auth user last.
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
     if (deleteError) {
