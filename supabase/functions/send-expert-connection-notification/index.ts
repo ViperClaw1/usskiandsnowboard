@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import { emailTemplate, sendEmail, sleep } from "../_shared/email-template.ts";
+import { emailTemplate, sendEmail } from "../_shared/email-template.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,32 +71,75 @@ Deno.serve(async (req) => {
     const expertFirstName = expert.full_name?.split(" ")[0] ?? "Expert";
     const athleteFullName = athleteProfile?.full_name ?? "Athlete";
     const athleteFirstName = athleteFullName.split(" ")[0];
+    const athleteEmail = athlete.email || athleteProfile?.email;
+    const expertEmail = expert.email;
 
     const athleteSport = Array.isArray(athlete.sport_discipline)
       ? athlete.sport_discipline.join(", ")
       : athlete.sport_discipline ?? "winter sports";
 
-    const expertEmail = expert.email;
-    const athleteEmail = athlete.email || athleteProfile?.email;
-
     if (notification_type === "request_created") {
-      const subject = "Your expert connection request has been sent";
+      const subject = `${athleteFullName} <> ${expert.full_name} — Athlete Connection Introduction`;
       const bodyHtml = `
         <p style="font-size:16px; color:#333; margin:0 0 20px;">
-          Hello <strong>${athleteFirstName}</strong>,
+          <strong>${expertFirstName},</strong>
         </p>
         <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-          Your connection request to <strong>${expert.full_name}</strong> has been sent successfully.
+          Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
         </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          <strong>${athleteFirstName},</strong> Please meet <strong>${expert.full_name}</strong>, an expert in <strong>${expert.area_of_expertise ?? expert.job_title ?? "their field"}</strong> who is happy to speak to you about their professional experience.
+        </p>
+        ${ecr.message ? `
+        <div style="background:#f8f9fa; border-left:4px solid #0066cc; padding:12px 16px; margin:0 0 16px; border-radius:0 4px 4px 0;">
+          <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Message from ${athleteFirstName}</p>
+          <p style="font-size:14px; color:#333; margin:0; font-style:italic;">"${ecr.message}"</p>
+        </div>
+        ` : ""}
         <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-          We will notify you as soon as there is an update.
+          <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
         </p>
         <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
           Cheers,<br/>
           <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
         </p>
       `;
-      const html = emailTemplate("Connection Request Sent", bodyHtml);
+      const html = emailTemplate("Athlete Connection Introduction", bodyHtml);
+
+      if (expertEmail) {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [expertEmail],
+          cc: [CC_ADDRESS],
+          subject,
+          html,
+        });
+      } else {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [CC_ADDRESS],
+          subject: `[Missing Expert Email] ${subject}`,
+          html,
+        });
+      }
+    } else if (notification_type === "request_accepted") {
+      const subject = "Your expert connection request was approved";
+      const bodyHtml = `
+        <p style="font-size:16px; color:#333; margin:0 0 20px;">
+          Hello <strong>${athleteFirstName}</strong>,
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          Great news — <strong>${expert.full_name}</strong> has approved your connection request.
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
+          You can now continue the conversation directly.
+        </p>
+        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
+          Cheers,<br/>
+          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
+        </p>
+      `;
+      const html = emailTemplate("Connection Request Approved", bodyHtml);
 
       if (athleteEmail) {
         await sendEmail(resend, {
@@ -150,64 +193,10 @@ Deno.serve(async (req) => {
         });
       }
     } else {
-      const subject = `${athleteFullName} <> ${expert.full_name} — Athlete Connection Introduction`;
-
-      const bodyHtml = `
-        <p style="font-size:16px; color:#333; margin:0 0 20px;">
-          <strong>${expertFirstName},</strong>
-        </p>
-        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-          Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
-        </p>
-        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-          <strong>${athleteFirstName},</strong> Please meet <strong>${expert.full_name}</strong>, an expert in <strong>${expert.area_of_expertise ?? expert.job_title ?? "their field"}</strong> who is happy to speak to you about their professional experience.
-        </p>
-        ${ecr.message ? `
-        <div style="background:#f8f9fa; border-left:4px solid #0066cc; padding:12px 16px; margin:0 0 16px; border-radius:0 4px 4px 0;">
-          <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Message from ${athleteFirstName}</p>
-          <p style="font-size:14px; color:#333; margin:0; font-style:italic;">"${ecr.message}"</p>
-        </div>
-        ` : ""}
-        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-          <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
-        </p>
-        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
-          Cheers,<br/>
-          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
-        </p>
-      `;
-
-      const html = emailTemplate("Athlete Connection Introduction", bodyHtml);
-
-      if (expertEmail) {
-        await sendEmail(resend, {
-          from: FROM_ADDRESS,
-          to: [expertEmail],
-          cc: [CC_ADDRESS],
-          subject,
-          html,
-        });
-        await sleep(1000);
-      }
-
-      if (athleteEmail && athleteEmail !== expertEmail) {
-        await sendEmail(resend, {
-          from: FROM_ADDRESS,
-          to: [athleteEmail],
-          cc: [CC_ADDRESS],
-          subject,
-          html,
-        });
-      }
-
-      if (!expertEmail && !athleteEmail) {
-        await sendEmail(resend, {
-          from: FROM_ADDRESS,
-          to: [CC_ADDRESS],
-          subject: `[No Expert/Athlete Email] ${subject}`,
-          html,
-        });
-      }
+      return new Response(JSON.stringify({ error: `Unsupported notification_type: ${notification_type}` }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log("Expert connection notification sent for request:", request_id);
