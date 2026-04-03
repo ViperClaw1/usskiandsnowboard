@@ -106,7 +106,7 @@ const getInitials = (name: string) =>
 const getPrimaryIndustry = (industry: string | null) => {
   if (!industry) return null;
   const first = industry
-    .split(",")
+    .split(/[,;|]/)
     .map((v) => v.trim())
     .find(Boolean);
   return first || null;
