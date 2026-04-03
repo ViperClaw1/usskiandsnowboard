@@ -73,7 +73,7 @@ export const ExpertConnectionRequestDialog = ({
 
       // Trigger notification email
       await supabase.functions.invoke("send-expert-connection-notification", {
-        body: { request_id: req.id },
+        body: { request_id: req.id, notification_type: "request_created" },
       });
 
       toast.success("Connection request sent!");

@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { request_id, notification_type = "request_accepted" } = await req.json();
+    const { request_id, notification_type = "request_created" } = await req.json();
     if (!request_id) {
       return new Response(JSON.stringify({ error: "Missing request_id" }), {
         status: 400,
@@ -79,7 +79,42 @@ Deno.serve(async (req) => {
     const expertEmail = expert.email;
     const athleteEmail = athlete.email || athleteProfile?.email;
 
-    if (notification_type === "request_declined") {
+    if (notification_type === "request_created") {
+      const subject = "Your expert connection request has been sent";
+      const bodyHtml = `
+        <p style="font-size:16px; color:#333; margin:0 0 20px;">
+          Hello <strong>${athleteFirstName}</strong>,
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          Your connection request to <strong>${expert.full_name}</strong> has been sent successfully.
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
+          We will notify you as soon as there is an update.
+        </p>
+        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
+          Cheers,<br/>
+          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
+        </p>
+      `;
+      const html = emailTemplate("Connection Request Sent", bodyHtml);
+
+      if (athleteEmail) {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [athleteEmail],
+          cc: [CC_ADDRESS],
+          subject,
+          html,
+        });
+      } else {
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [CC_ADDRESS],
+          subject: `[Missing Athlete Email] ${subject}`,
+          html,
+        });
+      }
+    } else if (notification_type === "request_declined") {
       const subject = "Connection Request Update";
       const bodyHtml = `
         <p style="font-size:16px; color:#333; margin:0 0 20px;">
