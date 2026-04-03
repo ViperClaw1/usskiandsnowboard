@@ -329,7 +329,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           </Badge>
                         )}
                         {disciplinePreview && (
-                          <Badge variant="outline" className="w-fit">
+                          <Badge variant="outline" className="text-xs">
                             {disciplinePreview}
                           </Badge>
                         )}
@@ -349,8 +349,14 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           </div>
                           <Progress value={completeness} className="h-2" />
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
-                              {getText("hero.complete_profile_cta", "Complete your profile")} <ArrowRight className="ml-1 h-3 w-3" />
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="p-0 h-auto"
+                              onClick={() => onNavigate("profile")}
+                            >
+                              {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
+                              <ArrowRight className="ml-1 h-3 w-3" />
                             </Button>
                             <div className="basis-full [@media(min-width:930px)]:basis-auto">
                               <AIProfilePopulator
