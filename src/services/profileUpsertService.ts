@@ -47,7 +47,33 @@ const pickImageCandidate = (profileData: any, keys: string[]): string | null => 
   return null;
 };
 
+/** Account email from Auth or `profiles` — used to keep role profile `email` in sync during AI upserts. */
+const resolveAccountEmail = async (userId: string): Promise<string | null> => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user?.id === userId && typeof user.email === "string" && user.email.trim()) {
+    return user.email.trim();
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (session?.user?.id === userId && typeof session.user.email === "string" && session.user.email.trim()) {
+    return session.user.email.trim();
+  }
+
+  const { data: row } = await supabase.from("profiles").select("email").eq("id", userId).maybeSingle();
+  if (typeof row?.email === "string" && row.email.trim()) {
+    return row.email.trim();
+  }
+
+  return null;
+};
+
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
+  const accountEmail = await resolveAccountEmail(userId);
+
   const uploadedPhotoUrl = resolveImageUrl(
     pickImageCandidate(profileData, ["photo_url", "image_url", "profile_image_url", "avatar_url", "headshot_url"]),
   );
@@ -65,6 +91,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
     bio: profileData.bio || null,
     photo_url: uploadedPhotoUrl || existing?.photo_url || null,
     linkedin_url: profileData.linkedin_url || url.trim(),
+    ...(accountEmail ? { email: accountEmail } : {}),
   };
 
   if (existing) {
@@ -77,6 +104,8 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
 };
 
 export const upsertEmployerProfile = async (userId: string, profileData: any, url: string) => {
+  const accountEmail = await resolveAccountEmail(userId);
+
   const uploadedLogoUrl = resolveImageUrl(
     pickImageCandidate(profileData, ["logo_url", "image_url"]),
   );
@@ -103,6 +132,7 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
     opportunities_offered: profileData.opportunities_offered || null,
     connection_to_ussa: profileData.connection_to_ussa || null,
     job_board_url: profileData.job_board_url || null,
+    ...(accountEmail ? { email: accountEmail } : {}),
   };
 
   if (existing) {
@@ -115,6 +145,8 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
 };
 
 export const upsertAthleteProfile = async (userId: string, profileData: any) => {
+  const accountEmail = await resolveAccountEmail(userId);
+
   const uploadedPhotoUrl = resolveImageUrl(
     pickImageCandidate(profileData, ["photo_url", "image_url", "profile_image_url", "avatar_url", "headshot_url"]),
   );
@@ -150,6 +182,7 @@ export const upsertAthleteProfile = async (userId: string, profileData: any) => 
     sponsors: toStringArray(profileData.sponsors),
     professional_highlights: profileData.professional_highlights || null,
     is_public: true,
+    ...(accountEmail ? { email: accountEmail } : {}),
   };
 
   const completenessFields = Object.values(athleteFields).filter((_, i) => i < 12);

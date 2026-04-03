@@ -500,6 +500,7 @@ export type Database = {
           contact_person: string | null
           contact_title: string | null
           created_at: string
+          email: string | null
           hq_location: string | null
           id: string
           individual_roles: Json | null
@@ -525,6 +526,7 @@ export type Database = {
           contact_person?: string | null
           contact_title?: string | null
           created_at?: string
+          email?: string | null
           hq_location?: string | null
           id?: string
           individual_roles?: Json | null
@@ -550,6 +552,7 @@ export type Database = {
           contact_person?: string | null
           contact_title?: string | null
           created_at?: string
+          email?: string | null
           hq_location?: string | null
           id?: string
           individual_roles?: Json | null
