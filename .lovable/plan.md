@@ -1,21 +1,39 @@
 
 
-## Fix: RLS Violation on `profiles` Table During Employer AI Auto-Fill
+## Plan: Fix AI Profile Auto-Fill Image Upload and Post-Completion Dialog
 
-### Problem
-The `ensureProfileRow` function (added in the last diff) tries to INSERT into the `profiles` table from the client side. However, the `profiles` table has **no INSERT RLS policy** for authenticated users — profile rows are created exclusively by the `handle_new_user` database trigger (which uses `SECURITY DEFINER` to bypass RLS). Every signed-up user already has a `profiles` row, so this guard is unnecessary and causes the `42501` error.
+### Problem Summary
+1. **Photo URLs not rendering**: AI extracts external image URLs (e.g., from Instagram/LinkedIn/websites) but stores them directly. These external URLs often fail to load due to CORS, hotlinking protection, or expiration.
+2. **Dialog shows "Complete Your Profile" choice instead of edit form**: After AI auto-fill creates the profile, the `refreshKey` increment triggers a re-mount. However, each dashboard component checks `profile ? <EditForm> : <ChoiceDialog>`. The `useQuery` cache may not yet have the new profile when the dialog opens, so it shows the choice dialog.
 
-### Fix
+### Solution
 
-**File: `src/services/profileUpsertService.ts`**
+#### 1. Download and re-upload external images to Supabase Storage (profileUpsertService.ts)
 
-1. **Remove** the entire `ensureProfileRow` function (lines 22–49)
-2. **Remove** the `await ensureProfileRow(userId, profileData.company_name);` call inside `upsertEmployerProfile` (line 77)
+Add a helper function `uploadExternalImage(userId, externalUrl, bucket)` that:
+- Fetches the external image via `fetch()`
+- Uploads it to the appropriate Supabase storage bucket (`athlete-photos`, `company-logos`, or `expert-photos`)
+- Returns the Supabase public URL
+- Falls back to `null` if the fetch/upload fails (non-blocking)
 
-No other changes needed — the athlete and expert flows don't call `ensureProfileRow`, so they are unaffected. The athlete flow uses `profiles.update()` (which has a valid UPDATE policy), and the expert flow only touches `expert_profiles`.
+Call this helper in each upsert function:
+- `upsertAthleteProfile`: upload `profileData.photo_url` to `athlete-photos` bucket, store result in `athleteFields.photo_url`
+- `upsertEmployerProfile`: upload `profileData.logo_url` to `company-logos` bucket, store result in `employerFields.logo_url`
+- `upsertExpertProfile`: upload `profileData.photo_url` to `expert-photos` bucket, store result in `expertFields.photo_url`
 
-### Verification
-- Employer AI auto-fill: will no longer attempt a `profiles` INSERT, so the RLS error is eliminated
-- Athlete AI auto-fill: only calls `profiles.update()` — valid UPDATE policy exists (`auth.uid() = id`)
-- Expert AI auto-fill: only touches `expert_profiles` — valid ALL policy exists (`auth.uid() = user_id`)
+#### 2. Fix post-AI dialog behavior (AthleteDashboard, EmployerDashboard, ExpertDashboard)
+
+The issue: after AI auto-fill completes, the `onComplete` callback in `Dashboard.tsx` increments `refreshKey`, causing the dashboard to remount. But when the user later clicks "Edit Profile" or the pen icon, the dialog still checks `profile ? <EditForm> : <ChoiceDialog>`.
+
+Since AI auto-fill creates/updates the profile, the query cache should have data. The fix is to ensure query invalidation happens before the dashboard remounts. In `Dashboard.tsx`'s `AIProfilePopulator.onComplete`:
+- Also invalidate the per-role profile query keys (`athleteProfileKey`, `employerProfileKey`, `expert-own-profile`) so the re-mounted dashboard fetches fresh data immediately.
+
+Additionally, in each dashboard's `openProfileDialog` effect, when the profile already exists, set `dialogStep` to skip the choice dialog:
+- **ExpertDashboard** (line 78-84): When `openProfileDialog` fires, check if profile exists and set `dialogStep` to `"manual"` instead of `"choice"`
+- **AthleteDashboard** and **EmployerDashboard** already handle this correctly via `profile ? <EditForm> : <ChoiceDialog>` — the issue is stale cache, so invalidation fixes it.
+
+### Files Modified
+- `src/services/profileUpsertService.ts` — add `uploadExternalImage` helper, call it in all three upsert functions
+- `src/pages/Dashboard.tsx` — invalidate role-specific profile query keys in AI populator's `onComplete`
+- `src/components/dashboard/ExpertDashboard.tsx` — fix `openProfileDialog` effect to set `dialogStep = "manual"` when profile exists
 
