@@ -103,7 +103,7 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
 };
 
 export const upsertAthleteProfile = async (userId: string, profileData: any) => {
-  const uploadedPhotoUrl = await uploadExternalImage(userId, profileData.photo_url, "athlete-photos");
+  const uploadedPhotoUrl = resolveImageUrl(profileData.photo_url);
 
   if (profileData.first_name || profileData.last_name) {
     await supabase
