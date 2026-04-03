@@ -329,7 +329,11 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
                         {profile?.company_name || "Partner"}
                       </h1>
-                      {profile?.industry && <p className="text-base text-muted-foreground">{profile.industry}</p>}
+                      {profile?.industry && (
+                        <p className="max-w-[min(100%,28rem)] text-base text-muted-foreground leading-snug break-words">
+                          {profile.industry}
+                        </p>
+                      )}
                       {profile?.hq_location && (
                         <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
