@@ -39,12 +39,22 @@ const resolveImageUrl = (
   return null;
 };
 
+const pickImageCandidate = (profileData: any, keys: string[]): string | null => {
+  for (const key of keys) {
+    const value = profileData?.[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+};
+
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
-  const uploadedPhotoUrl = resolveImageUrl(profileData.photo_url);
+  const uploadedPhotoUrl = resolveImageUrl(
+    pickImageCandidate(profileData, ["photo_url", "image_url", "profile_image_url", "avatar_url", "headshot_url"]),
+  );
 
   const { data: existing } = await supabase
     .from("expert_profiles")
-    .select("id")
+    .select("id, photo_url")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -53,7 +63,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
     job_title: profileData.job_title || null,
     area_of_expertise: profileData.area_of_expertise || null,
     bio: profileData.bio || null,
-    photo_url: uploadedPhotoUrl || null,
+    photo_url: uploadedPhotoUrl || existing?.photo_url || null,
     linkedin_url: profileData.linkedin_url || url.trim(),
   };
 
@@ -67,11 +77,13 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
 };
 
 export const upsertEmployerProfile = async (userId: string, profileData: any, url: string) => {
-  const uploadedLogoUrl = resolveImageUrl(profileData.logo_url);
+  const uploadedLogoUrl = resolveImageUrl(
+    pickImageCandidate(profileData, ["logo_url", "image_url"]),
+  );
 
   const { data: existing } = await supabase
     .from("employer_profiles")
-    .select("id")
+    .select("id, logo_url")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -82,7 +94,7 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
     hq_location: profileData.hq_location || null,
     about: profileData.about || null,
     website: profileData.website || url.trim(),
-    logo_url: uploadedLogoUrl || null,
+    logo_url: uploadedLogoUrl || existing?.logo_url || null,
     linkedin_url: profileData.linkedin_url || null,
     contact_person: profileData.contact_person || null,
     contact_email: profileData.contact_email || null,
@@ -103,7 +115,9 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
 };
 
 export const upsertAthleteProfile = async (userId: string, profileData: any) => {
-  const uploadedPhotoUrl = resolveImageUrl(profileData.photo_url);
+  const uploadedPhotoUrl = resolveImageUrl(
+    pickImageCandidate(profileData, ["photo_url", "image_url", "profile_image_url", "avatar_url", "headshot_url"]),
+  );
 
   if (profileData.first_name || profileData.last_name) {
     await supabase
@@ -115,7 +129,11 @@ export const upsertAthleteProfile = async (userId: string, profileData: any) => 
       .eq("id", userId);
   }
 
-  const { data: existing } = await supabase.from("athlete_profiles").select("id").eq("user_id", userId).maybeSingle();
+  const { data: existing } = await supabase
+    .from("athlete_profiles")
+    .select("id, photo_url")
+    .eq("user_id", userId)
+    .maybeSingle();
 
   const athleteFields = {
     sport_discipline: toStringArray(profileData.sport_discipline),
@@ -127,7 +145,7 @@ export const upsertAthleteProfile = async (userId: string, profileData: any) => 
       ? profileData.affiliation
       : "Current Team Member",
     home_mountain: profileData.home_mountain || null,
-    photo_url: uploadedPhotoUrl || null,
+    photo_url: uploadedPhotoUrl || existing?.photo_url || null,
     instagram_url: profileData.instagram_url || null,
     sponsors: toStringArray(profileData.sponsors),
     professional_highlights: profileData.professional_highlights || null,

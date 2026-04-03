@@ -291,6 +291,14 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    const pickFirstString = (obj: Record<string, unknown>, keys: string[]): string | null => {
+      for (const key of keys) {
+        const value = obj[key];
+        if (typeof value === "string" && value.trim()) return value.trim();
+      }
+      return null;
+    };
+
     const uploadImage = async (externalUrl: string | undefined | null, bucket: string, userId: string): Promise<string | null> => {
       if (!externalUrl || typeof externalUrl !== "string") return null;
       const trimmed = externalUrl.trim();
@@ -299,7 +307,12 @@ Deno.serve(async (req) => {
       if (trimmed.includes(supabaseUrl)) return trimmed;
 
       try {
-        const imgResp = await fetch(trimmed);
+        const imgResp = await fetch(trimmed, {
+          headers: {
+            "user-agent": "Mozilla/5.0 (compatible; AIProfileBot/1.0)",
+            accept: "image/*,*/*;q=0.8",
+          },
+        });
         if (!imgResp.ok) { console.warn("Image fetch failed:", imgResp.status); return null; }
         const blob = await imgResp.blob();
         if (!blob.type.startsWith("image/")) return null;
@@ -339,12 +352,20 @@ Deno.serve(async (req) => {
       if (isExpert || (!isEmployer && !isExpert)) {
         // Expert or Athlete: upload photo_url
         const bucket = isExpert ? "expert-photos" : "athlete-photos";
-        const uploaded = await uploadImage(profileData.photo_url as string, bucket, callerUserId);
+        const sourcePhotoUrl = pickFirstString(profileData, [
+          "photo_url",
+          "image_url",
+          "profile_image_url",
+          "avatar_url",
+          "headshot_url",
+        ]);
+        const uploaded = await uploadImage(sourcePhotoUrl, bucket, callerUserId);
         if (uploaded) profileData.photo_url = uploaded;
       }
       if (isEmployer) {
         // Employer: upload logo_url
-        const uploaded = await uploadImage(profileData.logo_url as string, "company-logos", callerUserId);
+        const sourceLogoUrl = pickFirstString(profileData, ["logo_url", "image_url"]);
+        const uploaded = await uploadImage(sourceLogoUrl, "company-logos", callerUserId);
         if (uploaded) profileData.logo_url = uploaded;
       }
     }
