@@ -287,6 +287,68 @@ Deno.serve(async (req) => {
 
     console.log("Extracted profile data:", JSON.stringify(profileData));
 
+    // Step 3: Download and re-upload external images to Supabase Storage (server-side, no CORS)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const uploadImage = async (externalUrl: string | undefined | null, bucket: string, userId: string): Promise<string | null> => {
+      if (!externalUrl || typeof externalUrl !== "string") return null;
+      const trimmed = externalUrl.trim();
+      if (!trimmed || !trimmed.startsWith("http")) return null;
+      // Skip if already a Supabase URL
+      if (trimmed.includes(supabaseUrl)) return trimmed;
+
+      try {
+        const imgResp = await fetch(trimmed);
+        if (!imgResp.ok) { console.warn("Image fetch failed:", imgResp.status); return null; }
+        const blob = await imgResp.blob();
+        if (!blob.type.startsWith("image/")) return null;
+        const ext = blob.type.split("/")[1]?.split("+")[0] || "jpg";
+        const fileName = `${userId}/ai-profile-${Date.now()}.${ext}`;
+
+        const uploadResp = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}/${fileName}`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${serviceRoleKey}`,
+            "Content-Type": blob.type,
+            "x-upsert": "true",
+          },
+          body: blob,
+        });
+        if (!uploadResp.ok) { console.warn("Storage upload failed:", await uploadResp.text()); return null; }
+
+        return `${supabaseUrl}/storage/v1/object/public/${bucket}/${fileName}`;
+      } catch (err) {
+        console.warn("Image upload error:", err);
+        return null;
+      }
+    };
+
+    // Get user ID from auth header for storage path
+    const authHeader = req.headers.get("authorization") || "";
+    let callerUserId: string | null = null;
+    try {
+      const sb = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user: caller } } = await sb.auth.getUser();
+      callerUserId = caller?.id || null;
+    } catch { /* ignore */ }
+
+    if (callerUserId) {
+      if (isExpert || (!isEmployer && !isExpert)) {
+        // Expert or Athlete: upload photo_url
+        const bucket = isExpert ? "expert-photos" : "athlete-photos";
+        const uploaded = await uploadImage(profileData.photo_url as string, bucket, callerUserId);
+        if (uploaded) profileData.photo_url = uploaded;
+      }
+      if (isEmployer) {
+        // Employer: upload logo_url
+        const uploaded = await uploadImage(profileData.logo_url as string, "company-logos", callerUserId);
+        if (uploaded) profileData.logo_url = uploaded;
+      }
+    }
+
     return new Response(JSON.stringify({ success: true, data: profileData }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
