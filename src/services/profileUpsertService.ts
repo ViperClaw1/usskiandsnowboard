@@ -23,44 +23,24 @@ const toStringArray = (value: unknown): string[] => {
  * Returns the public URL on success, or null on failure (non-blocking).
  * Path follows RLS requirement: `{userId}/{filename}`.
  */
-const uploadExternalImage = async (
-  userId: string,
-  externalUrl: string | null | undefined,
-  bucket: string,
-): Promise<string | null> => {
-  if (!externalUrl || typeof externalUrl !== "string") return null;
-  const trimmed = externalUrl.trim();
-  if (!trimmed || !trimmed.startsWith("http")) return null;
-
-  try {
-    const response = await fetch(trimmed);
-    if (!response.ok) return null;
-
-    const blob = await response.blob();
-    if (!blob.type.startsWith("image/")) return null;
-
-    const ext = blob.type.split("/")[1]?.split("+")[0] || "jpg";
-    const fileName = `${userId}/ai-profile-${Date.now()}.${ext}`;
-
-    const { error: uploadErr } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, blob, { contentType: blob.type, upsert: true });
-
-    if (uploadErr) {
-      console.warn("Image upload failed:", uploadErr.message);
-      return null;
-    }
-
-    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
-    return publicUrl;
-  } catch (err) {
-    console.warn("Failed to download/upload external image:", err);
-    return null;
-  }
+/**
+ * Returns the image URL as-is if it's already a Supabase storage URL,
+ * or null if it's an external URL (those are now handled server-side in the edge function).
+ */
+const resolveImageUrl = (
+  imageUrl: string | null | undefined,
+): string | null => {
+  if (!imageUrl || typeof imageUrl !== "string") return null;
+  const trimmed = imageUrl.trim();
+  if (!trimmed) return null;
+  // If it's already a Supabase storage URL, use it directly
+  if (trimmed.includes("supabase.co/storage/")) return trimmed;
+  // External URLs should have been uploaded server-side; if not, skip
+  return null;
 };
 
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
-  const uploadedPhotoUrl = await uploadExternalImage(userId, profileData.photo_url, "expert-photos");
+  const uploadedPhotoUrl = resolveImageUrl(profileData.photo_url);
 
   const { data: existing } = await supabase
     .from("expert_profiles")
@@ -87,7 +67,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
 };
 
 export const upsertEmployerProfile = async (userId: string, profileData: any, url: string) => {
-  const uploadedLogoUrl = await uploadExternalImage(userId, profileData.logo_url, "company-logos");
+  const uploadedLogoUrl = resolveImageUrl(profileData.logo_url);
 
   const { data: existing } = await supabase
     .from("employer_profiles")
@@ -123,7 +103,7 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
 };
 
 export const upsertAthleteProfile = async (userId: string, profileData: any) => {
-  const uploadedPhotoUrl = await uploadExternalImage(userId, profileData.photo_url, "athlete-photos");
+  const uploadedPhotoUrl = resolveImageUrl(profileData.photo_url);
 
   if (profileData.first_name || profileData.last_name) {
     await supabase
