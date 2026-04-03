@@ -67,7 +67,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
 };
 
 export const upsertEmployerProfile = async (userId: string, profileData: any, url: string) => {
-  const uploadedLogoUrl = await uploadExternalImage(userId, profileData.logo_url, "company-logos");
+  const uploadedLogoUrl = resolveImageUrl(profileData.logo_url);
 
   const { data: existing } = await supabase
     .from("employer_profiles")
