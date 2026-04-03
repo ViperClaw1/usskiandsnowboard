@@ -11,6 +11,42 @@ const corsHeaders = {
 const CC_ADDRESS = "michele.lowry@usskiandsnowboard.org";
 const FROM_ADDRESS = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 
+/** PostgREST may return a joined row as an object or a single-element array — normalize. */
+function unwrapJoined<T>(value: T | T[] | null | undefined): T | null {
+  if (value == null) return null;
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value;
+}
+
+/**
+ * Experts often have a null `expert_profiles.email` — the real inbox is on
+ * `profiles.email` or Auth. Without this, request_created had no `to` address.
+ */
+async function resolveExpertInboxEmail(
+  supabase: ReturnType<typeof createClient>,
+  expert: { email?: string | null; user_id?: string | null },
+): Promise<string | null> {
+  if (typeof expert.email === "string" && expert.email.trim()) {
+    return expert.email.trim();
+  }
+  const uid = expert.user_id;
+  if (!uid) return null;
+
+  const { data: prof } = await supabase.from("profiles").select("email").eq("id", uid).maybeSingle();
+  const fromProfile = prof?.email;
+  if (typeof fromProfile === "string" && fromProfile.trim()) {
+    return fromProfile.trim();
+  }
+
+  const { data: authData, error: authErr } = await supabase.auth.admin.getUserById(uid);
+  if (authErr) {
+    console.warn("[expert-notif] auth.admin.getUserById failed:", authErr.message);
+    return null;
+  }
+  const fromAuth = authData.user?.email;
+  return typeof fromAuth === "string" && fromAuth.trim() ? fromAuth.trim() : null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -40,6 +76,7 @@ Deno.serve(async (req) => {
         message,
         expert_profiles!inner(
           id,
+          user_id,
           full_name,
           job_title,
           area_of_expertise,
@@ -64,9 +101,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    const expert = ecr.expert_profiles as any;
-    const athlete = ecr.athlete_profiles as any;
-    const athleteProfile = athlete.profiles;
+    const expert = unwrapJoined(ecr.expert_profiles as any);
+    const athlete = unwrapJoined(ecr.athlete_profiles as any);
+    const athleteProfile = unwrapJoined(athlete?.profiles) ?? athlete?.profiles;
+
+    if (!expert || !athlete) {
+      console.error("[expert-notif] Missing joined expert or athlete row", { request_id });
+      return new Response(JSON.stringify({ error: "Request data incomplete" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const expertFullName = expert.full_name ?? "Expert";
     const expertFirstName = expertFullName.split(" ")[0];
@@ -74,8 +119,13 @@ Deno.serve(async (req) => {
     const athleteFirstName = athleteFullName.split(" ")[0];
 
     // Resolve emails — athlete falls back to profiles.email
-    const athleteEmail: string | null = athlete.email || athleteProfile?.email || null;
-    const expertEmail: string | null = expert.email || null;
+    const athleteEmail: string | null =
+      (typeof athlete.email === "string" && athlete.email.trim() ? athlete.email.trim() : null) ||
+      (typeof athleteProfile?.email === "string" && athleteProfile.email.trim()
+        ? athleteProfile.email.trim()
+        : null);
+
+    const expertEmail: string | null = await resolveExpertInboxEmail(supabase, expert);
 
     const athleteSport = Array.isArray(athlete.sport_discipline)
       ? athlete.sport_discipline.join(", ")
