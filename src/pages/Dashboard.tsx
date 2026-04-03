@@ -291,8 +291,14 @@ const Dashboard = () => {
               userId={user.id}
               onComplete={() => {
                 setShowAIPopulator(false);
+                // Invalidate role-specific profile queries so remounted dashboards fetch fresh data
+                queryClient.invalidateQueries({ queryKey: ["athlete-dashboard-profile", user.id] });
+                queryClient.invalidateQueries({ queryKey: ["employer-dashboard-profile", user.id] });
+                queryClient.invalidateQueries({ queryKey: ["expert-own-profile", user.id] });
+                // Invalidate landing page dashboard queries
                 queryClient.invalidateQueries({ queryKey: ["athlete-landing-dashboard", user.id] });
                 queryClient.invalidateQueries({ queryKey: ["partner-landing-dashboard", user.id] });
+                queryClient.invalidateQueries({ queryKey: ["expert-landing-dashboard", user.id] });
                 setRefreshKey((k) => k + 1);
               }}
             />

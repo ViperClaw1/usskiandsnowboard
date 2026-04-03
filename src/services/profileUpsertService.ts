@@ -7,7 +7,6 @@ const toStringArray = (value: unknown): string[] => {
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (!trimmed) return [];
-    // Allow both single values and comma-separated values from AI responses.
     if (trimmed.includes(",")) {
       return trimmed
         .split(",")
@@ -19,34 +18,49 @@ const toStringArray = (value: unknown): string[] => {
   return [];
 };
 
-const ensureProfileRow = async (userId: string, fullName?: string) => {
-  const { data: existing, error: selectErr } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", userId)
-    .maybeSingle();
+/**
+ * Downloads an external image and re-uploads it to Supabase Storage.
+ * Returns the public URL on success, or null on failure (non-blocking).
+ * Path follows RLS requirement: `{userId}/{filename}`.
+ */
+const uploadExternalImage = async (
+  userId: string,
+  externalUrl: string | null | undefined,
+  bucket: string,
+): Promise<string | null> => {
+  if (!externalUrl || typeof externalUrl !== "string") return null;
+  const trimmed = externalUrl.trim();
+  if (!trimmed || !trimmed.startsWith("http")) return null;
 
-  if (selectErr) throw selectErr;
-  if (existing) return;
+  try {
+    const response = await fetch(trimmed);
+    if (!response.ok) return null;
 
-  const { data: userRes, error: userErr } = await supabase.auth.getUser();
-  if (userErr) throw userErr;
+    const blob = await response.blob();
+    if (!blob.type.startsWith("image/")) return null;
 
-  const email = userRes.user?.email ?? null;
+    const ext = blob.type.split("/")[1]?.split("+")[0] || "jpg";
+    const fileName = `${userId}/ai-profile-${Date.now()}.${ext}`;
 
-  const { error: insertErr } = await supabase.from("profiles").insert({
-    id: userId,
-    email,
-    full_name: fullName?.trim() ? fullName.trim() : null,
-  });
+    const { error: uploadErr } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, blob, { contentType: blob.type, upsert: true });
 
-  // If another request created the profile concurrently, treat it as success.
-  if (insertErr && insertErr.code !== "23505") throw insertErr;
+    if (uploadErr) {
+      console.warn("Image upload failed:", uploadErr.message);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
+    return publicUrl;
+  } catch (err) {
+    console.warn("Failed to download/upload external image:", err);
+    return null;
+  }
 };
 
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
-  // Ensure the parent profiles row exists to satisfy FK constraints in role tables.
-  await ensureProfileRow(userId, profileData.full_name || name);
+  const uploadedPhotoUrl = await uploadExternalImage(userId, profileData.photo_url, "expert-photos");
 
   const { data: existing } = await supabase
     .from("expert_profiles")
@@ -59,7 +73,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
     job_title: profileData.job_title || null,
     area_of_expertise: profileData.area_of_expertise || null,
     bio: profileData.bio || null,
-    photo_url: profileData.photo_url || null,
+    photo_url: uploadedPhotoUrl || null,
     linkedin_url: profileData.linkedin_url || url.trim(),
   };
 
@@ -73,7 +87,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
 };
 
 export const upsertEmployerProfile = async (userId: string, profileData: any, url: string) => {
-  await ensureProfileRow(userId, profileData.company_name);
+  const uploadedLogoUrl = await uploadExternalImage(userId, profileData.logo_url, "company-logos");
 
   const { data: existing } = await supabase
     .from("employer_profiles")
@@ -88,7 +102,7 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
     hq_location: profileData.hq_location || null,
     about: profileData.about || null,
     website: profileData.website || url.trim(),
-    logo_url: profileData.logo_url || null,
+    logo_url: uploadedLogoUrl || null,
     linkedin_url: profileData.linkedin_url || null,
     contact_person: profileData.contact_person || null,
     contact_email: profileData.contact_email || null,
@@ -109,8 +123,7 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
 };
 
 export const upsertAthleteProfile = async (userId: string, profileData: any) => {
-  const derivedFullName = [profileData.first_name, profileData.last_name].filter(Boolean).join(" ").trim();
-  await ensureProfileRow(userId, derivedFullName || undefined);
+  const uploadedPhotoUrl = await uploadExternalImage(userId, profileData.photo_url, "athlete-photos");
 
   if (profileData.first_name || profileData.last_name) {
     await supabase
@@ -134,7 +147,7 @@ export const upsertAthleteProfile = async (userId: string, profileData: any) => 
       ? profileData.affiliation
       : "Current Team Member",
     home_mountain: profileData.home_mountain || null,
-    photo_url: profileData.photo_url || null,
+    photo_url: uploadedPhotoUrl || null,
     instagram_url: profileData.instagram_url || null,
     sponsors: toStringArray(profileData.sponsors),
     professional_highlights: profileData.professional_highlights || null,
