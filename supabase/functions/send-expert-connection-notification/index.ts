@@ -68,18 +68,24 @@ Deno.serve(async (req) => {
     const athlete = ecr.athlete_profiles as any;
     const athleteProfile = athlete.profiles;
 
-    const expertFirstName = expert.full_name?.split(" ")[0] ?? "Expert";
+    const expertFullName = expert.full_name ?? "Expert";
+    const expertFirstName = expertFullName.split(" ")[0];
     const athleteFullName = athleteProfile?.full_name ?? "Athlete";
     const athleteFirstName = athleteFullName.split(" ")[0];
-    const athleteEmail = athlete.email || athleteProfile?.email;
-    const expertEmail = expert.email;
+
+    // Resolve emails — athlete falls back to profiles.email
+    const athleteEmail: string | null = athlete.email || athleteProfile?.email || null;
+    const expertEmail: string | null = expert.email || null;
 
     const athleteSport = Array.isArray(athlete.sport_discipline)
       ? athlete.sport_discipline.join(", ")
       : athlete.sport_discipline ?? "winter sports";
 
+    console.log(`[expert-notif] type=${notification_type} request=${request_id} expertEmail=${expertEmail} athleteEmail=${athleteEmail}`);
+
     if (notification_type === "request_created") {
-      const subject = `${athleteFullName} <> ${expert.full_name} — Athlete Connection Introduction`;
+      // ── Recipient: EXPERT only (CC admin) ──
+      const subject = `${athleteFullName} <> ${expertFullName} — Athlete Connection Introduction`;
       const bodyHtml = `
         <p style="font-size:16px; color:#333; margin:0 0 20px;">
           <strong>${expertFirstName},</strong>
@@ -88,7 +94,7 @@ Deno.serve(async (req) => {
           Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
         </p>
         <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-          <strong>${athleteFirstName},</strong> Please meet <strong>${expert.full_name}</strong>, an expert in <strong>${expert.area_of_expertise ?? expert.job_title ?? "their field"}</strong> who is happy to speak to you about their professional experience.
+          <strong>${athleteFirstName},</strong> Please meet <strong>${expertFullName}</strong>, an expert in <strong>${expert.area_of_expertise ?? expert.job_title ?? "their field"}</strong> who is happy to speak to you about their professional experience.
         </p>
         ${ecr.message ? `
         <div style="background:#f8f9fa; border-left:4px solid #0066cc; padding:12px 16px; margin:0 0 16px; border-radius:0 4px 4px 0;">
@@ -107,6 +113,7 @@ Deno.serve(async (req) => {
       const html = emailTemplate("Athlete Connection Introduction", bodyHtml);
 
       if (expertEmail) {
+        console.log(`[expert-notif] Sending request_created TO expert: ${expertEmail}`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [expertEmail],
@@ -115,6 +122,7 @@ Deno.serve(async (req) => {
           html,
         });
       } else {
+        console.warn(`[expert-notif] Expert email missing, sending to CC only`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [CC_ADDRESS],
@@ -123,13 +131,14 @@ Deno.serve(async (req) => {
         });
       }
     } else if (notification_type === "request_accepted") {
+      // ── Recipient: ATHLETE only (CC admin) ──
       const subject = "Your expert connection request was approved";
       const bodyHtml = `
         <p style="font-size:16px; color:#333; margin:0 0 20px;">
           Hello <strong>${athleteFirstName}</strong>,
         </p>
         <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-          Great news — <strong>${expert.full_name}</strong> has approved your connection request.
+          Great news — <strong>${expertFullName}</strong> has approved your connection request.
         </p>
         <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
           You can now continue the conversation directly.
@@ -142,6 +151,7 @@ Deno.serve(async (req) => {
       const html = emailTemplate("Connection Request Approved", bodyHtml);
 
       if (athleteEmail) {
+        console.log(`[expert-notif] Sending request_accepted TO athlete: ${athleteEmail}`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [athleteEmail],
@@ -150,6 +160,7 @@ Deno.serve(async (req) => {
           html,
         });
       } else {
+        console.warn(`[expert-notif] Athlete email missing, sending to CC only`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [CC_ADDRESS],
@@ -158,13 +169,14 @@ Deno.serve(async (req) => {
         });
       }
     } else if (notification_type === "request_declined") {
+      // ── Recipient: ATHLETE only (CC admin) ──
       const subject = "Connection Request Update";
       const bodyHtml = `
         <p style="font-size:16px; color:#333; margin:0 0 20px;">
           Hello <strong>${athleteFirstName}</strong>,
         </p>
         <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-          <strong>${expert.full_name}</strong> has declined your connection request at this time.
+          <strong>${expertFullName}</strong> has declined your connection request at this time.
         </p>
         <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
           Please keep exploring other experts and opportunities on Athlete Connection.
@@ -177,6 +189,7 @@ Deno.serve(async (req) => {
       const html = emailTemplate("Connection Request Update", bodyHtml);
 
       if (athleteEmail) {
+        console.log(`[expert-notif] Sending request_declined TO athlete: ${athleteEmail}`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [athleteEmail],
@@ -185,6 +198,7 @@ Deno.serve(async (req) => {
           html,
         });
       } else {
+        console.warn(`[expert-notif] Athlete email missing, sending to CC only`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [CC_ADDRESS],
@@ -199,7 +213,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log("Expert connection notification sent for request:", request_id);
+    console.log(`[expert-notif] Done. type=${notification_type} request=${request_id}`);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
