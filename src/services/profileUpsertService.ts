@@ -40,7 +40,7 @@ const resolveImageUrl = (
 };
 
 export const upsertExpertProfile = async (userId: string, profileData: any, name: string, url: string) => {
-  const uploadedPhotoUrl = await uploadExternalImage(userId, profileData.photo_url, "expert-photos");
+  const uploadedPhotoUrl = resolveImageUrl(profileData.photo_url);
 
   const { data: existing } = await supabase
     .from("expert_profiles")
