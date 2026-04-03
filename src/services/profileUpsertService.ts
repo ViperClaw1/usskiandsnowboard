@@ -116,6 +116,11 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
     .eq("user_id", userId)
     .maybeSingle();
 
+  const scrapedContactEmail =
+    typeof profileData.contact_email === "string" && profileData.contact_email.trim()
+      ? profileData.contact_email.trim()
+      : null;
+
   const employerFields = {
     company_name: profileData.company_name,
     industry: profileData.industry || null,
@@ -126,7 +131,8 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
     logo_url: uploadedLogoUrl || existing?.logo_url || null,
     linkedin_url: profileData.linkedin_url || null,
     contact_person: profileData.contact_person || null,
-    contact_email: profileData.contact_email || null,
+    // Prefer the signed-in partner’s account email; fall back to AI-scraped site contact.
+    contact_email: accountEmail ?? scrapedContactEmail ?? null,
     contact_title: profileData.contact_title || null,
     phone: profileData.phone || null,
     opportunities_offered: profileData.opportunities_offered || null,
