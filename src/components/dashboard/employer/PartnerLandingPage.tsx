@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
+import { normalizeEmployerIndustryTitle } from "@/services/profileUpsertService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -248,6 +249,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
 
   const completeness = profile?.profile_completeness ?? 0;
   const profileViewsThisMonth = profile?.profile_views ?? 0;
+  const industryBadgeLabel = normalizeEmployerIndustryTitle(profile?.industry);
 
   return (
     <div
@@ -329,10 +331,13 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
                         {profile?.company_name || "Partner"}
                       </h1>
-                      {profile?.industry && (
-                        <p className="max-w-[min(100%,28rem)] text-base text-muted-foreground leading-snug break-words">
-                          {profile.industry}
-                        </p>
+                      {industryBadgeLabel && (
+                        <Badge
+                          variant="secondary"
+                          className="mt-1 flex w-fit max-w-[min(100%,28rem)] whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto min-h-0 items-start py-1.5 text-xs font-semibold"
+                        >
+                          {industryBadgeLabel}
+                        </Badge>
                       )}
                       {profile?.hq_location && (
                         <p className="flex items-center gap-1.5 text-sm text-muted-foreground">

@@ -47,6 +47,20 @@ const pickImageCandidate = (profileData: any, keys: string[]): string | null => 
   return null;
 };
 
+/**
+ * Keeps a short primary industry label for employers (AI often returns "Title (long detail)").
+ * Strips parenthetical and bracket suffixes; safe for display and storage after AI auto-fill.
+ */
+export const normalizeEmployerIndustryTitle = (value: unknown): string | null => {
+  if (value == null) return null;
+  if (typeof value !== "string") return null;
+  let s = value.trim();
+  if (!s) return null;
+  s = s.split("(")[0].trim();
+  s = s.split("[")[0].trim();
+  return s.trim() || null;
+};
+
 /** Account email from Auth or `profiles` — used to keep role profile `email` in sync during AI upserts. */
 const resolveAccountEmail = async (userId: string): Promise<string | null> => {
   const {
@@ -123,7 +137,7 @@ export const upsertEmployerProfile = async (userId: string, profileData: any, ur
 
   const employerFields = {
     company_name: profileData.company_name,
-    industry: profileData.industry || null,
+    industry: normalizeEmployerIndustryTitle(profileData.industry) ?? null,
     company_size: profileData.company_size || null,
     hq_location: profileData.hq_location || null,
     about: profileData.about || null,
