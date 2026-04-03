@@ -230,7 +230,12 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
 
   const disciplinePreview = useMemo(() => {
     if (!profile?.area_of_expertise) return null;
-    return profile.area_of_expertise.split(",")[0]?.trim() || null;
+    return (
+      profile.area_of_expertise
+        .split(/[,;|]/)
+        .map((value) => value.trim())
+        .find(Boolean) || null
+    );
   }, [profile?.area_of_expertise]);
 
   if (dashboardLoading || athletesLoading || partnersLoading) {
