@@ -78,10 +78,11 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
   useEffect(() => {
     if (openProfileDialog) {
       setEditOpen(true);
-      setDialogStep("choice");
+      // If profile already exists (e.g. after AI auto-fill), skip choice dialog
+      setDialogStep(profile ? "manual" : "choice");
       onProfileDialogOpened?.();
     }
-  }, [openProfileDialog, onProfileDialogOpened]);
+  }, [openProfileDialog, onProfileDialogOpened, profile]);
 
   if (profileLoading) return <LoadingSpinner fullScreen />;
 
