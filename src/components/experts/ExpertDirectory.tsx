@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -15,6 +15,7 @@ import { Search, X, Linkedin, ImagePlus } from "lucide-react";
 import { ExpertConnectionRequestDialog } from "./ExpertConnectionRequestDialog";
 import { INDUSTRY_OPTIONS } from "@/data/suggestions";
 import usLogo from "@/assets/us-logo-new.png";
+import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
 
 // ==============================
 // Types
@@ -87,6 +88,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
   const [filterIndustry, setFilterIndustry] = useState("all");
   const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
   const [connectionDialogExpert, setConnectionDialogExpert] = useState<ExpertProfile | null>(null);
+  const [page, setPage] = useState(1);
 
   const { data: experts = [], isLoading } = useQuery({
     queryKey: ["expert-profiles"],
@@ -135,6 +137,24 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     }
     return res;
   }, [experts, search, filterIndustry]);
+
+  const totalFilteredExperts = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredExperts / DIRECTORY_PAGE_SIZE));
+  const pageStartIndex = totalFilteredExperts === 0 ? 0 : (page - 1) * DIRECTORY_PAGE_SIZE + 1;
+  const pageEndIndex = Math.min(page * DIRECTORY_PAGE_SIZE, totalFilteredExperts);
+
+  const paginatedExperts = useMemo(() => {
+    const start = (page - 1) * DIRECTORY_PAGE_SIZE;
+    return filtered.slice(start, start + DIRECTORY_PAGE_SIZE);
+  }, [filtered, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, filterIndustry]);
+
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
 
   const canRequest = role === "athlete";
 
@@ -187,7 +207,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
         <div className="text-center py-16 text-muted-foreground">No experts found.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((expert) => {
+          {paginatedExperts.map((expert) => {
             const requestStatus = requestStatusMap[expert.id];
             return (
               <Card
@@ -247,6 +267,30 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {totalFilteredExperts > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredExperts} matching experts
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
 

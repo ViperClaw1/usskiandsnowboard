@@ -1,7 +1,7 @@
 // ==============================
 // Imports
 // ==============================
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { SPORT_DISCIPLINES_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
+import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
 
 // ==============================
 // Types / Interfaces
@@ -210,6 +211,7 @@ const AthleteDirectory = () => {
   const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterSkills, setFilterSkills] = useState<string>("");
   const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
+  const [page, setPage] = useState(1);
 
   // ==============================
   // Data Fetching — Athletes
@@ -302,6 +304,24 @@ const AthleteDirectory = () => {
 
     return result;
   }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
+
+  const totalFilteredAthletes = filteredAthletes.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredAthletes / DIRECTORY_PAGE_SIZE));
+  const pageStartIndex = totalFilteredAthletes === 0 ? 0 : (page - 1) * DIRECTORY_PAGE_SIZE + 1;
+  const pageEndIndex = Math.min(page * DIRECTORY_PAGE_SIZE, totalFilteredAthletes);
+
+  const paginatedAthletes = useMemo(() => {
+    const start = (page - 1) * DIRECTORY_PAGE_SIZE;
+    return filteredAthletes.slice(start, start + DIRECTORY_PAGE_SIZE);
+  }, [filteredAthletes, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
+
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
 
   // ==============================
   // Handlers
@@ -562,7 +582,7 @@ const AthleteDirectory = () => {
           searchTerm) && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Showing {filteredAthletes.length} of {athletes.length} athletes
+              Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredAthletes} matching athletes ({athletes.length} total)
             </p>
             <Button
               variant="outline"
@@ -583,7 +603,7 @@ const AthleteDirectory = () => {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAthletes.map((athlete) => (
+        {paginatedAthletes.map((athlete) => (
           <Card
             key={athlete.id}
             className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50"
@@ -706,6 +726,30 @@ const AthleteDirectory = () => {
           </Card>
         ))}
       </div>
+
+      {totalFilteredAthletes > 0 && (
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredAthletes} matching athletes
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Athlete Detail Dialog */}
       {selectedAthlete && (

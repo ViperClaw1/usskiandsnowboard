@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
 
 // ==============================
 // Types / Interfaces
@@ -163,6 +164,7 @@ const EmployerDirectory = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(1);
 
   // ==============================
   // Data Fetching — Employers
@@ -270,6 +272,24 @@ const EmployerDirectory = () => {
       return true;
     });
   }, [employers, filterCompanySize, filterLocation, filterIndustry, searchTerm]);
+
+  const totalFilteredEmployers = filteredEmployers.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredEmployers / DIRECTORY_PAGE_SIZE));
+  const pageStartIndex = totalFilteredEmployers === 0 ? 0 : (page - 1) * DIRECTORY_PAGE_SIZE + 1;
+  const pageEndIndex = Math.min(page * DIRECTORY_PAGE_SIZE, totalFilteredEmployers);
+
+  const paginatedEmployers = useMemo(() => {
+    const start = (page - 1) * DIRECTORY_PAGE_SIZE;
+    return filteredEmployers.slice(start, start + DIRECTORY_PAGE_SIZE);
+  }, [filteredEmployers, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filterCompanySize, filterLocation, filterIndustry]);
+
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
 
   // ==============================
   // Handlers
@@ -514,7 +534,7 @@ const EmployerDirectory = () => {
 
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredEmployers.length} of {employers.length} employers
+          Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredEmployers} matching employers ({employers.length} total)
         </p>
         {(searchTerm || filterCompanySize !== "all" || filterLocation !== "all" || filterIndustry !== "all") && (
           <Button variant="outline" size="sm" onClick={clearFilters}>
@@ -525,7 +545,7 @@ const EmployerDirectory = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">
-        {filteredEmployers.map((employer) => (
+        {paginatedEmployers.map((employer) => (
           <Card
             key={employer.id}
             className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50 flex flex-col"
@@ -625,6 +645,30 @@ const EmployerDirectory = () => {
           </Card>
         ))}
       </div>
+
+      {totalFilteredEmployers > 0 && (
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredEmployers} matching employers
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Partner Details Dialog */}
       {selectedEmployer && !showRequestDialog && (
