@@ -10,18 +10,18 @@ const EXPERT_TOOL = {
   type: "function",
   function: {
     name: "populate_expert_profile",
-    description: "Populate an expert professional profile with extracted data from LinkedIn.",
+    description: "Populate an expert professional profile with extracted data from LinkedIn. You MUST provide job_title, area_of_expertise, and bio — never leave them empty. If the scraped content is sparse, infer reasonable values from the person's name, URL, and any available context.",
     parameters: {
       type: "object",
       properties: {
         full_name: { type: "string" },
-        job_title: { type: "string", description: "Current role/title" },
-        area_of_expertise: { type: "string", description: "Primary area of professional expertise" },
-        bio: { type: "string", description: "Professional bio, 2-4 sentences" },
+        job_title: { type: "string", description: "Current role/title as shown on their profile. If not explicitly found, infer from any available context (e.g. headline, experience section). Never leave blank." },
+        area_of_expertise: { type: "string", description: "Primary area of professional expertise based on their actual profile content — use their real industry/domain, NOT sports unless their profile is actually sports-related. Never leave blank." },
+        bio: { type: "string", description: "Professional bio, 2-4 sentences summarizing their career based on actual profile data. Never leave blank." },
         photo_url: { type: "string", description: "URL to profile headshot" },
         linkedin_url: { type: "string" },
       },
-      required: ["full_name"],
+      required: ["full_name", "job_title", "area_of_expertise", "bio"],
       additionalProperties: false,
     },
   },
