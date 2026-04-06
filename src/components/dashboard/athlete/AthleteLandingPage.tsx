@@ -260,12 +260,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   }}
                 />
               ) : (
-                <div className="relative z-20 h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
                   <button
                     type="button"
                     onClick={() => bgInputRef.current?.click()}
                     disabled={uploadingBg}
-                    className="relative z-20 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+                    className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
                   >
                     {uploadingBg ? (
                       <Loader2 className="h-8 w-8 animate-spin" />
