@@ -206,16 +206,16 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">No experts found.</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           {paginatedExperts.map((expert) => {
             const requestStatus = requestStatusMap[expert.id];
             return (
               <Card
                 key={expert.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer hover:shadow-md transition-shadow flex flex-col"
                 onClick={() => setSelectedExpert(expert)}
               >
-                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                <CardContent className="p-5 flex flex-col flex-1 items-center text-center gap-3">
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={expert.photo_url ?? undefined} alt={expert.full_name} />
                     <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
@@ -246,10 +246,8 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   {canRequest && (
                     <Button
                       size="sm"
-                      className="w-full mt-1"
-                      variant={
-                        requestStatus === "pending" ? "outline" : requestStatus === "accepted" ? "secondary" : "default"
-                      }
+                      className="w-full mt-auto"
+                      variant={requestStatus === "accepted" ? "default" : "outline"}
                       disabled={!!requestStatus}
                       onClick={(e) => {
                         e.stopPropagation();
