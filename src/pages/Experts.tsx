@@ -70,7 +70,7 @@ const Experts = () => {
                   <ExpertDirectory />
                 </div>
 
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="fixed inset-0 z-20 flex items-center justify-center">
                   <Card className="max-w-md mx-4 shadow-xl">
                     <CardContent className="pt-6 text-center space-y-4">
                       <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
