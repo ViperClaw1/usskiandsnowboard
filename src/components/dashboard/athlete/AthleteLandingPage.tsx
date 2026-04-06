@@ -272,7 +272,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                     ) : (
                       <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
-                    <span className="text-sm font-medium">
+                    <span className="hidden sm:inline text-sm font-medium">
                       {uploadingBg ? "Uploading\u2026" : "Add background photo"}
                     </span>
                   </button>

@@ -285,7 +285,9 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                     ) : (
                       <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
-                    <span className="text-sm font-medium">{uploadingBg ? "Uploading…" : "Add background photo"}</span>
+                    <span className="hidden sm:inline text-sm font-medium">
+                      {uploadingBg ? "Uploading…" : "Add background photo"}
+                    </span>
                   </button>
                 </div>
               )}

@@ -278,7 +278,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                     ) : (
                       <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
-                    <span className="text-sm font-medium">
+                    <span className="hidden sm:inline text-sm font-medium">
                       {uploadingBg ? "Uploading..." : getText("hero.add_background_photo", "Add background photo")}
                     </span>
                   </button>
