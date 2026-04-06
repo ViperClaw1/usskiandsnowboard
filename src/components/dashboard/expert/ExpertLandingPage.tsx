@@ -266,21 +266,21 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   }}
                 />
               ) : (
-                <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                <div className="relative z-20 h-50 sm:h-58 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
                   <button
                     type="button"
                     onClick={() => bgInputRef.current?.click()}
                     disabled={uploadingBg}
-                    className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+                    className="relative z-20 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
                   >
                     {uploadingBg ? (
                       <Loader2 className="h-8 w-8 animate-spin" />
                     ) : (
                       <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
-                    <span className="text-sm font-medium">
+                    {/* <span className="text-sm font-medium">
                       {uploadingBg ? "Uploading..." : getText("hero.add_background_photo", "Add background photo")}
-                    </span>
+                    </span> */}
                   </button>
                 </div>
               )}
@@ -334,10 +334,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           </Badge>
                         )}
                         {disciplinePreview && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs max-w-full whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto"
-                          >
+                          <Badge variant="outline" className="text-xs">
                             {disciplinePreview}
                           </Badge>
                         )}
@@ -346,7 +343,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   </div>
 
                   {completeness < 100 && (
-                    <Card className="w-auto mx-3 mb-3 [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
+                    <Card className="w-auto mx-3 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
