@@ -1,0 +1,439 @@
+import { useState, useEffect, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Loader2, CheckCircle, XCircle, Building2, Globe, Linkedin, Search } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
+
+interface ConnectionRequest {
+  id: string;
+  employer_id: string;
+  athlete_id: string;
+  message: string | null;
+  opportunity_type: string | null;
+  created_at: string;
+  initiated_by_user_id: string | null;
+  initiated_by_employer: boolean;
+  employer_profiles: {
+    company_name: string;
+    industry: string | null;
+    company_size: string | null;
+    hq_location: string | null;
+    about: string | null;
+    opportunities_offered: string | null;
+    contact_person: string | null;
+    logo_url: string | null;
+    website: string | null;
+    linkedin_url: string | null;
+  };
+}
+
+interface ConnectionRequestsManagerProps {
+  athleteProfileId: string;
+}
+
+const ConnectionRequestsManager = ({ athleteProfileId }: ConnectionRequestsManagerProps) => {
+  const [requests, setRequests] = useState<ConnectionRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState<ConnectionRequest | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+
+  useEffect(() => {
+    if (athleteProfileId) {
+      loadRequests();
+    }
+
+    // Set up real-time subscription for connection requests
+    const channel = supabase
+      .channel('connection_requests_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_requests',
+          filter: `athlete_id=eq.${athleteProfileId}`
+        },
+        () => {
+          loadRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [athleteProfileId]);
+
+  const loadRequests = async () => {
+    setLoading(true);
+    try {
+      // Get current user to check who owns the athlete profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("User not authenticated");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("connection_requests")
+        .select(`
+          *,
+          employer_profiles (
+            company_name,
+            industry,
+            company_size,
+            hq_location,
+            about,
+            opportunities_offered,
+            contact_person,
+            logo_url,
+            website,
+            linkedin_url
+          )
+        `)
+        .eq("athlete_id", athleteProfileId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading requests:", error);
+        toast.error("Failed to load connection requests");
+        return;
+      }
+
+      // Determine who initiated each request by comparing initiated_by_user_id with current user
+      const requestsWithInitiator = (data || []).map(req => ({
+        ...req,
+        // If the current user initiated, they can only cancel. Otherwise they can accept/reject.
+        initiated_by_employer: req.initiated_by_user_id !== user.id
+      }));
+
+      setRequests(requestsWithInitiator);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (requestId: string, status: "accepted" | "deleted") => {
+    setProcessing(true);
+    try {
+      if (status === "deleted") {
+        // Decline = delete the record entirely so the requester can re-send
+        const { error } = await supabase
+          .from("connection_requests")
+          .delete()
+          .eq("id", requestId);
+
+        if (error) throw error;
+        toast.success("Request declined");
+        setSelectedRequest(null);
+        loadRequests();
+        return;
+      }
+
+      // Accepted path
+      const { data, error } = await supabase
+        .from("connection_requests")
+        .update({ status: "accepted" })
+        .eq("id", requestId)
+        .select("id, status")
+        .single();
+
+      if (error) throw error;
+
+      // DB trigger on_connection_request_event fires send-connection-notification automatically
+
+      if (selectedRequest) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const userEmail = user?.email || "your email";
+        const companyName = selectedRequest.employer_profiles.company_name;
+        toast.success(`Please check your email (${userEmail}) for an introduction to ${companyName}!`, {
+          duration: 6000,
+        });
+      }
+
+      setSelectedRequest(null);
+      loadRequests();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update connection status");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter((request) => {
+      const matchesSearch = !searchTerm || 
+        request.employer_profiles.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.employer_profiles.about?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.message?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesIndustry = !filterIndustry || 
+        request.employer_profiles.industry === filterIndustry;
+      
+      const matchesLocation = !filterLocation || 
+        request.employer_profiles.hq_location === filterLocation;
+      
+      return matchesSearch && matchesIndustry && matchesLocation;
+    });
+  }, [requests, searchTerm, filterIndustry, filterLocation]);
+
+  const uniqueIndustries = useMemo(() => {
+    return Array.from(new Set(requests.map(r => r.employer_profiles.industry).filter(Boolean)));
+  }, [requests]);
+
+  const uniqueLocations = useMemo(() => {
+    return Array.from(new Set(requests.map(r => r.employer_profiles.hq_location).filter(Boolean)));
+  }, [requests]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="mb-4 space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by company name, description, or message..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={filterIndustry}
+            onChange={(e) => setFilterIndustry(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Industries</option>
+            {uniqueIndustries.map(industry => (
+              <option key={industry} value={industry}>{industry}</option>
+            ))}
+          </select>
+          <select
+            value={filterLocation}
+            onChange={(e) => setFilterLocation(e.target.value)}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">All Locations</option>
+            {uniqueLocations.map(location => (
+              <option key={location} value={location}>{location}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {filteredRequests.length === 0 ? (
+        <div className="text-center p-8">
+          <p className="text-muted-foreground">
+            {requests.length === 0 ? "Opportunities under review—the right connection is on its way. Make sure your profile is complete and visible to showcase your excellence." : "No requests match your filters"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {filteredRequests.map((request) => (
+          <Card key={request.id} className="cursor-pointer hover:border-primary/50 hover:shadow-lg hover:scale-[1.01] transition-all duration-200 animate-fade-in" onClick={() => setSelectedRequest(request)}>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12">
+                  {request.employer_profiles.logo_url ? (
+                    <AvatarImage src={request.employer_profiles.logo_url} alt={request.employer_profiles.company_name} className="object-cover" />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-6 w-6 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex-1">
+                  <CardTitle className="text-base">{request.employer_profiles.company_name}</CardTitle>
+                  {request.employer_profiles.industry && (
+                    <p className="text-sm text-muted-foreground">{request.employer_profiles.industry}</p>
+                  )}
+                </div>
+                <Badge variant="secondary">Pending</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {request.employer_profiles.about && (
+                <p className="text-sm mb-2 text-muted-foreground line-clamp-2">{request.employer_profiles.about}</p>
+              )}
+              {request.opportunity_type && (
+                <p className="text-sm mb-2">
+                  <span className="font-medium">Opportunity:</span> {request.opportunity_type}
+                </p>
+              )}
+              {request.message && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{request.message}</p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      )}
+
+      {selectedRequest && (
+        <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Connection Request from {selectedRequest.employer_profiles.company_name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  {selectedRequest.employer_profiles.logo_url ? (
+                    <AvatarImage src={selectedRequest.employer_profiles.logo_url} alt={selectedRequest.employer_profiles.company_name} className="object-cover" />
+                  ) : (
+                    <AvatarFallback>
+                      <Building2 className="h-8 w-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{selectedRequest.employer_profiles.company_name}</h3>
+                  {selectedRequest.employer_profiles.industry && (
+                    <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.industry}</p>
+                  )}
+                </div>
+              </div>
+
+              {selectedRequest.employer_profiles.about && (
+                <div>
+                  <h4 className="font-medium mb-2">About</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.about}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                {selectedRequest.employer_profiles.company_size && (
+                  <div>
+                    <h4 className="font-medium mb-2">Company Size</h4>
+                    <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.company_size}</p>
+                  </div>
+                )}
+                {selectedRequest.employer_profiles.hq_location && (
+                  <div>
+                    <h4 className="font-medium mb-2">HQ Location</h4>
+                    <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.hq_location}</p>
+                  </div>
+                )}
+              </div>
+
+              {selectedRequest.employer_profiles.opportunities_offered && (
+                <div>
+                  <h4 className="font-medium mb-2">Opportunities Offered</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.opportunities_offered}</p>
+                </div>
+              )}
+
+              {selectedRequest.employer_profiles.contact_person && (
+                <div>
+                  <h4 className="font-medium mb-2">Contact Person</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.employer_profiles.contact_person}</p>
+                </div>
+              )}
+
+              {selectedRequest.employer_profiles.website && (
+                <div>
+                  <h4 className="font-medium mb-2">Website</h4>
+                  <a 
+                    href={selectedRequest.employer_profiles.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    Visit Website
+                  </a>
+                </div>
+              )}
+
+              {selectedRequest.employer_profiles.linkedin_url && (
+                <div>
+                  <h4 className="font-medium mb-2">LinkedIn</h4>
+                  <a 
+                    href={selectedRequest.employer_profiles.linkedin_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-2"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    View Company
+                  </a>
+                </div>
+              )}
+
+              {selectedRequest.opportunity_type && (
+                <div>
+                  <h4 className="font-medium mb-2">Specific Opportunity</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.opportunity_type}</p>
+                </div>
+              )}
+
+              {selectedRequest.message && (
+                <div>
+                  <h4 className="font-medium mb-2">Message</h4>
+                  <p className="text-sm text-muted-foreground">{selectedRequest.message}</p>
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                {selectedRequest.initiated_by_employer ? (
+                  <>
+                    <Button
+                      onClick={() => handleUpdateStatus(selectedRequest.id, "accepted")}
+                      disabled={processing}
+                      className="flex-1"
+                    >
+                      {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                      Accept
+                    </Button>
+                    <Button
+                      onClick={() => handleUpdateStatus(selectedRequest.id, "deleted")}
+                      disabled={processing}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                      Decline
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedRequest.id, "deleted")}
+                    disabled={processing}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                    Cancel Request
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+};
+
+export default ConnectionRequestsManager;

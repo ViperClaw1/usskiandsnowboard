@@ -1,0 +1,203 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system - US Ski & Snowboard Style
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    scrollbar-gutter: stable;
+
+    /* White background */
+    --background: 0 0% 100%;
+    --foreground: 215 28% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+
+    /* Navy Blue - Primary (like US Ski & Snowboard) */
+    --primary: 215 65% 25%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 215 55% 35%;
+
+    /* Bright Red - Secondary/Accent (like US Ski & Snowboard red) */
+    --secondary: 355 84% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 355 84% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 215 65% 25%;
+
+    --radius: 0.25rem;
+
+    /* US Ski & Snowboard inspired gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(215 65% 25%), hsl(215 65% 35%));
+    --gradient-card: linear-gradient(to bottom, hsl(0 0% 100%), hsl(210 40% 98%));
+    --gradient-accent: linear-gradient(135deg, hsl(355 84% 50%), hsl(355 84% 60%));
+
+    /* Athletic shadows */
+    --shadow-elegant: 0 4px 20px -4px hsl(215 65% 25% / 0.15);
+    --shadow-hover: 0 8px 30px -4px hsl(215 65% 25% / 0.25);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 215 28% 17%;
+    --sidebar-primary: 215 65% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 215 28% 17%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 215 65% 25%;
+  }
+
+  html body[data-scroll-locked] {
+    overflow: scroll !important;
+    margin-right: 0 !important;
+  }
+
+  .dark {
+    /* Dark navy background */
+    --background: 215 40% 15%;
+    --foreground: 0 0% 98%;
+
+    --card: 215 35% 18%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 215 35% 18%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Lighter navy for dark mode primary */
+    --primary: 215 65% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 215 65% 55%;
+
+    /* Keep red bright in dark mode */
+    --secondary: 355 84% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 30% 25%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 355 84% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 30% 28%;
+    --input: 215 30% 28%;
+    --ring: 215 65% 45%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(215 65% 25%), hsl(215 65% 40%));
+    --gradient-card: linear-gradient(to bottom, hsl(215 35% 18%), hsl(215 35% 20%));
+    --gradient-accent: linear-gradient(135deg, hsl(355 84% 50%), hsl(355 84% 60%));
+    --shadow-elegant: 0 4px 20px -4px hsl(215 65% 15% / 0.4);
+    --shadow-hover: 0 8px 30px -4px hsl(215 65% 15% / 0.6);
+
+    --sidebar-background: 215 40% 12%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 215 65% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 30% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 215 30% 20%;
+    --sidebar-ring: 215 65% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Article body: CSS custom properties beat prose plugin's direct element rules
+     because .article-body.prose has specificity (0,2,1) vs .prose (0,1,1). */
+  .article-body.prose p,
+  .article-body.prose li,
+  .article-body.prose ul,
+  .article-body.prose ol,
+  .article-body.prose blockquote,
+  .article-body.prose td,
+  .article-body.prose th {
+    font-size: var(--article-font-size, inherit);
+    font-family: var(--article-font-family, inherit);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    padding-right: 0 !important;
+    font-family:
+      "Montserrat",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-weight: 500;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+  }
+}
+
+@layer utilities {
+  @keyframes shimmer-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .shimmer-surface {
+    position: relative;
+    overflow: hidden;
+    background-color: hsl(var(--muted));
+  }
+
+  .shimmer-surface::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--background) / 0.45) 50%,
+      transparent 100%
+    );
+    animation: shimmer-slide 1.4s linear infinite;
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  .dark .shimmer-surface::after {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--foreground) / 0.12) 50%,
+      transparent 100%
+    );
+  }
+}

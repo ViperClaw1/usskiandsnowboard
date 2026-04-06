@@ -1,0 +1,17 @@
+{
+  "name": "U.S. Ski & Snowboard Athlete Connection",
+  "short_name": "USSS Athletes",
+  "description": "Connect U.S. Ski & Snowboard athletes with meaningful career opportunities, internships, and mentorship beyond competition",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#1e3a5f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

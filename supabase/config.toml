@@ -1,0 +1,23 @@
+project_id = "fihcubajfjjbcjqiqqrv"
+
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/block_oauth_signup_hook"
+
+[functions.scrape-news]
+verify_jwt = false
+
+[functions.resend-confirmation]
+verify_jwt = false
+
+[functions.send-role-notification]
+verify_jwt = false
+
+[functions.send-admin-summary]
+verify_jwt = false
+
+[functions.submit-waitlist-application]
+verify_jwt = false
+
+[functions.handle-waitlist-decision]
+verify_jwt = false
