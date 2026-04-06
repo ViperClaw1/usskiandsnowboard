@@ -334,7 +334,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           </Badge>
                         )}
                         {disciplinePreview && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge
+                            variant="outline"
+                            className="text-xs max-w-full whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto"
+                          >
                             {disciplinePreview}
                           </Badge>
                         )}
@@ -343,7 +346,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   </div>
 
                   {completeness < 100 && (
-                    <Card className="w-auto mx-3 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
+                    <Card className="w-auto mx-3 mb-3 [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
