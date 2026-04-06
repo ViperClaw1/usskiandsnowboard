@@ -32,7 +32,7 @@ async function resolveExpertInboxEmail(
   const uid = expert.user_id;
   if (!uid) return null;
 
-  const { data: prof } = await supabase.from("profiles").select("email").eq("id", uid).maybeSingle();
+  const { data: prof } = await supabase.from("profiles").select("email").eq("id", uid).maybeSingle() as { data: { email?: string } | null };
   const fromProfile = prof?.email;
   if (typeof fromProfile === "string" && fromProfile.trim()) {
     return fromProfile.trim();
