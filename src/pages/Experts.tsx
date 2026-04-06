@@ -76,7 +76,6 @@ const Experts = () => {
                       <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
                       <div>
                         <h3 className="text-lg font-semibold mb-1">Sign In to View Experts</h3>
-                        <p className="text-sm font-medium text-foreground mb-2">Sign In to View Athletes</p>
                         <p className="text-sm text-muted-foreground">
                           Create an account or sign in to connect with our experts
                         </p>
