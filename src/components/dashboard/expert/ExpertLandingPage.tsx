@@ -266,21 +266,21 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   }}
                 />
               ) : (
-                <div className="relative z-20 h-50 sm:h-58 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                <div className="h-50 sm:h-58 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
                   <button
                     type="button"
                     onClick={() => bgInputRef.current?.click()}
                     disabled={uploadingBg}
-                    className="relative z-20 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+                    className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
                   >
                     {uploadingBg ? (
                       <Loader2 className="h-8 w-8 animate-spin" />
                     ) : (
                       <ImagePlus className="h-8 w-8 group-hover:scale-110 transition-transform" />
                     )}
-                    {/* <span className="text-sm font-medium">
+                    <span className="text-sm font-medium">
                       {uploadingBg ? "Uploading..." : getText("hero.add_background_photo", "Add background photo")}
-                    </span> */}
+                    </span>
                   </button>
                 </div>
               )}
