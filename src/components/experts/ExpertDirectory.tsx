@@ -179,7 +179,10 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Industries</SelectItem>
-            <SelectItem value="alum"><img src={usLogo} alt="" className="inline h-4 w-4 object-contain mr-1 align-middle" />US Ski &amp; Snowboard Alum</SelectItem>
+            <SelectItem value="alum">
+              <img src={usLogo} alt="" className="inline h-4 w-4 object-contain mr-1 align-middle" />
+              US Ski &amp; Snowboard Alum
+            </SelectItem>
             {INDUSTRY_OPTIONS.map((ind) => (
               <SelectItem key={ind} value={ind}>
                 {ind}
@@ -248,7 +251,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                       size="sm"
                       className="w-full mt-1"
                       variant={
-                        requestStatus === "pending" ? "outline" : requestStatus === "accepted" ? "secondary" : "default"
+                        requestStatus === "pending" ? "outline" : requestStatus === "accepted" ? "primary" : "default"
                       }
                       disabled={!!requestStatus}
                       onClick={(e) => {
