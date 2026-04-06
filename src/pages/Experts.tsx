@@ -3,6 +3,10 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { ExpertDirectory } from "@/components/experts/ExpertDirectory";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Lock } from "lucide-react";
 
 const PageSkeleton = () => (
   <div className="min-h-screen bg-background">
@@ -25,6 +29,7 @@ const PageSkeleton = () => (
 );
 
 const Experts = () => {
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { role: userRole } = useUserRole(user?.id);
 
@@ -59,9 +64,27 @@ const Experts = () => {
               </div>
             </section>
 
-            <section className="py-8 sm:py-12">
+            <section className="py-8 sm:py-12 relative">
               <div className="container mx-auto px-4 max-w-7xl">
-                <ExpertDirectory />
+                <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
+                  <ExpertDirectory />
+                </div>
+
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Card className="max-w-md mx-4 shadow-xl">
+                    <CardContent className="pt-6 text-center space-y-4">
+                      <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+                      <div>
+                        <h3 className="text-lg font-semibold mb-1">Sign In to View Experts</h3>
+                        <p className="text-sm font-medium text-foreground mb-2">Sign In to View Athletes</p>
+                        <p className="text-sm text-muted-foreground">
+                          Create an account or sign in to connect with our experts
+                        </p>
+                      </div>
+                      <Button onClick={() => navigate("/auth")}>Sign In</Button>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </section>
           </>
