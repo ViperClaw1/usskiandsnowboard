@@ -23,7 +23,7 @@ function unwrapJoined<T>(value: T | T[] | null | undefined): T | null {
  * `profiles.email` or Auth. Without this, request_created had no `to` address.
  */
 async function resolveExpertInboxEmail(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   expert: { email?: string | null; user_id?: string | null },
 ): Promise<string | null> {
   if (typeof expert.email === "string" && expert.email.trim()) {
@@ -32,7 +32,7 @@ async function resolveExpertInboxEmail(
   const uid = expert.user_id;
   if (!uid) return null;
 
-  const { data: prof } = await supabase.from("profiles").select("email").eq("id", uid).maybeSingle();
+  const { data: prof } = await supabase.from("profiles").select("email").eq("id", uid).maybeSingle() as { data: { email?: string } | null };
   const fromProfile = prof?.email;
   if (typeof fromProfile === "string" && fromProfile.trim()) {
     return fromProfile.trim();
