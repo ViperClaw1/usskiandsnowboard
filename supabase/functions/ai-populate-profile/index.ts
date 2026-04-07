@@ -6,6 +6,106 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const EXPERT_INDUSTRY_OPTIONS = [
+  "Technology & Software",
+  "Finance & Banking",
+  "Healthcare & Medical",
+  "Retail & E-commerce",
+  "Manufacturing",
+  "Construction & Real Estate",
+  "Education & Training",
+  "Hospitality & Tourism",
+  "Transportation & Logistics",
+  "Media & Entertainment",
+  "Consulting & Professional Services",
+  "Energy & Utilities",
+  "Telecommunications",
+  "Automotive",
+  "Aerospace & Defense",
+  "Agriculture & Farming",
+  "Biotechnology & Pharmaceuticals",
+  "Consumer Goods",
+  "Fashion & Apparel",
+  "Food & Beverage",
+  "Insurance",
+  "Legal Services",
+  "Marketing & Advertising",
+  "Mining & Metals",
+  "Non-Profit & Social Services",
+  "Publishing",
+  "Sports & Recreation",
+  "Government & Public Sector",
+  "Environmental Services",
+  "Other",
+] as const;
+
+const STOP_WORDS = new Set(["and", "or", "the", "of", "services", "service"]);
+
+const normalizeText = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const toKeywordSet = (value: string): Set<string> =>
+  new Set(
+    normalizeText(value)
+      .split(" ")
+      .map((part) => part.trim())
+      .filter((part) => part.length > 2 && !STOP_WORDS.has(part)),
+  );
+
+const getIndustryMatchScore = (input: string, option: string): number => {
+  const inputNorm = normalizeText(input);
+  const optionNorm = normalizeText(option);
+  if (!inputNorm || !optionNorm) return 0;
+  if (inputNorm === optionNorm) return 1;
+  if (inputNorm.includes(optionNorm) || optionNorm.includes(inputNorm)) return 0.8;
+
+  const inputTokens = toKeywordSet(inputNorm);
+  const optionTokens = toKeywordSet(optionNorm);
+  if (inputTokens.size === 0 || optionTokens.size === 0) return 0;
+
+  let overlap = 0;
+  for (const token of inputTokens) {
+    if (optionTokens.has(token)) overlap += 1;
+  }
+
+  const denominator = Math.max(inputTokens.size, optionTokens.size);
+  return denominator > 0 ? overlap / denominator : 0;
+};
+
+const findBestIndustryMatch = (industryValue: string): string | null => {
+  const input = industryValue.trim();
+  if (!input) return null;
+
+  let bestOption: string | null = null;
+  let bestScore = 0;
+
+  for (const option of EXPERT_INDUSTRY_OPTIONS) {
+    const score = getIndustryMatchScore(input, option);
+    if (score > bestScore) {
+      bestScore = score;
+      bestOption = option;
+    }
+  }
+
+  return bestScore >= 0.35 ? bestOption : null;
+};
+
+const toShortIndustry = (industryValue: string): string => {
+  const compact = industryValue
+    .replace(/\([^)]*\)/g, " ")
+    .split(/[|;,/]/)[0]
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const shortValue = compact.slice(0, 48).trim();
+  return shortValue || "Other";
+};
+
 const EXPERT_TOOL = {
   type: "function",
   function: {
@@ -17,6 +117,10 @@ const EXPERT_TOOL = {
         full_name: { type: "string" },
         job_title: { type: "string", description: "Current role/title as shown on their profile. If not explicitly found, infer from any available context (e.g. headline, experience section). Never leave blank." },
         area_of_expertise: { type: "string", description: "Primary area of professional expertise based on their actual profile content — use their real industry/domain, NOT sports unless their profile is actually sports-related. Never leave blank." },
+        industry: {
+          type: "string",
+          description: `LinkedIn industry/domain. Prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. If none clearly fit, provide a short industry phrase from profile content.`,
+        },
         bio: { type: "string", description: "Professional bio, 2-4 sentences summarizing their career based on actual profile data. Never leave blank." },
         photo_url: { type: "string", description: "URL to profile headshot" },
         linkedin_url: { type: "string" },
@@ -183,6 +287,10 @@ CRITICAL RULES for job_title, area_of_expertise, and bio:
 - If the scraped content is empty or blocked, make a reasonable inference from the person's name and the LinkedIn URL slug (e.g. "linkedin.com/in/john-doe-cto" → job_title could be "CTO").
 - For area_of_expertise, use their ACTUAL professional domain (e.g. "Software Engineering", "Corporate Finance", "Digital Marketing") — NOT sports.
 - For bio, write 2-4 professional sentences based on available data. If data is very limited, write a brief generic professional bio using their name and any inferred role.
+CRITICAL RULES for industry:
+- Always return the industry field.
+- First, try to map the profile to one of these exact values: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}.
+- If no close match exists, return a short industry phrase exactly as inferred from LinkedIn (2-5 words, no long explanation).
 ${mustCallInstruction}`
       : isEmployer
       ? `You are extracting company profile information from a website for a U.S. Ski & Snowboard partner directory. The company name is "${name}". Extract all available fields ACCURATELY from the scraped content. Use the company's ACTUAL industry, description, and details as found on their website. Do NOT assume the company is sports-related unless the content explicitly says so. For fields that cannot be determined, make reasonable suggestions based on actual scraped content. If no content was scraped, use only the company name — leave fields empty rather than inventing details. ${mustCallInstruction}`
@@ -294,6 +402,18 @@ ${mustCallInstruction}`
     }
 
     console.log("Extracted profile data:", JSON.stringify(profileData));
+
+    if (isExpert) {
+      const extractedIndustry =
+        (typeof profileData.industry === "string" && profileData.industry.trim()) ||
+        (typeof profileData.area_of_expertise === "string" && profileData.area_of_expertise.trim()) ||
+        "";
+
+      if (extractedIndustry) {
+        const matchedIndustry = findBestIndustryMatch(extractedIndustry);
+        profileData.industry = matchedIndustry ?? toShortIndustry(extractedIndustry);
+      }
+    }
 
     // Step 3: Download and re-upload external images to Supabase Storage (server-side, no CORS)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
