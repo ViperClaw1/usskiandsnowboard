@@ -227,6 +227,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
   const profileViews = profile?.profile_views ?? 0;
   const profileName = profile?.full_name || "Expert";
   const bgUrl = localBgUrl ?? profile?.background_image_url ?? null;
+  const primaryIndustry = getPrimaryIndustry(profile?.industry ?? null);
 
   const disciplinePreview = useMemo(() => {
     if (!profile?.area_of_expertise) return null;
@@ -328,15 +329,19 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                         {getText("hero.edit_profile", "Edit profile")}
                       </Button>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {getPrimaryIndustry(profile?.industry ?? null) && (
+                        {primaryIndustry && (
                           <Badge variant="secondary" className="w-fit">
-                            {getPrimaryIndustry(profile?.industry ?? null)}
+                            {primaryIndustry}
                           </Badge>
                         )}
                         {disciplinePreview && (
                           <Badge
                             variant="outline"
-                            className="text-xs max-w-[min(100%,20rem)] whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto min-h-0 items-start py-1.5"
+                            className={
+                              primaryIndustry
+                                ? "text-xs"
+                                : "text-xs max-w-[min(100%,20rem)] whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto min-h-0 items-start py-1.5"
+                            }
                           >
                             {disciplinePreview}
                           </Badge>
