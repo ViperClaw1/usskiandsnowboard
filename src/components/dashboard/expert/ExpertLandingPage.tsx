@@ -255,17 +255,21 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
       const disciplineEl = disciplineBadgeRef.current;
       const industryEl = industryBadgeRef.current;
 
-      if (!rowEl || !disciplineEl || !disciplinePreview || !primaryIndustry || !industryEl) {
+      if (!rowEl || !disciplineEl || !disciplinePreview) {
         setWrapDisciplineBadge(false);
         return;
       }
 
-      const onSeparateLine = disciplineEl.offsetTop > industryEl.offsetTop;
-      if (!onSeparateLine) {
-        setWrapDisciplineBadge(false);
-        return;
+      // If the industry badge is present and both badges sit on the same line, no wrapping needed
+      if (primaryIndustry && industryEl) {
+        const onSeparateLine = disciplineEl.offsetTop > industryEl.offsetTop;
+        if (!onSeparateLine) {
+          setWrapDisciplineBadge(false);
+          return;
+        }
       }
 
+      // Badge is alone or on its own line — check if its text overflows the row
       const disciplineStyle = window.getComputedStyle(disciplineEl);
       const font = [
         disciplineStyle.fontStyle,
