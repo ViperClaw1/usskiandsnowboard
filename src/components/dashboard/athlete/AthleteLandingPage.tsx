@@ -145,6 +145,16 @@ const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
   return (data as EmployerProfile[]) ?? [];
 };
 
+const getShortIndustryBadgeLabel = (industry: string | null) => {
+  if (!industry) return null;
+  const primary = industry
+    .split(/[,;|]/)
+    .map((v) => v.trim())
+    .find(Boolean);
+  if (!primary) return null;
+  return primary.length > 42 ? `${primary.slice(0, 39).trimEnd()}...` : primary;
+};
+
 export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: AthleteHomeProps) => {
   const queryClient = useQueryClient();
   const bgInputRef = useRef<HTMLInputElement>(null);
@@ -574,8 +584,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                         <div>
                           <p className="font-semibold text-sm">{connection.employer_profiles.company_name}</p>
                           {connection.employer_profiles.industry && (
-                            <Badge variant="grayout" className="mt-2 text-xs">
-                              {connection.employer_profiles.industry}
+                            <Badge
+                              variant="grayout"
+                              className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                              title={connection.employer_profiles.industry}
+                            >
+                              {getShortIndustryBadgeLabel(connection.employer_profiles.industry)}
                             </Badge>
                           )}
                         </div>
@@ -614,8 +628,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                       <div>
                         <p className="font-semibold text-sm">{partner.company_name}</p>
                         {partner.industry && (
-                          <Badge variant="grayout" className="mt-2 text-xs">
-                            {partner.industry}
+                          <Badge
+                            variant="grayout"
+                            className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                            title={partner.industry}
+                          >
+                            {getShortIndustryBadgeLabel(partner.industry)}
                           </Badge>
                         )}
                       </div>

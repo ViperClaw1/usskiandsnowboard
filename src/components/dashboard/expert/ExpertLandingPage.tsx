@@ -112,6 +112,12 @@ const getPrimaryIndustry = (industry: string | null) => {
   return first || null;
 };
 
+const getShortIndustryBadgeLabel = (industry: string | null) => {
+  const primary = getPrimaryIndustry(industry);
+  if (!primary) return null;
+  return primary.length > 42 ? `${primary.slice(0, 39).trimEnd()}...` : primary;
+};
+
 const fetchExpertDashboard = async (userId: string): Promise<ExpertDashboardData> => {
   const { data: profileData } = await supabase.from("expert_profiles").select("*").eq("user_id", userId).maybeSingle();
 
@@ -394,7 +400,11 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                       </Button>
                       <div ref={badgesRowRef} className="flex flex-wrap gap-2 mt-1">
                         {primaryIndustry && (
-                          <Badge ref={industryBadgeRef} variant="secondary" className="w-fit">
+                          <Badge
+                            ref={industryBadgeRef}
+                            variant="secondary"
+                            className="w-fit max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                          >
                             {primaryIndustry}
                           </Badge>
                         )}
@@ -714,9 +724,13 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                       </Avatar>
                       <div>
                         <p className="font-semibold text-sm">{partner.company_name}</p>
-                        {partner.industry && (
-                          <Badge variant="secondary" className="mt-2 text-xs">
-                            {partner.industry}
+                        {getShortIndustryBadgeLabel(partner.industry) && (
+                          <Badge
+                            variant="secondary"
+                            className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                            title={partner.industry ?? undefined}
+                          >
+                            {getShortIndustryBadgeLabel(partner.industry)}
                           </Badge>
                         )}
                       </div>

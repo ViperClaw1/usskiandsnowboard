@@ -250,6 +250,11 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
   const completeness = profile?.profile_completeness ?? 0;
   const profileViewsThisMonth = profile?.profile_views ?? 0;
   const industryBadgeLabel = normalizeEmployerIndustryTitle(profile?.industry);
+  const shortIndustryBadgeLabel = industryBadgeLabel
+    ? industryBadgeLabel.length > 42
+      ? `${industryBadgeLabel.slice(0, 39).trimEnd()}...`
+      : industryBadgeLabel
+    : null;
 
   return (
     <div
@@ -333,12 +338,13 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground drop-shadow-sm">
                         {profile?.company_name || "Partner"}
                       </h1>
-                      {industryBadgeLabel && (
+                      {shortIndustryBadgeLabel && (
                         <Badge
                           variant="secondary"
-                          className="mt-1 flex w-fit max-w-[min(100%,28rem)] whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto min-h-0 items-start py-1.5 text-xs font-semibold"
+                          className="mt-1 flex w-fit max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs font-semibold"
+                          title={industryBadgeLabel}
                         >
-                          {industryBadgeLabel}
+                          {shortIndustryBadgeLabel}
                         </Badge>
                       )}
                       {profile?.hq_location && (

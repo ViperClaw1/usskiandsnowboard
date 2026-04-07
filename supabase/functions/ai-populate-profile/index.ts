@@ -415,6 +415,10 @@ ${mustCallInstruction}`
       }
     }
 
+    if (isEmployer && typeof profileData.industry === "string" && profileData.industry.trim()) {
+      profileData.industry = toShortIndustry(profileData.industry);
+    }
+
     // Step 3: Download and re-upload external images to Supabase Storage (server-side, no CORS)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
