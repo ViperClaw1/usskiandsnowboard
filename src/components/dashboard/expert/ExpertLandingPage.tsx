@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -173,7 +173,11 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
   const [previewOpen, setPreviewOpen] = useState(false);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
+  const [wrapDisciplineBadge, setWrapDisciplineBadge] = useState(false);
   const bgInputRef = useRef<HTMLInputElement>(null);
+  const badgesRowRef = useRef<HTMLDivElement>(null);
+  const industryBadgeRef = useRef<HTMLDivElement>(null);
+  const disciplineBadgeRef = useRef<HTMLDivElement>(null);
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<ExpertDashboardData>({
     queryKey: expertDashboardKey(user.id),
@@ -238,6 +242,66 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
         .find(Boolean) || null
     );
   }, [profile?.area_of_expertise]);
+
+  useEffect(() => {
+    const evaluateDisciplineWrap = () => {
+      const rowEl = badgesRowRef.current;
+      const disciplineEl = disciplineBadgeRef.current;
+      const industryEl = industryBadgeRef.current;
+
+      if (!rowEl || !disciplineEl || !disciplinePreview || !primaryIndustry || !industryEl) {
+        setWrapDisciplineBadge(false);
+        return;
+      }
+
+      const onSeparateLine = disciplineEl.offsetTop > industryEl.offsetTop;
+      if (!onSeparateLine) {
+        setWrapDisciplineBadge(false);
+        return;
+      }
+
+      const disciplineStyle = window.getComputedStyle(disciplineEl);
+      const font = [
+        disciplineStyle.fontStyle,
+        disciplineStyle.fontVariant,
+        disciplineStyle.fontWeight,
+        disciplineStyle.fontSize,
+        disciplineStyle.lineHeight === "normal" ? "" : `/${disciplineStyle.lineHeight}`,
+        disciplineStyle.fontFamily,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if (!context) {
+        setWrapDisciplineBadge(false);
+        return;
+      }
+      context.font = font;
+
+      const horizontalExtras =
+        parseFloat(disciplineStyle.paddingLeft || "0") +
+        parseFloat(disciplineStyle.paddingRight || "0") +
+        parseFloat(disciplineStyle.borderLeftWidth || "0") +
+        parseFloat(disciplineStyle.borderRightWidth || "0");
+
+      const textWidth = context.measureText(disciplinePreview).width;
+      const availableWidth = rowEl.clientWidth;
+      setWrapDisciplineBadge(textWidth + horizontalExtras > availableWidth);
+    };
+
+    evaluateDisciplineWrap();
+    const resizeObserver = new ResizeObserver(evaluateDisciplineWrap);
+    if (badgesRowRef.current) resizeObserver.observe(badgesRowRef.current);
+    if (disciplineBadgeRef.current) resizeObserver.observe(disciplineBadgeRef.current);
+    window.addEventListener("resize", evaluateDisciplineWrap);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", evaluateDisciplineWrap);
+    };
+  }, [disciplinePreview, primaryIndustry]);
 
   if (dashboardLoading || athletesLoading || partnersLoading) {
     return (
@@ -328,19 +392,20 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                       >
                         {getText("hero.edit_profile", "Edit profile")}
                       </Button>
-                      <div className="flex flex-wrap gap-2 mt-1">
+                      <div ref={badgesRowRef} className="flex flex-wrap gap-2 mt-1">
                         {primaryIndustry && (
-                          <Badge variant="secondary" className="w-fit">
+                          <Badge ref={industryBadgeRef} variant="secondary" className="w-fit">
                             {primaryIndustry}
                           </Badge>
                         )}
                         {disciplinePreview && (
                           <Badge
+                            ref={disciplineBadgeRef}
                             variant="outline"
                             className={
-                              primaryIndustry
-                                ? "text-xs"
-                                : "text-xs max-w-[min(100%,20rem)] whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto min-h-0 items-start py-1.5"
+                              wrapDisciplineBadge
+                                ? "text-xs max-w-full whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto min-h-0 items-start py-1.5"
+                                : "text-xs whitespace-nowrap"
                             }
                           >
                             {disciplinePreview}
