@@ -389,7 +389,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                   </div>
                   {/* Right — completion card, only when profile is incomplete */}
                   {completeness < 100 && (
-                    <Card className="w-auto mx-3 mb-3 bg-background opacity-100 [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
+                    <Card className="w-auto mx-3 mb-3 bg-white dark:bg-card [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
