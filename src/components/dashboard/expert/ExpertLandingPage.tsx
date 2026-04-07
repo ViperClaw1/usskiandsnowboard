@@ -334,7 +334,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           </Badge>
                         )}
                         {disciplinePreview && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge
+                            variant="outline"
+                            className="text-xs max-w-[min(100%,20rem)] whitespace-normal text-left leading-snug break-words [overflow-wrap:anywhere] h-auto min-h-0 items-start py-1.5"
+                          >
                             {disciplinePreview}
                           </Badge>
                         )}
