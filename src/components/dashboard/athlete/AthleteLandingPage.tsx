@@ -320,7 +320,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <div className="flex flex-col [@media(min-width:930px)]:flex-row [@media(min-width:930px)]:items-end [@media(min-width:930px)]:justify-between [@media(min-width:930px)]:px-6 gap-4">
                   {/* Left — profile info */}
                   <div
-                    className="flex flex-col sm:flex-row items-start gap-4 p-4 w-full rounded-t-xl sm:rounded-t-none sm:rounded-t-xl sm:w-fit shadow-sm"
+                    className="flex flex-col sm:flex-row items-start gap-4 p-4 w-full rounded-lg border-0 sm:w-fit shadow-sm"
                     style={{ backgroundColor: "#ffffff", opacity: 1 }}
                   >
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
@@ -382,7 +382,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   {/* Right — completion card, only when profile is incomplete */}
                   {completeness < 100 && (
                     <Card
-                      className="w-auto mx-3 mb-3 [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0"
+                      className="w-auto mx-3 mb-3 rounded-lg [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0"
                       style={{ backgroundColor: "#ffffff", opacity: 1 }}
                     >
                       <CardContent className="pt-6">
