@@ -255,7 +255,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     >
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
-          <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
+          <Card className="overflow-visible sm:overflow-hidden border shadow-elegant">
             {/* Banner — relative container for the absolute profile row on sm+ */}
             <div className="relative overflow-visible">
               {/* Background image / gradient */}
@@ -270,12 +270,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   }}
                 />
               ) : (
-                <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                <div className="relative z-20 h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
                   <button
                     type="button"
                     onClick={() => bgInputRef.current?.click()}
                     disabled={uploadingBg}
-                    className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+                    className="relative z-20 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
                   >
                     {uploadingBg ? (
                       <Loader2 className="h-8 w-8 animate-spin" />
@@ -311,18 +311,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <Pencil className="h-4 w-4 text-gray-950" />
               </Button>
 
-              {/*
-                Profile row — spans the full card width.
-                Mobile  (<640px): flows below banner, -mt-16 so avatar straddles banner edge.
-                sm+ (>=640px): absolute, translate-y-1/2 — left = profile info, right = completion card.
-              */}
               <div className="-mt-16 [@media(min-width:930px)]:mt-0 [@media(min-width:930px)]:absolute [@media(min-width:930px)]:bottom-0 [@media(min-width:930px)]:left-0 [@media(min-width:930px)]:right-0 [@media(min-width:930px)]:translate-y-1/2 z-10">
                 <div className="flex flex-col [@media(min-width:930px)]:flex-row [@media(min-width:930px)]:items-end [@media(min-width:930px)]:justify-between [@media(min-width:930px)]:px-6 gap-4">
                   {/* Left — profile info */}
-                  <div
-                    className="flex flex-col sm:flex-row items-start gap-4 p-4 w-full rounded-lg border-0 sm:w-fit shadow-sm"
-                    style={{ backgroundColor: "#ffffff", opacity: 1 }}
-                  >
+                  <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-card w-full rounded-lg sm:w-fit shadow-sm">
                     <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg shrink-0 -mt-12 sm:mt-0">
                       <AvatarImage src={profile?.photo_url || ""} />
                       <AvatarFallback className="text-xl sm:text-2xl">
@@ -381,10 +373,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
 
                   {/* Right — completion card, only when profile is incomplete */}
                   {completeness < 100 && (
-                    <Card
-                      className="w-auto mx-3 mb-3 rounded-lg [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0"
-                      style={{ backgroundColor: "#ffffff", opacity: 1 }}
-                    >
+                    <Card className="w-auto mx-3 mb-3 rounded-lg bg-card [@media(min-width:930px)]:mb-0 [@media(min-width:930px)]:mx-0 [@media(min-width:930px)]:w-64 [@media(min-width:930px)]:max-w-[calc(100%-2rem)] shrink-0">
                       <CardContent className="pt-6">
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
@@ -395,7 +384,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           </div>
                           <Progress value={completeness} className="h-2" />
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => onNavigate("profile")}>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="p-0 h-auto"
+                              onClick={() => onNavigate("profile")}
+                            >
                               {getText("hero.complete_profile_cta", "Complete your profile")}{" "}
                               <ArrowRight className="ml-1 h-3 w-3" />
                             </Button>
