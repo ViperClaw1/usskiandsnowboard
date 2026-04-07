@@ -266,7 +266,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   }}
                 />
               ) : (
-                <div className="h-50 sm:h-58 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
                   <button
                     type="button"
                     onClick={() => bgInputRef.current?.click()}
