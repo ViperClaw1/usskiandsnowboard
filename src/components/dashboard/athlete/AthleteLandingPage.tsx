@@ -255,7 +255,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     >
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
-          <Card className="overflow-visible sm:overflow-hidden border shadow-elegant">
+          <Card className="overflow-visible sm:overflow-hidden rounded-lg border shadow-elegant">
             {/* Banner — relative container for the absolute profile row on sm+ */}
             <div className="relative overflow-visible">
               {/* Background image / gradient */}

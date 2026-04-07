@@ -328,7 +328,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
     >
       <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
-          <Card className="overflow-visible sm:overflow-hidden rounded-xl border shadow-elegant">
+          <Card className="overflow-visible sm:overflow-hidden rounded-lg border shadow-elegant">
             <div className="relative overflow-visible">
               {/* Background image / gradient */}
               {bgUrl ? (
