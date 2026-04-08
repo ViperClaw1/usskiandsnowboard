@@ -50,6 +50,25 @@ const passwordRules = [
   { label: "At least one special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>_\-+=\\[\]/;'`~]/.test(p) },
 ];
 
+const SIGNUP_COOLDOWN_SECONDS = 45;
+const RESEND_COOLDOWN_SECONDS = 90;
+
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+const throttleKey = (scope: "signup" | "resend", email: string) => `auth:${scope}:${normalizeEmail(email)}`;
+const nowSeconds = () => Math.floor(Date.now() / 1000);
+const setThrottleUntil = (scope: "signup" | "resend", email: string, secondsFromNow: number) => {
+  const key = throttleKey(scope, email);
+  localStorage.setItem(key, String(nowSeconds() + secondsFromNow));
+};
+const getThrottleRemaining = (scope: "signup" | "resend", email: string) => {
+  const key = throttleKey(scope, email);
+  const raw = localStorage.getItem(key);
+  const until = raw ? Number(raw) : 0;
+  if (!until) return 0;
+  const remaining = until - nowSeconds();
+  return remaining > 0 ? remaining : 0;
+};
+
 /**
  * Returns true if the user account was created within the last 60 seconds.
  * Used to detect brand-new OAuth sign-ups that should be blocked.
@@ -210,6 +229,15 @@ const Auth = () => {
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
+  useEffect(() => {
+    const normalized = normalizeEmail(email);
+    if (!normalized) {
+      setResendCooldown(0);
+      return;
+    }
+    setResendCooldown(getThrottleRemaining("resend", normalized));
+  }, [email]);
+
   // Handle OAuth error redirects: read from the real URL so we're not dependent on
   // React Router's location (which can be stale on full-page redirect).
   useEffect(() => {
@@ -297,11 +325,25 @@ const Auth = () => {
   // ==============================
 
   const handleResendVerification = async () => {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+      toast.error("Enter your email first to resend verification.");
+      return;
+    }
+
+    const remaining = getThrottleRemaining("resend", normalizedEmail);
+    if (remaining > 0) {
+      setResendCooldown(remaining);
+      toast.error(`Please wait ${remaining}s before requesting another verification email.`);
+      return;
+    }
+
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email });
+      const { error } = await supabase.auth.resend({ type: "signup", email: normalizedEmail });
       if (error) throw error;
       toast.success("Verification email sent! Check your inbox.");
-      setResendCooldown(60);
+      setThrottleUntil("resend", normalizedEmail, RESEND_COOLDOWN_SECONDS);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (error: any) {
       toast.error(error.message || "Failed to resend verification email.");
     }
@@ -334,6 +376,13 @@ const Auth = () => {
       return;
     }
 
+    const normalizedEmail = normalizeEmail(email);
+    const signupRemaining = getThrottleRemaining("signup", normalizedEmail);
+    if (signupRemaining > 0) {
+      setFormError(`Please wait ${signupRemaining}s before trying to sign up again.`);
+      return;
+    }
+
     setLoading(true);
     try {
       if (step === "signup-with-code") {
@@ -346,7 +395,7 @@ const Auth = () => {
       }
 
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           data: { full_name: fullName, user_type: userType },
@@ -362,7 +411,9 @@ const Auth = () => {
       }
 
       toast.success("Account created! Please check your email to verify your account.");
-      navigate("/email-verification");
+      setThrottleUntil("signup", normalizedEmail, SIGNUP_COOLDOWN_SECONDS);
+      localStorage.setItem("pending_verification_email", normalizedEmail);
+      navigate("/email-verification", { state: { email: normalizedEmail } });
       setEmail("");
       setPassword("");
       setConfirmPassword("");
@@ -390,10 +441,17 @@ const Auth = () => {
 
     // Experts should self-sign up directly and use their existing dashboard onboarding.
     if (userType === "expert") {
+      const normalizedEmail = normalizeEmail(email);
+      const signupRemaining = getThrottleRemaining("signup", normalizedEmail);
+      if (signupRemaining > 0) {
+        setFormError(`Please wait ${signupRemaining}s before trying to sign up again.`);
+        return;
+      }
+
       setLoading(true);
       try {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: normalizedEmail,
           password,
           options: {
             data: { full_name: fullName, user_type: userType },
@@ -408,7 +466,9 @@ const Auth = () => {
         }
 
         toast.success("Account created! Please check your email to verify your account.");
-        navigate("/email-verification");
+        setThrottleUntil("signup", normalizedEmail, SIGNUP_COOLDOWN_SECONDS);
+        localStorage.setItem("pending_verification_email", normalizedEmail);
+        navigate("/email-verification", { state: { email: normalizedEmail } });
         setEmail("");
         setPassword("");
         setConfirmPassword("");
@@ -420,37 +480,6 @@ const Auth = () => {
       } finally {
         setLoading(false);
       }
-    }
-
-    // Check whether this email already has an account before advancing to the
-    // waitlist profile-data step. Supabase returns identities:[] (no error) when
-    // the email is already registered, so we use that as a cheap existence probe.
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName, user_type: userType } },
-      });
-
-      if (error) {
-        setFormError(mapAuthError(error.message || "Failed to verify email."));
-        return;
-      }
-
-      if (data.user?.identities?.length === 0) {
-        setFormError("An account with this email already exists. Try signing in instead.");
-        return;
-      }
-
-      // A new account was created by the probe — sign it out immediately so the
-      // waitlist flow stays clean. The user will be properly provisioned later.
-      await supabase.auth.signOut();
-    } catch (err: any) {
-      setFormError(mapAuthError(err.message || "Failed to verify email."));
-      return;
-    } finally {
-      setLoading(false);
     }
 
     // Store basic info for waitlist submission

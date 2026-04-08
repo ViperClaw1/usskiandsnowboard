@@ -2,8 +2,8 @@
 // Imports
 // ==============================
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,18 +22,42 @@ export default function EmailVerification() {
   // ==============================
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const stateEmail = (location.state as { email?: string } | null)?.email;
+  const targetEmail = useMemo(() => {
+    const fromState = typeof stateEmail === "string" ? stateEmail.trim().toLowerCase() : "";
+    const fromStorage = (localStorage.getItem("pending_verification_email") || "").trim().toLowerCase();
+    return fromState || fromStorage;
+  }, [stateEmail]);
+
+  const cooldownKey = useMemo(() => (targetEmail ? `auth:resend:${targetEmail}` : ""), [targetEmail]);
+
+  useEffect(() => {
+    if (!cooldownKey) return;
+    const raw = localStorage.getItem(cooldownKey);
+    const until = raw ? Number(raw) : 0;
+    const now = Math.floor(Date.now() / 1000);
+    const remaining = until > now ? until - now : 0;
+    setCooldown(remaining);
+  }, [cooldownKey]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   // ==============================
   // Handlers
   // ==============================
 
   const handleResendEmail = async () => {
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user?.email) {
+    if (!targetEmail) {
       toast({
         title: "Error",
         description: "No email found. Please sign in again.",
@@ -43,9 +67,18 @@ export default function EmailVerification() {
       return;
     }
 
+    if (cooldown > 0) {
+      toast({
+        title: "Please wait",
+        description: `You can resend again in ${cooldown}s.`,
+      });
+      return;
+    }
+
+    setLoading(true);
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email: user.email,
+      email: targetEmail,
     });
 
     setLoading(false);
@@ -58,6 +91,10 @@ export default function EmailVerification() {
       });
     } else {
       setResent(true);
+      const nextCooldown = 90;
+      const until = Math.floor(Date.now() / 1000) + nextCooldown;
+      if (cooldownKey) localStorage.setItem(cooldownKey, String(until));
+      setCooldown(nextCooldown);
       toast({
         title: "Email sent!",
         description: "Check your inbox for the verification link.",
@@ -95,11 +132,11 @@ export default function EmailVerification() {
             </p>
             <Button
               onClick={handleResendEmail}
-              disabled={loading || resent}
+              disabled={loading || resent || cooldown > 0 || !targetEmail}
               className="w-full"
               variant="outline"
             >
-              {loading ? "Sending..." : "Resend verification email"}
+              {loading ? "Sending..." : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend verification email"}
             </Button>
           </div>
 
