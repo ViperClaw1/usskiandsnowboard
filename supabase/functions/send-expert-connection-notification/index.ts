@@ -187,7 +187,8 @@ Deno.serve(async (req) => {
       }
     } else if (notification_type === "request_accepted") {
       // ── Joint introduction email, but personalized separately for each recipient ──
-      const subject = `${athleteFullName} <> ${expertFullName} — Athlete Connection Introduction`;
+      const athleteSubject = `${athleteFullName} <> ${expertFullName} — Athlete Connection Introduction`;
+      const expertSubject = `${expertFullName} <> ${athleteFullName} — Expert Connection Introduction`;
       const expertiseLabel = expert.area_of_expertise ?? expert.job_title ?? "their field";
       const messageCard = (label: string) =>
         ecr.message
@@ -232,7 +233,7 @@ Deno.serve(async (req) => {
           <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
             <strong>${athleteFirstName},</strong> Please meet <strong>${expertFullName}</strong>, an expert in <strong>${expertiseLabel}</strong> who is happy to speak to you about their professional experience.
           </p>
-          ${messageCard(`Message from ${athleteFirstName}`)}
+          ${messageCard(`MESSAGE FROM ${athleteFirstName.toUpperCase()}`)}
           <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
             <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
           </p>
@@ -245,7 +246,10 @@ Deno.serve(async (req) => {
 
       const sendAcceptedEmail = async (recipient: "athlete" | "expert", toEmail: string | null) => {
         if (!toEmail) return false;
-        const html = emailTemplate("Athlete Connection Introduction", buildAcceptedBodyHtml(recipient));
+        const subject = recipient === "athlete" ? athleteSubject : expertSubject;
+        const title = recipient === "athlete" ? "Athlete Connection Introduction" : "Expert Connection Introduction";
+        const html = emailTemplate(title, buildAcceptedBodyHtml(recipient));
+        console.log(`[expert-notif] Sending request_accepted ${recipient} intro TO: ${toEmail} subject="${subject}"`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [toEmail],
@@ -273,7 +277,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [CC_ADDRESS],
-          subject: `[Missing Emails] ${subject}`,
+          subject: `[Missing Emails] ${athleteSubject}`,
           html,
         });
       }
