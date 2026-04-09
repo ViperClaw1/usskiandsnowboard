@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
           </p>
           ${messageCard(`MESSAGE FROM ${athleteFirstName.toUpperCase()}`)}
           <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-            <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
+            <strong>${athleteFirstName}</strong> will take it from here to introduce themselves and find time to connect.
           </p>
           <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
             Cheers,<br/>
