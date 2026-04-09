@@ -1,39 +1,43 @@
 
 
-## Plan: Fix AI Profile Auto-Fill Image Upload and Post-Completion Dialog
+## Align Expert Connection Email Templates with Partner Flow
 
-### Problem Summary
-1. **Photo URLs not rendering**: AI extracts external image URLs (e.g., from Instagram/LinkedIn/websites) but stores them directly. These external URLs often fail to load due to CORS, hotlinking protection, or expiration.
-2. **Dialog shows "Complete Your Profile" choice instead of edit form**: After AI auto-fill creates the profile, the `refreshKey` increment triggers a re-mount. However, each dashboard component checks `profile ? <EditForm> : <ChoiceDialog>`. The `useQuery` cache may not yet have the new profile when the dialog opens, so it shows the choice dialog.
+### Summary
 
-### Solution
+Rewrite the three notification types in `send-expert-connection-notification/index.ts` so that:
 
-#### 1. Download and re-upload external images to Supabase Storage (profileUpsertService.ts)
+1. **request_created** — Uses the structured "New Connection Request" card template (matching the athlete-partner `newRequestBody` pattern): expert profile card with name, expertise, message, and a "Review Request" CTA button. Sent TO the expert, CC admin.
 
-Add a helper function `uploadExternalImage(userId, externalUrl, bucket)` that:
-- Fetches the external image via `fetch()`
-- Uploads it to the appropriate Supabase storage bucket (`athlete-photos`, `company-logos`, or `expert-photos`)
-- Returns the Supabase public URL
-- Falls back to `null` if the fetch/upload fails (non-blocking)
+2. **request_accepted** — Uses the current `request_created` introduction template (the joint "Please meet..." email sent to BOTH athlete and expert, CC admin). This is the same introductory format currently in the expert notification function.
 
-Call this helper in each upsert function:
-- `upsertAthleteProfile`: upload `profileData.photo_url` to `athlete-photos` bucket, store result in `athleteFields.photo_url`
-- `upsertEmployerProfile`: upload `profileData.logo_url` to `company-logos` bucket, store result in `employerFields.logo_url`
-- `upsertExpertProfile`: upload `profileData.photo_url` to `expert-photos` bucket, store result in `expertFields.photo_url`
+3. **request_declined** — No changes, keeps the current template.
 
-#### 2. Fix post-AI dialog behavior (AthleteDashboard, EmployerDashboard, ExpertDashboard)
+### Changes (single file)
 
-The issue: after AI auto-fill completes, the `onComplete` callback in `Dashboard.tsx` increments `refreshKey`, causing the dashboard to remount. But when the user later clicks "Edit Profile" or the pen icon, the dialog still checks `profile ? <EditForm> : <ChoiceDialog>`.
+**`supabase/functions/send-expert-connection-notification/index.ts`**
 
-Since AI auto-fill creates/updates the profile, the query cache should have data. The fix is to ensure query invalidation happens before the dashboard remounts. In `Dashboard.tsx`'s `AIProfilePopulator.onComplete`:
-- Also invalidate the per-role profile query keys (`athleteProfileKey`, `employerProfileKey`, `expert-own-profile`) so the re-mounted dashboard fetches fresh data immediately.
+- **request_created** block (lines 136-182): Replace the inline introduction-style body with a structured card template mirroring `newRequestBody` from the partner flow:
+  - "Hello [Expert], You have received a new connection request from [Athlete]!"
+  - Profile card showing athlete name, sport, bio (fetched from athlete_profiles), and the optional message
+  - "Review Request" button linking to `/dashboard`
+  - Sent TO expert only, CC admin
+  - Need to also fetch `bio` from athlete_profiles — update the select query (line 85-91) to include `bio`
 
-Additionally, in each dashboard's `openProfileDialog` effect, when the profile already exists, set `dialogStep` to skip the choice dialog:
-- **ExpertDashboard** (line 78-84): When `openProfileDialog` fires, check if profile exists and set `dialogStep` to `"manual"` instead of `"choice"`
-- **AthleteDashboard** and **EmployerDashboard** already handle this correctly via `profile ? <EditForm> : <ChoiceDialog>` — the issue is stale cache, so invalidation fixes it.
+- **request_accepted** block (lines 183-220): Replace the simple "approved" notification with the joint introduction email (the current `request_created` body):
+  - Addressed to expert first name, introduces athlete with sport
+  - Addressed to athlete first name, introduces expert with area_of_expertise/job_title
+  - Includes original message if present
+  - "Expert will take it from here" closing
+  - Sent TO both athlete AND expert, CC admin
+  - Subject becomes `"[Athlete] <> [Expert] — Athlete Connection Introduction"`
 
-### Files Modified
-- `src/services/profileUpsertService.ts` — add `uploadExternalImage` helper, call it in all three upsert functions
-- `src/pages/Dashboard.tsx` — invalidate role-specific profile query keys in AI populator's `onComplete`
-- `src/components/dashboard/ExpertDashboard.tsx` — fix `openProfileDialog` effect to set `dialogStep = "manual"` when profile exists
+- **request_declined** block: No changes.
+
+- **Query update** (line 85-91): Add `bio` to `athlete_profiles` select fields.
+
+### Technical Details
+
+- The `appUrl` constant (`https://usskiandsnowboard.lovable.app`) will be added for the CTA button URL.
+- For `request_accepted`, the `to` array will include both `expertEmail` and `athleteEmail` (filtering nulls), matching the partner flow's `introductionBody` pattern.
+- The function will be redeployed after changes.
 
