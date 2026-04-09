@@ -10,6 +10,7 @@ const corsHeaders = {
 
 const CC_ADDRESS = "michele.lowry@usskiandsnowboard.org";
 const FROM_ADDRESS = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
+const APP_URL = "https://usskiandsnowboard.lovable.app";
 
 /** PostgREST may return a joined row as an object or a single-element array — normalize. */
 function unwrapJoined<T>(value: T | T[] | null | undefined): T | null {
