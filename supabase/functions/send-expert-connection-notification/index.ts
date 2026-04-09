@@ -10,6 +10,7 @@ const corsHeaders = {
 
 const CC_ADDRESS = "michele.lowry@usskiandsnowboard.org";
 const FROM_ADDRESS = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
+const APP_URL = "https://usskiandsnowboard.lovable.app";
 
 /** PostgREST may return a joined row as an object or a single-element array — normalize. */
 function unwrapJoined<T>(value: T | T[] | null | undefined): T | null {
@@ -87,6 +88,7 @@ Deno.serve(async (req) => {
           user_id,
           sport_discipline,
           email,
+          bio,
           profiles!inner(full_name, email)
         )
       `)
@@ -134,7 +136,57 @@ Deno.serve(async (req) => {
     console.log(`[expert-notif] type=${notification_type} request=${request_id} expertEmail=${expertEmail} athleteEmail=${athleteEmail}`);
 
     if (notification_type === "request_created") {
-      // ── Recipient: EXPERT only (CC admin) ──
+      // ── Recipient: EXPERT only (CC admin) — structured "New Request" card ──
+      const athleteBio = athlete.bio ?? "";
+      const subject = `New Connection Request from ${athleteFullName}`;
+      const bodyHtml = `
+        <p style="font-size:16px; color:#333; margin:0 0 20px;">
+          Hello <strong>${expertFirstName}</strong>,
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          You have received a new connection request from <strong>${athleteFullName}</strong>!
+        </p>
+        <div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:8px; padding:20px; margin:0 0 20px;">
+          <p style="font-size:15px; color:#333; margin:0 0 8px;"><strong>${athleteFullName}</strong></p>
+          <p style="font-size:14px; color:#666; margin:0 0 8px;">Sport: <strong>${athleteSport}</strong></p>
+          ${athleteBio ? `<p style="font-size:14px; color:#555; margin:0 0 12px; line-height:1.5;">${athleteBio}</p>` : ""}
+          ${ecr.message ? `
+          <div style="border-top:1px solid #dee2e6; padding-top:12px; margin-top:12px;">
+            <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Message from ${athleteFirstName}</p>
+            <p style="font-size:14px; color:#333; margin:0; font-style:italic;">"${ecr.message}"</p>
+          </div>
+          ` : ""}
+        </div>
+        <div style="text-align:center; margin:0 0 24px;">
+          <a href="${APP_URL}/dashboard" style="display:inline-block; background:#0066cc; color:#ffffff; text-decoration:none; padding:12px 32px; border-radius:6px; font-size:15px; font-weight:600;">Review Request</a>
+        </div>
+        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
+          Cheers,<br/>
+          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
+        </p>
+      `;
+      const html = emailTemplate("New Connection Request", bodyHtml);
+
+      if (expertEmail) {
+        console.log(`[expert-notif] Sending request_created TO expert: ${expertEmail}`);
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [expertEmail],
+          cc: [CC_ADDRESS],
+          subject,
+          html,
+        });
+      } else {
+        console.warn(`[expert-notif] Expert email missing, sending to CC only`);
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [CC_ADDRESS],
+          subject: `[Missing Expert Email] ${subject}`,
+          html,
+        });
+      }
+    } else if (notification_type === "request_accepted") {
+      // ── Joint introduction email TO both athlete AND expert (CC admin) ──
       const subject = `${athleteFullName} <> ${expertFullName} — Athlete Connection Introduction`;
       const bodyHtml = `
         <p style="font-size:16px; color:#333; margin:0 0 20px;">
@@ -162,59 +214,22 @@ Deno.serve(async (req) => {
       `;
       const html = emailTemplate("Athlete Connection Introduction", bodyHtml);
 
-      if (expertEmail) {
-        console.log(`[expert-notif] Sending request_created TO expert: ${expertEmail}`);
+      const toAddresses = [expertEmail, athleteEmail].filter(Boolean) as string[];
+      if (toAddresses.length > 0) {
+        console.log(`[expert-notif] Sending request_accepted introduction TO: ${toAddresses.join(", ")}`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
-          to: [expertEmail],
+          to: toAddresses,
           cc: [CC_ADDRESS],
           subject,
           html,
         });
       } else {
-        console.warn(`[expert-notif] Expert email missing, sending to CC only`);
+        console.warn(`[expert-notif] Both emails missing, sending to CC only`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [CC_ADDRESS],
-          subject: `[Missing Expert Email] ${subject}`,
-          html,
-        });
-      }
-    } else if (notification_type === "request_accepted") {
-      // ── Recipient: ATHLETE only (CC admin) ──
-      const subject = "Your expert connection request was approved";
-      const bodyHtml = `
-        <p style="font-size:16px; color:#333; margin:0 0 20px;">
-          Hello <strong>${athleteFirstName}</strong>,
-        </p>
-        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-          Great news — <strong>${expertFullName}</strong> has approved your connection request.
-        </p>
-        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-          You can now continue the conversation directly.
-        </p>
-        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
-          Cheers,<br/>
-          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
-        </p>
-      `;
-      const html = emailTemplate("Connection Request Approved", bodyHtml);
-
-      if (athleteEmail) {
-        console.log(`[expert-notif] Sending request_accepted TO athlete: ${athleteEmail}`);
-        await sendEmail(resend, {
-          from: FROM_ADDRESS,
-          to: [athleteEmail],
-          cc: [CC_ADDRESS],
-          subject,
-          html,
-        });
-      } else {
-        console.warn(`[expert-notif] Athlete email missing, sending to CC only`);
-        await sendEmail(resend, {
-          from: FROM_ADDRESS,
-          to: [CC_ADDRESS],
-          subject: `[Missing Athlete Email] ${subject}`,
+          subject: `[Missing Emails] ${subject}`,
           html,
         });
       }
