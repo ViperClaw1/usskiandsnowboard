@@ -97,7 +97,8 @@ const fetchDirectoryAthletes = async (): Promise<AthleteProfile[]> => {
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(`*, profiles(full_name)`)
-    .eq("is_public", true);
+    .eq("is_public", true)
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
 

@@ -102,7 +102,7 @@ const Employers = () => {
           `id, user_id, company_name, industry, logo_url, about,
            connection_to_ussa, opportunities_offered, profile_views`,
         )
-        .order("profile_views", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(3);
       if (error) throw error;
       return data ?? [];

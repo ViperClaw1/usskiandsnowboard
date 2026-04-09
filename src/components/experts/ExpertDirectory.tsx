@@ -67,7 +67,7 @@ const fetchExperts = async (): Promise<ExpertProfile[]> => {
     .select("*")
     // Legacy expert rows may have is_public = null. Treat null as public.
     .or("is_public.is.true,is_public.is.null")
-    .order("full_name");
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as ExpertProfile[];
 };

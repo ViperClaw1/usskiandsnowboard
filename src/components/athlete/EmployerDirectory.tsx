@@ -60,7 +60,10 @@ const ATHLETE_PROFILE_KEY = ["employer-directory-athlete-profile"];
 // ==============================
 
 const fetchDirectoryEmployers = async (): Promise<EmployerProfile[]> => {
-  const { data, error } = await supabase.from("employer_profiles").select("*");
+  const { data, error } = await supabase
+    .from("employer_profiles")
+    .select("*")
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return (data as unknown as EmployerProfile[]) ?? [];
 };

@@ -86,7 +86,7 @@ const Athletes = () => {
            profiles!inner(full_name)`,
         )
         .eq("is_public", true)
-        .order("profile_views", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(3);
       if (error) throw error;
       return data ?? [];
