@@ -33,7 +33,9 @@ async function resolveExpertInboxEmail(
   const uid = expert.user_id;
   if (!uid) return null;
 
-  const { data: prof } = await supabase.from("profiles").select("email").eq("id", uid).maybeSingle() as { data: { email?: string } | null };
+  const { data: prof } = (await supabase.from("profiles").select("email").eq("id", uid).maybeSingle()) as {
+    data: { email?: string } | null;
+  };
   const fromProfile = prof?.email;
   if (typeof fromProfile === "string" && fromProfile.trim()) {
     return fromProfile.trim();
@@ -72,7 +74,8 @@ Deno.serve(async (req) => {
     // Fetch the request with expert and athlete data
     const { data: ecr, error: ecrErr } = await supabase
       .from("expert_connection_requests")
-      .select(`
+      .select(
+        `
         id,
         message,
         expert_profiles!inner(
@@ -91,7 +94,8 @@ Deno.serve(async (req) => {
           bio,
           profiles!inner(full_name, email)
         )
-      `)
+      `,
+      )
       .eq("id", request_id)
       .single();
 
@@ -123,17 +127,17 @@ Deno.serve(async (req) => {
     // Resolve emails — athlete falls back to profiles.email
     const athleteEmail: string | null =
       (typeof athlete.email === "string" && athlete.email.trim() ? athlete.email.trim() : null) ||
-      (typeof athleteProfile?.email === "string" && athleteProfile.email.trim()
-        ? athleteProfile.email.trim()
-        : null);
+      (typeof athleteProfile?.email === "string" && athleteProfile.email.trim() ? athleteProfile.email.trim() : null);
 
     const expertEmail: string | null = await resolveExpertInboxEmail(supabase, expert);
 
     const athleteSport = Array.isArray(athlete.sport_discipline)
       ? athlete.sport_discipline.join(", ")
-      : athlete.sport_discipline ?? "winter sports";
+      : (athlete.sport_discipline ?? "winter sports");
 
-    console.log(`[expert-notif] type=${notification_type} request=${request_id} expertEmail=${expertEmail} athleteEmail=${athleteEmail}`);
+    console.log(
+      `[expert-notif] type=${notification_type} request=${request_id} expertEmail=${expertEmail} athleteEmail=${athleteEmail}`,
+    );
 
     if (notification_type === "request_created") {
       // ── Recipient: EXPERT only (CC admin) — structured "New Request" card ──
@@ -150,12 +154,16 @@ Deno.serve(async (req) => {
           <p style="font-size:15px; color:#333; margin:0 0 8px;"><strong>${athleteFullName}</strong></p>
           <p style="font-size:14px; color:#666; margin:0 0 8px;">Sport: <strong>${athleteSport}</strong></p>
           ${athleteBio ? `<p style="font-size:14px; color:#555; margin:0 0 12px; line-height:1.5;">${athleteBio}</p>` : ""}
-          ${ecr.message ? `
+          ${
+            ecr.message
+              ? `
           <div style="border-top:1px solid #dee2e6; padding-top:12px; margin-top:12px;">
             <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Message from ${athleteFirstName}</p>
             <p style="font-size:14px; color:#333; margin:0; font-style:italic;">"${ecr.message}"</p>
           </div>
-          ` : ""}
+          `
+              : ""
+          }
         </div>
         <div style="text-align:center; margin:0 0 24px;">
           <a href="${APP_URL}/dashboard" style="display:inline-block; background:#0066cc; color:#ffffff; text-decoration:none; padding:12px 32px; border-radius:6px; font-size:15px; font-weight:600;">Review Request</a>
@@ -333,9 +341,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("send-expert-connection-notification error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
