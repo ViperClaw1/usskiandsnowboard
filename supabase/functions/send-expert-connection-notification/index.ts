@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
           user_id,
           sport_discipline,
           email,
+          bio,
           profiles!inner(full_name, email)
         )
       `)
