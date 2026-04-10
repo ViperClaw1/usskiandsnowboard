@@ -358,6 +358,43 @@ const Auth = () => {
     return Number(data?.cooldown_remaining || 0);
   };
 
+  const signUpWithCustomVerification = async (params: {
+    email: string;
+    password: string;
+    fullName: string;
+    userType: "athlete" | "employer" | "expert";
+  }) => {
+    const { data, error } = await supabase.functions.invoke("send-verification-email", {
+      body: {
+        email: params.email,
+        password: params.password,
+        full_name: params.fullName,
+        user_type: params.userType,
+        source: "signup",
+        redirect_to: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      let message = error.message || "Failed to create account.";
+      try {
+        if (typeof (error as any).context?.json === "function") {
+          const body = await (error as any).context.json();
+          message = body?.error || message;
+        }
+      } catch {
+        // keep fallback error message
+      }
+      throw new Error(message);
+    }
+
+    if (!data?.success) {
+      throw new Error(data?.error || "Failed to create account.");
+    }
+
+    return Number(data?.cooldown_remaining || SIGNUP_COOLDOWN_SECONDS);
+  };
+
   const handleResendVerification = async () => {
     const normalizedEmail = normalizeEmail(email);
     if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
@@ -433,30 +470,12 @@ const Auth = () => {
         }
       }
 
-      const { data, error } = await supabase.auth.signUp({
+      const signupCooldown = await signUpWithCustomVerification({
         email: normalizedEmail,
         password,
-        options: {
-          data: { full_name: fullName, user_type: userType },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
+        fullName,
+        userType,
       });
-
-      if (error) throw error;
-      if (data.user?.identities?.length === 0) {
-        setFormError("An account with this email already exists. Try signing in instead.");
-        setLoading(false);
-        return;
-      }
-
-      let signupCooldown = SIGNUP_COOLDOWN_SECONDS;
-      try {
-        const serverCooldown = await sendVerificationEmail(normalizedEmail, "signup");
-        signupCooldown = serverCooldown || SIGNUP_COOLDOWN_SECONDS;
-      } catch (sendError: any) {
-        console.error("Failed to trigger custom verification email:", sendError);
-        toast.error(sendError?.message || "Account created, but we could not send verification email automatically.");
-      }
 
       toast.success("Account created! Please check your email to verify your account.");
       setThrottleUntil("signup", normalizedEmail, signupCooldown);
@@ -498,29 +517,12 @@ const Auth = () => {
 
       setLoading(true);
       try {
-        const { data, error } = await supabase.auth.signUp({
+        const signupCooldown = await signUpWithCustomVerification({
           email: normalizedEmail,
           password,
-          options: {
-            data: { full_name: fullName, user_type: userType },
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-          },
+          fullName,
+          userType,
         });
-
-        if (error) throw error;
-        if (data.user?.identities?.length === 0) {
-          setFormError("An account with this email already exists. Try signing in instead.");
-          return;
-        }
-
-        let signupCooldown = SIGNUP_COOLDOWN_SECONDS;
-        try {
-          const serverCooldown = await sendVerificationEmail(normalizedEmail, "signup");
-          signupCooldown = serverCooldown || SIGNUP_COOLDOWN_SECONDS;
-        } catch (sendError: any) {
-          console.error("Failed to trigger custom verification email:", sendError);
-          toast.error(sendError?.message || "Account created, but we could not send verification email automatically.");
-        }
 
         toast.success("Account created! Please check your email to verify your account.");
         setThrottleUntil("signup", normalizedEmail, signupCooldown);

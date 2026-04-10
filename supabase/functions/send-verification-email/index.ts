@@ -12,6 +12,7 @@ const FROM = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type VerificationSource = "signup" | "resend";
+type SignupUserType = "athlete" | "employer" | "expert";
 
 const SOURCE_COOLDOWN_SECONDS: Record<VerificationSource, number> = {
   signup: 60,
@@ -64,6 +65,9 @@ Deno.serve(async (req) => {
     const rawEmail = typeof body?.email === "string" ? body.email : "";
     const normalizedEmail = normalizeEmail(rawEmail);
     const source: VerificationSource = body?.source === "signup" ? "signup" : "resend";
+    const password = typeof body?.password === "string" ? body.password : "";
+    const fullName = typeof body?.full_name === "string" ? body.full_name.trim() : "";
+    const userType: SignupUserType = body?.user_type === "employer" || body?.user_type === "expert" ? body.user_type : "athlete";
     const redirectTo =
       typeof body?.redirect_to === "string" && body.redirect_to.trim()
         ? body.redirect_to.trim()
@@ -71,6 +75,13 @@ Deno.serve(async (req) => {
 
     if (!normalizedEmail || !EMAIL_REGEX.test(normalizedEmail)) {
       return new Response(JSON.stringify({ error: "Valid email is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (source === "signup" && !password) {
+      return new Response(JSON.stringify({ error: "Password is required for signup." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -142,16 +153,51 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (source === "signup") {
+      const { error: createUserError } = await supabase.auth.admin.createUser({
+        email: normalizedEmail,
+        password,
+        email_confirm: false,
+        user_metadata: {
+          full_name: fullName,
+          user_type: userType,
+        },
+      });
+
+      if (createUserError) {
+        const message = (createUserError.message || "").toLowerCase();
+        if (message.includes("already been registered") || message.includes("already registered")) {
+          return new Response(JSON.stringify({ error: "An account with this email already exists. Try signing in instead." }), {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        console.error("createUser error:", createUserError);
+        return new Response(JSON.stringify({ error: "Failed to create account." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Generate a verification-capable link.
     let linkData: any = null;
     let linkError: any = null;
 
-    ({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: "signup",
-      email: normalizedEmail,
-      password: crypto.randomUUID(),
-      options: { redirectTo },
-    }));
+    if (source === "signup") {
+      ({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email: normalizedEmail,
+        options: { redirectTo },
+      }));
+    } else {
+      ({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: "signup",
+        email: normalizedEmail,
+        password: crypto.randomUUID(),
+        options: { redirectTo },
+      }));
+    }
 
     if (linkError && linkError.message?.toLowerCase().includes("already been registered")) {
       ({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
