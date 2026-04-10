@@ -1170,7 +1170,9 @@ const WaitlistProfileStep = ({
                 <CardDescription>
                   {userType === "athlete"
                     ? "Enter your Instagram URL and we'll extract your profile automatically."
-                    : "Enter your company website and we'll extract your profile automatically."}
+                    : userType === "expert"
+                      ? "Enter your full name and LinkedIn URL and we'll extract your profile automatically."
+                      : "Enter your company website and we'll extract your profile automatically."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1187,6 +1189,31 @@ const WaitlistProfileStep = ({
                       onChange={(e) => setAiUrl(e.target.value)}
                     />
                   </div>
+                ) : userType === "expert" ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-full-name">Full Name</Label>
+                      <Input
+                        id="ai-full-name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={fullName}
+                        readOnly
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-url" className="flex items-center gap-1">
+                        <Globe className="h-3.5 w-3.5" /> LinkedIn URL
+                      </Label>
+                      <Input
+                        id="ai-url"
+                        type="url"
+                        placeholder="https://linkedin.com/in/..."
+                        value={aiUrl}
+                        onChange={(e) => setAiUrl(e.target.value)}
+                      />
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="space-y-2">
