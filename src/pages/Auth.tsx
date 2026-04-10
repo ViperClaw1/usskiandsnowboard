@@ -506,42 +506,7 @@ const Auth = () => {
       return;
     }
 
-    // Experts should self-sign up directly and use their existing dashboard onboarding.
-    if (userType === "expert") {
-      const normalizedEmail = normalizeEmail(email);
-      const signupRemaining = getThrottleRemaining("signup", normalizedEmail);
-      if (signupRemaining > 0) {
-        setFormError(`Please wait ${signupRemaining}s before trying to sign up again.`);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const signupCooldown = await signUpWithCustomVerification({
-          email: normalizedEmail,
-          password,
-          fullName,
-          userType,
-        });
-
-        toast.success("Account created! Please check your email to verify your account.");
-        setThrottleUntil("signup", normalizedEmail, signupCooldown);
-        localStorage.setItem("pending_verification_email", normalizedEmail);
-        navigate("/email-verification", { state: { email: normalizedEmail } });
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-        setFullName("");
-        return;
-      } catch (err: any) {
-        setFormError(mapAuthError(err.message || "Failed to create account"));
-        return;
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // Store basic info for waitlist submission
+    // No-code signups always go through waitlist (athlete, employer, and expert).
     setProfileData({ full_name: fullName, email, user_type: userType });
     setStep("profile-data");
   };
@@ -721,7 +686,7 @@ const Auth = () => {
     return (
       <WaitlistProfileStep
         fullName={profileData.full_name || ""}
-        userType={profileData.user_type as "athlete" | "employer"}
+        userType={profileData.user_type as "athlete" | "employer" | "expert"}
         onBack={() => setStep("signup-no-code")}
         onRequestAccess={handleRequestAccess}
         isSubmitting={waitlistSubmitting}
@@ -1038,7 +1003,7 @@ const Auth = () => {
 // ==============================
 
 interface WaitlistProfileStepProps {
-  userType: "athlete" | "employer";
+  userType: "athlete" | "employer" | "expert";
   fullName: string;
   onBack: () => void;
   onRequestAccess: (profileData: Record<string, any>) => void;
@@ -1077,8 +1042,12 @@ const WaitlistProfileStep = ({
     header: "Welcome, Partner!",
     body: "You're one step away from discovering top athletes. Share your company details to complete your profile.",
   };
+  const expertWelcome = {
+    header: "Welcome, Expert!",
+    body: "You're one step away from joining the platform. Share your professional details to complete your profile.",
+  };
 
-  const welcome = userType === "athlete" ? athleteWelcome : partnerWelcome;
+  const welcome = userType === "athlete" ? athleteWelcome : userType === "expert" ? expertWelcome : partnerWelcome;
 
   const updateField = (key: string, value: any) => setFormData((prev) => ({ ...prev, [key]: value }));
 
