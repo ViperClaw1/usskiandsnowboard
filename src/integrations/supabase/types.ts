@@ -489,6 +489,30 @@ export type Database = {
           },
         ]
       }
+      email_verification_send_log: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          requester_ip: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          requester_ip: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          requester_ip?: string
+          source?: string
+        }
+        Relationships: []
+      }
       employer_profiles: {
         Row: {
           about: string | null
