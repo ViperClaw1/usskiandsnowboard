@@ -22,8 +22,8 @@ serve(async (req) => {
       });
     }
 
-    if (!["athlete", "employer"].includes(user_type)) {
-      return new Response(JSON.stringify({ error: "user_type must be 'athlete' or 'employer'" }), {
+    if (!["athlete", "employer", "expert"].includes(user_type)) {
+      return new Response(JSON.stringify({ error: "user_type must be 'athlete', 'employer', or 'expert'" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

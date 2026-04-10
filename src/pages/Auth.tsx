@@ -594,6 +594,7 @@ const Auth = () => {
       navigate("/waitlist");
     } catch (error: any) {
       toast.error(error.message || "Failed to submit application. Please try again.");
+      throw error;
     } finally {
       setWaitlistSubmitting(false);
     }
@@ -1006,7 +1007,7 @@ interface WaitlistProfileStepProps {
   userType: "athlete" | "employer" | "expert";
   fullName: string;
   onBack: () => void;
-  onRequestAccess: (profileData: Record<string, any>) => void;
+  onRequestAccess: (profileData: Record<string, any>) => Promise<void>;
   isSubmitting: boolean;
 }
 
