@@ -76,22 +76,40 @@ export default function EmailVerification() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: targetEmail,
+    const { data, error } = await supabase.functions.invoke("send-verification-email", {
+      body: {
+        email: targetEmail,
+        source: "resend",
+        redirect_to: `${window.location.origin}/dashboard`,
+      },
     });
-
     setLoading(false);
 
-    if (error) {
+    if (error || !data?.success) {
+      let message = error?.message || data?.error || "Failed to send verification email.";
+      let cooldownFromServer = Number(data?.cooldown_remaining || 0);
+      try {
+        if (error && typeof (error as any).context?.json === "function") {
+          const body = await (error as any).context.json();
+          message = body?.error || message;
+          cooldownFromServer = Number(body?.cooldown_remaining || cooldownFromServer || 0);
+        }
+      } catch {
+        // keep fallback message/cooldown
+      }
+      if (cooldownFromServer > 0) {
+        const until = Math.floor(Date.now() / 1000) + cooldownFromServer;
+        if (cooldownKey) localStorage.setItem(cooldownKey, String(until));
+        setCooldown(cooldownFromServer);
+      }
       toast({
         title: "Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } else {
       setResent(true);
-      const nextCooldown = 90;
+      const nextCooldown = Number(data?.cooldown_remaining || 90);
       const until = Math.floor(Date.now() / 1000) + nextCooldown;
       if (cooldownKey) localStorage.setItem(cooldownKey, String(until));
       setCooldown(nextCooldown);
@@ -132,7 +150,7 @@ export default function EmailVerification() {
             </p>
             <Button
               onClick={handleResendEmail}
-              disabled={loading || resent || cooldown > 0 || !targetEmail}
+              disabled={loading || cooldown > 0 || !targetEmail}
               className="w-full"
               variant="outline"
             >

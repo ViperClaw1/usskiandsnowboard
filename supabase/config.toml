@@ -10,6 +10,9 @@ verify_jwt = false
 [functions.resend-confirmation]
 verify_jwt = false
 
+[functions.send-verification-email]
+verify_jwt = false
+
 [functions.send-role-notification]
 verify_jwt = false
 

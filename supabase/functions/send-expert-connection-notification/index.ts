@@ -202,74 +202,80 @@ Deno.serve(async (req) => {
         ecr.message
           ? `
         <div style="background:#f8f9fa; border-left:4px solid #0066cc; padding:12px 16px; margin:0 0 16px; border-radius:0 4px 4px 0;">
-          <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">${label}</p>
+          <p style="font-size:13px; color:#666; margin:0 0 4px; font-weight:600; letter-spacing:0.5px;">${label}</p>
           <p style="font-size:14px; color:#333; margin:0; font-style:italic;">"${ecr.message}"</p>
         </div>
         `
           : "";
 
-      const buildAcceptedBodyHtml = (recipient: "athlete" | "expert") => {
-        if (recipient === "athlete") {
-          return `
-            <p style="font-size:16px; color:#333; margin:0 0 20px;">
-              <strong>${athleteFirstName},</strong>
-            </p>
-            <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-              Please meet <strong>${expertFullName}</strong>, an expert in <strong>${expertiseLabel}</strong> who is happy to speak to you about their professional experience.
-            </p>
-            <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-              <strong>${expertFirstName},</strong> Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
-            </p>
-            ${messageCard(`MESSAGE FROM ${athleteFirstName.toUpperCase()}`)}
-            <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-              <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
-            </p>
-            <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
-              Cheers,<br/>
-              <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
-            </p>
-          `;
-        }
+      const athleteBodyHtml = `
+        <p style="font-size:16px; color:#333; margin:0 0 20px;">
+          <strong>${athleteFirstName},</strong>
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          Please meet <strong>${expertFullName}</strong>, an expert in <strong>${expertiseLabel}</strong> who is happy to speak to you about their professional experience.
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          <strong>${expertFirstName},</strong> Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
+        </p>
+        ${messageCard(`MESSAGE FROM ${athleteFirstName.toUpperCase()}`)}
+        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
+          <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
+        </p>
+        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
+          Cheers,<br/>
+          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
+        </p>
+      `;
 
-        return `
-          <p style="font-size:16px; color:#333; margin:0 0 20px;">
-            <strong>${expertFirstName},</strong>
-          </p>
-          <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-            Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
-          </p>
-          <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
-            <strong>${athleteFirstName},</strong> Please meet <strong>${expertFullName}</strong>, an expert in <strong>${expertiseLabel}</strong> who is happy to speak to you about their professional experience.
-          </p>
-          ${messageCard(`MESSAGE FROM ${athleteFirstName.toUpperCase()}`)}
-          <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-            <strong>${athleteFirstName}</strong> will take it from here to introduce themselves and find time to connect.
-          </p>
-          <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
-            Cheers,<br/>
-            <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
-          </p>
-        `;
-      };
+      const expertBodyHtml = `
+        <p style="font-size:16px; color:#333; margin:0 0 20px;">
+          <strong>${expertFirstName},</strong>
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          Please meet <strong>${athleteFullName}</strong>, an accomplished professional <strong>${athleteSport}</strong> athlete and member of US Ski &amp; Snowboard.
+        </p>
+        <p style="font-size:15px; color:#444; margin:0 0 16px; line-height:1.6;">
+          <strong>${athleteFirstName},</strong> Please meet <strong>${expertFullName}</strong>, an expert in <strong>${expertiseLabel}</strong> who is happy to speak to you about their professional experience.
+        </p>
+        ${messageCard(`Message from ${athleteFirstName}`)}
+        <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
+          <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
+        </p>
+        <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
+          Cheers,<br/>
+          <strong>US Ski &amp; Snowboard Athlete Development Team</strong>
+        </p>
+      `;
 
-      const sendAcceptedEmail = async (recipient: "athlete" | "expert", toEmail: string | null) => {
-        if (!toEmail) return false;
-        const subject = recipient === "athlete" ? athleteSubject : expertSubject;
-        const title = recipient === "athlete" ? "Athlete Connection Introduction" : "Expert Connection Introduction";
-        const html = emailTemplate(title, buildAcceptedBodyHtml(recipient));
-        console.log(`[expert-notif] Sending request_accepted ${recipient} intro TO: ${toEmail} subject="${subject}"`);
+      let athleteSent = false;
+      let expertSent = false;
+
+      if (athleteEmail) {
+        const html = emailTemplate("Athlete Connection Introduction", athleteBodyHtml);
+        console.log(`[expert-notif] Sending request_accepted athlete intro TO: ${athleteEmail} subject="${athleteSubject}"`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
-          to: [toEmail],
+          to: [athleteEmail],
           cc: [CC_ADDRESS],
-          subject,
+          subject: athleteSubject,
           html,
         });
-        return true;
-      };
+        athleteSent = true;
+      }
 
-      const athleteSent = await sendAcceptedEmail("athlete", athleteEmail);
-      const expertSent = await sendAcceptedEmail("expert", expertEmail);
+      if (expertEmail) {
+        const html = emailTemplate("Expert Connection Introduction", expertBodyHtml);
+        console.log(`[expert-notif] Sending request_accepted expert intro TO: ${expertEmail} subject="${expertSubject}"`);
+        await sendEmail(resend, {
+          from: FROM_ADDRESS,
+          to: [expertEmail],
+          cc: [CC_ADDRESS],
+          subject: expertSubject,
+          html,
+        });
+        expertSent = true;
+      }
 
       if (!athleteSent && !expertSent) {
         console.warn("[expert-notif] Both athlete and expert emails missing; sending alert to CC only");

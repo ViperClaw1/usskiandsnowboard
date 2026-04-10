@@ -324,6 +324,40 @@ const Auth = () => {
   // Handlers
   // ==============================
 
+  const sendVerificationEmail = async (targetEmail: string, source: "signup" | "resend") => {
+    const { data, error } = await supabase.functions.invoke("send-verification-email", {
+      body: {
+        email: targetEmail,
+        source,
+        redirect_to: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      let message = error.message || "Failed to send verification email.";
+      let cooldownRemaining = 0;
+      try {
+        if (typeof (error as any).context?.json === "function") {
+          const body = await (error as any).context.json();
+          message = body?.error || message;
+          cooldownRemaining = Number(body?.cooldown_remaining || 0);
+        }
+      } catch {
+        // keep fallback error message
+      }
+      throw { message, cooldownRemaining };
+    }
+
+    if (!data?.success) {
+      throw {
+        message: data?.error || "Failed to send verification email.",
+        cooldownRemaining: Number(data?.cooldown_remaining || 0),
+      };
+    }
+
+    return Number(data?.cooldown_remaining || 0);
+  };
+
   const handleResendVerification = async () => {
     const normalizedEmail = normalizeEmail(email);
     if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
@@ -339,13 +373,18 @@ const Auth = () => {
     }
 
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email: normalizedEmail });
-      if (error) throw error;
+      const cooldownFromServer = await sendVerificationEmail(normalizedEmail, "resend");
       toast.success("Verification email sent! Check your inbox.");
-      setThrottleUntil("resend", normalizedEmail, RESEND_COOLDOWN_SECONDS);
-      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      const cooldownToUse = cooldownFromServer || RESEND_COOLDOWN_SECONDS;
+      setThrottleUntil("resend", normalizedEmail, cooldownToUse);
+      setResendCooldown(cooldownToUse);
     } catch (error: any) {
-      toast.error(error.message || "Failed to resend verification email.");
+      const cooldownRemaining = Number(error?.cooldownRemaining || 0);
+      if (cooldownRemaining > 0) {
+        setThrottleUntil("resend", normalizedEmail, cooldownRemaining);
+        setResendCooldown(cooldownRemaining);
+      }
+      toast.error(error?.message || "Failed to resend verification email.");
     }
   };
 
@@ -410,8 +449,17 @@ const Auth = () => {
         return;
       }
 
+      let signupCooldown = SIGNUP_COOLDOWN_SECONDS;
+      try {
+        const serverCooldown = await sendVerificationEmail(normalizedEmail, "signup");
+        signupCooldown = serverCooldown || SIGNUP_COOLDOWN_SECONDS;
+      } catch (sendError: any) {
+        console.error("Failed to trigger custom verification email:", sendError);
+        toast.error(sendError?.message || "Account created, but we could not send verification email automatically.");
+      }
+
       toast.success("Account created! Please check your email to verify your account.");
-      setThrottleUntil("signup", normalizedEmail, SIGNUP_COOLDOWN_SECONDS);
+      setThrottleUntil("signup", normalizedEmail, signupCooldown);
       localStorage.setItem("pending_verification_email", normalizedEmail);
       navigate("/email-verification", { state: { email: normalizedEmail } });
       setEmail("");
@@ -465,8 +513,17 @@ const Auth = () => {
           return;
         }
 
+        let signupCooldown = SIGNUP_COOLDOWN_SECONDS;
+        try {
+          const serverCooldown = await sendVerificationEmail(normalizedEmail, "signup");
+          signupCooldown = serverCooldown || SIGNUP_COOLDOWN_SECONDS;
+        } catch (sendError: any) {
+          console.error("Failed to trigger custom verification email:", sendError);
+          toast.error(sendError?.message || "Account created, but we could not send verification email automatically.");
+        }
+
         toast.success("Account created! Please check your email to verify your account.");
-        setThrottleUntil("signup", normalizedEmail, SIGNUP_COOLDOWN_SECONDS);
+        setThrottleUntil("signup", normalizedEmail, signupCooldown);
         localStorage.setItem("pending_verification_email", normalizedEmail);
         navigate("/email-verification", { state: { email: normalizedEmail } });
         setEmail("");
