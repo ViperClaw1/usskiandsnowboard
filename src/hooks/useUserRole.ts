@@ -13,8 +13,13 @@ import { supabase } from "@/integrations/supabase/client";
 // Extracted outside the hook so it is a stable reference (not recreated per render).
 // ==============================
 const fetchUserRole = async (userId: string): Promise<string | null> => {
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).single();
-  return data?.role ?? null;
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .order("role", { ascending: false })
+    .limit(1);
+  return data?.[0]?.role ?? null;
 };
 
 // ==============================
