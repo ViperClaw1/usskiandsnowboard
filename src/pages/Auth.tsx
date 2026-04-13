@@ -1109,12 +1109,9 @@ const WaitlistProfileStep = ({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground text-center">How would you like to complete your profile?</p>
-            <Button className="w-full h-12" onClick={() => setMode("ai")}>
-              <Sparkles className="mr-2 h-4 w-4" /> Complete with AI
-            </Button>
-            <Button variant="outline" className="w-full h-12" onClick={() => setMode("manual")}>
-              Complete Manually
+            <p className="text-sm text-muted-foreground text-center">Complete your profile to submit your application.</p>
+            <Button className="w-full h-12" onClick={() => setMode("manual")}>
+              Send Application Data
             </Button>
             <Button
               variant="ghost"
