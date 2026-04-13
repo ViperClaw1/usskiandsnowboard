@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
@@ -675,9 +675,6 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-xl">
-                    <DialogHeader>
-                      <DialogTitle>Expert Profile Preview</DialogTitle>
-                    </DialogHeader>
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-14 w-14">
@@ -845,9 +842,6 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
             </div>
           ) : (
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-              <DialogHeader>
-                <DialogTitle>Athlete Profile</DialogTitle>
-              </DialogHeader>
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
                   {selectedAthlete.background_image_url ? (
@@ -924,9 +918,6 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
             </div>
           ) : (
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-              <DialogHeader>
-                <DialogTitle>Partner Profile</DialogTitle>
-              </DialogHeader>
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
                   {selectedPartner.background_image_url ? (

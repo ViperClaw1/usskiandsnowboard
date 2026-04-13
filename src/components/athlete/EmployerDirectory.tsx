@@ -695,10 +695,6 @@ const EmployerDirectory = () => {
         <Dialog open={!!selectedEmployer} onOpenChange={(open) => !open && setSelectedEmployer(null)}>
           <DialogContent className="max-w-3xl">
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-            <DialogHeader>
-              <DialogTitle>{selectedEmployer.company_name}</DialogTitle>
-            </DialogHeader>
-
             <Tabs defaultValue="profile" className="mt-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="profile">Profile</TabsTrigger>

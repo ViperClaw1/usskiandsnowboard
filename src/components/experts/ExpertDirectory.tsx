@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Search, X, Linkedin, ImagePlus } from "lucide-react";
@@ -338,9 +338,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   </AvatarFallback>
                 </Avatar>
                 <div className="pb-1">
-                  <DialogHeader>
-                    <DialogTitle className="text-lg leading-tight">{selectedExpert.full_name}</DialogTitle>
-                  </DialogHeader>
+                  <p className="text-lg leading-tight font-semibold">{selectedExpert.full_name}</p>
                   {selectedExpert.job_title && (
                     <p className="text-sm text-muted-foreground">{selectedExpert.job_title}</p>
                   )}

@@ -30,7 +30,7 @@ import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 import { normalizeEmployerIndustryTitle } from "@/services/profileUpsertService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Connection {
   id: string;
@@ -707,9 +707,6 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
             </div>
           ) : (
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-              <DialogHeader>
-                <DialogTitle>Athlete Profile</DialogTitle>
-              </DialogHeader>
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
                   {selectedAthlete.background_image_url ? (

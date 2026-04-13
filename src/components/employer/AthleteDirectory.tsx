@@ -792,10 +792,6 @@ const AthleteDirectory = () => {
         >
           <DialogContent className="max-w-3xl">
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-              <DialogHeader>
-                <DialogTitle>{selectedAthlete.profiles.full_name || "Athlete"}</DialogTitle>
-              </DialogHeader>
-
               <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="profile">Profile</TabsTrigger>

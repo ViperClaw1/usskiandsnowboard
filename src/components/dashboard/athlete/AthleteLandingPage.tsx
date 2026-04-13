@@ -703,9 +703,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             </div>
           ) : (
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
-              <DialogHeader>
-                <DialogTitle>Partner Profile</DialogTitle>
-              </DialogHeader>
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
                   {selectedPartner.background_image_url ? (
