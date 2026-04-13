@@ -61,20 +61,17 @@ interface EmployerProfile {
 interface AthleteProfile {
   id: string;
   photo_url: string | null;
-  sport_discipline: string[] | null;
-  skills: string[] | null;
-  availability: string | null;
-  profiles: {
-    full_name: string;
-  } | null;
-}
-
-interface FeaturedAthleteDetail extends AthleteProfile {
   background_image_url: string | null;
   bio: string | null;
   professional_highlights: string | null;
+  sport_discipline: string[] | null;
+  skills: string[] | null;
+  availability: string | null;
   geographic_preferences: string[] | null;
   career_interests: string[] | null;
+  profiles: {
+    full_name: string;
+  } | null;
 }
 
 interface ConnectionStats {
@@ -143,7 +140,9 @@ const fetchPartnerDashboard = async (userId: string): Promise<DashboardData> => 
 const fetchFeaturedAthletes = async (): Promise<AthleteProfile[]> => {
   const { data } = await supabase
     .from("athlete_profiles")
-    .select("id, photo_url, sport_discipline, skills, availability, profiles(full_name)")
+    .select(
+      "id, photo_url, background_image_url, bio, professional_highlights, sport_discipline, skills, availability, geographic_preferences, career_interests, profiles(full_name)",
+    )
     .eq("is_public", true)
     .order("profile_views", { ascending: false })
     .limit(4);
@@ -156,9 +155,8 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
-  const [selectedAthlete, setSelectedAthlete] = useState<FeaturedAthleteDetail | null>(null);
+  const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfile | null>(null);
   const [athleteDialogOpen, setAthleteDialogOpen] = useState(false);
-  const [loadingAthleteDetail, setLoadingAthleteDetail] = useState(false);
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -193,29 +191,6 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
     }
   };
   const { getText, typography } = useDashboardTextOverrides("employer");
-
-  const openAthletePreview = async (athleteId: string) => {
-    setAthleteDialogOpen(true);
-    setLoadingAthleteDetail(true);
-    try {
-      const { data, error } = await supabase
-        .from("athlete_profiles")
-        .select(
-          "id, photo_url, background_image_url, bio, professional_highlights, sport_discipline, skills, availability, geographic_preferences, career_interests, profiles(full_name)",
-        )
-        .eq("id", athleteId)
-        .single();
-
-      if (error) throw error;
-      setSelectedAthlete(data as FeaturedAthleteDetail);
-    } catch (error) {
-      console.error("Error loading athlete profile:", error);
-      toast.error("Failed to load athlete profile");
-      setAthleteDialogOpen(false);
-    } finally {
-      setLoadingAthleteDetail(false);
-    }
-  };
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardData>({
     queryKey: partnerDashboardKey(user.id),
@@ -646,7 +621,10 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                 <Card
                   key={athlete.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => void openAthletePreview(athlete.id)}
+                  onClick={() => {
+                    setSelectedAthlete(athlete);
+                    setAthleteDialogOpen(true);
+                  }}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -701,7 +679,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
         }}
       >
         <DialogContent className="max-w-3xl">
-          {loadingAthleteDetail || !selectedAthlete ? (
+          {!selectedAthlete ? (
             <div className="py-8">
               <LoadingSpinner />
             </div>

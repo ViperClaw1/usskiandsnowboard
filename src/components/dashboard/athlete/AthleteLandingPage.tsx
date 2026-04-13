@@ -75,9 +75,6 @@ interface EmployerProfile {
   logo_url: string | null;
   industry: string | null;
   opportunities_offered: string | null;
-}
-
-interface FeaturedPartnerDetail extends EmployerProfile {
   background_image_url: string | null;
   company_size: string | null;
   hq_location: string | null;
@@ -149,7 +146,9 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
 const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
   const { data } = await supabase
     .from("employer_profiles")
-    .select("id, company_name, logo_url, industry, opportunities_offered")
+    .select(
+      "id, company_name, logo_url, industry, opportunities_offered, background_image_url, company_size, hq_location, about, contact_person, contact_title, website, linkedin_url",
+    )
     .order("profile_views", { ascending: false })
     .limit(4);
 
@@ -171,9 +170,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
-  const [selectedPartner, setSelectedPartner] = useState<FeaturedPartnerDetail | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<EmployerProfile | null>(null);
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
-  const [loadingPartnerDetail, setLoadingPartnerDetail] = useState(false);
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -208,29 +206,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     }
   };
   const { getText, typography } = useDashboardTextOverrides("athlete");
-
-  const openPartnerPreview = async (partnerId: string) => {
-    setPartnerDialogOpen(true);
-    setLoadingPartnerDetail(true);
-    try {
-      const { data, error } = await supabase
-        .from("employer_profiles")
-        .select(
-          "id, company_name, logo_url, industry, opportunities_offered, background_image_url, company_size, hq_location, about, contact_person, contact_title, website, linkedin_url",
-        )
-        .eq("id", partnerId)
-        .single();
-
-      if (error) throw error;
-      setSelectedPartner(data as FeaturedPartnerDetail);
-    } catch (error) {
-      console.error("Error loading partner profile:", error);
-      toast.error("Failed to load partner profile");
-      setPartnerDialogOpen(false);
-    } finally {
-      setLoadingPartnerDetail(false);
-    }
-  };
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<AthleteDashboardData>({
     queryKey: athleteDashboardKey(user.id),
@@ -660,7 +635,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <Card
                   key={partner.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => void openPartnerPreview(partner.id)}
+                  onClick={() => {
+                    setSelectedPartner(partner);
+                    setPartnerDialogOpen(true);
+                  }}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -697,7 +675,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
         }}
       >
         <DialogContent className="max-w-3xl">
-          {loadingPartnerDetail || !selectedPartner ? (
+          {!selectedPartner ? (
             <div className="py-8">
               <LoadingSpinner />
             </div>

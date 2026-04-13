@@ -70,9 +70,14 @@ interface ExpertConnection {
 interface FeaturedAthlete {
   id: string;
   photo_url: string | null;
+  background_image_url: string | null;
+  bio: string | null;
+  professional_highlights: string | null;
   sport_discipline: string[] | null;
   skills: string[] | null;
   availability: string | null;
+  career_interests: string[] | null;
+  geographic_preferences: string[] | null;
   profiles: {
     full_name: string | null;
   } | null;
@@ -83,30 +88,7 @@ interface FeaturedPartner {
   company_name: string;
   logo_url: string | null;
   industry: string | null;
-}
-
-interface AthletePreviewProfile {
-  id: string;
-  photo_url: string | null;
   background_image_url: string | null;
-  bio: string | null;
-  professional_highlights: string | null;
-  availability: string | null;
-  sport_discipline: string[] | null;
-  skills: string[] | null;
-  career_interests: string[] | null;
-  geographic_preferences: string[] | null;
-  profiles: {
-    full_name: string | null;
-  } | null;
-}
-
-interface PartnerPreviewProfile {
-  id: string;
-  company_name: string;
-  logo_url: string | null;
-  background_image_url: string | null;
-  industry: string | null;
   company_size: string | null;
   hq_location: string | null;
   opportunities_offered: string | null;
@@ -187,7 +169,9 @@ const fetchExpertDashboard = async (userId: string): Promise<ExpertDashboardData
 const fetchFeaturedAthletes = async (): Promise<FeaturedAthlete[]> => {
   const { data } = await supabase
     .from("athlete_profiles")
-    .select("id, photo_url, sport_discipline, skills, availability, profiles(full_name)")
+    .select(
+      "id, photo_url, background_image_url, bio, professional_highlights, sport_discipline, skills, availability, career_interests, geographic_preferences, profiles(full_name)",
+    )
     .eq("is_public", true)
     .order("profile_views", { ascending: false })
     .limit(4);
@@ -198,7 +182,9 @@ const fetchFeaturedAthletes = async (): Promise<FeaturedAthlete[]> => {
 const fetchFeaturedPartners = async (): Promise<FeaturedPartner[]> => {
   const { data } = await supabase
     .from("employer_profiles")
-    .select("id, company_name, logo_url, industry")
+    .select(
+      "id, company_name, logo_url, industry, background_image_url, company_size, hq_location, opportunities_offered, about, contact_person, contact_title, website, linkedin_url",
+    )
     .order("profile_views", { ascending: false })
     .limit(4);
 
@@ -212,12 +198,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
   const [wrapDisciplineBadge, setWrapDisciplineBadge] = useState(false);
-  const [selectedAthlete, setSelectedAthlete] = useState<AthletePreviewProfile | null>(null);
-  const [selectedPartner, setSelectedPartner] = useState<PartnerPreviewProfile | null>(null);
+  const [selectedAthlete, setSelectedAthlete] = useState<FeaturedAthlete | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<FeaturedPartner | null>(null);
   const [athleteDialogOpen, setAthleteDialogOpen] = useState(false);
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
-  const [loadingAthleteDetail, setLoadingAthleteDetail] = useState(false);
-  const [loadingPartnerDetail, setLoadingPartnerDetail] = useState(false);
   const bgInputRef = useRef<HTMLInputElement>(null);
   const badgesRowRef = useRef<HTMLDivElement>(null);
   const industryBadgeRef = useRef<HTMLDivElement>(null);
@@ -264,52 +248,6 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
       toast.error("Failed to upload background photo");
     } finally {
       setUploadingBg(false);
-    }
-  };
-
-  const openAthletePreview = async (athleteId: string) => {
-    setAthleteDialogOpen(true);
-    setLoadingAthleteDetail(true);
-    try {
-      const { data, error } = await supabase
-        .from("athlete_profiles")
-        .select(
-          "id, photo_url, background_image_url, bio, professional_highlights, availability, sport_discipline, skills, career_interests, geographic_preferences, profiles(full_name)",
-        )
-        .eq("id", athleteId)
-        .single();
-
-      if (error) throw error;
-      setSelectedAthlete(data as unknown as AthletePreviewProfile);
-    } catch (error) {
-      console.error("Error loading athlete preview:", error);
-      toast.error("Failed to load athlete profile");
-      setAthleteDialogOpen(false);
-    } finally {
-      setLoadingAthleteDetail(false);
-    }
-  };
-
-  const openPartnerPreview = async (partnerId: string) => {
-    setPartnerDialogOpen(true);
-    setLoadingPartnerDetail(true);
-    try {
-      const { data, error } = await supabase
-        .from("employer_profiles")
-        .select(
-          "id, company_name, logo_url, background_image_url, industry, company_size, hq_location, opportunities_offered, about, contact_person, contact_title, website, linkedin_url",
-        )
-        .eq("id", partnerId)
-        .single();
-
-      if (error) throw error;
-      setSelectedPartner(data as unknown as PartnerPreviewProfile);
-    } catch (error) {
-      console.error("Error loading partner preview:", error);
-      toast.error("Failed to load partner profile");
-      setPartnerDialogOpen(false);
-    } finally {
-      setLoadingPartnerDetail(false);
     }
   };
 
@@ -760,7 +698,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 <Card
                   key={athlete.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => void openAthletePreview(athlete.id)}
+                  onClick={() => {
+                    setSelectedAthlete(athlete);
+                    setAthleteDialogOpen(true);
+                  }}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -799,7 +740,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 <Card
                   key={partner.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => void openPartnerPreview(partner.id)}
+                  onClick={() => {
+                    setSelectedPartner(partner);
+                    setPartnerDialogOpen(true);
+                  }}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -836,7 +780,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
         }}
       >
         <DialogContent className="max-w-3xl">
-          {loadingAthleteDetail || !selectedAthlete ? (
+          {!selectedAthlete ? (
             <div className="py-8">
               <LoadingSpinner />
             </div>
@@ -912,7 +856,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
         }}
       >
         <DialogContent className="max-w-3xl">
-          {loadingPartnerDetail || !selectedPartner ? (
+          {!selectedPartner ? (
             <div className="py-8">
               <LoadingSpinner />
             </div>
