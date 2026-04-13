@@ -607,7 +607,7 @@ const AthleteDirectory = () => {
         {paginatedAthletes.map((athlete) => (
           <Card
             key={athlete.id}
-            className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50"
+            className="h-full cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50 flex flex-col"
             onClick={async () => {
               setSelectedAthlete(athlete);
               try {
@@ -653,7 +653,7 @@ const AthleteDirectory = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 flex-1 flex flex-col">
               <div>
                 <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
                 <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio || "No bio provided"}</p>
@@ -723,6 +723,7 @@ const AthleteDirectory = () => {
                   <p className="text-xs text-muted-foreground">Not specified</p>
                 )}
               </div>
+              <div className="flex-1" />
               {canSendRequest && (
                 <Button
                   className="w-full"
