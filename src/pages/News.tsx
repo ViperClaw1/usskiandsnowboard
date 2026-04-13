@@ -5,13 +5,30 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Newspaper, Loader2, ExternalLink } from "lucide-react";
+import { Newspaper, ExternalLink } from "lucide-react";
 import mountainHeaderBg from "@/assets/mountain-header-bg.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { PageFooter } from "@/components/layout/PageFooter";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const NewsCardSkeleton = () => (
+  <Card className="shadow-elegant overflow-hidden">
+    <Skeleton className="h-48 w-full" />
+    <CardHeader className="space-y-3">
+      <Skeleton className="h-5 w-full" />
+      <Skeleton className="h-5 w-4/5" />
+      <Skeleton className="h-4 w-1/3" />
+    </CardHeader>
+    <CardContent className="space-y-2">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+    </CardContent>
+  </Card>
+);
 
 // ==============================
 // Component Definition
@@ -69,8 +86,10 @@ const News = () => {
         <section className="py-8 sm:py-12">
           <div className="container mx-auto px-4">
             {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <NewsCardSkeleton />
+                <NewsCardSkeleton />
+                <NewsCardSkeleton />
               </div>
             ) : articles && articles.length > 0 ? (
               <>

@@ -10,7 +10,6 @@ import AthleteDashboard from "@/components/dashboard/AthleteDashboard";
 import EmployerDashboard from "@/components/dashboard/EmployerDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import ExpertDashboard from "@/components/dashboard/ExpertDashboard";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -20,6 +19,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { dashboardRoleKey, useDashboardRole } from "@/hooks/useDashboardRole";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 
 // ==============================
 // Constants — Welcome Content
@@ -58,6 +60,23 @@ Athlete Connection exists to bridge the gap between elite sport and long-term pr
 
 To get started, complete your profile so athletes can understand your background, industry expertise, and how you're willing to engage.`,
 };
+
+const DashboardLoadingSkeleton = () => (
+  <div className="container mx-auto px-4 py-8 space-y-6">
+    <Card>
+      <CardContent className="p-6 space-y-4">
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+      </CardContent>
+    </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+    </div>
+  </div>
+);
 
 // ==============================
 // Component Definition
@@ -179,7 +198,7 @@ const Dashboard = () => {
   // roleLoading is only true on first-ever Dashboard visit (initialData
   // populates from cache on all subsequent mounts).
   // ==============================
-  if (authLoading || roleLoading) return <LoadingSpinner fullScreen />;
+  if (authLoading || roleLoading) return <DashboardLoadingSkeleton />;
   if (!user || !session) return null;
   if (!role) {
     return (
