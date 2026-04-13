@@ -77,6 +77,17 @@ interface EmployerProfile {
   opportunities_offered: string | null;
 }
 
+interface FeaturedPartnerDetail extends EmployerProfile {
+  background_image_url: string | null;
+  company_size: string | null;
+  hq_location: string | null;
+  about: string | null;
+  contact_person: string | null;
+  contact_title: string | null;
+  website: string | null;
+  linkedin_url: string | null;
+}
+
 interface ConnectionStats {
   pending: number;
   accepted: number;
@@ -160,6 +171,9 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<FeaturedPartnerDetail | null>(null);
+  const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
+  const [loadingPartnerDetail, setLoadingPartnerDetail] = useState(false);
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -194,6 +208,29 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     }
   };
   const { getText, typography } = useDashboardTextOverrides("athlete");
+
+  const openPartnerPreview = async (partnerId: string) => {
+    setPartnerDialogOpen(true);
+    setLoadingPartnerDetail(true);
+    try {
+      const { data, error } = await supabase
+        .from("employer_profiles")
+        .select(
+          "id, company_name, logo_url, industry, opportunities_offered, background_image_url, company_size, hq_location, about, contact_person, contact_title, website, linkedin_url",
+        )
+        .eq("id", partnerId)
+        .single();
+
+      if (error) throw error;
+      setSelectedPartner(data as FeaturedPartnerDetail);
+    } catch (error) {
+      console.error("Error loading partner profile:", error);
+      toast.error("Failed to load partner profile");
+      setPartnerDialogOpen(false);
+    } finally {
+      setLoadingPartnerDetail(false);
+    }
+  };
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<AthleteDashboardData>({
     queryKey: athleteDashboardKey(user.id),
@@ -623,7 +660,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                 <Card
                   key={partner.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onNavigate("directory")}
+                  onClick={() => void openPartnerPreview(partner.id)}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -651,6 +688,69 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
           </CardContent>
         </Card>
       </section>
+
+      <Dialog
+        open={partnerDialogOpen}
+        onOpenChange={(open) => {
+          setPartnerDialogOpen(open);
+          if (!open) setSelectedPartner(null);
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          {loadingPartnerDetail || !selectedPartner ? (
+            <div className="py-8">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
+              <DialogHeader>
+                <DialogTitle>Partner Profile</DialogTitle>
+              </DialogHeader>
+              <div className="mt-6 space-y-6">
+                <div className="relative -mx-6 -mt-6">
+                  {selectedPartner.background_image_url ? (
+                    <div
+                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedPartner.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                    <AvatarImage src={selectedPartner.logo_url ?? undefined} className="object-contain p-1" />
+                    <AvatarFallback>{selectedPartner.company_name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="pt-10">
+                  <h3 className="font-semibold text-lg">{selectedPartner.company_name}</h3>
+                  {selectedPartner.industry ? <p className="text-sm text-muted-foreground">{selectedPartner.industry}</p> : null}
+                </div>
+                {[
+                  { label: "About", value: selectedPartner.about },
+                  { label: "Opportunities Offered", value: selectedPartner.opportunities_offered },
+                  { label: "Company Size", value: selectedPartner.company_size },
+                  { label: "Location", value: selectedPartner.hq_location },
+                  {
+                    label: "Contact Person",
+                    value: selectedPartner.contact_person
+                      ? `${selectedPartner.contact_person}${selectedPartner.contact_title ? ` (${selectedPartner.contact_title})` : ""}`
+                      : null,
+                  },
+                  { label: "Website", value: selectedPartner.website },
+                  { label: "LinkedIn", value: selectedPartner.linkedin_url },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <h4 className="font-medium mb-1">{item.label}</h4>
+                    <p className="text-sm text-muted-foreground break-all">{item.value || "Not specified"}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -30,6 +30,7 @@ import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 import { normalizeEmployerIndustryTitle } from "@/services/profileUpsertService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Connection {
   id: string;
@@ -66,6 +67,14 @@ interface AthleteProfile {
   profiles: {
     full_name: string;
   } | null;
+}
+
+interface FeaturedAthleteDetail extends AthleteProfile {
+  background_image_url: string | null;
+  bio: string | null;
+  professional_highlights: string | null;
+  geographic_preferences: string[] | null;
+  career_interests: string[] | null;
 }
 
 interface ConnectionStats {
@@ -147,6 +156,9 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
+  const [selectedAthlete, setSelectedAthlete] = useState<FeaturedAthleteDetail | null>(null);
+  const [athleteDialogOpen, setAthleteDialogOpen] = useState(false);
+  const [loadingAthleteDetail, setLoadingAthleteDetail] = useState(false);
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -181,6 +193,29 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
     }
   };
   const { getText, typography } = useDashboardTextOverrides("employer");
+
+  const openAthletePreview = async (athleteId: string) => {
+    setAthleteDialogOpen(true);
+    setLoadingAthleteDetail(true);
+    try {
+      const { data, error } = await supabase
+        .from("athlete_profiles")
+        .select(
+          "id, photo_url, background_image_url, bio, professional_highlights, sport_discipline, skills, availability, geographic_preferences, career_interests, profiles(full_name)",
+        )
+        .eq("id", athleteId)
+        .single();
+
+      if (error) throw error;
+      setSelectedAthlete(data as FeaturedAthleteDetail);
+    } catch (error) {
+      console.error("Error loading athlete profile:", error);
+      toast.error("Failed to load athlete profile");
+      setAthleteDialogOpen(false);
+    } finally {
+      setLoadingAthleteDetail(false);
+    }
+  };
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardData>({
     queryKey: partnerDashboardKey(user.id),
@@ -611,7 +646,7 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
                 <Card
                   key={athlete.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onNavigate("directory")}
+                  onClick={() => void openAthletePreview(athlete.id)}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -657,6 +692,90 @@ export const PartnerLandingPage = ({ user, onNavigate, onProfileUpdated }: Partn
           </CardContent>
         </Card>
       </section>
+
+      <Dialog
+        open={athleteDialogOpen}
+        onOpenChange={(open) => {
+          setAthleteDialogOpen(open);
+          if (!open) setSelectedAthlete(null);
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          {loadingAthleteDetail || !selectedAthlete ? (
+            <div className="py-8">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
+              <DialogHeader>
+                <DialogTitle>Athlete Profile</DialogTitle>
+              </DialogHeader>
+              <div className="mt-6 space-y-6">
+                <div className="relative -mx-6 -mt-6">
+                  {selectedAthlete.background_image_url ? (
+                    <div
+                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                    <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
+                    <AvatarFallback>
+                      {selectedAthlete.profiles?.full_name
+                        ? selectedAthlete.profiles.full_name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                        : "AT"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="pt-10">
+                  <h3 className="font-semibold text-lg">{selectedAthlete.profiles?.full_name || "Athlete"}</h3>
+                  {selectedAthlete.sport_discipline?.length ? (
+                    <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline.join(", ")}</p>
+                  ) : null}
+                </div>
+                {[
+                  { label: "Bio", value: selectedAthlete.bio },
+                  { label: "Professional Highlights", value: selectedAthlete.professional_highlights },
+                  { label: "Availability", value: selectedAthlete.availability },
+                  {
+                    label: "Geographic Preferences",
+                    value: selectedAthlete.geographic_preferences?.length
+                      ? selectedAthlete.geographic_preferences.join(", ")
+                      : null,
+                  },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <h4 className="font-medium mb-1">{item.label}</h4>
+                    <p className="text-sm text-muted-foreground">{item.value || "Not specified"}</p>
+                  </div>
+                ))}
+                <div>
+                  <h4 className="font-medium mb-2">Skills</h4>
+                  {selectedAthlete.skills?.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedAthlete.skills.map((skill, idx) => (
+                        <Badge key={idx} variant="secondary">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Not specified</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

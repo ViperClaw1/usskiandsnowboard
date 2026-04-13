@@ -846,7 +846,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           ) : (
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
               <DialogHeader>
-                <DialogTitle>{selectedAthlete.profiles?.full_name || "Athlete"}</DialogTitle>
+                <DialogTitle>Athlete Profile</DialogTitle>
               </DialogHeader>
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
@@ -925,7 +925,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           ) : (
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
               <DialogHeader>
-                <DialogTitle>{selectedPartner.company_name}</DialogTitle>
+                <DialogTitle>Partner Profile</DialogTitle>
               </DialogHeader>
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
