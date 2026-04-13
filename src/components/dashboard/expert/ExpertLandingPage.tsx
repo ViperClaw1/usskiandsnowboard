@@ -85,6 +85,38 @@ interface FeaturedPartner {
   industry: string | null;
 }
 
+interface AthletePreviewProfile {
+  id: string;
+  photo_url: string | null;
+  background_image_url: string | null;
+  bio: string | null;
+  professional_highlights: string | null;
+  availability: string | null;
+  sport_discipline: string[] | null;
+  skills: string[] | null;
+  career_interests: string[] | null;
+  geographic_preferences: string[] | null;
+  profiles: {
+    full_name: string | null;
+  } | null;
+}
+
+interface PartnerPreviewProfile {
+  id: string;
+  company_name: string;
+  logo_url: string | null;
+  background_image_url: string | null;
+  industry: string | null;
+  company_size: string | null;
+  hq_location: string | null;
+  opportunities_offered: string | null;
+  about: string | null;
+  contact_person: string | null;
+  contact_title: string | null;
+  website: string | null;
+  linkedin_url: string | null;
+}
+
 interface ExpertDashboardData {
   profile: ExpertProfile | null;
   connectionStats: ConnectionStats;
@@ -180,6 +212,12 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
   const [wrapDisciplineBadge, setWrapDisciplineBadge] = useState(false);
+  const [selectedAthlete, setSelectedAthlete] = useState<AthletePreviewProfile | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<PartnerPreviewProfile | null>(null);
+  const [athleteDialogOpen, setAthleteDialogOpen] = useState(false);
+  const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
+  const [loadingAthleteDetail, setLoadingAthleteDetail] = useState(false);
+  const [loadingPartnerDetail, setLoadingPartnerDetail] = useState(false);
   const bgInputRef = useRef<HTMLInputElement>(null);
   const badgesRowRef = useRef<HTMLDivElement>(null);
   const industryBadgeRef = useRef<HTMLDivElement>(null);
@@ -226,6 +264,52 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
       toast.error("Failed to upload background photo");
     } finally {
       setUploadingBg(false);
+    }
+  };
+
+  const openAthletePreview = async (athleteId: string) => {
+    setAthleteDialogOpen(true);
+    setLoadingAthleteDetail(true);
+    try {
+      const { data, error } = await supabase
+        .from("athlete_profiles")
+        .select(
+          "id, photo_url, background_image_url, bio, professional_highlights, availability, sport_discipline, skills, career_interests, geographic_preferences, profiles(full_name)",
+        )
+        .eq("id", athleteId)
+        .single();
+
+      if (error) throw error;
+      setSelectedAthlete(data as unknown as AthletePreviewProfile);
+    } catch (error) {
+      console.error("Error loading athlete preview:", error);
+      toast.error("Failed to load athlete profile");
+      setAthleteDialogOpen(false);
+    } finally {
+      setLoadingAthleteDetail(false);
+    }
+  };
+
+  const openPartnerPreview = async (partnerId: string) => {
+    setPartnerDialogOpen(true);
+    setLoadingPartnerDetail(true);
+    try {
+      const { data, error } = await supabase
+        .from("employer_profiles")
+        .select(
+          "id, company_name, logo_url, background_image_url, industry, company_size, hq_location, opportunities_offered, about, contact_person, contact_title, website, linkedin_url",
+        )
+        .eq("id", partnerId)
+        .single();
+
+      if (error) throw error;
+      setSelectedPartner(data as unknown as PartnerPreviewProfile);
+    } catch (error) {
+      console.error("Error loading partner preview:", error);
+      toast.error("Failed to load partner profile");
+      setPartnerDialogOpen(false);
+    } finally {
+      setLoadingPartnerDetail(false);
     }
   };
 
@@ -679,7 +763,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 <Card
                   key={athlete.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onNavigate("athletes")}
+                  onClick={() => void openAthletePreview(athlete.id)}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -718,7 +802,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                 <Card
                   key={partner.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onNavigate("employers")}
+                  onClick={() => void openPartnerPreview(partner.id)}
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
@@ -746,6 +830,150 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           </CardContent>
         </Card>
       </section>
+
+      <Dialog
+        open={athleteDialogOpen}
+        onOpenChange={(open) => {
+          setAthleteDialogOpen(open);
+          if (!open) setSelectedAthlete(null);
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          {loadingAthleteDetail || !selectedAthlete ? (
+            <div className="py-8">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
+              <DialogHeader>
+                <DialogTitle>{selectedAthlete.profiles?.full_name || "Athlete"}</DialogTitle>
+              </DialogHeader>
+              <div className="mt-6 space-y-6">
+                <div className="relative -mx-6 -mt-6">
+                  {selectedAthlete.background_image_url ? (
+                    <div
+                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                    <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
+                    <AvatarFallback>{getInitials(selectedAthlete.profiles?.full_name || "Athlete") || "AT"}</AvatarFallback>
+                  </Avatar>
+                </div>
+
+                <div className="pt-10">
+                  <h3 className="font-semibold text-lg">{selectedAthlete.profiles?.full_name || "Athlete"}</h3>
+                  {selectedAthlete.sport_discipline?.length ? (
+                    <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline.join(", ")}</p>
+                  ) : null}
+                </div>
+
+                {[
+                  { label: "Bio", value: selectedAthlete.bio },
+                  { label: "Professional Highlights", value: selectedAthlete.professional_highlights },
+                  { label: "Availability", value: selectedAthlete.availability },
+                  {
+                    label: "Geographic Preferences",
+                    value: selectedAthlete.geographic_preferences?.length
+                      ? selectedAthlete.geographic_preferences.join(", ")
+                      : null,
+                  },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <h4 className="font-medium mb-1">{item.label}</h4>
+                    <p className="text-sm text-muted-foreground">{item.value || "Not specified"}</p>
+                  </div>
+                ))}
+
+                <div>
+                  <h4 className="font-medium mb-2">Skills</h4>
+                  {selectedAthlete.skills?.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedAthlete.skills.map((skill, idx) => (
+                        <Badge key={idx} variant="secondary">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Not specified</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={partnerDialogOpen}
+        onOpenChange={(open) => {
+          setPartnerDialogOpen(open);
+          if (!open) setSelectedPartner(null);
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          {loadingPartnerDetail || !selectedPartner ? (
+            <div className="py-8">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
+              <DialogHeader>
+                <DialogTitle>{selectedPartner.company_name}</DialogTitle>
+              </DialogHeader>
+              <div className="mt-6 space-y-6">
+                <div className="relative -mx-6 -mt-6">
+                  {selectedPartner.background_image_url ? (
+                    <div
+                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedPartner.background_image_url})` }}
+                    />
+                  ) : (
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                    <AvatarImage src={selectedPartner.logo_url ?? undefined} className="object-contain p-1" />
+                    <AvatarFallback>{selectedPartner.company_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </div>
+
+                <div className="pt-10">
+                  <h3 className="font-semibold text-lg">{selectedPartner.company_name}</h3>
+                  {selectedPartner.industry ? <p className="text-sm text-muted-foreground">{selectedPartner.industry}</p> : null}
+                </div>
+
+                {[
+                  { label: "About", value: selectedPartner.about },
+                  { label: "Company Size", value: selectedPartner.company_size },
+                  { label: "HQ Location", value: selectedPartner.hq_location },
+                  { label: "Opportunities Offered", value: selectedPartner.opportunities_offered },
+                  {
+                    label: "Contact",
+                    value: selectedPartner.contact_person
+                      ? `${selectedPartner.contact_person}${selectedPartner.contact_title ? ` (${selectedPartner.contact_title})` : ""}`
+                      : null,
+                  },
+                  { label: "Website", value: selectedPartner.website },
+                  { label: "LinkedIn", value: selectedPartner.linkedin_url },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <h4 className="font-medium mb-1">{item.label}</h4>
+                    <p className="text-sm text-muted-foreground break-all">{item.value || "Not specified"}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
