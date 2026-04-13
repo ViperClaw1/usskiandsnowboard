@@ -23,6 +23,8 @@ import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { SPORT_DISCIPLINES_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 
 // ==============================
 // Types / Interfaces
@@ -74,6 +76,25 @@ interface Certification {
   issuer: string | null;
   issue_date: string | null;
 }
+
+const DirectoryLoadingSkeleton = () => (
+  <div className="space-y-6">
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-full" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+    </div>
+  </div>
+);
 
 interface EmployerProfile {
   id: string;
@@ -493,11 +514,7 @@ const AthleteDirectory = () => {
   // populates from cache and athletesLoading is false from render zero.
   // ==============================
   if (athletesLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DirectoryLoadingSkeleton />;
   }
 
   if (athletes.length === 0) {

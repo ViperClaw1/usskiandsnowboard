@@ -17,6 +17,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 
 // ==============================
 // Types / Interfaces
@@ -47,6 +49,25 @@ interface EmployerProfile {
 interface AthleteProfile {
   id: string;
 }
+
+const DirectoryLoadingSkeleton = () => (
+  <div className="space-y-6">
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-full" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+    </div>
+  </div>
+);
 
 // ==============================
 // Query Keys
@@ -391,11 +412,7 @@ const EmployerDirectory = () => {
   // render zero.
   // ==============================
   if (employersLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <DirectoryLoadingSkeleton />;
   }
 
   if (employers.length === 0) {

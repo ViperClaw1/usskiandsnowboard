@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 import { Search, X, Linkedin, ImagePlus } from "lucide-react";
 import { ExpertConnectionRequestDialog } from "./ExpertConnectionRequestDialog";
 import { INDUSTRY_OPTIONS } from "@/data/suggestions";
@@ -79,6 +80,20 @@ interface ExpertDirectoryProps {
   adminMode?: boolean;
   onAddExpert?: () => void;
 }
+
+const DirectoryLoadingSkeleton = () => (
+  <div className="space-y-6">
+    <div className="flex flex-col sm:flex-row gap-3">
+      <Skeleton className="h-10 flex-1" />
+      <Skeleton className="h-10 w-full sm:w-56" />
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+      <ProfileCardSkeleton />
+    </div>
+  </div>
+);
 
 export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirectoryProps) => {
   const { user } = useAuth();
@@ -158,7 +173,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
   const canRequest = role === "athlete";
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <DirectoryLoadingSkeleton />;
 
   return (
     <div className="space-y-6">
