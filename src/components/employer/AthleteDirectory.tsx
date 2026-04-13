@@ -154,15 +154,17 @@ const fetchEmployerProfile = async (): Promise<EmployerProfile | null> => {
   };
 };
 
-const fetchExistingRequests = async (employerId: string): Promise<Set<string>> => {
+type ConnectionRequestStatus = "pending" | "accepted";
+
+const fetchExistingRequests = async (employerId: string): Promise<Map<string, ConnectionRequestStatus>> => {
   const { data, error } = await supabase
     .from("connection_requests")
-    .select("athlete_id")
+    .select("athlete_id, status")
     .eq("employer_id", employerId)
     .in("status", ["pending", "accepted"]);
 
   if (error) throw error;
-  return new Set(data?.map((r) => r.athlete_id) || []);
+  return new Map((data ?? []).map((r) => [r.athlete_id, r.status as ConnectionRequestStatus]));
 };
 
 // ==============================
@@ -251,17 +253,19 @@ const AthleteDirectory = () => {
   // Keyed by employerId so the cache entry is correctly scoped per employer.
   // Only enabled once employerProfileId is known.
   // ==============================
-  const { data: existingRequestsSet = new Set<string>(), refetch: refetchRequests } = useQuery<Set<string>>({
+  const { data: existingRequestsMap = new Map<string, ConnectionRequestStatus>(), refetch: refetchRequests } = useQuery<
+    Map<string, ConnectionRequestStatus>
+  >({
     queryKey: ["existing-requests", employerProfileId],
     queryFn: () => fetchExistingRequests(employerProfileId!),
     enabled: !!employerProfileId,
-    initialData: () => queryClient.getQueryData<Set<string>>(["existing-requests", employerProfileId]),
+    initialData: () => queryClient.getQueryData<Map<string, ConnectionRequestStatus>>(["existing-requests", employerProfileId]),
     staleTime: 2 * 60 * 1000,
   });
 
   // Wrap in a stable reference so renders that only change other state don't
   // reconstruct it — existingRequests is used in multiple render paths below.
-  const existingRequests = existingRequestsSet;
+  const existingRequests = existingRequestsMap;
 
   // ==============================
   // Derived Values — Filtered Athletes
@@ -375,8 +379,9 @@ const AthleteDirectory = () => {
       toast.error("Unable to send request");
       return;
     }
-    if (existingRequests.has(selectedAthlete.id)) {
-      toast.error("You have already sent a request to this athlete");
+    const existingStatus = existingRequests.get(selectedAthlete.id);
+    if (existingStatus) {
+      toast.error(existingStatus === "accepted" ? "You are already connected with this athlete" : "Request already sent");
       return;
     }
     if (!requestMessage.trim()) {
@@ -735,7 +740,11 @@ const AthleteDirectory = () => {
                     setShowRequestDialog(true);
                   }}
                 >
-                  {existingRequests.has(athlete.id) ? "Request Sent" : "Request Connection"}
+                  {existingRequests.get(athlete.id) === "accepted"
+                    ? "Connected"
+                    : existingRequests.get(athlete.id) === "pending"
+                      ? "Request Sent"
+                      : "Request Connection"}
                 </Button>
               )}
             </CardContent>
@@ -829,7 +838,11 @@ const AthleteDirectory = () => {
                         variant={existingRequests.has(selectedAthlete.id) ? "outline" : "default"}
                         disabled={existingRequests.has(selectedAthlete.id)}
                       >
-                        {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
+                        {existingRequests.get(selectedAthlete.id) === "accepted"
+                          ? "Connected"
+                          : existingRequests.get(selectedAthlete.id) === "pending"
+                            ? "Request Sent"
+                            : "Request Connection"}
                       </Button>
                     )}
                   </div>
