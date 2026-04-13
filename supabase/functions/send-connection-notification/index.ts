@@ -166,10 +166,7 @@ function athleteNewRequestBody(athleteName: string, companyName: string, request
     </table>`;
 }
 
-/**
- * Builds the joint introduction email body sent to both parties on connection acceptance.
- */
-function introductionBody(
+function athleteIntroductionBody(
   athleteFirstName: string,
   athleteLastName: string,
   athleteSport: string,
@@ -184,16 +181,35 @@ function introductionBody(
   const titleClause = repTitle ? `a ${repTitle} at` : "from";
 
   return `
-    <p style="margin: 0 0 24px; font-size: 16px;">${repFirstName},</p>
-
-    <p style="margin: 0 0 24px; font-size: 16px;">
-      Please meet <strong>${athleteFullName}</strong>, an accomplished professional ${sportLabel}athlete and member of the US Ski &amp; Snowboard.
-    </p>
-
     <p style="margin: 0 0 24px; font-size: 16px;">${athleteFirstName},</p>
 
     <p style="margin: 0 0 24px; font-size: 16px;">
       Please meet <strong>${repFullName}</strong>, ${titleClause} <strong>${companyName}</strong>.
+    </p>
+
+    <p style="margin: 0 0 40px; font-size: 16px;">
+      ${repFirstName} will take it from here to introduce themselves and find time to connect.
+    </p>
+
+    <p style="margin: 0 0 4px; font-size: 16px;">Cheers,</p>
+    <p style="margin: 0; font-size: 16px; font-weight: bold;">US Ski &amp; Snowboard Athlete Development Team</p>`;
+}
+
+function employerIntroductionBody(
+  athleteFirstName: string,
+  athleteLastName: string,
+  athleteSport: string,
+  repFirstName: string,
+  companyName: string,
+): string {
+  const athleteFullName = [athleteFirstName, athleteLastName].filter(Boolean).join(" ");
+  const sportLabel = athleteSport ? `${athleteSport} ` : "";
+
+  return `
+    <p style="margin: 0 0 24px; font-size: 16px;">${repFirstName},</p>
+
+    <p style="margin: 0 0 24px; font-size: 16px;">
+      Please meet <strong>${athleteFullName}</strong>, an accomplished professional ${sportLabel}athlete and member of the US Ski &amp; Snowboard.
     </p>
 
     <p style="margin: 0 0 40px; font-size: 16px;">
@@ -325,22 +341,25 @@ const handler = async (req: Request): Promise<Response> => {
       await notifyAdmins("new_connection_request", request_id);
 
     } else if (notification_type === "request_accepted") {
-      // Build recipient list — both athlete and employer
-      const toAddresses = [athleteEmail, employerEmail].filter((e): e is string => Boolean(e));
+      const athleteSport = Array.isArray(request.athlete_profiles.sport_discipline)
+        ? request.athlete_profiles.sport_discipline.join(", ")
+        : (request.athlete_profiles.sport_discipline ?? "");
 
-      if (toAddresses.length > 0) {
-        const subject = `${companyName} <> ${athleteFirstName} ${athleteLastName} — Athlete Connection`.trim();
+      const athleteCanReceive = athleteUserId ? await shouldSendEmail(supabase, athleteUserId, "request_accepted") : true;
+      const employerCanReceive = employerUserId ? await shouldSendEmail(supabase, employerUserId, "request_accepted") : true;
+
+      if (athleteEmail && athleteCanReceive) {
         await sendEmail(resend, {
           from: FROM,
-          to: toAddresses,
+          to: [athleteEmail],
           cc: CC_ALWAYS,
-          subject,
+          subject: `${athleteFullName} <> ${companyName} — Athlete Connection Introduction`,
           html: emailTemplate(
             "You're Connected!",
-            introductionBody(
+            athleteIntroductionBody(
               athleteFirstName,
               athleteLastName,
-              request.athlete_profiles.sport_discipline || "",
+              athleteSport,
               repFirstNameSafe,
               repLastNameSafe,
               repTitle,
@@ -348,7 +367,21 @@ const handler = async (req: Request): Promise<Response> => {
             ),
           ),
         });
-        console.log(`Introduction email sent to: ${toAddresses.join(", ")} (CC: ${CC_ALWAYS.join(", ")})`);
+        console.log(`Accepted intro email sent to athlete: ${athleteEmail}`);
+      }
+
+      if (employerEmail && employerCanReceive) {
+        await sendEmail(resend, {
+          from: FROM,
+          to: [employerEmail],
+          cc: CC_ALWAYS,
+          subject: `${companyName} <> ${athleteFullName} — Athlete Connection Introduction`,
+          html: emailTemplate(
+            "You're Connected!",
+            employerIntroductionBody(athleteFirstName, athleteLastName, athleteSport, repFirstNameSafe, companyName),
+          ),
+        });
+        console.log(`Accepted intro email sent to employer: ${employerEmail}`);
       }
 
       // SMS notifications remain unchanged
