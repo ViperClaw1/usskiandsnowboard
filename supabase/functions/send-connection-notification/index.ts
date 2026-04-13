@@ -187,6 +187,12 @@ function athleteIntroductionBody(
       Please meet <strong>${repFullName}</strong>, ${titleClause} <strong>${companyName}</strong>.
     </p>
 
+    <p style="margin: 0 0 24px; font-size: 16px;">${repFirstName},</p>
+
+    <p style="margin: 0 0 24px; font-size: 16px;">
+      Please meet <strong>${athleteFullName}</strong>, an accomplished professional ${sportLabel}athlete and member of the US Ski &amp; Snowboard.
+    </p>
+
     <p style="margin: 0 0 40px; font-size: 16px;">
       ${repFirstName} will take it from here to introduce themselves and find time to connect.
     </p>
@@ -200,10 +206,14 @@ function employerIntroductionBody(
   athleteLastName: string,
   athleteSport: string,
   repFirstName: string,
+  repLastName: string,
+  repTitle: string,
   companyName: string,
 ): string {
   const athleteFullName = [athleteFirstName, athleteLastName].filter(Boolean).join(" ");
+  const repFullName = [repFirstName, repLastName].filter(Boolean).join(" ");
   const sportLabel = athleteSport ? `${athleteSport} ` : "";
+  const titleClause = repTitle ? `a ${repTitle} at` : "from";
 
   return `
     <p style="margin: 0 0 24px; font-size: 16px;">${repFirstName},</p>
@@ -212,8 +222,14 @@ function employerIntroductionBody(
       Please meet <strong>${athleteFullName}</strong>, an accomplished professional ${sportLabel}athlete and member of the US Ski &amp; Snowboard.
     </p>
 
+    <p style="margin: 0 0 24px; font-size: 16px;">${athleteFirstName},</p>
+
+    <p style="margin: 0 0 24px; font-size: 16px;">
+      Please meet <strong>${repFullName}</strong>, ${titleClause} <strong>${companyName}</strong>.
+    </p>
+
     <p style="margin: 0 0 40px; font-size: 16px;">
-      ${repFirstName} will take it from here to introduce themselves and find time to connect.
+      ${athleteFirstName} will take it from here to introduce themselves and find time to connect.
     </p>
 
     <p style="margin: 0 0 4px; font-size: 16px;">Cheers,</p>
@@ -378,7 +394,15 @@ const handler = async (req: Request): Promise<Response> => {
           subject: `${companyName} <> ${athleteFullName} — Athlete Connection Introduction`,
           html: emailTemplate(
             "You're Connected!",
-            employerIntroductionBody(athleteFirstName, athleteLastName, athleteSport, repFirstNameSafe, companyName),
+            employerIntroductionBody(
+              athleteFirstName,
+              athleteLastName,
+              athleteSport,
+              repFirstNameSafe,
+              repLastNameSafe,
+              repTitle,
+              companyName,
+            ),
           ),
         });
         console.log(`Accepted intro email sent to employer: ${employerEmail}`);
