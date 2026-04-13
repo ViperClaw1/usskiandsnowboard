@@ -723,6 +723,20 @@ const AthleteDirectory = () => {
                   <p className="text-xs text-muted-foreground">Not specified</p>
                 )}
               </div>
+              {canSendRequest && (
+                <Button
+                  className="w-full"
+                  variant={existingRequests.has(athlete.id) ? "outline" : "default"}
+                  disabled={existingRequests.has(athlete.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedAthlete(athlete);
+                    setShowRequestDialog(true);
+                  }}
+                >
+                  {existingRequests.has(athlete.id) ? "Request Sent" : "Request Connection"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -806,6 +820,16 @@ const AthleteDirectory = () => {
                     <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
                     {selectedAthlete.sport_discipline && (
                       <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
+                    )}
+                    {canSendRequest && (
+                      <Button
+                        onClick={() => setShowRequestDialog(true)}
+                        className="mt-4 w-full sm:w-auto"
+                        variant={existingRequests.has(selectedAthlete.id) ? "outline" : "default"}
+                        disabled={existingRequests.has(selectedAthlete.id)}
+                      >
+                        {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
+                      </Button>
                     )}
                   </div>
 
