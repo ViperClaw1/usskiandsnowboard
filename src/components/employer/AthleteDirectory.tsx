@@ -979,15 +979,6 @@ const AthleteDirectory = () => {
                     )}
                   </div>
 
-                  {canSendRequest && (
-                    <Button
-                      onClick={() => setShowRequestDialog(true)}
-                      className="w-full"
-                      disabled={existingRequests.has(selectedAthlete.id)}
-                    >
-                      {existingRequests.has(selectedAthlete.id) ? "Request Sent" : "Request Connection"}
-                    </Button>
-                  )}
                 </TabsContent>
 
                 <TabsContent value="portfolio" className="mt-6">
