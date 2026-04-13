@@ -50,7 +50,6 @@ interface AthleteProfile {
   profiles: {
     full_name: string | null;
   };
-  lifestyle_photos?: string[];
 }
 
 interface Education {
@@ -117,40 +116,30 @@ const EMPLOYER_PROFILE_KEY = ["athlete-directory-employer-profile"];
 const fetchDirectoryAthletes = async (): Promise<AthleteProfile[]> => {
   const { data, error } = await supabase
     .from("athlete_profiles")
-    .select(`*, profiles(full_name)`)
+    .select(`
+      id,
+      user_id,
+      email,
+      bio,
+      sport_discipline,
+      skills,
+      photo_url,
+      background_image_url,
+      availability,
+      career_interests,
+      geographic_preferences,
+      professional_highlights,
+      years_of_membership,
+      instagram_url,
+      profile_views,
+      sponsors,
+      profiles(full_name)
+    `)
     .eq("is_public", true)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-
-  // Load lifestyle photos for each athlete in parallel
-  const athletesWithPhotos = await Promise.all(
-    (data || []).map(async (athlete) => {
-      try {
-        const { data: photoFiles } = await supabase.storage
-          .from("athlete-photos")
-          .list(`${athlete.user_id}/lifestyle`, {
-            limit: 5,
-            sortBy: { column: "created_at", order: "desc" },
-          });
-
-        if (photoFiles && photoFiles.length > 0) {
-          const photoUrls = photoFiles.map((file) => {
-            const { data: urlData } = supabase.storage
-              .from("athlete-photos")
-              .getPublicUrl(`${athlete.user_id}/lifestyle/${file.name}`);
-            return urlData.publicUrl;
-          });
-          return { ...athlete, lifestyle_photos: photoUrls };
-        }
-        return { ...athlete, lifestyle_photos: [] };
-      } catch {
-        return { ...athlete, lifestyle_photos: [] };
-      }
-    }),
-  );
-
-  return athletesWithPhotos;
+  return (data ?? []) as AthleteProfile[];
 };
 
 const fetchEmployerProfile = async (): Promise<EmployerProfile | null> => {
