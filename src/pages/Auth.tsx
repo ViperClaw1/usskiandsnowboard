@@ -1272,6 +1272,8 @@ const WaitlistProfileStep = ({
         <CardContent className="space-y-4">
           {userType === "athlete" ? (
             <WaitlistAthleteForm formData={formData} updateField={updateField} />
+          ) : userType === "expert" ? (
+            <WaitlistExpertForm formData={formData} updateField={updateField} />
           ) : (
             <WaitlistEmployerForm formData={formData} updateField={updateField} />
           )}
@@ -1370,6 +1372,74 @@ const WaitlistAthleteForm = ({
           placeholder="Key achievements, records, competition history..."
           value={formData.professional_highlights || ""}
           onChange={(e) => updateField("professional_highlights", e.target.value)}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ==============================
+// WaitlistExpertForm — simplified expert fields (no company name/size/website)
+// ==============================
+const WaitlistExpertForm = ({
+  formData,
+  updateField,
+}: {
+  formData: Record<string, any>;
+  updateField: (k: string, v: any) => void;
+}) => {
+  const INDUSTRIES = [
+    "Technology", "Finance", "Healthcare", "Sports & Recreation",
+    "Media & Entertainment", "Retail", "Manufacturing", "Consulting",
+    "Education", "Non-Profit", "Government", "Other",
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Industry</Label>
+        <select
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          value={formData.industry || ""}
+          onChange={(e) => updateField("industry", e.target.value)}
+        >
+          <option value="">Select industry</option>
+          {INDUSTRIES.map((i) => (
+            <option key={i} value={i}>{i}</option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label>About</Label>
+        <textarea
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-y"
+          placeholder="Tell us about your expertise..."
+          value={formData.about || ""}
+          onChange={(e) => updateField("about", e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>LinkedIn URL</Label>
+        <Input
+          placeholder="https://linkedin.com/in/..."
+          value={formData.linkedin_url || ""}
+          onChange={(e) => updateField("linkedin_url", e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Location</Label>
+        <Input
+          placeholder="e.g. Park City, UT"
+          value={formData.hq_location || ""}
+          onChange={(e) => updateField("hq_location", e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Area of Expertise</Label>
+        <Input
+          placeholder="e.g. Career coaching, Financial planning..."
+          value={formData.area_of_expertise || ""}
+          onChange={(e) => updateField("area_of_expertise", e.target.value)}
         />
       </div>
     </div>
