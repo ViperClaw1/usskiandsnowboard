@@ -136,8 +136,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { notification_type, user_id, request_id }: AdminNotificationRequest = await req.json();
-    console.log("Processing admin notification:", { notification_type, user_id, request_id });
+    const { notification_type, user_id, request_id, applicant_name, applicant_email, applicant_role }: AdminNotificationRequest = await req.json();
+    console.log("Processing admin notification:", { notification_type, user_id, request_id, applicant_name, applicant_email, applicant_role });
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
@@ -167,6 +167,9 @@ const handler = async (req: Request): Promise<Response> => {
         break;
       case "connection_accepted":
         preferenceColumn = "email_accepted_connections";
+        break;
+      case "new_waitlist_application":
+        preferenceColumn = "email_new_accounts";
         break;
       default:
         preferenceColumn = "email_new_requests";
@@ -281,6 +284,12 @@ const handler = async (req: Request): Promise<Response> => {
           ),
         );
       }
+    } else if (notification_type === "new_waitlist_application" && applicant_name && applicant_email && applicant_role) {
+      emailSubject = "New Waitlist Application - US Ski & Snowboard";
+      emailHtml = emailTemplate(
+        "New Waitlist Application",
+        newWaitlistApplicationBody(applicant_name, applicant_email, applicant_role),
+      );
     }
 
     // === Sequential send with 1000 ms gap to stay under the 2 req/s Resend limit ===
