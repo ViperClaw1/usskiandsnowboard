@@ -77,6 +77,20 @@ serve(async (req) => {
       });
     }
 
+    // Notify admins about the new waitlist application (non-fatal)
+    try {
+      await supabase.functions.invoke("send-admin-notification", {
+        body: {
+          notification_type: "new_waitlist_application",
+          applicant_name: full_name,
+          applicant_email: email,
+          applicant_role: user_type,
+        },
+      });
+    } catch (notifyErr) {
+      console.error("Failed to send admin notification (non-fatal):", notifyErr);
+    }
+
     return new Response(JSON.stringify({ success: true, id: data.id }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

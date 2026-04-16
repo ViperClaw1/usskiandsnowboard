@@ -12,9 +12,12 @@ const corsHeaders = {
 };
 
 interface AdminNotificationRequest {
-  notification_type: "new_account" | "connection_declined" | "new_connection_request" | "connection_accepted";
+  notification_type: "new_account" | "connection_declined" | "new_connection_request" | "connection_accepted" | "new_waitlist_application";
   user_id?: string;
   request_id?: string;
+  applicant_name?: string;
+  applicant_email?: string;
+  applicant_role?: string;
 }
 
 // === Email body builders ===
@@ -79,6 +82,30 @@ function connectionAcceptedBody(athleteName: string, companyName: string, date: 
     </table>`;
 }
 
+function newWaitlistApplicationBody(fullName: string, email: string, role: string): string {
+  const dashboardUrl = "https://usskiandsnowboard.lovable.app/dashboard";
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  return `
+    <p style="margin: 0 0 30px; font-size: 16px;">A new applicant is waiting for your review on the U.S. Ski &amp; Snowboard platform:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Name:</strong> ${fullName}</p>
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Email:</strong> ${email}</p>
+          <p style="margin: 0; font-size: 15px;"><strong>Applying as:</strong> ${roleLabel}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0 0 30px; font-size: 16px;">Please review the application and approve or decline it from the admin dashboard.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 30px;">
+      <tr>
+        <td align="center">
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Application</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
 function connectionDeclinedBody(athleteName: string, companyName: string, date: string): string {
   const dashboardUrl = "https://usskiandsnowboard.lovable.app/dashboard";
   return `
@@ -109,8 +136,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { notification_type, user_id, request_id }: AdminNotificationRequest = await req.json();
-    console.log("Processing admin notification:", { notification_type, user_id, request_id });
+    const { notification_type, user_id, request_id, applicant_name, applicant_email, applicant_role }: AdminNotificationRequest = await req.json();
+    console.log("Processing admin notification:", { notification_type, user_id, request_id, applicant_name, applicant_email, applicant_role });
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
@@ -140,6 +167,9 @@ const handler = async (req: Request): Promise<Response> => {
         break;
       case "connection_accepted":
         preferenceColumn = "email_accepted_connections";
+        break;
+      case "new_waitlist_application":
+        preferenceColumn = "email_new_accounts";
         break;
       default:
         preferenceColumn = "email_new_requests";
@@ -254,6 +284,12 @@ const handler = async (req: Request): Promise<Response> => {
           ),
         );
       }
+    } else if (notification_type === "new_waitlist_application" && applicant_name && applicant_email && applicant_role) {
+      emailSubject = "New Waitlist Application - US Ski & Snowboard";
+      emailHtml = emailTemplate(
+        "New Waitlist Application",
+        newWaitlistApplicationBody(applicant_name, applicant_email, applicant_role),
+      );
     }
 
     // === Sequential send with 1000 ms gap to stay under the 2 req/s Resend limit ===
