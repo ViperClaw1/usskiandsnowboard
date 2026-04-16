@@ -1341,7 +1341,7 @@ const WaitlistAthleteForm = ({
       <div className="space-y-2">
         <Label>Bio</Label>
         <textarea
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-none"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-y"
           placeholder="Tell us about yourself..."
           value={formData.bio || ""}
           onChange={(e) => updateField("bio", e.target.value)}
