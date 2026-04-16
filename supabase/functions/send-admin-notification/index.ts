@@ -12,9 +12,12 @@ const corsHeaders = {
 };
 
 interface AdminNotificationRequest {
-  notification_type: "new_account" | "connection_declined" | "new_connection_request" | "connection_accepted";
+  notification_type: "new_account" | "connection_declined" | "new_connection_request" | "connection_accepted" | "new_waitlist_application";
   user_id?: string;
   request_id?: string;
+  applicant_name?: string;
+  applicant_email?: string;
+  applicant_role?: string;
 }
 
 // === Email body builders ===
@@ -74,6 +77,30 @@ function connectionAcceptedBody(athleteName: string, companyName: string, date: 
       <tr>
         <td align="center">
           <a href="${dashboardUrl}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View in Dashboard</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+function newWaitlistApplicationBody(fullName: string, email: string, role: string): string {
+  const dashboardUrl = "https://usskiandsnowboard.lovable.app/dashboard";
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  return `
+    <p style="margin: 0 0 30px; font-size: 16px;">A new applicant is waiting for your review on the U.S. Ski &amp; Snowboard platform:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Name:</strong> ${fullName}</p>
+          <p style="margin: 0 0 10px; font-size: 15px;"><strong>Email:</strong> ${email}</p>
+          <p style="margin: 0; font-size: 15px;"><strong>Applying as:</strong> ${roleLabel}</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0 0 30px; font-size: 16px;">Please review the application and approve or decline it from the admin dashboard.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 30px;">
+      <tr>
+        <td align="center">
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Review Application</a>
         </td>
       </tr>
     </table>`;
