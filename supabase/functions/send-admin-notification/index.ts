@@ -35,6 +35,7 @@ function newAccountBody(fullName: string, email: string, role: string): string {
 }
 
 function newConnectionRequestBody(athleteName: string, sport: string, companyName: string, date: string): string {
+  const dashboardUrl = "https://usskiandsnowboard.lovable.app/dashboard";
   return `
     <p style="margin: 0 0 30px; font-size: 16px;">A new connection request has been made:</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
@@ -47,10 +48,17 @@ function newConnectionRequestBody(athleteName: string, sport: string, companyNam
         </td>
       </tr>
     </table>
-    <p style="margin: 0; font-size: 16px;">You can view all connection requests in the admin dashboard.</p>`;
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 30px;">
+      <tr>
+        <td align="center">
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View in Dashboard</a>
+        </td>
+      </tr>
+    </table>`;
 }
 
 function connectionAcceptedBody(athleteName: string, companyName: string, date: string): string {
+  const dashboardUrl = "https://usskiandsnowboard.lovable.app/dashboard";
   return `
     <p style="margin: 0 0 30px; font-size: 16px;">A connection has been established:</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
@@ -62,10 +70,17 @@ function connectionAcceptedBody(athleteName: string, companyName: string, date: 
         </td>
       </tr>
     </table>
-    <p style="margin: 0; font-size: 16px;">You can view all connections in the admin dashboard.</p>`;
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 30px;">
+      <tr>
+        <td align="center">
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View in Dashboard</a>
+        </td>
+      </tr>
+    </table>`;
 }
 
 function connectionDeclinedBody(athleteName: string, companyName: string, date: string): string {
+  const dashboardUrl = "https://usskiandsnowboard.lovable.app/dashboard";
   return `
     <p style="margin: 0 0 30px; font-size: 16px;">A connection request has been declined:</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 8px; margin: 0 0 30px;">
@@ -77,7 +92,13 @@ function connectionDeclinedBody(athleteName: string, companyName: string, date: 
         </td>
       </tr>
     </table>
-    <p style="margin: 0; font-size: 16px;">You can view all connections in the admin dashboard.</p>`;
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 30px;">
+      <tr>
+        <td align="center">
+          <a href="${dashboardUrl}" style="display: inline-block; padding: 16px 40px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View in Dashboard</a>
+        </td>
+      </tr>
+    </table>`;
 }
 
 // === Handler ===
