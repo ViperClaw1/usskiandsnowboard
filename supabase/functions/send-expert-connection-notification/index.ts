@@ -8,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CC_ADDRESS = "michele.lowry@usskiandsnowboard.org";
+const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org"];
 const FROM_ADDRESS = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 const APP_URL = "https://usskiandsnowboard.lovable.app";
 
