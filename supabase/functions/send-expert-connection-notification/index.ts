@@ -8,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org"];
+const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org", "bryanhdunn@gmail.com"];
 const FROM_ADDRESS = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 const APP_URL = "https://usskiandsnowboard.lovable.app";
 
@@ -253,7 +253,9 @@ Deno.serve(async (req) => {
 
       if (athleteEmail) {
         const html = emailTemplate("Athlete Connection Introduction", athleteBodyHtml);
-        console.log(`[expert-notif] Sending request_accepted athlete intro TO: ${athleteEmail} subject="${athleteSubject}"`);
+        console.log(
+          `[expert-notif] Sending request_accepted athlete intro TO: ${athleteEmail} subject="${athleteSubject}"`,
+        );
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [athleteEmail],
@@ -266,7 +268,9 @@ Deno.serve(async (req) => {
 
       if (expertEmail) {
         const html = emailTemplate("Expert Connection Introduction", expertBodyHtml);
-        console.log(`[expert-notif] Sending request_accepted expert intro TO: ${expertEmail} subject="${expertSubject}"`);
+        console.log(
+          `[expert-notif] Sending request_accepted expert intro TO: ${expertEmail} subject="${expertSubject}"`,
+        );
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [expertEmail],
