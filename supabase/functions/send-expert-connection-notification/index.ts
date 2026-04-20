@@ -8,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CC_ADDRESS = "michele.lowry@usskiandsnowboard.org";
+const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org"];
 const FROM_ADDRESS = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 const APP_URL = "https://usskiandsnowboard.lovable.app";
 
@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [expertEmail],
-          cc: [CC_ADDRESS],
+          cc: CC_ADDRESSES,
           subject,
           html,
         });
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
         console.warn(`[expert-notif] Expert email missing, sending to CC only`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
-          to: [CC_ADDRESS],
+          to: CC_ADDRESSES,
           subject: `[Missing Expert Email] ${subject}`,
           html,
         });
@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [athleteEmail],
-          cc: [CC_ADDRESS],
+          cc: CC_ADDRESSES,
           subject: athleteSubject,
           html,
         });
@@ -270,7 +270,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [expertEmail],
-          cc: [CC_ADDRESS],
+          cc: CC_ADDRESSES,
           subject: expertSubject,
           html,
         });
@@ -290,7 +290,7 @@ Deno.serve(async (req) => {
         );
         await sendEmail(resend, {
           from: FROM_ADDRESS,
-          to: [CC_ADDRESS],
+          to: CC_ADDRESSES,
           subject: `[Missing Emails] ${athleteSubject}`,
           html,
         });
@@ -320,7 +320,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [athleteEmail],
-          cc: [CC_ADDRESS],
+          cc: CC_ADDRESSES,
           subject,
           html,
         });
@@ -328,7 +328,7 @@ Deno.serve(async (req) => {
         console.warn(`[expert-notif] Athlete email missing, sending to CC only`);
         await sendEmail(resend, {
           from: FROM_ADDRESS,
-          to: [CC_ADDRESS],
+          to: CC_ADDRESSES,
           subject: `[Missing Athlete Email] ${subject}`,
           html,
         });
