@@ -1037,12 +1037,15 @@ export type Database = {
       admin_analytics_summary: {
         Row: {
           accepted_connections: number | null
+          accepted_expert_connections: number | null
           avg_athlete_completeness: number | null
           avg_employer_completeness: number | null
+          avg_expert_completeness: number | null
           pending_requests: number | null
           rejected_requests: number | null
           total_athletes: number | null
           total_employers: number | null
+          total_experts: number | null
           total_requests: number | null
           total_users: number | null
         }
