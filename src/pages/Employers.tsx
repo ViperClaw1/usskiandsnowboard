@@ -195,8 +195,8 @@ const Employers = () => {
                     {/* Blurred card grid — aria-hidden so screen readers skip */}
                     <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                        {employerList.map((employer) => (
-                          <Card key={employer.id} className="w-full">
+                        {paddedEmployers.map((employer, idx) => (
+                          <Card key={`${employer.id}-${idx}`} className="w-full">
                             <CardHeader className="pb-3">
                               <div className="flex items-center gap-3">
                                 {employer.logo_url ? (
