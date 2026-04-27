@@ -73,6 +73,7 @@ const AppRoutes = () => (
       <Route path="/admin/users" element={<AllUsers />} />
       <Route path="/admin/athletes" element={<AllAthletes />} />
       <Route path="/admin/employers" element={<AllEmployers />} />
+      <Route path="/admin/experts" element={<AllExperts />} />
       <Route path="/admin/requests" element={<AllRequests />} />
       <Route path="/admin/connections" element={<AcceptedConnections />} />
       <Route path="/admin/rejected" element={<RejectedRequests />} />
