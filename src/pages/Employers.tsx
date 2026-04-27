@@ -127,6 +127,20 @@ const Employers = () => {
   /** Stable employer list reference — prevents re-renders from reconstructing card props */
   const employerList = useMemo(() => employers, [employers]);
 
+  /**
+   * Pad the preview list to always fill two full rows (6 cards on lg, 4 on md, 2 on sm)
+   * by repeating existing cards. Keeps the blurred backdrop visually balanced.
+   */
+  const paddedEmployers = useMemo(() => {
+    if (employerList.length === 0) return [];
+    const targetCount = 6;
+    const out: typeof employerList = [];
+    for (let i = 0; i < targetCount; i++) {
+      out.push(employerList[i % employerList.length]);
+    }
+    return out;
+  }, [employerList]);
+
   // ==============================
   // Render
   // ==============================
@@ -181,8 +195,8 @@ const Employers = () => {
                     {/* Blurred card grid — aria-hidden so screen readers skip */}
                     <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                        {employerList.map((employer) => (
-                          <Card key={employer.id} className="w-full">
+                        {paddedEmployers.map((employer, idx) => (
+                          <Card key={`${employer.id}-${idx}`} className="w-full">
                             <CardHeader className="pb-3">
                               <div className="flex items-center gap-3">
                                 {employer.logo_url ? (

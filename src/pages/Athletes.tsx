@@ -111,6 +111,22 @@ const Athletes = () => {
     [athletes],
   );
 
+  /**
+   * Pad the preview list to always fill two full rows (6 cards on lg, 4 on md, 2 on sm)
+   * by repeating existing cards. This keeps the blurred backdrop visually balanced
+   * regardless of how many real athletes exist.
+   */
+  const paddedAthletes = useMemo(() => {
+    const list = athletesWithSlicedSkills;
+    if (list.length === 0) return [];
+    const targetCount = 6; // two rows of 3 at the largest breakpoint
+    const out: typeof list = [];
+    for (let i = 0; i < targetCount; i++) {
+      out.push(list[i % list.length]);
+    }
+    return out;
+  }, [athletesWithSlicedSkills]);
+
   // ==============================
   // Render
   // ==============================
@@ -156,8 +172,8 @@ const Athletes = () => {
                 {/* Blurred card grid — aria-hidden so screen readers skip */}
                 <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                    {athletesWithSlicedSkills.map((athlete) => (
-                      <Card key={athlete.id} className="w-full">
+                    {paddedAthletes.map((athlete, idx) => (
+                      <Card key={`${athlete.id}-${idx}`} className="w-full">
                         <CardHeader className="pb-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-12 w-12">

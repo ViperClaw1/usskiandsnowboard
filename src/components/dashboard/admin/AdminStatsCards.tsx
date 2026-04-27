@@ -23,16 +23,25 @@ export const AdminStatsCards = () => {
     {
       title: "Total Users",
       value: stats?.total_users || 0,
-      subtitle: `${stats?.total_athletes || 0} athletes • ${stats?.total_employers || 0} employers`,
+      subtitle: `${stats?.total_athletes || 0} athletes • ${stats?.total_employers || 0} employers • ${stats?.total_experts || 0} experts`,
       icon: Users,
       color: "text-primary",
       bgColor: "bg-primary/10",
       route: "/admin/users"
     },
     {
-      title: "Total Connections",
+      title: "Total Athlete ↔ Employer Connections",
       value: stats?.accepted_connections || 0,
       subtitle: `${stats?.total_requests || 0} total requests`,
+      icon: CheckCircle,
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+      route: "/admin/connections"
+    },
+    {
+      title: "Total Athlete ↔ Expert Connections",
+      value: stats?.accepted_expert_connections || 0,
+      subtitle: "Accepted mentorship connections",
       icon: CheckCircle,
       color: "text-accent",
       bgColor: "bg-accent/10",
@@ -73,6 +82,15 @@ export const AdminStatsCards = () => {
       color: "text-accent",
       bgColor: "bg-accent/10",
       route: "/admin/employers"
+    },
+    {
+      title: "Expert Profiles",
+      value: `${stats?.avg_expert_completeness || 0}%`,
+      subtitle: "Avg. completeness",
+      icon: TrendingUp,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      route: "/admin/users"
     }
   ];
 
