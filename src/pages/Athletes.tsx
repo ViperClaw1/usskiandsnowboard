@@ -172,8 +172,8 @@ const Athletes = () => {
                 {/* Blurred card grid — aria-hidden so screen readers skip */}
                 <div className="blur-sm pointer-events-none select-none" aria-hidden="true">
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                    {athletesWithSlicedSkills.map((athlete) => (
-                      <Card key={athlete.id} className="w-full">
+                    {paddedAthletes.map((athlete, idx) => (
+                      <Card key={`${athlete.id}-${idx}`} className="w-full">
                         <CardHeader className="pb-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-12 w-12">
