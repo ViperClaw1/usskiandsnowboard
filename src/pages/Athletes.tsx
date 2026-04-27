@@ -49,9 +49,9 @@ const PageSkeleton = () => (
     <section className="py-8 sm:py-12">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <ProfileCardSkeleton />
-          <ProfileCardSkeleton />
-          <ProfileCardSkeleton />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ProfileCardSkeleton key={i} />
+          ))}
         </div>
       </div>
     </section>
