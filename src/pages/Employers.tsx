@@ -127,6 +127,20 @@ const Employers = () => {
   /** Stable employer list reference — prevents re-renders from reconstructing card props */
   const employerList = useMemo(() => employers, [employers]);
 
+  /**
+   * Pad the preview list to always fill two full rows (6 cards on lg, 4 on md, 2 on sm)
+   * by repeating existing cards. Keeps the blurred backdrop visually balanced.
+   */
+  const paddedEmployers = useMemo(() => {
+    if (employerList.length === 0) return [];
+    const targetCount = 6;
+    const out: typeof employerList = [];
+    for (let i = 0; i < targetCount; i++) {
+      out.push(employerList[i % employerList.length]);
+    }
+    return out;
+  }, [employerList]);
+
   // ==============================
   // Render
   // ==============================
