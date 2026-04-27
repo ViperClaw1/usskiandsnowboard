@@ -90,7 +90,7 @@ export const AdminStatsCards = () => {
       icon: TrendingUp,
       color: "text-primary",
       bgColor: "bg-primary/10",
-      route: "/admin/users"
+      route: "/admin/experts"
     }
   ];
 
