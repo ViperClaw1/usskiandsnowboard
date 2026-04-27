@@ -111,6 +111,22 @@ const Athletes = () => {
     [athletes],
   );
 
+  /**
+   * Pad the preview list to always fill two full rows (6 cards on lg, 4 on md, 2 on sm)
+   * by repeating existing cards. This keeps the blurred backdrop visually balanced
+   * regardless of how many real athletes exist.
+   */
+  const paddedAthletes = useMemo(() => {
+    const list = athletesWithSlicedSkills;
+    if (list.length === 0) return [];
+    const targetCount = 6; // two rows of 3 at the largest breakpoint
+    const out: typeof list = [];
+    for (let i = 0; i < targetCount; i++) {
+      out.push(list[i % list.length]);
+    }
+    return out;
+  }, [athletesWithSlicedSkills]);
+
   // ==============================
   // Render
   // ==============================
