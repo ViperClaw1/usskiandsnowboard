@@ -23,6 +23,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AllUsers from "./pages/admin/AllUsers";
 import AllAthletes from "./pages/admin/AllAthletes";
 import AllEmployers from "./pages/admin/AllEmployers";
+import AllExperts from "./pages/admin/AllExperts";
 import AllRequests from "./pages/admin/AllRequests";
 import AcceptedConnections from "./pages/admin/AcceptedConnections";
 import RejectedRequests from "./pages/admin/RejectedRequests";
