@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [athleteEmail],
-          cc: CC_ADDRESSES,
+          cc: uniqEmails([...CC_ADDRESSES, ...CC_INTRO_EXTRA]),
           subject: athleteSubject,
           html,
         });
@@ -278,7 +278,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [expertEmail],
-          cc: CC_ADDRESSES,
+          cc: uniqEmails([...CC_ADDRESSES, ...CC_INTRO_EXTRA, athleteEmail]),
           subject: expertSubject,
           html,
         });
