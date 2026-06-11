@@ -13,6 +13,7 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
 
 const FROM = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 const CC_ALWAYS = ["michele.lowry@usskiandsnowboard.org"];
+const CC_INTRO_EXTRA = ["bryan@cardinallands.com"];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
