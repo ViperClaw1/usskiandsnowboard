@@ -9,6 +9,10 @@ const corsHeaders = {
 };
 
 const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org", "bryanhdunn@gmail.com"];
+const CC_INTRO_EXTRA = ["bryan@cardinallands.com"];
+
+const uniqEmails = (arr: (string | null | undefined)[]) =>
+  Array.from(new Set(arr.filter((x): x is string => !!x && x.trim().length > 0).map((x) => x.trim())));
 const FROM_ADDRESS = "U.S. Ski & Snowboard <notifications@athleteconnection.org>";
 const APP_URL = "https://usskiandsnowboard.lovable.app";
 
