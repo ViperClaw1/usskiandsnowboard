@@ -365,11 +365,15 @@ const handler = async (req: Request): Promise<Response> => {
       const athleteCanReceive = athleteUserId ? await shouldSendEmail(supabase, athleteUserId, "request_accepted") : true;
       const employerCanReceive = employerUserId ? await shouldSendEmail(supabase, employerUserId, "request_accepted") : true;
 
+      // Dedup helper for CC lists
+      const uniq = (arr: (string | null | undefined)[]) =>
+        Array.from(new Set(arr.filter((x): x is string => !!x && x.trim().length > 0)));
+
       if (athleteEmail && athleteCanReceive) {
         await sendEmail(resend, {
           from: FROM,
           to: [athleteEmail],
-          cc: CC_ALWAYS,
+          cc: uniq([...CC_ALWAYS, ...CC_INTRO_EXTRA]),
           subject: `${athleteFullName} <> ${companyName} — Athlete Connection Introduction`,
           html: emailTemplate(
             "You're Connected!",
@@ -391,7 +395,7 @@ const handler = async (req: Request): Promise<Response> => {
         await sendEmail(resend, {
           from: FROM,
           to: [employerEmail],
-          cc: CC_ALWAYS,
+          cc: uniq([...CC_ALWAYS, ...CC_INTRO_EXTRA, athleteEmail]),
           subject: `${companyName} <> ${athleteFullName} — Athlete Connection Introduction`,
           html: emailTemplate(
             "You're Connected!",
