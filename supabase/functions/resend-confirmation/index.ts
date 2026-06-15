@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
     const { error: emailError } = await resend.emails.send({
       from: FROM,
       to: [email],
+      reply_to: "michele.lowry@usskiandsnowboard.org",
       subject: "Confirm your email address",
       html: emailTemplate("Welcome to U.S. Ski & Snowboard!", bodyHtml),
     });
