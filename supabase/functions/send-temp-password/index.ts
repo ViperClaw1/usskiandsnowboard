@@ -93,6 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "U.S. Ski & Snowboard <notifications@athleteconnection.org>",
       to: [profile.email],
+      reply_to: "michele.lowry@usskiandsnowboard.org",
       subject: "Your Temporary Password",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
