@@ -68,7 +68,15 @@ export interface EmailPayload {
   subject: string;
   html: string;
   cc?: string[];
+  replyTo?: string | string[];
 }
+
+/**
+ * Default Reply-To for all outbound mail. The `notifications@athleteconnection.org`
+ * sender is an unmonitored no-reply mailbox, so we redirect any replies (including
+ * "Reply All") to a monitored address to prevent bounces / "Address Not Found".
+ */
+export const DEFAULT_REPLY_TO = "michele.lowry@usskiandsnowboard.org";
 
 /**
  * Send a single email via Resend.
@@ -80,6 +88,7 @@ export async function sendEmail(resend: Resend, payload: EmailPayload): Promise<
     to: payload.to,
     subject: payload.subject,
     html: payload.html,
+    reply_to: payload.replyTo ?? DEFAULT_REPLY_TO,
   };
   if (payload.cc && payload.cc.length > 0) {
     sendPayload.cc = payload.cc;
