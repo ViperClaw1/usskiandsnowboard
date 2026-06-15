@@ -30,6 +30,7 @@ import {
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 import { SPORT_DISCIPLINES_OPTIONS } from "@/data/suggestions";
+import { EMPLOYER_REGISTRATION_ENABLED } from "@/config/features";
 
 // ==============================
 // Utilities
