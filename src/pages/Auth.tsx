@@ -135,7 +135,12 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const typeParam = searchParams.get("type");
-  const initialType = typeParam === "athlete" || typeParam === "employer" || typeParam === "expert" ? typeParam : null;
+  const normalizedTypeParam =
+    !EMPLOYER_REGISTRATION_ENABLED && typeParam === "employer" ? "athlete" : typeParam;
+  const initialType =
+    normalizedTypeParam === "athlete" || normalizedTypeParam === "employer" || normalizedTypeParam === "expert"
+      ? normalizedTypeParam
+      : null;
 
   // ---- Step machine ----
   const [step, setStep] = useState<AuthStep>("landing");
@@ -814,7 +819,9 @@ const Auth = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="athlete">Athlete</SelectItem>
-                  <SelectItem value="employer">Employer</SelectItem>
+                  {EMPLOYER_REGISTRATION_ENABLED && (
+                    <SelectItem value="employer">Employer</SelectItem>
+                  )}
                   <SelectItem value="expert">Expert</SelectItem>
                 </SelectContent>
               </Select>
