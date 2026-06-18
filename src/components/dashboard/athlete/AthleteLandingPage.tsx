@@ -16,7 +16,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Clock,
-  Video,
+  
   EyeIcon,
   Pencil,
   MapPin,
