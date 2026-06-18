@@ -148,7 +148,12 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     if (filterIndustry === "alum") {
       res = res.filter((e) => e.is_alum);
     } else if (filterIndustry !== "all") {
-      res = res.filter((e) => e.industry === filterIndustry);
+      res = res.filter((e) =>
+        e.industry
+          ?.split(",")
+          .map((v) => v.trim())
+          .includes(filterIndustry),
+      );
     }
     return res;
   }, [experts, search, filterIndustry]);
