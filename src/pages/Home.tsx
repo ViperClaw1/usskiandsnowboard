@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Briefcase, ArrowRight, Newspaper, ExternalLink } from "lucide-react";
+import { Users, Star, ArrowRight, Newspaper, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import heroImage from "@/assets/hero-skiing.jpg";
