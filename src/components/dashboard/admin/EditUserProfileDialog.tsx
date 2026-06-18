@@ -9,6 +9,8 @@ import { Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { INDUSTRY_OPTIONS } from "@/data/suggestions";
 
 type EditableRole = "athlete" | "expert";
 
