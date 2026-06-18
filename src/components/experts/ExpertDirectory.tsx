@@ -103,7 +103,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
   const [filterIndustry, setFilterIndustry] = useState("all");
   const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
   const [connectionDialogExpert, setConnectionDialogExpert] = useState<ExpertProfile | null>(null);
-  const [page, setPage] = useState(1);
+  
 
   const { data: experts = [], isLoading } = useQuery({
     queryKey: ["expert-profiles"],
