@@ -298,27 +298,14 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
       )}
 
       {totalFilteredExperts > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredExperts} matching experts
+        <>
+          <div ref={sentinelRef} aria-hidden className="h-1" />
+          <p className="text-center text-sm text-muted-foreground">
+            {hasMore
+              ? `Loading more… (showing ${paginatedExperts.length} of ${totalFilteredExperts})`
+              : `Showing all ${totalFilteredExperts} matching experts`}
           </p>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Expert Detail Dialog */}
