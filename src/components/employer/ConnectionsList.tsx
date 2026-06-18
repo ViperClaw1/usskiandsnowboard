@@ -377,24 +377,35 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6 mt-4">
-                {/* Banner */}
-                <div className="relative -mx-6 -mt-4">
-                  <div
-                    className={`h-28 rounded-t-lg overflow-hidden ${selectedConnection.athlete_profiles.background_image_url ? "bg-cover bg-center" : "bg-gradient-to-br from-primary/20 via-primary/10 to-muted"}`}
-                    style={selectedConnection.athlete_profiles.background_image_url ? { backgroundImage: `url(${selectedConnection.athlete_profiles.background_image_url})` } : undefined}
-                  />
-                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
-                    <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
-                    <AvatarFallback>AT</AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="pt-10 pb-2">
-                  <h3 className="font-semibold text-lg">
-                    {selectedConnection.athlete_profiles.profiles?.full_name || "Athlete"}
-                  </h3>
-                  {selectedConnection.athlete_profiles.sport_discipline && (
-                    <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.sport_discipline}</p>
-                  )}
+                {selectedConnection.athlete_profiles.background_image_url && (
+                  <div className="relative -mx-6 -mt-4">
+                    <div
+                      className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${selectedConnection.athlete_profiles.background_image_url})` }}
+                    />
+                    <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                      <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
+                      <AvatarFallback>AT</AvatarFallback>
+                    </Avatar>
+                  </div>
+                )}
+                <div className={selectedConnection.athlete_profiles.background_image_url ? "pt-10 pb-2" : "pb-2"}>
+                  <div className="flex items-start gap-4">
+                    {!selectedConnection.athlete_profiles.background_image_url && (
+                      <Avatar className="h-16 w-16 border-4 border-background shadow-lg shrink-0">
+                        <AvatarImage src={selectedConnection.athlete_profiles.photo_url ?? undefined} />
+                        <AvatarFallback>AT</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {selectedConnection.athlete_profiles.profiles?.full_name || "Athlete"}
+                      </h3>
+                      {selectedConnection.athlete_profiles.sport_discipline && (
+                        <p className="text-sm text-muted-foreground">{selectedConnection.athlete_profiles.sport_discipline}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div>
