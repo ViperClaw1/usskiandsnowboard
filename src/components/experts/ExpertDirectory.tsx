@@ -156,13 +156,19 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           .includes(filterIndustry),
       );
     }
+    if (filterAffiliation !== "all") {
+      res = res.filter(
+        (e) => (e.ussa_affiliate ?? "").toLowerCase() === filterAffiliation.toLowerCase(),
+      );
+    }
     return res;
-  }, [experts, search, filterIndustry]);
+  }, [experts, search, filterIndustry, filterAffiliation]);
 
   const totalFilteredExperts = filtered.length;
   const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredExperts, [
     search,
     filterIndustry,
+    filterAffiliation,
   ]);
 
   const paginatedExperts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
