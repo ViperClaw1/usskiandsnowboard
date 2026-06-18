@@ -618,10 +618,9 @@ const AthleteDirectory = () => {
             onClick={async () => {
               setSelectedAthlete(athlete);
               try {
-                await supabase
-                  .from("athlete_profiles")
-                  .update({ profile_views: (athlete.profile_views || 0) + 1 })
-                  .eq("id", athlete.id);
+                await supabase.rpc("increment_athlete_profile_views", {
+                  athlete_profile_id: athlete.id,
+                });
               } catch (error) {
                 console.error("Error tracking view:", error);
               }

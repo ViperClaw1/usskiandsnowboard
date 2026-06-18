@@ -260,7 +260,16 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               <Card
                 key={expert.id}
                 className="cursor-pointer hover:shadow-md transition-shadow flex flex-col"
-                onClick={() => setSelectedExpert(expert)}
+                onClick={async () => {
+                  setSelectedExpert(expert);
+                  try {
+                    await supabase.rpc("increment_expert_profile_views", {
+                      expert_profile_id: expert.id,
+                    });
+                  } catch (error) {
+                    console.error("Error tracking expert view:", error);
+                  }
+                }}
               >
                 <CardContent className="p-5 flex flex-col flex-1 items-center text-center gap-3">
                   <Avatar className="h-16 w-16">
