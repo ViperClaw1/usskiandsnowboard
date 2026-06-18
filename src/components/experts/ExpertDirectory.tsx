@@ -176,6 +176,22 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     setPage((prev) => Math.min(prev, totalPages));
   }, [totalPages]);
 
+  // Make the device Back button close the expert dialog instead of leaving /experts.
+  useEffect(() => {
+    if (!selectedExpert) return;
+    window.history.pushState({ expertDialog: true }, "");
+    const onPop = () => setSelectedExpert(null);
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // If our temporary entry is still on top, pop it so we don't leave junk in history.
+      if (window.history.state && (window.history.state as { expertDialog?: boolean }).expertDialog) {
+        window.history.back();
+      }
+    };
+  }, [selectedExpert]);
+
+
   const canRequest = role === "athlete";
 
   if (isLoading) return <DirectoryLoadingSkeleton />;
