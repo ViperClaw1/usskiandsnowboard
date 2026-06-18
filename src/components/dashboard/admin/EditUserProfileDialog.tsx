@@ -40,6 +40,7 @@ export const EditUserProfileDialog = ({
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [bio, setBio] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const [companyName, setCompanyName] = useState<string>("");
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
