@@ -418,7 +418,7 @@ export const FullUserManagementTable = () => {
 
                   {/* Roles */}
                   {currentUser && (
-                    <div className="mt-2">
+                    <div className="mt-2 space-y-1.5">
                       <UserRoleManager
                         userId={user.id}
                         currentUserId={currentUser.id}
@@ -426,6 +426,13 @@ export const FullUserManagementTable = () => {
                         userName={user.full_name || ""}
                         roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
                       />
+                      {(user.roles as string[]).includes("expert") && (
+                        <ExpertBadgeManager
+                          userId={user.id}
+                          userName={user.full_name || user.email}
+                          currentAffiliate={(user as { expertAffiliate?: string | null }).expertAffiliate ?? null}
+                        />
+                      )}
                     </div>
                   )}
 
