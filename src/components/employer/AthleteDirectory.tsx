@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw, ImagePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -773,12 +773,7 @@ const AthleteDirectory = () => {
         >
           <DialogContent className="max-w-3xl">
             <div className="max-h-[50vh] sm:max-h-[85vh] overflow-y-auto overflow-x-hidden">
-                <Tabs defaultValue="profile" className="w-full">
-                  <TabsList className="grid w-full grid-cols-1">
-                    <TabsTrigger value="profile">Profile</TabsTrigger>
-                  </TabsList>
-
-                <TabsContent value="profile" className="space-y-6 mt-6">
+                <div className="w-full space-y-6 mt-6">
                   {selectedAthlete.background_image_url && (
                     <div className="relative -mx-6 -mt-6">
                       <div
@@ -976,9 +971,7 @@ const AthleteDirectory = () => {
                     </div>
                   )}
 
-
-                </TabsContent>
-              </Tabs>
+                </div>
             </div>
           </DialogContent>
         </Dialog>

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 
 interface Connection {
@@ -371,12 +371,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
               </DialogTitle>
             </DialogHeader>
 
-            <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="grid w-full grid-cols-1">
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="profile" className="space-y-6 mt-4">
+            <div className="w-full space-y-6 mt-4">
                 {selectedConnection.athlete_profiles.background_image_url && (
                   <div className="relative -mx-6 -mt-4">
                     <div
@@ -525,9 +520,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                   )}
                 </div>
               )}
-            </TabsContent>
-
-          </Tabs>
+            </div>
             </div>
           </DialogContent>
         </Dialog>
