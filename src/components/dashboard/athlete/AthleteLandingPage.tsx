@@ -26,9 +26,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
-import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
