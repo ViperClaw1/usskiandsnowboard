@@ -39,6 +39,7 @@ export const EditUserProfileDialog = ({
   const [uploading, setUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [bio, setBio] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
