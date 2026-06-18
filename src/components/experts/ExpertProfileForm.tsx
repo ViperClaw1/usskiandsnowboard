@@ -156,6 +156,7 @@ export const ExpertProfileForm = ({
       const payload = {
         full_name: form.full_name.trim(),
         job_title: form.job_title.trim() || null,
+        company_name: form.company_name.trim() || null,
         area_of_expertise: form.area_of_expertise.trim() || null,
         headshot: form.headshot.trim() || null,
         bio: form.bio.trim() || null,
