@@ -163,8 +163,22 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
         );
       }
     }
+    // Sort: experts created within the last 30 days first (newest first), then the rest by created_at desc
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const isNewExpert = (e: ExpertProfile) =>
+      e.created_at ? now - new Date(e.created_at).getTime() <= THIRTY_DAYS_MS : false;
+    res = [...res].sort((a, b) => {
+      const aNew = isNewExpert(a) ? 1 : 0;
+      const bNew = isNewExpert(b) ? 1 : 0;
+      if (aNew !== bNew) return bNew - aNew;
+      const at = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return bt - at;
+    });
     return res;
   }, [experts, search, filterIndustry, filterAffiliation]);
+
 
   const totalFilteredExperts = filtered.length;
   const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredExperts, [
