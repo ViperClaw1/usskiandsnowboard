@@ -1098,7 +1098,7 @@ export type Database = {
       user_signups_by_day: {
         Row: {
           athlete_signups: number | null
-          employer_signups: number | null
+          expert_signups: number | null
           signup_date: string | null
           signups: number | null
         }

@@ -57,10 +57,10 @@ export const SignupsChart = () => {
             />
             <Line 
               type="monotone" 
-              dataKey="employer_signups" 
+              dataKey="expert_signups" 
               stroke="hsl(var(--accent))" 
               strokeWidth={2}
-              name="Employers"
+              name="Experts"
             />
           </LineChart>
         </ResponsiveContainer>
