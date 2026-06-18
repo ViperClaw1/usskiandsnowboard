@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
+import { ExpertBadgeManager } from "./ExpertBadgeManager";
 import { Search, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -77,7 +78,7 @@ export const FullUserManagementTable = () => {
 
       const { data: experts, error: expertsError } = await supabase
         .from("expert_profiles")
-        .select("user_id, full_name");
+        .select("user_id, full_name, ussa_affiliate");
 
       if (expertsError) throw expertsError;
 
@@ -87,6 +88,10 @@ export const FullUserManagementTable = () => {
       }, {});
       const expertNameByUserId = (experts ?? []).reduce<Record<string, string>>((acc, row) => {
         acc[row.user_id] = row.full_name?.trim() ?? "";
+        return acc;
+      }, {});
+      const expertAffiliateByUserId = (experts ?? []).reduce<Record<string, string | null>>((acc, row) => {
+        acc[row.user_id] = row.ussa_affiliate ?? null;
         return acc;
       }, {});
 
@@ -105,6 +110,7 @@ export const FullUserManagementTable = () => {
             roles: userRoles as string[],
             emailConfirmed: false,
             companyName: isEmployer ? (employerByUserId[profile.id] ?? null) : null,
+            expertAffiliate: expertAffiliateByUserId[profile.id] ?? null,
           };
         }) || []
       );
@@ -327,13 +333,22 @@ export const FullUserManagementTable = () => {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       {currentUser && (
-                        <UserRoleManager
-                          userId={user.id}
-                          currentUserId={currentUser.id}
-                          userEmail={user.email}
-                          userName={user.full_name || ""}
-                          roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
-                        />
+                        <div className="flex flex-col gap-1.5">
+                          <UserRoleManager
+                            userId={user.id}
+                            currentUserId={currentUser.id}
+                            userEmail={user.email}
+                            userName={user.full_name || ""}
+                            roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
+                          />
+                          {(user.roles as string[]).includes("expert") && (
+                            <ExpertBadgeManager
+                              userId={user.id}
+                              userName={user.full_name || user.email}
+                              currentAffiliate={(user as { expertAffiliate?: string | null }).expertAffiliate ?? null}
+                            />
+                          )}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -403,7 +418,7 @@ export const FullUserManagementTable = () => {
 
                   {/* Roles */}
                   {currentUser && (
-                    <div className="mt-2">
+                    <div className="mt-2 space-y-1.5">
                       <UserRoleManager
                         userId={user.id}
                         currentUserId={currentUser.id}
@@ -411,6 +426,13 @@ export const FullUserManagementTable = () => {
                         userName={user.full_name || ""}
                         roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
                       />
+                      {(user.roles as string[]).includes("expert") && (
+                        <ExpertBadgeManager
+                          userId={user.id}
+                          userName={user.full_name || user.email}
+                          currentAffiliate={(user as { expertAffiliate?: string | null }).expertAffiliate ?? null}
+                        />
+                      )}
                     </div>
                   )}
 
