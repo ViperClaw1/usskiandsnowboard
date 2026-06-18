@@ -3,7 +3,7 @@
 // ==============================
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import scheduleImage from "@/assets/schedule-image.webp";
+import scheduleImage from "@/assets/schedule-2026-27.png.asset.json";
 import { PageFooter } from "@/components/layout/PageFooter";
 
 // ==============================
@@ -21,8 +21,8 @@ const Schedule = () => (
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">2025-26 Season Schedule</h1>
-              <p className="text-base sm:text-lg text-muted-foreground">Where to see U.S. Ski &amp; Snowboard events</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">2026-27 World Cup Schedule</h1>
+              <p className="text-base sm:text-lg text-muted-foreground">U.S. Ski &amp; Snowboard World Cup events</p>
             </div>
             <a href={`${import.meta.env.BASE_URL}schedule.pdf`} download>
               <Button size="lg" className="gap-2">
@@ -39,8 +39,8 @@ const Schedule = () => (
         <div className="container mx-auto px-4">
           <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant">
             <img
-              src={scheduleImage}
-              alt="2025-26 Season Schedule"
+              src={scheduleImage.url}
+              alt="2026-27 World Cup Schedule"
               className="w-full h-auto"
               width={1200}
               height={900}
