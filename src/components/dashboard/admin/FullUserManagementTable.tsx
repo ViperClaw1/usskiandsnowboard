@@ -8,7 +8,8 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
 import { ExpertBadgeManager } from "./ExpertBadgeManager";
-import { Search, Trash2, UserPlus } from "lucide-react";
+import { Pencil, Search, Trash2, UserPlus } from "lucide-react";
+import { EditUserProfileDialog } from "./EditUserProfileDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -37,6 +38,7 @@ export const FullUserManagementTable = () => {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [userToEdit, setUserToEdit] = useState<{ id: string; name: string; role: "athlete" | "expert" } | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     email: "",
@@ -359,6 +361,31 @@ export const FullUserManagementTable = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
+                        {(() => {
+                          const roles = user.roles as string[];
+                          const editableRole: "athlete" | "expert" | null = roles.includes("athlete")
+                            ? "athlete"
+                            : roles.includes("expert")
+                              ? "expert"
+                              : null;
+                          if (!editableRole) return null;
+                          return (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                setUserToEdit({
+                                  id: user.id,
+                                  name: user.full_name || user.email,
+                                  role: editableRole,
+                                })
+                              }
+                              title="Edit profile picture & description"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          );
+                        })()}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -437,11 +464,37 @@ export const FullUserManagementTable = () => {
                   )}
 
                   {/* Action strip */}
-                  <div className="mt-3 flex items-center border-t border-border/60 pt-2.5">
+                  <div className="mt-3 flex items-center gap-1 border-t border-border/60 pt-2.5">
+                    {(() => {
+                      const roles = user.roles as string[];
+                      const editableRole: "athlete" | "expert" | null = roles.includes("athlete")
+                        ? "athlete"
+                        : roles.includes("expert")
+                          ? "expert"
+                          : null;
+                      if (!editableRole) return null;
+                      return (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="ml-auto h-8 gap-1.5 px-2 text-xs"
+                          onClick={() =>
+                            setUserToEdit({
+                              id: user.id,
+                              name: user.full_name || user.email,
+                              role: editableRole,
+                            })
+                          }
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit Profile
+                        </Button>
+                      );
+                    })()}
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="ml-auto h-8 gap-1.5 px-2 text-xs text-destructive hover:text-destructive"
+                      className={`${(user.roles as string[]).includes("athlete") || (user.roles as string[]).includes("expert") ? "" : "ml-auto"} h-8 gap-1.5 px-2 text-xs text-destructive hover:text-destructive`}
                       onClick={() => handleDeleteUser(user.id, user.email, user.full_name || "")}
                       disabled={isSelf}
                     >
@@ -546,6 +599,15 @@ export const FullUserManagementTable = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {userToEdit && (
+        <EditUserProfileDialog
+          open={!!userToEdit}
+          onOpenChange={(o) => !o && setUserToEdit(null)}
+          userId={userToEdit.id}
+          userName={userToEdit.name}
+          role={userToEdit.role}
+        />
+      )}
     </Card>
   );
 };
