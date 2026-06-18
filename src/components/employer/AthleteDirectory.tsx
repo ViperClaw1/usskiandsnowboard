@@ -791,7 +791,7 @@ const AthleteDirectory = () => {
           }}
         >
           <DialogContent className="max-w-3xl">
-            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
+            <div className="max-h-[50vh] sm:max-h-[85vh] overflow-y-auto overflow-x-hidden">
               <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="profile">Profile</TabsTrigger>

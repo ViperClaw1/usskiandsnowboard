@@ -334,7 +334,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
       {/* Expert Detail Dialog */}
       {selectedExpert && (
         <Dialog open={!!selectedExpert} onOpenChange={(o) => !o && setSelectedExpert(null)}>
-          <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] w-[calc(100vw-1rem)] sm:w-full flex flex-col gap-0">
+          <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[50vh] sm:max-h-[90vh] w-[calc(100vw-1rem)] sm:w-full flex flex-col gap-0">
             {/* Banner (fixed, doesn't scroll) */}
             {selectedExpert.background_image_url && (
               <div
