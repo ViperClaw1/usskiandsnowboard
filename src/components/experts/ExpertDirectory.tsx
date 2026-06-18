@@ -422,7 +422,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               {selectedExpert.bio && (
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">About</p>
-                  <p className="text-sm text-foreground leading-relaxed">{selectedExpert.bio}</p>
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{selectedExpert.bio}</p>
                 </div>
               )}
 
