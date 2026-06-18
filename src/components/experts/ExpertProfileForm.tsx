@@ -26,6 +26,7 @@ interface ExpertFormState {
   full_name: string;
   linkedin_url: string;
   job_title: string;
+  company_name: string;
   area_of_expertise: string;
   headshot: string;
   bio: string;
@@ -40,6 +41,7 @@ const EMPTY: ExpertFormState = {
   full_name: "",
   linkedin_url: "",
   job_title: "",
+  company_name: "",
   area_of_expertise: "",
   headshot: "",
   bio: "",
@@ -154,6 +156,7 @@ export const ExpertProfileForm = ({
       const payload = {
         full_name: form.full_name.trim(),
         job_title: form.job_title.trim() || null,
+        company_name: form.company_name.trim() || null,
         area_of_expertise: form.area_of_expertise.trim() || null,
         headshot: form.headshot.trim() || null,
         bio: form.bio.trim() || null,
@@ -227,6 +230,14 @@ export const ExpertProfileForm = ({
             value={form.job_title}
             onChange={(e) => set("job_title", e.target.value)}
             placeholder="VP of Marketing"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Company Name</Label>
+          <Input
+            value={form.company_name}
+            onChange={(e) => set("company_name", e.target.value)}
+            placeholder="Acme Corp"
           />
         </div>
         <div className="space-y-1.5">

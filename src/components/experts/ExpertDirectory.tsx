@@ -26,6 +26,7 @@ export interface ExpertProfile {
   user_id: string;
   full_name: string;
   job_title: string | null;
+  company_name: string | null;
   area_of_expertise: string | null;
   bio: string | null;
   photo_url: string | null;
@@ -300,6 +301,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                       {expert.job_title && (
                         <p className="text-sm text-muted-foreground">{expert.job_title}</p>
                       )}
+                      {expert.company_name && (
+                        <p className="text-sm text-muted-foreground">{expert.company_name}</p>
+                      )}
                       {expert.area_of_expertise && (
                         <p className="text-xs text-primary font-medium mt-1">{expert.area_of_expertise}</p>
                       )}
@@ -389,6 +393,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   <p className="text-lg leading-tight font-semibold">{selectedExpert.full_name}</p>
                   {selectedExpert.job_title && (
                     <p className="text-sm text-muted-foreground">{selectedExpert.job_title}</p>
+                  )}
+                  {selectedExpert.company_name && (
+                    <p className="text-sm text-muted-foreground">{selectedExpert.company_name}</p>
                   )}
                 </div>
               </div>

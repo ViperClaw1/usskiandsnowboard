@@ -116,6 +116,7 @@ const EXPERT_TOOL = {
       properties: {
         full_name: { type: "string" },
         job_title: { type: "string", description: "Current role/title as shown on their profile. If not explicitly found, infer from any available context (e.g. headline, experience section). Never leave blank." },
+        company_name: { type: "string", description: "Current company/employer name where the person works, as shown on their LinkedIn experience section." },
         area_of_expertise: { type: "string", description: "Primary area of professional expertise based on their actual profile content — use their real industry/domain, NOT sports unless their profile is actually sports-related. Never leave blank." },
         industry: {
           type: "string",

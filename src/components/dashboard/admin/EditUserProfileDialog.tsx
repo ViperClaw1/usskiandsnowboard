@@ -40,6 +40,7 @@ export const EditUserProfileDialog = ({
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [bio, setBio] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const [companyName, setCompanyName] = useState<string>("");
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,12 +49,13 @@ export const EditUserProfileDialog = ({
     (async () => {
       setLoading(true);
       setTitle("");
+      setCompanyName("");
       let data: any = null;
       let error: any = null;
       if (role === "expert") {
         const result = await supabase
           .from("expert_profiles")
-          .select("id, photo_url, bio, job_title")
+          .select("id, photo_url, bio, job_title, company_name")
           .eq("user_id", userId)
           .maybeSingle();
         data = result.data;
@@ -74,7 +76,10 @@ export const EditUserProfileDialog = ({
         setProfileId(data.id);
         setPhotoUrl(data.photo_url ?? "");
         setBio(data.bio ?? "");
-        if (role === "expert") setTitle(data.job_title ?? "");
+        if (role === "expert") {
+          setTitle(data.job_title ?? "");
+          setCompanyName(data.company_name ?? "");
+        }
       } else {
         setProfileId(null);
         setPhotoUrl("");
@@ -120,6 +125,7 @@ export const EditUserProfileDialog = ({
     };
     if (role === "expert") {
       payload.job_title = title || null;
+      payload.company_name = companyName || null;
     }
     const { error } = await supabase
       .from(tableFor(role))
@@ -205,16 +211,28 @@ export const EditUserProfileDialog = ({
             </div>
 
             {role === "expert" && (
-              <div className="space-y-2">
-                <Label htmlFor="admin-edit-title">Title</Label>
-                <Input
-                  id="admin-edit-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Marketing Specialist"
-                  disabled={!profileId}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-edit-title">Title</Label>
+                  <Input
+                    id="admin-edit-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Marketing Specialist"
+                    disabled={!profileId}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-edit-company">Company Name</Label>
+                  <Input
+                    id="admin-edit-company"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="e.g. Acme Corp"
+                    disabled={!profileId}
+                  />
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
