@@ -101,6 +101,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
   const [search, setSearch] = useState("");
   const [filterIndustry, setFilterIndustry] = useState("all");
+  const [filterAffiliation, setFilterAffiliation] = useState("all");
   const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
   const [connectionDialogExpert, setConnectionDialogExpert] = useState<ExpertProfile | null>(null);
   
