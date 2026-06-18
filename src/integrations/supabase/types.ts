@@ -706,6 +706,13 @@ export type Database = {
             referencedRelation: "expert_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "expert_connection_requests_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "top_expert_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       expert_profiles: {
@@ -1090,6 +1097,17 @@ export type Database = {
           company_name: string | null
           id: string | null
           industry: string | null
+          profile_completeness: number | null
+          profile_views: number | null
+        }
+        Relationships: []
+      }
+      top_expert_profiles: {
+        Row: {
+          area_of_expertise: string | null
+          full_name: string | null
+          id: string | null
+          job_title: string | null
           profile_completeness: number | null
           profile_views: number | null
         }
