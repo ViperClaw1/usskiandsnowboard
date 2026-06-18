@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,7 @@ export const EditUserProfileDialog = ({
   const [uploading, setUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [bio, setBio] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,11 +47,26 @@ export const EditUserProfileDialog = ({
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from(tableFor(role))
-        .select("id, photo_url, bio")
-        .eq("user_id", userId)
-        .maybeSingle();
+      setTitle("");
+      let data: any = null;
+      let error: any = null;
+      if (role === "expert") {
+        const result = await supabase
+          .from("expert_profiles")
+          .select("id, photo_url, bio, job_title")
+          .eq("user_id", userId)
+          .maybeSingle();
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from("athlete_profiles")
+          .select("id, photo_url, bio")
+          .eq("user_id", userId)
+          .maybeSingle();
+        data = result.data;
+        error = result.error;
+      }
       if (cancelled) return;
       if (error) {
         toast.error(`Failed to load profile: ${error.message}`);
@@ -57,6 +74,7 @@ export const EditUserProfileDialog = ({
         setProfileId(data.id);
         setPhotoUrl(data.photo_url ?? "");
         setBio(data.bio ?? "");
+        if (role === "expert") setTitle(data.job_title ?? "");
       } else {
         setProfileId(null);
         setPhotoUrl("");
@@ -96,9 +114,16 @@ export const EditUserProfileDialog = ({
   const handleSave = async () => {
     if (!profileId) return;
     setSaving(true);
+    const payload: Record<string, any> = {
+      photo_url: photoUrl || null,
+      bio: bio || null,
+    };
+    if (role === "expert") {
+      payload.job_title = title || null;
+    }
     const { error } = await supabase
       .from(tableFor(role))
-      .update({ photo_url: photoUrl || null, bio: bio || null })
+      .update(payload)
       .eq("id", profileId);
     setSaving(false);
     if (error) {
@@ -124,7 +149,7 @@ export const EditUserProfileDialog = ({
         <DialogHeader>
           <DialogTitle>Edit {role === "athlete" ? "Athlete" : "Expert"} Profile</DialogTitle>
           <DialogDescription>
-            Update {userName || "this user"}'s profile picture and description.
+            Update {userName || "this user"}'s profile picture{role === "expert" ? ", title, and description" : " and description"}.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,6 +203,19 @@ export const EditUserProfileDialog = ({
                 )}
               </div>
             </div>
+
+            {role === "expert" && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-edit-title">Title</Label>
+                <Input
+                  id="admin-edit-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Marketing Specialist"
+                  disabled={!profileId}
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="admin-edit-bio">Description / Bio</Label>
