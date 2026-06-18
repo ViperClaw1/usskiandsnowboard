@@ -53,12 +53,13 @@ export const EditUserProfileDialog = ({
       setLoading(true);
       setTitle("");
       setCompanyName("");
+      setIndustry([]);
       let data: any = null;
       let error: any = null;
       if (role === "expert") {
         const result = await supabase
           .from("expert_profiles")
-          .select("id, photo_url, bio, job_title, company_name")
+          .select("id, photo_url, bio, job_title, company_name, industry")
           .eq("user_id", userId)
           .maybeSingle();
         data = result.data;
@@ -82,6 +83,14 @@ export const EditUserProfileDialog = ({
         if (role === "expert") {
           setTitle(data.job_title ?? "");
           setCompanyName(data.company_name ?? "");
+          const ind = data.industry;
+          setIndustry(
+            Array.isArray(ind)
+              ? ind
+              : typeof ind === "string" && ind.trim()
+                ? ind.split(",").map((s: string) => s.trim()).filter(Boolean)
+                : []
+          );
         }
       } else {
         setProfileId(null);
