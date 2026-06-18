@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExpertsByIndustryChart } from "./ExpertsByIndustryChart";
 
 export const TopProfilesTable = () => {
   const { data: topAthletes, isLoading: athletesLoading } = useQuery({
@@ -119,6 +120,9 @@ export const TopProfilesTable = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Experts by Industry ── */}
+      <ExpertsByIndustryChart />
 
       {/* ── Top Experts ── */}
       <Card>
