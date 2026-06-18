@@ -26,6 +26,7 @@ import AllEmployers from "./pages/admin/AllEmployers";
 import AllExperts from "./pages/admin/AllExperts";
 import AllRequests from "./pages/admin/AllRequests";
 import AcceptedConnections from "./pages/admin/AcceptedConnections";
+import AcceptedExpertConnections from "./pages/admin/AcceptedExpertConnections";
 import RejectedRequests from "./pages/admin/RejectedRequests";
 import Settings from "./pages/Settings";
 import Training from "./pages/Training";
