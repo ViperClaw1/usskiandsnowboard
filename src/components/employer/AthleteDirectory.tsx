@@ -649,41 +649,45 @@ const AthleteDirectory = () => {
                 </Avatar>
                 <div className="text-center w-full">
                   <CardTitle className="text-lg">{athlete.profiles.full_name || "Athlete"}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {athlete.sport_discipline?.join(", ") || "Sport not specified"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {athlete.years_of_membership
-                      ? `${athlete.years_of_membership} years U.S. Ski & Snowboard`
-                      : "\u00A0"}
-                  </p>
+                  {athlete.sport_discipline && athlete.sport_discipline.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {athlete.sport_discipline.join(", ")}
+                    </p>
+                  )}
+                  {athlete.years_of_membership && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {`${athlete.years_of_membership} years U.S. Ski & Snowboard`}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3 flex-1 flex flex-col">
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio || "No bio provided"}</p>
-              </div>
-              <div className="min-h-[2.5rem]">
-                <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {athlete.professional_highlights || "Not specified"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 min-h-[1.5rem]">
-                <p className="text-xs font-semibold text-foreground">Availability:</p>
-                {athlete.availability ? (
+              {athlete.bio && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{athlete.bio}</p>
+                </div>
+              )}
+              {athlete.professional_highlights && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Highlights</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {athlete.professional_highlights}
+                  </p>
+                </div>
+              )}
+              {athlete.availability && (
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-semibold text-foreground">Availability:</p>
                   <Badge variant="outline" className="text-xs">
                     {athlete.availability}
                   </Badge>
-                ) : (
-                  <span className="text-xs text-muted-foreground">Not specified</span>
-                )}
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Interests</p>
-                {athlete.career_interests && athlete.career_interests.length > 0 ? (
+                </div>
+              )}
+              {athlete.career_interests && athlete.career_interests.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Interests</p>
                   <div className="flex flex-wrap gap-1">
                     {athlete.career_interests.slice(0, 2).map((interest, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
@@ -696,13 +700,11 @@ const AthleteDirectory = () => {
                       </Badge>
                     )}
                   </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not specified</p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
-                {athlete.skills && athlete.skills.length > 0 ? (
+                </div>
+              )}
+              {athlete.skills && athlete.skills.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Skills</p>
                   <div className="flex flex-wrap gap-1">
                     {athlete.skills.slice(0, 3).map((skill, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
@@ -715,21 +717,17 @@ const AthleteDirectory = () => {
                       </Badge>
                     )}
                   </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not specified</p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-foreground mb-1">Location Preferences</p>
-                {athlete.geographic_preferences && athlete.geographic_preferences.length > 0 ? (
+                </div>
+              )}
+              {athlete.geographic_preferences && athlete.geographic_preferences.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">Location Preferences</p>
                   <p className="text-xs text-muted-foreground line-clamp-1">
                     {athlete.geographic_preferences.slice(0, 2).join(", ")}
                     {athlete.geographic_preferences.length > 2 && ` +${athlete.geographic_preferences.length - 2} more`}
                   </p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not specified</p>
-                )}
-              </div>
+                </div>
+              )}
               <div className="flex-1" />
               {canSendRequest && (
                 <Button
