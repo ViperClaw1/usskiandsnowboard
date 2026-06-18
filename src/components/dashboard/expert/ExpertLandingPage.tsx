@@ -787,28 +787,34 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           ) : (
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
               <div className="mt-6 space-y-6">
-                <div className="relative -mx-6 -mt-6">
-                  {selectedAthlete.background_image_url ? (
+                {selectedAthlete.background_image_url && (
+                  <div className="relative -mx-6 -mt-6">
                     <div
                       className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
                       style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
                     />
-                  ) : (
-                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
-                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
-                    <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
-                    <AvatarFallback>{getInitials(selectedAthlete.profiles?.full_name || "Athlete") || "AT"}</AvatarFallback>
-                  </Avatar>
-                </div>
+                    <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                      <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
+                      <AvatarFallback>{getInitials(selectedAthlete.profiles?.full_name || "Athlete") || "AT"}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                )}
 
-                <div className="pt-10">
-                  <h3 className="font-semibold text-lg">{selectedAthlete.profiles?.full_name || "Athlete"}</h3>
-                  {selectedAthlete.sport_discipline?.length ? (
-                    <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline.join(", ")}</p>
-                  ) : null}
+                <div className={selectedAthlete.background_image_url ? "pt-10" : "pt-4"}>
+                  <div className="flex items-start gap-4">
+                    {!selectedAthlete.background_image_url && (
+                      <Avatar className="h-16 w-16 border-4 border-background shadow-lg shrink-0">
+                        <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
+                        <AvatarFallback>{getInitials(selectedAthlete.profiles?.full_name || "Athlete") || "AT"}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div>
+                      <h3 className="font-semibold text-lg">{selectedAthlete.profiles?.full_name || "Athlete"}</h3>
+                      {selectedAthlete.sport_discipline?.length ? (
+                        <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline.join(", ")}</p>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
 
                 {[
