@@ -800,7 +800,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   </div>
                 )}
 
-                <div className={selectedAthlete.background_image_url ? "pt-10" : "pt-4"}>
+                <div className={selectedAthlete.background_image_url ? "pt-10" : "pt-6"}>
                   <div className="flex items-start gap-4">
                     {!selectedAthlete.background_image_url && (
                       <Avatar className="h-16 w-16 border-4 border-background shadow-lg shrink-0">

@@ -820,7 +820,7 @@ const AthleteDirectory = () => {
                       </Avatar>
                     </div>
                   )}
-                  <div className={selectedAthlete.background_image_url ? "pt-10 pb-2" : "pb-2"}>
+                  <div className={selectedAthlete.background_image_url ? "pt-10 pb-2" : "pt-6 pb-2"}>
                     <div className="flex items-start gap-4">
                       {!selectedAthlete.background_image_url && (
                         <Avatar className="h-16 w-16 border-4 border-background shadow-lg shrink-0">
