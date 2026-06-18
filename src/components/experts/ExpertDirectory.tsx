@@ -146,9 +146,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           e.area_of_expertise?.toLowerCase().includes(s),
       );
     }
-    if (filterIndustry === "alum") {
-      res = res.filter((e) => e.is_alum);
-    } else if (filterIndustry !== "all") {
+    if (filterIndustry !== "all") {
       res = res.filter((e) =>
         e.industry
           ?.split(",")
@@ -157,9 +155,13 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
       );
     }
     if (filterAffiliation !== "all") {
-      res = res.filter(
-        (e) => (e.ussa_affiliate ?? "").toLowerCase() === filterAffiliation.toLowerCase(),
-      );
+      if (filterAffiliation === "Athlete Alum") {
+        res = res.filter((e) => e.is_alum);
+      } else {
+        res = res.filter(
+          (e) => (e.ussa_affiliate ?? "").toLowerCase() === filterAffiliation.toLowerCase(),
+        );
+      }
     }
     return res;
   }, [experts, search, filterIndustry, filterAffiliation]);
@@ -212,10 +214,6 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Industries</SelectItem>
-            <SelectItem value="alum">
-              <img src={usLogo} alt="" className="inline h-4 w-4 object-contain mr-1 align-middle" />
-              US Ski &amp; Snowboard Alum
-            </SelectItem>
             {INDUSTRY_OPTIONS.map((ind) => (
               <SelectItem key={ind} value={ind}>
                 {ind}
@@ -232,6 +230,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
             <SelectItem value="Trustee">Trustee</SelectItem>
             <SelectItem value="Ambassador">Ambassador</SelectItem>
             <SelectItem value="Next Gen">Next Gen</SelectItem>
+            <SelectItem value="Athlete Alum">Athlete Alum</SelectItem>
           </SelectContent>
         </Select>
         {(filterIndustry !== "all" || filterAffiliation !== "all" || search) && (
