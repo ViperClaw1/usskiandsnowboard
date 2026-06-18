@@ -39,8 +39,8 @@ const Schedule = () => (
         <div className="container mx-auto px-4">
           <div className="bg-card rounded-lg border border-border overflow-hidden shadow-elegant">
             <img
-              src={scheduleImage}
-              alt="2025-26 Season Schedule"
+              src={scheduleImage.url}
+              alt="2026-27 World Cup Schedule"
               className="w-full h-auto"
               width={1200}
               height={900}
