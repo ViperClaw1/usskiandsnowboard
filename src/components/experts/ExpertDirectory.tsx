@@ -36,7 +36,9 @@ export interface ExpertProfile {
   linkedin_url: string | null;
   email: string | null;
   is_public: boolean | null;
+  created_at: string | null;
 }
+
 
 // ==============================
 // Helpers
