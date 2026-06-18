@@ -204,6 +204,19 @@ export const EditUserProfileDialog = ({
               </div>
             </div>
 
+            {role === "expert" && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-edit-title">Title</Label>
+                <Input
+                  id="admin-edit-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Marketing Specialist"
+                  disabled={!profileId}
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="admin-edit-bio">Description / Bio</Label>
               <Textarea
