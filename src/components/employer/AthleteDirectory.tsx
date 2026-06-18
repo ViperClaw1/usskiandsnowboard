@@ -22,7 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { SPORT_DISCIPLINES_OPTIONS, SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
-import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCardSkeleton } from "@/components/ui/skeleton-card";
 
