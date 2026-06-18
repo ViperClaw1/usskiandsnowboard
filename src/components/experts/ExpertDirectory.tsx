@@ -101,6 +101,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
   const [search, setSearch] = useState("");
   const [filterIndustry, setFilterIndustry] = useState("all");
+  const [filterAffiliation, setFilterAffiliation] = useState("all");
   const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
   const [connectionDialogExpert, setConnectionDialogExpert] = useState<ExpertProfile | null>(null);
   
@@ -155,13 +156,19 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           .includes(filterIndustry),
       );
     }
+    if (filterAffiliation !== "all") {
+      res = res.filter(
+        (e) => (e.ussa_affiliate ?? "").toLowerCase() === filterAffiliation.toLowerCase(),
+      );
+    }
     return res;
-  }, [experts, search, filterIndustry]);
+  }, [experts, search, filterIndustry, filterAffiliation]);
 
   const totalFilteredExperts = filtered.length;
   const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredExperts, [
     search,
     filterIndustry,
+    filterAffiliation,
   ]);
 
   const paginatedExperts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
@@ -216,13 +223,25 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
             ))}
           </SelectContent>
         </Select>
-        {(filterIndustry !== "all" || search) && (
+        <Select value={filterAffiliation} onValueChange={setFilterAffiliation}>
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Filter by USSS Affiliation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All USSS Affiliations</SelectItem>
+            <SelectItem value="Trustee">Trustee</SelectItem>
+            <SelectItem value="Ambassador">Ambassador</SelectItem>
+            <SelectItem value="Next Gen">Next Gen</SelectItem>
+          </SelectContent>
+        </Select>
+        {(filterIndustry !== "all" || filterAffiliation !== "all" || search) && (
           <Button
             variant="outline"
             size="icon"
             onClick={() => {
               setSearch("");
               setFilterIndustry("all");
+              setFilterAffiliation("all");
             }}
           >
             <X className="h-4 w-4" />
