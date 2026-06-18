@@ -252,7 +252,6 @@ export const EditUserProfileDialog = ({
                     selected={industry}
                     onChange={setIndustry}
                     placeholder="Select industries..."
-                    disabled={!profileId}
                   />
                 </div>
               </>
