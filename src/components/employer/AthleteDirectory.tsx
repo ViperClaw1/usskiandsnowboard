@@ -1007,57 +1007,6 @@ const AthleteDirectory = () => {
 
                 </TabsContent>
 
-                <TabsContent value="portfolio" className="mt-6">
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="font-medium mb-2">Lifestyle Photos</h4>
-                      {athletePhotos.length > 0 ? (
-                        <div className="relative touch-pan-y" {...photoSwipeHandlers}>
-                          <img
-                            src={athletePhotos[currentPhotoIndex]}
-                            alt={`Lifestyle photo ${currentPhotoIndex + 1}`}
-                            className="w-full h-64 object-cover rounded-lg select-none"
-                            draggable={false}
-                          />
-                          {athletePhotos.length > 1 && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentPhotoIndex((p) => (p === 0 ? athletePhotos.length - 1 : p - 1));
-                                }}
-                              >
-                                <ChevronLeft className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm md:flex hidden"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentPhotoIndex((p) => (p === athletePhotos.length - 1 ? 0 : p + 1));
-                                }}
-                              >
-                                <ChevronRight className="h-4 w-4" />
-                              </Button>
-                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
-                                {currentPhotoIndex + 1} / {athletePhotos.length}
-                              </div>
-                              <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground md:hidden">
-                                Swipe to navigate
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Not specified</p>
-                      )}
-                    </div>
-                    <AthletePortfolioView athleteId={selectedAthlete.id} />
-                  </div>
                 </TabsContent>
               </Tabs>
             </div>
