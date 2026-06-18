@@ -36,7 +36,9 @@ export interface ExpertProfile {
   linkedin_url: string | null;
   email: string | null;
   is_public: boolean | null;
+  created_at: string | null;
 }
+
 
 // ==============================
 // Helpers
@@ -163,8 +165,22 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
         );
       }
     }
+    // Sort: experts created within the last 30 days first (newest first), then the rest by created_at desc
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const isNewExpert = (e: ExpertProfile) =>
+      e.created_at ? now - new Date(e.created_at).getTime() <= THIRTY_DAYS_MS : false;
+    res = [...res].sort((a, b) => {
+      const aNew = isNewExpert(a) ? 1 : 0;
+      const bNew = isNewExpert(b) ? 1 : 0;
+      if (aNew !== bNew) return bNew - aNew;
+      const at = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return bt - at;
+    });
     return res;
   }, [experts, search, filterIndustry, filterAffiliation]);
+
 
   const totalFilteredExperts = filtered.length;
   const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredExperts, [
@@ -286,6 +302,12 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 justify-center">
+                    {expert.created_at &&
+                      Date.now() - new Date(expert.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000 && (
+                        <Badge className="text-xs bg-emerald-500 text-white border-transparent hover:bg-emerald-500">
+                          New
+                        </Badge>
+                      )}
                     {getPrimaryIndustry(expert.industry) && (
                       <Badge variant="secondary" className="text-xs">
                         {getPrimaryIndustry(expert.industry)}
@@ -298,6 +320,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                       </Badge>
                     )}
                   </div>
+
                   {expert.bio && <p className="text-xs text-muted-foreground line-clamp-2">{expert.bio}</p>}
                   {canRequest && (
                     <Button
