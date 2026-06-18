@@ -121,6 +121,9 @@ export const TopProfilesTable = () => {
         </CardContent>
       </Card>
 
+      {/* ── Experts by Industry ── */}
+      <ExpertsByIndustryChart />
+
       {/* ── Top Experts ── */}
       <Card>
         <CardHeader>
