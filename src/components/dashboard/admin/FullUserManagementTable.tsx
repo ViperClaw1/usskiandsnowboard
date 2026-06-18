@@ -8,7 +8,8 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserRoleManager } from "./UserRoleManager";
 import { ExpertBadgeManager } from "./ExpertBadgeManager";
-import { Search, Trash2, UserPlus } from "lucide-react";
+import { Pencil, Search, Trash2, UserPlus } from "lucide-react";
+import { EditUserProfileDialog } from "./EditUserProfileDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
