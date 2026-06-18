@@ -26,6 +26,7 @@ import AllEmployers from "./pages/admin/AllEmployers";
 import AllExperts from "./pages/admin/AllExperts";
 import AllRequests from "./pages/admin/AllRequests";
 import AcceptedConnections from "./pages/admin/AcceptedConnections";
+import AcceptedExpertConnections from "./pages/admin/AcceptedExpertConnections";
 import RejectedRequests from "./pages/admin/RejectedRequests";
 import Settings from "./pages/Settings";
 import Training from "./pages/Training";
@@ -76,6 +77,7 @@ const AppRoutes = () => (
       <Route path="/admin/experts" element={<AllExperts />} />
       <Route path="/admin/requests" element={<AllRequests />} />
       <Route path="/admin/connections" element={<AcceptedConnections />} />
+      <Route path="/admin/expert-connections" element={<AcceptedExpertConnections />} />
       <Route path="/admin/rejected" element={<RejectedRequests />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/privacy" element={<Privacy />} />

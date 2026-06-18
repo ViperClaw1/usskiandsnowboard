@@ -45,7 +45,7 @@ export const AdminStatsCards = () => {
       icon: CheckCircle,
       color: "text-accent",
       bgColor: "bg-accent/10",
-      route: "/admin/connections"
+      route: "/admin/expert-connections"
     },
     {
       title: "Pending Requests",
