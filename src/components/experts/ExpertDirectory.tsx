@@ -89,7 +89,7 @@ const DirectoryLoadingSkeleton = () => (
       <Skeleton className="h-10 flex-1" />
       <Skeleton className="h-10 w-full sm:w-56" />
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <ProfileCardSkeleton />
       <ProfileCardSkeleton />
       <ProfileCardSkeleton />
@@ -269,13 +269,13 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">No experts found.</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {paginatedExperts.map((expert) => {
             const requestStatus = requestStatusMap[expert.id];
             return (
               <Card
                 key={expert.id}
-                className="cursor-pointer hover:shadow-md transition-shadow flex flex-col"
+                className="h-full cursor-pointer hover:shadow-lg transition-shadow hover:border-primary/50 flex flex-col"
                 onClick={async () => {
                   setSelectedExpert(expert);
                   try {
@@ -288,14 +288,14 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                 }}
               >
                 <CardContent className="p-5 flex flex-col flex-1 items-center text-center gap-3">
-                  <Avatar className="h-16 w-16">
+                  <Avatar className="h-24 w-24">
                     <AvatarImage src={expert.photo_url ?? undefined} alt={expert.full_name} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
                       {getInitials(expert.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
-                    <p className="font-semibold text-foreground">{expert.full_name}</p>
+                    <p className="text-lg font-semibold text-foreground">{expert.full_name}</p>
                     {expert.job_title && <p className="text-sm text-muted-foreground">{expert.job_title}</p>}
                     {expert.area_of_expertise && (
                       <p className="text-xs text-primary font-medium">{expert.area_of_expertise}</p>
