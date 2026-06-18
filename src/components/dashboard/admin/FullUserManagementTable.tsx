@@ -464,11 +464,37 @@ export const FullUserManagementTable = () => {
                   )}
 
                   {/* Action strip */}
-                  <div className="mt-3 flex items-center border-t border-border/60 pt-2.5">
+                  <div className="mt-3 flex items-center gap-1 border-t border-border/60 pt-2.5">
+                    {(() => {
+                      const roles = user.roles as string[];
+                      const editableRole: "athlete" | "expert" | null = roles.includes("athlete")
+                        ? "athlete"
+                        : roles.includes("expert")
+                          ? "expert"
+                          : null;
+                      if (!editableRole) return null;
+                      return (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="ml-auto h-8 gap-1.5 px-2 text-xs"
+                          onClick={() =>
+                            setUserToEdit({
+                              id: user.id,
+                              name: user.full_name || user.email,
+                              role: editableRole,
+                            })
+                          }
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit Profile
+                        </Button>
+                      );
+                    })()}
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="ml-auto h-8 gap-1.5 px-2 text-xs text-destructive hover:text-destructive"
+                      className={`${(user.roles as string[]).includes("athlete") || (user.roles as string[]).includes("expert") ? "" : "ml-auto"} h-8 gap-1.5 px-2 text-xs text-destructive hover:text-destructive`}
                       onClick={() => handleDeleteUser(user.id, user.email, user.full_name || "")}
                       disabled={isSelf}
                     >
