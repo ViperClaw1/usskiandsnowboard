@@ -333,13 +333,22 @@ export const FullUserManagementTable = () => {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       {currentUser && (
-                        <UserRoleManager
-                          userId={user.id}
-                          currentUserId={currentUser.id}
-                          userEmail={user.email}
-                          userName={user.full_name || ""}
-                          roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
-                        />
+                        <div className="flex flex-col gap-1.5">
+                          <UserRoleManager
+                            userId={user.id}
+                            currentUserId={currentUser.id}
+                            userEmail={user.email}
+                            userName={user.full_name || ""}
+                            roles={user.roles as ("admin" | "athlete" | "employer" | "expert")[]}
+                          />
+                          {(user.roles as string[]).includes("expert") && (
+                            <ExpertBadgeManager
+                              userId={user.id}
+                              userName={user.full_name || user.email}
+                              currentAffiliate={(user as { expertAffiliate?: string | null }).expertAffiliate ?? null}
+                            />
+                          )}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
