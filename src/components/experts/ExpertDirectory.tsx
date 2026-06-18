@@ -16,7 +16,7 @@ import { Search, X, Linkedin, ImagePlus } from "lucide-react";
 import { ExpertConnectionRequestDialog } from "./ExpertConnectionRequestDialog";
 import { INDUSTRY_OPTIONS } from "@/data/suggestions";
 import usLogo from "@/assets/us-logo-new.png";
-import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 // ==============================
 // Types
@@ -103,7 +103,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
   const [filterIndustry, setFilterIndustry] = useState("all");
   const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
   const [connectionDialogExpert, setConnectionDialogExpert] = useState<ExpertProfile | null>(null);
-  const [page, setPage] = useState(1);
+  
 
   const { data: experts = [], isLoading } = useQuery({
     queryKey: ["expert-profiles"],
@@ -159,22 +159,12 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
   }, [experts, search, filterIndustry]);
 
   const totalFilteredExperts = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalFilteredExperts / DIRECTORY_PAGE_SIZE));
-  const pageStartIndex = totalFilteredExperts === 0 ? 0 : (page - 1) * DIRECTORY_PAGE_SIZE + 1;
-  const pageEndIndex = Math.min(page * DIRECTORY_PAGE_SIZE, totalFilteredExperts);
+  const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredExperts, [
+    search,
+    filterIndustry,
+  ]);
 
-  const paginatedExperts = useMemo(() => {
-    const start = (page - 1) * DIRECTORY_PAGE_SIZE;
-    return filtered.slice(start, start + DIRECTORY_PAGE_SIZE);
-  }, [filtered, page]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, filterIndustry]);
-
-  useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
-  }, [totalPages]);
+  const paginatedExperts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   // Make the device Back button close the expert dialog instead of leaving /experts.
   useEffect(() => {
@@ -308,27 +298,14 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
       )}
 
       {totalFilteredExperts > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredExperts} matching experts
+        <>
+          <div ref={sentinelRef} aria-hidden className="h-1" />
+          <p className="text-center text-sm text-muted-foreground">
+            {hasMore
+              ? `Loading more… (showing ${paginatedExperts.length} of ${totalFilteredExperts})`
+              : `Showing all ${totalFilteredExperts} matching experts`}
           </p>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Expert Detail Dialog */}
