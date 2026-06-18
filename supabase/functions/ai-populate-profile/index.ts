@@ -323,7 +323,11 @@ ${mustCallInstruction}`
       });
     };
 
-    const models = ["openai/gpt-5-mini", "google/gemini-2.5-flash", "google/gemini-2.5-flash-lite"];
+    const models = [
+      "google/gemini-3-flash-preview",
+      "openai/gpt-5-mini",
+      "google/gemini-2.5-flash",
+    ];
     let aiResp: Response | null = null;
     for (const model of models) {
       console.log("Trying model:", model);
