@@ -334,15 +334,15 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
       {/* Expert Detail Dialog */}
       {selectedExpert && (
         <Dialog open={!!selectedExpert} onOpenChange={(o) => !o && setSelectedExpert(null)}>
-          <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-            {/* Banner */}
+          <DialogContent className="sm:max-w-lg p-0 overflow-hidden max-h-[90vh] w-[calc(100vw-1rem)] sm:w-full flex flex-col gap-0">
+            {/* Banner (fixed, doesn't scroll) */}
             {selectedExpert.background_image_url ? (
               <div
-                className="h-28 bg-cover bg-center"
+                className="h-28 shrink-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${selectedExpert.background_image_url})` }}
               />
             ) : (
-              <div className="h-28 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
+              <div className="h-28 shrink-0 bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
                 <div className="flex flex-col items-center gap-1 text-muted-foreground">
                   <ImagePlus className="h-7 w-7" />
                   <span className="text-xs font-medium">No background photo</span>
@@ -350,7 +350,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               </div>
             )}
 
-            <div className="px-6 pb-6 -mt-8 space-y-4">
+            <div className="flex-1 overflow-y-auto px-6 pb-6 -mt-8 space-y-4">
               <div className="flex items-end gap-4">
                 <Avatar className="h-16 w-16 border-4 border-background shadow">
                   <AvatarImage src={selectedExpert.photo_url ?? undefined} alt={selectedExpert.full_name} />
@@ -423,8 +423,13 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                     </Button>
                   );
                 })()}
+
+              <Button variant="outline" className="w-full" onClick={() => setSelectedExpert(null)}>
+                Close
+              </Button>
             </div>
           </DialogContent>
+
         </Dialog>
       )}
 
