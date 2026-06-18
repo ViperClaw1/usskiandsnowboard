@@ -26,6 +26,7 @@ interface ExpertFormState {
   full_name: string;
   linkedin_url: string;
   job_title: string;
+  company_name: string;
   area_of_expertise: string;
   headshot: string;
   bio: string;
@@ -40,6 +41,7 @@ const EMPTY: ExpertFormState = {
   full_name: "",
   linkedin_url: "",
   job_title: "",
+  company_name: "",
   area_of_expertise: "",
   headshot: "",
   bio: "",
