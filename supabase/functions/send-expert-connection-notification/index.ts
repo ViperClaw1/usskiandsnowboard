@@ -255,20 +255,12 @@ Deno.serve(async (req) => {
       let athleteSent = false;
       let expertSent = false;
 
-      if (athleteEmail) {
-        const html = emailTemplate("Athlete Connection Introduction", athleteBodyHtml);
-        console.log(
-          `[expert-notif] Sending request_accepted athlete intro TO: ${athleteEmail} subject="${athleteSubject}"`,
-        );
-        await sendEmail(resend, {
-          from: FROM_ADDRESS,
-          to: [athleteEmail],
-          cc: uniqEmails([...CC_ADDRESSES, ...CC_INTRO_EXTRA]),
-          subject: athleteSubject,
-          html,
-        });
-        athleteSent = true;
-      }
+      // Disabled: duplicate athlete-directed intro email. The expert-directed
+      // intro below CC's the athlete, so both parties still receive the
+      // introduction in a single email thread.
+      // if (athleteEmail) { ... athleteSubject send ... }
+      void athleteSubject;
+      void athleteBodyHtml;
 
       if (expertEmail) {
         const html = emailTemplate("Expert Connection Introduction", expertBodyHtml);
