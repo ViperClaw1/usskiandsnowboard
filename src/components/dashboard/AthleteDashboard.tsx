@@ -314,14 +314,6 @@ const AthleteDashboard = ({
           </FadeIn>
         );
 
-      case "portfolio":
-        return (
-          <FadeIn key={viewKey}>
-            <DashboardSectionLayout title="Portfolio" onBack={() => handleNavigate("home")}>
-              {profile?.id ? <AthletePortfolio athleteId={profile.id} /> : <PortfolioSkeleton />}
-            </DashboardSectionLayout>
-          </FadeIn>
-        );
 
       case "connections":
         return (
