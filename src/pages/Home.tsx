@@ -135,14 +135,14 @@ const Home = () => {
                 </Link>
               </div>
               <div className="bg-card p-8 rounded-lg shadow-elegant text-center border border-border hover:shadow-lg transition-shadow">
-                <Briefcase className="h-12 w-12 text-accent mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Browse Partners</h3>
+                <Star className="h-12 w-12 text-accent mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-3 text-foreground">Browse Experts</h3>
                 <p className="text-muted-foreground mb-6">
-                  Discover organizations offering exciting career opportunities.
+                  Connect with experienced professionals and mentors offering guidance and career opportunities.
                 </p>
-                <Link to="/employers">
+                <Link to="/experts">
                   <Button variant="secondary" className="w-full">
-                    View Partners
+                    View Experts
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
