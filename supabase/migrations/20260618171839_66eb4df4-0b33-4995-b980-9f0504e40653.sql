@@ -1,0 +1,1 @@
+ALTER TABLE public.expert_profiles ADD COLUMN IF NOT EXISTS company_name text;

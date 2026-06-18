@@ -720,6 +720,7 @@ export type Database = {
           area_of_expertise: string | null
           background_image_url: string | null
           bio: string | null
+          company_name: string | null
           created_at: string
           email: string | null
           full_name: string
@@ -741,6 +742,7 @@ export type Database = {
           area_of_expertise?: string | null
           background_image_url?: string | null
           bio?: string | null
+          company_name?: string | null
           created_at?: string
           email?: string | null
           full_name: string
@@ -762,6 +764,7 @@ export type Database = {
           area_of_expertise?: string | null
           background_image_url?: string | null
           bio?: string | null
+          company_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
