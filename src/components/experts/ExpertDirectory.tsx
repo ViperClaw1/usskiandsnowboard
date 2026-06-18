@@ -394,6 +394,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   {selectedExpert.job_title && (
                     <p className="text-sm text-muted-foreground">{selectedExpert.job_title}</p>
                   )}
+                  {selectedExpert.company_name && (
+                    <p className="text-sm text-muted-foreground">{selectedExpert.company_name}</p>
+                  )}
                 </div>
               </div>
 
