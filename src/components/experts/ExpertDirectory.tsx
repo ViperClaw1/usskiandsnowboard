@@ -343,7 +343,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               />
             )}
 
-            <div className={`flex-1 overflow-y-auto px-6 pb-6 space-y-4 ${selectedExpert.background_image_url ? "-mt-8" : ""}`}>
+            <div className={`flex-1 overflow-y-auto px-6 pb-6 space-y-4 ${selectedExpert.background_image_url ? "-mt-8" : "pt-6"}`}>
               <div className="flex items-end gap-4">
                 <Avatar className="h-16 w-16 border-4 border-background shadow">
                   <AvatarImage src={selectedExpert.photo_url ?? undefined} alt={selectedExpert.full_name} />
