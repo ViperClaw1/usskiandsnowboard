@@ -1,0 +1,1 @@
+UPDATE public.expert_profiles SET ussa_affiliate = 'Next Gen Council' WHERE ussa_affiliate = 'Next Gen';
