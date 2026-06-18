@@ -599,6 +599,15 @@ export const FullUserManagementTable = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {userToEdit && (
+        <EditUserProfileDialog
+          open={!!userToEdit}
+          onOpenChange={(o) => !o && setUserToEdit(null)}
+          userId={userToEdit.id}
+          userName={userToEdit.name}
+          role={userToEdit.role}
+        />
+      )}
     </Card>
   );
 };
