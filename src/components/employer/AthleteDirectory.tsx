@@ -799,40 +799,51 @@ const AthleteDirectory = () => {
                 </TabsList>
 
                 <TabsContent value="profile" className="space-y-6 mt-6">
-                  {/* Banner */}
-                  <div className="relative -mx-6 -mt-6">
-                    {selectedAthlete.background_image_url ? (
+                  {selectedAthlete.background_image_url && (
+                    <div className="relative -mx-6 -mt-6">
                       <div
                         className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
                         style={{ backgroundImage: `url(${selectedAthlete.background_image_url})` }}
                       />
-                    ) : (
-                      <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <ImagePlus className="h-8 w-8" />
-                          <span className="text-sm font-medium">No background photo</span>
-                        </div>
+                      <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
+                        <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {selectedAthlete.profiles.full_name
+                            ? selectedAthlete.profiles.full_name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 2)
+                            : "AT"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  )}
+                  <div className={selectedAthlete.background_image_url ? "pt-10 pb-2" : "pb-2"}>
+                    <div className="flex items-start gap-4">
+                      {!selectedAthlete.background_image_url && (
+                        <Avatar className="h-16 w-16 border-4 border-background shadow-lg shrink-0">
+                          <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {selectedAthlete.profiles.full_name
+                              ? selectedAthlete.profiles.full_name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                                  .slice(0, 2)
+                              : "AT"}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div>
+                        <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
+                        {selectedAthlete.sport_discipline && (
+                          <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
+                        )}
                       </div>
-                    )}
-                    <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
-                      <AvatarImage src={selectedAthlete.photo_url ?? undefined} className="object-cover" />
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                        {selectedAthlete.profiles.full_name
-                          ? selectedAthlete.profiles.full_name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .toUpperCase()
-                              .slice(0, 2)
-                          : "AT"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="pt-10 pb-2">
-                    <h3 className="font-semibold text-lg">{selectedAthlete.profiles.full_name || "Athlete"}</h3>
-                    {selectedAthlete.sport_discipline && (
-                      <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
-                    )}
+                    </div>
                     {canSendRequest && (
                       <Button
                         onClick={() => setShowRequestDialog(true)}
