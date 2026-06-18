@@ -138,7 +138,7 @@ const Home = () => {
                 <Star className="h-12 w-12 text-accent mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-3 text-foreground">Browse Experts</h3>
                 <p className="text-muted-foreground mb-6">
-                  Connect with experienced professionals and mentors offering guidance and career opportunities.
+                  Connect with experienced professionals and mentors offering career guidance.
                 </p>
                 <Link to="/experts">
                   <Button variant="secondary" className="w-full">
