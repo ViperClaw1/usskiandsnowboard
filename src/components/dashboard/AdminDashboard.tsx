@@ -68,7 +68,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-6 mx-auto">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5 mx-auto">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
@@ -76,10 +76,6 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <TabsTrigger value="athlete" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Athlete View</span>
-            </TabsTrigger>
-            <TabsTrigger value="employer" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Partner View</span>
             </TabsTrigger>
             <TabsTrigger value="experts" className="flex items-center gap-2">
               <UserCheck className="h-4 w-4" />
@@ -94,6 +90,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
               <span className="hidden sm:inline">Waitlist</span>
             </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="analytics" forceMount className="space-y-6 mt-6">
             {/* Header Card */}
