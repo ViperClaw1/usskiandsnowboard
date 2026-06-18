@@ -227,10 +227,10 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All USSS Affiliations</SelectItem>
+            <SelectItem value="Athlete Alum">Athlete Alum</SelectItem>
             <SelectItem value="Trustee">Trustee</SelectItem>
             <SelectItem value="Ambassador">Ambassador</SelectItem>
             <SelectItem value="Next Gen">Next Gen</SelectItem>
-            <SelectItem value="Athlete Alum">Athlete Alum</SelectItem>
           </SelectContent>
         </Select>
         {(filterIndustry !== "all" || filterAffiliation !== "all" || search) && (
