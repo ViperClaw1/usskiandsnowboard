@@ -159,22 +159,12 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
   }, [experts, search, filterIndustry]);
 
   const totalFilteredExperts = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalFilteredExperts / DIRECTORY_PAGE_SIZE));
-  const pageStartIndex = totalFilteredExperts === 0 ? 0 : (page - 1) * DIRECTORY_PAGE_SIZE + 1;
-  const pageEndIndex = Math.min(page * DIRECTORY_PAGE_SIZE, totalFilteredExperts);
+  const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredExperts, [
+    search,
+    filterIndustry,
+  ]);
 
-  const paginatedExperts = useMemo(() => {
-    const start = (page - 1) * DIRECTORY_PAGE_SIZE;
-    return filtered.slice(start, start + DIRECTORY_PAGE_SIZE);
-  }, [filtered, page]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, filterIndustry]);
-
-  useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
-  }, [totalPages]);
+  const paginatedExperts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   // Make the device Back button close the expert dialog instead of leaving /experts.
   useEffect(() => {
