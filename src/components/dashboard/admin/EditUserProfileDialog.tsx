@@ -47,11 +47,26 @@ export const EditUserProfileDialog = ({
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from(tableFor(role))
-        .select("id, photo_url, bio, job_title")
-        .eq("user_id", userId)
-        .maybeSingle();
+      setTitle("");
+      let data: any = null;
+      let error: any = null;
+      if (role === "expert") {
+        const result = await supabase
+          .from("expert_profiles")
+          .select("id, photo_url, bio, job_title")
+          .eq("user_id", userId)
+          .maybeSingle();
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from("athlete_profiles")
+          .select("id, photo_url, bio")
+          .eq("user_id", userId)
+          .maybeSingle();
+        data = result.data;
+        error = result.error;
+      }
       if (cancelled) return;
       if (error) {
         toast.error(`Failed to load profile: ${error.message}`);
@@ -59,6 +74,7 @@ export const EditUserProfileDialog = ({
         setProfileId(data.id);
         setPhotoUrl(data.photo_url ?? "");
         setBio(data.bio ?? "");
+        if (role === "expert") setTitle(data.job_title ?? "");
       } else {
         setProfileId(null);
         setPhotoUrl("");
