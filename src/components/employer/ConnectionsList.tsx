@@ -10,7 +10,7 @@ import { Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
+
 
 interface Connection {
   id: string;
