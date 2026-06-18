@@ -211,16 +211,28 @@ export const EditUserProfileDialog = ({
             </div>
 
             {role === "expert" && (
-              <div className="space-y-2">
-                <Label htmlFor="admin-edit-title">Title</Label>
-                <Input
-                  id="admin-edit-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Marketing Specialist"
-                  disabled={!profileId}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-edit-title">Title</Label>
+                  <Input
+                    id="admin-edit-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Marketing Specialist"
+                    disabled={!profileId}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-edit-company">Company Name</Label>
+                  <Input
+                    id="admin-edit-company"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="e.g. Acme Corp"
+                    disabled={!profileId}
+                  />
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
