@@ -149,9 +149,6 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             <AthleteLayoutEditor />
           </TabsContent>
 
-          <TabsContent value="employer" forceMount className="mt-6">
-            <PartnerLayoutEditor />
-          </TabsContent>
 
           <TabsContent value="training" forceMount className="mt-6">
             <TrainingArticleManager />
