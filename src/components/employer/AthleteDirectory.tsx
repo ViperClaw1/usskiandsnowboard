@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Instagram, ChevronLeft, ChevronRight, Search, X, Share2, RefreshCw, ImagePlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
