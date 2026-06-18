@@ -155,7 +155,7 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
                             profile.ussa_affiliate === "Athlete Alum" ||
                             profile.ussa_affiliate === "Trustee" ||
                             profile.ussa_affiliate === "Ambassador" ||
-                            profile.ussa_affiliate === "Next Gen"
+                            profile.ussa_affiliate === "Next Gen Council"
                               ? profile.ussa_affiliate
                               : "",
                           full_name: profile.full_name,

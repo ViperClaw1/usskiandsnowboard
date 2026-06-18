@@ -247,7 +247,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
             <SelectItem value="Athlete Alum">Athlete Alum</SelectItem>
             <SelectItem value="Trustee">Trustee</SelectItem>
             <SelectItem value="Ambassador">Ambassador</SelectItem>
-            <SelectItem value="Next Gen">Next Gen</SelectItem>
+            <SelectItem value="Next Gen Council">Next Gen Council</SelectItem>
           </SelectContent>
         </Select>
         {(filterIndustry !== "all" || filterAffiliation !== "all" || search) && (
