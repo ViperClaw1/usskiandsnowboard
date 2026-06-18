@@ -392,7 +392,7 @@ const ConnectionRequestsManager = ({ employerProfileId }: ConnectionRequestsMana
                     className="text-sm text-primary hover:underline flex items-center gap-2"
                   >
                     <Instagram className="h-4 w-4" />
-                    View Profile
+                    Open Instagram
                   </a>
                 </div>
               )}
