@@ -245,6 +245,16 @@ export const EditUserProfileDialog = ({
                     disabled={!profileId}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Industry</Label>
+                  <MultiSelect
+                    options={INDUSTRY_OPTIONS.map((ind) => ({ label: ind, value: ind }))}
+                    selected={industry}
+                    onChange={setIndustry}
+                    placeholder="Select industries..."
+                    disabled={!profileId}
+                  />
+                </div>
               </>
             )}
 
