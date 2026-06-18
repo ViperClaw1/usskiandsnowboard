@@ -12,7 +12,7 @@ import ConnectionsList from "@/components/athlete/ConnectionsList";
 import { ConnectionActivityBoard } from "@/components/connections/ConnectionActivityBoard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteLandingPage, athleteDashboardKey } from "@/components/dashboard/athlete/AthleteLandingPage";
-import { AthletePortfolio } from "@/components/athlete/AthletePortfolio";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProfileCompletionChoiceDialog } from "@/components/dashboard/ProfileCompletionChoiceDialog";
@@ -110,29 +110,6 @@ const HomeSkeleton = () => (
   </div>
 );
 
-// ---------------------------------------------------------------------------
-// Skeleton for the "portfolio" view
-// ---------------------------------------------------------------------------
-const PortfolioSkeleton = () => (
-  <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-7xl space-y-6">
-    <div className="flex items-center justify-between mb-4">
-      <Skeleton className="h-9 w-28 rounded-md" />
-    </div>
-    <div className="flex items-center gap-4">
-      <Skeleton className="h-20 w-20 rounded-full shrink-0" />
-      <div className="space-y-2 flex-1">
-        <Skeleton className="h-6 w-40" />
-        <Skeleton className="h-4 w-64" />
-        <Skeleton className="h-4 w-32" />
-      </div>
-    </div>
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-48 rounded-xl" />
-      ))}
-    </div>
-  </div>
-);
 
 // ---------------------------------------------------------------------------
 // Skeleton for the "connections" view
@@ -314,14 +291,6 @@ const AthleteDashboard = ({
           </FadeIn>
         );
 
-      case "portfolio":
-        return (
-          <FadeIn key={viewKey}>
-            <DashboardSectionLayout title="Portfolio" onBack={() => handleNavigate("home")}>
-              {profile?.id ? <AthletePortfolio athleteId={profile.id} /> : <PortfolioSkeleton />}
-            </DashboardSectionLayout>
-          </FadeIn>
-        );
 
       case "connections":
         return (

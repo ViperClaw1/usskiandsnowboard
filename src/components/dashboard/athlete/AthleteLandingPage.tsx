@@ -16,7 +16,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Clock,
-  Video,
+  
   EyeIcon,
   Pencil,
   MapPin,
@@ -26,9 +26,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AthleteProfilePreview } from "@/components/profile/AthleteProfilePreview";
-import { AthletePortfolioView } from "@/components/athlete/AthletePortfolioView";
 import { useDashboardTextOverrides } from "@/hooks/useDashboardLayout";
 import { AIProfilePopulator } from "@/components/profile/AIProfilePopulator";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -529,10 +527,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   <UserCircle className="mr-2 h-4 w-4" />
                   {getText("quick_actions.update_profile", "Update Profile")}
                 </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("portfolio")}>
-                  <Video className="mr-2 h-4 w-4" />
-                  {getText("quick_actions.manage_content", "Manage Content")}
-                </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("connections")}>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   {getText("quick_actions.view_connections", "View Connections")}
@@ -546,26 +540,15 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Profile Preview - How Partners See You</DialogTitle>
+                      <DialogTitle>Profile Preview - How Employers See You</DialogTitle>
                     </DialogHeader>
-                    <Tabs defaultValue="profile" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="profile">Profile</TabsTrigger>
-                        <TabsTrigger value="achievements">Athlete Content</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="profile" className="mt-4">
-                        {profile && (
-                          <AthleteProfilePreview
-                            profile={{ full_name: profile.profiles?.full_name }}
-                            profileData={profile}
-                            viewMode="public"
-                          />
-                        )}
-                      </TabsContent>
-                      <TabsContent value="achievements" className="mt-4">
-                        {profile && <AthletePortfolioView athleteId={profile.id} />}
-                      </TabsContent>
-                    </Tabs>
+                    {profile && (
+                      <AthleteProfilePreview
+                        profile={{ full_name: profile.profiles?.full_name }}
+                        profileData={profile}
+                        viewMode="public"
+                      />
+                    )}
                   </DialogContent>
                 </Dialog>
               </div>
