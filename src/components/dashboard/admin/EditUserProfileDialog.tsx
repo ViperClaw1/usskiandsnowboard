@@ -125,6 +125,7 @@ export const EditUserProfileDialog = ({
     };
     if (role === "expert") {
       payload.job_title = title || null;
+      payload.company_name = companyName || null;
     }
     const { error } = await supabase
       .from(tableFor(role))
