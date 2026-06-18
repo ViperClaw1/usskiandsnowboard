@@ -9,6 +9,8 @@ import { Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { INDUSTRY_OPTIONS } from "@/data/suggestions";
 
 type EditableRole = "athlete" | "expert";
 
@@ -41,6 +43,7 @@ export const EditUserProfileDialog = ({
   const [bio, setBio] = useState<string>("");
   const [title, setTitle] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
+  const [industry, setIndustry] = useState<string[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,12 +53,13 @@ export const EditUserProfileDialog = ({
       setLoading(true);
       setTitle("");
       setCompanyName("");
+      setIndustry([]);
       let data: any = null;
       let error: any = null;
       if (role === "expert") {
         const result = await supabase
           .from("expert_profiles")
-          .select("id, photo_url, bio, job_title, company_name")
+          .select("id, photo_url, bio, job_title, company_name, industry")
           .eq("user_id", userId)
           .maybeSingle();
         data = result.data;
@@ -79,6 +83,14 @@ export const EditUserProfileDialog = ({
         if (role === "expert") {
           setTitle(data.job_title ?? "");
           setCompanyName(data.company_name ?? "");
+          const ind = data.industry;
+          setIndustry(
+            Array.isArray(ind)
+              ? ind
+              : typeof ind === "string" && ind.trim()
+                ? ind.split(",").map((s: string) => s.trim()).filter(Boolean)
+                : []
+          );
         }
       } else {
         setProfileId(null);
@@ -126,6 +138,7 @@ export const EditUserProfileDialog = ({
     if (role === "expert") {
       payload.job_title = title || null;
       payload.company_name = companyName || null;
+      payload.industry = industry.length ? industry.join(", ") : null;
     }
     const { error } = await supabase
       .from(tableFor(role))
@@ -230,6 +243,15 @@ export const EditUserProfileDialog = ({
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="e.g. Acme Corp"
                     disabled={!profileId}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Industry</Label>
+                  <MultiSelect
+                    options={INDUSTRY_OPTIONS.map((ind) => ({ label: ind, value: ind }))}
+                    selected={industry}
+                    onChange={setIndustry}
+                    placeholder="Select industries..."
                   />
                 </div>
               </>
