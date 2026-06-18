@@ -845,25 +845,27 @@ const AthleteDirectory = () => {
                     { label: "Professional Highlights", value: selectedAthlete.professional_highlights },
                     { label: "Availability", value: selectedAthlete.availability },
                     { label: "Email", value: selectedAthlete.email },
-                  ].map(({ label, value }) => (
-                    <div key={label}>
-                      <h4 className="font-medium mb-2">{label}</h4>
-                      <p className="text-sm text-muted-foreground">{value || "Not specified"}</p>
+                  ]
+                    .filter(({ value }) => value)
+                    .map(({ label, value }) => (
+                      <div key={label}>
+                        <h4 className="font-medium mb-2">{label}</h4>
+                        <p className="text-sm text-muted-foreground">{value}</p>
+                      </div>
+                    ))}
+
+                  {selectedAthlete.years_of_membership && (
+                    <div>
+                      <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {`${selectedAthlete.years_of_membership} years`}
+                      </p>
                     </div>
-                  ))}
+                  )}
 
-                  <div>
-                    <h4 className="font-medium mb-2">Years of U.S. Ski & Snowboard Membership</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedAthlete.years_of_membership
-                        ? `${selectedAthlete.years_of_membership} years`
-                        : "Not specified"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-2">Instagram</h4>
-                    {selectedAthlete.instagram_url ? (
+                  {selectedAthlete.instagram_url && (
+                    <div>
+                      <h4 className="font-medium mb-2">Instagram</h4>
                       <a
                         href={selectedAthlete.instagram_url}
                         target="_blank"
@@ -872,46 +874,40 @@ const AthleteDirectory = () => {
                       >
                         <Instagram className="h-4 w-4" /> View Profile
                       </a>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Not specified</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {[
                     { label: "Sponsors", items: selectedAthlete.sponsors },
                     { label: "Skills", items: selectedAthlete.skills },
                     { label: "Career Interests", items: selectedAthlete.career_interests },
-                  ].map(({ label, items }) => (
-                    <div key={label}>
-                      <h4 className="font-medium mb-2">{label}</h4>
-                      {items && items.length > 0 ? (
+                  ]
+                    .filter(({ items }) => items && items.length > 0)
+                    .map(({ label, items }) => (
+                      <div key={label}>
+                        <h4 className="font-medium mb-2">{label}</h4>
                         <div className="flex flex-wrap gap-2">
-                          {items.map((item, i) => (
+                          {items!.map((item, i) => (
                             <Badge key={i} variant="secondary">
                               {item}
                             </Badge>
                           ))}
                         </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Not specified</p>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    ))}
 
-                  <div>
-                    <h4 className="font-medium mb-2">Geographic Preferences</h4>
-                    {selectedAthlete.geographic_preferences?.length ? (
+                  {selectedAthlete.geographic_preferences?.length ? (
+                    <div>
+                      <h4 className="font-medium mb-2">Geographic Preferences</h4>
                       <p className="text-sm text-muted-foreground">
                         {selectedAthlete.geographic_preferences.join(", ")}
                       </p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Not specified</p>
-                    )}
-                  </div>
+                    </div>
+                  ) : null}
 
-                  <div>
-                    <h4 className="font-medium mb-2">Education</h4>
-                    {athleteEducation.length > 0 ? (
+                  {athleteEducation.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Education</h4>
                       <div className="space-y-3">
                         {athleteEducation.map((edu) => (
                           <div key={edu.id} className="border-l-2 border-primary/20 pl-3">
@@ -923,14 +919,12 @@ const AthleteDirectory = () => {
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Not specified</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
-                  <div>
-                    <h4 className="font-medium mb-2">Experience</h4>
-                    {athleteExperience.length > 0 ? (
+                  {athleteExperience.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Experience</h4>
                       <div className="space-y-3">
                         {athleteExperience.map((exp) => (
                           <div key={exp.id} className="border-l-2 border-primary/20 pl-3">
@@ -956,14 +950,12 @@ const AthleteDirectory = () => {
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Not specified</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
-                  <div>
-                    <h4 className="font-medium mb-2">Certifications</h4>
-                    {athleteCertifications.length > 0 ? (
+                  {athleteCertifications.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Certifications</h4>
                       <div className="space-y-2">
                         {athleteCertifications.map((cert) => (
                           <div key={cert.id} className="border-l-2 border-primary/20 pl-3">
@@ -981,10 +973,9 @@ const AthleteDirectory = () => {
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Not specified</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
 
                 </TabsContent>
               </Tabs>
