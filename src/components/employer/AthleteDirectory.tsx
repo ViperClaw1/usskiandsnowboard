@@ -792,11 +792,10 @@ const AthleteDirectory = () => {
         >
           <DialogContent className="max-w-3xl">
             <div className="max-h-[50vh] sm:max-h-[85vh] overflow-y-auto overflow-x-hidden">
-              <Tabs defaultValue="profile" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="profile">Profile</TabsTrigger>
-                  <TabsTrigger value="portfolio">Athlete Content</TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="profile" className="w-full">
+                  <TabsList className="grid w-full grid-cols-1">
+                    <TabsTrigger value="profile">Profile</TabsTrigger>
+                  </TabsList>
 
                 <TabsContent value="profile" className="space-y-6 mt-6">
                   {selectedAthlete.background_image_url && (
