@@ -47,9 +47,10 @@ export const EditUserProfileDialog = ({
     let cancelled = false;
     (async () => {
       setLoading(true);
+      const selectFields = role === "expert" ? "id, photo_url, bio, job_title" : "id, photo_url, bio";
       const { data, error } = await supabase
         .from(tableFor(role))
-        .select("id, photo_url, bio")
+        .select(selectFields)
         .eq("user_id", userId)
         .maybeSingle();
       if (cancelled) return;
