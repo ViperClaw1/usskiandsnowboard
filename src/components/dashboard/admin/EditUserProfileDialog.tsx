@@ -49,12 +49,13 @@ export const EditUserProfileDialog = ({
     (async () => {
       setLoading(true);
       setTitle("");
+      setCompanyName("");
       let data: any = null;
       let error: any = null;
       if (role === "expert") {
         const result = await supabase
           .from("expert_profiles")
-          .select("id, photo_url, bio, job_title")
+          .select("id, photo_url, bio, job_title, company_name")
           .eq("user_id", userId)
           .maybeSingle();
         data = result.data;
@@ -75,7 +76,10 @@ export const EditUserProfileDialog = ({
         setProfileId(data.id);
         setPhotoUrl(data.photo_url ?? "");
         setBio(data.bio ?? "");
-        if (role === "expert") setTitle(data.job_title ?? "");
+        if (role === "expert") {
+          setTitle(data.job_title ?? "");
+          setCompanyName(data.company_name ?? "");
+        }
       } else {
         setProfileId(null);
         setPhotoUrl("");
