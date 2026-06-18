@@ -233,6 +233,14 @@ export const ExpertProfileForm = ({
           />
         </div>
         <div className="space-y-1.5">
+          <Label>Company Name</Label>
+          <Input
+            value={form.company_name}
+            onChange={(e) => set("company_name", e.target.value)}
+            placeholder="Acme Corp"
+          />
+        </div>
+        <div className="space-y-1.5">
           <Label>Area of Expertise</Label>
           <Input
             value={form.area_of_expertise}
