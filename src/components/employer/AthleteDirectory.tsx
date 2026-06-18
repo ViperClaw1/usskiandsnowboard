@@ -590,7 +590,7 @@ const AthleteDirectory = () => {
           searchTerm) && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Showing {pageStartIndex}-{pageEndIndex} of {totalFilteredAthletes} matching athletes ({athletes.length} total)
+              Showing {paginatedAthletes.length} of {totalFilteredAthletes} matching athletes ({athletes.length} total)
             </p>
             <Button
               variant="outline"
