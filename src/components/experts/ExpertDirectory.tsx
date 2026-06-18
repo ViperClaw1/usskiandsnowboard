@@ -351,7 +351,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                     {getInitials(selectedExpert.full_name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="pb-1">
+                <div className="pb-1 bg-background px-3 py-2 rounded-md shadow-sm">
                   <p className="text-lg leading-tight font-semibold">{selectedExpert.full_name}</p>
                   {selectedExpert.job_title && (
                     <p className="text-sm text-muted-foreground">{selectedExpert.job_title}</p>
