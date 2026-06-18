@@ -16,7 +16,7 @@ import { Search, X, Linkedin, ImagePlus } from "lucide-react";
 import { ExpertConnectionRequestDialog } from "./ExpertConnectionRequestDialog";
 import { INDUSTRY_OPTIONS } from "@/data/suggestions";
 import usLogo from "@/assets/us-logo-new.png";
-import { DIRECTORY_PAGE_SIZE } from "@/constants/directoryPagination";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 // ==============================
 // Types
