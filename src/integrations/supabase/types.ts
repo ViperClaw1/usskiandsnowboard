@@ -1133,8 +1133,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_athlete_profile_views: {
+        Args: { athlete_profile_id: string }
+        Returns: undefined
+      }
       increment_employer_profile_views: {
         Args: { employer_profile_id: string }
+        Returns: undefined
+      }
+      increment_expert_profile_views: {
+        Args: { expert_profile_id: string }
         Returns: undefined
       }
       setup_admin_user: {
