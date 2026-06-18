@@ -38,6 +38,7 @@ export const FullUserManagementTable = () => {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [userToDelete, setUserToDelete] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [userToEdit, setUserToEdit] = useState<{ id: string; name: string; role: "athlete" | "expert" } | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     email: "",
