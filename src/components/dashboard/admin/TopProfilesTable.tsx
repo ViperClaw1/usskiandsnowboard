@@ -15,18 +15,9 @@ export const TopProfilesTable = () => {
     },
   });
 
-  const { data: topEmployers, isLoading: employersLoading } = useQuery({
-    queryKey: ["top-employers"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("top_employer_profiles").select("*").limit(5);
-      if (error) throw error;
-      return data;
-    },
-  });
-
   return (
-    /* Parent: side-by-side on desktop (md grid), stacked on mobile/tablet */
-    <div className="flex flex-col gap-6 [@media(min-width:830px)]:grid [@media(min-width:830px)]:grid-cols-2">
+    <div className="flex flex-col gap-6">
+
       {/* ── Top Athletes ── */}
       <Card>
         <CardHeader>
