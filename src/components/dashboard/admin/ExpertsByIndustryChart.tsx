@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -73,7 +73,6 @@ export const ExpertsByIndustryChart = () => {
                   borderRadius: "0.5rem",
                 }}
               />
-              <Legend />
             </PieChart>
           </ResponsiveContainer>
         )}
