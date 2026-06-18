@@ -1006,8 +1006,6 @@ const AthleteDirectory = () => {
                   </div>
 
                 </TabsContent>
-
-                </TabsContent>
               </Tabs>
             </div>
           </DialogContent>
