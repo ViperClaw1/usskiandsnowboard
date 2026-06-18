@@ -149,7 +149,7 @@ export const EditUserProfileDialog = ({
         <DialogHeader>
           <DialogTitle>Edit {role === "athlete" ? "Athlete" : "Expert"} Profile</DialogTitle>
           <DialogDescription>
-            Update {userName || "this user"}'s profile picture and description.
+            Update {userName || "this user"}'s profile picture{role === "expert" ? ", title, and description" : " and description"}.
           </DialogDescription>
         </DialogHeader>
 
