@@ -101,6 +101,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
   const expertFields = {
     full_name: profileData.full_name || name.trim(),
     job_title: profileData.job_title || null,
+    company_name: profileData.company_name || null,
     area_of_expertise: profileData.area_of_expertise || null,
     bio: profileData.bio || null,
     photo_url: uploadedPhotoUrl || existing?.photo_url || null,
