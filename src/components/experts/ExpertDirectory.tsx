@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -287,20 +287,26 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   }
                 }}
               >
-                <CardContent className="p-5 flex flex-col flex-1 items-center text-center gap-3">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={expert.photo_url ?? undefined} alt={expert.full_name} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
-                      {getInitials(expert.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-1">
-                    <p className="text-lg font-semibold text-foreground">{expert.full_name}</p>
-                    {expert.job_title && <p className="text-sm text-muted-foreground">{expert.job_title}</p>}
-                    {expert.area_of_expertise && (
-                      <p className="text-xs text-primary font-medium">{expert.area_of_expertise}</p>
-                    )}
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col items-center gap-3">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={expert.photo_url ?? undefined} alt={expert.full_name} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                        {getInitials(expert.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-center w-full">
+                      <CardTitle className="text-lg">{expert.full_name}</CardTitle>
+                      {expert.job_title && (
+                        <p className="text-sm text-muted-foreground">{expert.job_title}</p>
+                      )}
+                      {expert.area_of_expertise && (
+                        <p className="text-xs text-primary font-medium mt-1">{expert.area_of_expertise}</p>
+                      )}
+                    </div>
                   </div>
+                </CardHeader>
+                <CardContent className="space-y-3 flex-1 flex flex-col">
                   <div className="flex flex-wrap gap-1 justify-center">
                     {expert.created_at &&
                       Date.now() - new Date(expert.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000 && (
@@ -322,10 +328,11 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   </div>
 
                   {expert.bio && <p className="text-xs text-muted-foreground line-clamp-2">{expert.bio}</p>}
+                  <div className="flex-1" />
                   {canRequest && (
                     <Button
                       size="sm"
-                      className="w-full mt-auto"
+                      className="w-full"
                       variant={requestStatus === "accepted" ? "default" : "outline"}
                       disabled={!!requestStatus}
                       onClick={(e) => {
