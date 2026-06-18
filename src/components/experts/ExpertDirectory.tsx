@@ -223,13 +223,25 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
             ))}
           </SelectContent>
         </Select>
-        {(filterIndustry !== "all" || search) && (
+        <Select value={filterAffiliation} onValueChange={setFilterAffiliation}>
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Filter by USSS Affiliation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All USSS Affiliations</SelectItem>
+            <SelectItem value="Trustee">Trustee</SelectItem>
+            <SelectItem value="Ambassador">Ambassador</SelectItem>
+            <SelectItem value="Next Gen">Next Gen</SelectItem>
+          </SelectContent>
+        </Select>
+        {(filterIndustry !== "all" || filterAffiliation !== "all" || search) && (
           <Button
             variant="outline"
             size="icon"
             onClick={() => {
               setSearch("");
               setFilterIndustry("all");
+              setFilterAffiliation("all");
             }}
           >
             <X className="h-4 w-4" />
