@@ -12,9 +12,9 @@ import {
 import { Award, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-type Affiliate = "Athlete Alum" | "Trustee" | "Ambassador" | "Next Gen";
+type Affiliate = "Athlete Alum" | "Trustee" | "Ambassador" | "Next Gen Council";
 
-const AFFILIATE_OPTIONS: Affiliate[] = ["Athlete Alum", "Trustee", "Ambassador", "Next Gen"];
+const AFFILIATE_OPTIONS: Affiliate[] = ["Athlete Alum", "Trustee", "Ambassador", "Next Gen Council"];
 
 interface ExpertBadgeManagerProps {
   userId: string;

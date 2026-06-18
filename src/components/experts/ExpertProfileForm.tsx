@@ -31,7 +31,7 @@ interface ExpertFormState {
   headshot: string;
   bio: string;
   industry: string[];
-  ussa_affiliate: "" | "Athlete Alum" | "Trustee" | "Ambassador" | "Next Gen";
+  ussa_affiliate: "" | "Athlete Alum" | "Trustee" | "Ambassador" | "Next Gen Council";
   is_alum: boolean;
   email: string;
   photo_url: string;
@@ -52,7 +52,7 @@ const EMPTY: ExpertFormState = {
   photo_url: "",
 };
 
-const AFFILIATE_OPTIONS = ["Athlete Alum", "Trustee", "Ambassador", "Next Gen"] as const;
+const AFFILIATE_OPTIONS = ["Athlete Alum", "Trustee", "Ambassador", "Next Gen Council"] as const;
 
 export const ExpertProfileForm = ({
   initialData,
