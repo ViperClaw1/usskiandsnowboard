@@ -302,6 +302,12 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1 justify-center">
+                    {expert.created_at &&
+                      Date.now() - new Date(expert.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000 && (
+                        <Badge className="text-xs bg-emerald-500 text-white border-transparent hover:bg-emerald-500">
+                          New
+                        </Badge>
+                      )}
                     {getPrimaryIndustry(expert.industry) && (
                       <Badge variant="secondary" className="text-xs">
                         {getPrimaryIndustry(expert.industry)}
@@ -314,6 +320,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                       </Badge>
                     )}
                   </div>
+
                   {expert.bio && <p className="text-xs text-muted-foreground line-clamp-2">{expert.bio}</p>}
                   {canRequest && (
                     <Button
