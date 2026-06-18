@@ -361,6 +361,31 @@ export const FullUserManagementTable = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
+                        {(() => {
+                          const roles = user.roles as string[];
+                          const editableRole: "athlete" | "expert" | null = roles.includes("athlete")
+                            ? "athlete"
+                            : roles.includes("expert")
+                              ? "expert"
+                              : null;
+                          if (!editableRole) return null;
+                          return (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                setUserToEdit({
+                                  id: user.id,
+                                  name: user.full_name || user.email,
+                                  role: editableRole,
+                                })
+                              }
+                              title="Edit profile picture & description"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          );
+                        })()}
                         <Button
                           variant="ghost"
                           size="icon"
