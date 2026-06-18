@@ -321,22 +321,18 @@ const AthleteDirectory = () => {
   }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
 
   const totalFilteredAthletes = filteredAthletes.length;
-  const totalPages = Math.max(1, Math.ceil(totalFilteredAthletes / DIRECTORY_PAGE_SIZE));
-  const pageStartIndex = totalFilteredAthletes === 0 ? 0 : (page - 1) * DIRECTORY_PAGE_SIZE + 1;
-  const pageEndIndex = Math.min(page * DIRECTORY_PAGE_SIZE, totalFilteredAthletes);
+  const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredAthletes, [
+    searchTerm,
+    filterSport,
+    filterAvailability,
+    filterSkills,
+    filterCareerInterests,
+  ]);
 
-  const paginatedAthletes = useMemo(() => {
-    const start = (page - 1) * DIRECTORY_PAGE_SIZE;
-    return filteredAthletes.slice(start, start + DIRECTORY_PAGE_SIZE);
-  }, [filteredAthletes, page]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
-
-  useEffect(() => {
-    setPage((prev) => Math.min(prev, totalPages));
-  }, [totalPages]);
+  const paginatedAthletes = useMemo(
+    () => filteredAthletes.slice(0, visibleCount),
+    [filteredAthletes, visibleCount],
+  );
 
   // ==============================
   // Handlers
