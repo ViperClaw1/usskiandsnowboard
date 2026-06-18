@@ -26,6 +26,7 @@ export interface ExpertProfile {
   user_id: string;
   full_name: string;
   job_title: string | null;
+  company_name: string | null;
   area_of_expertise: string | null;
   bio: string | null;
   photo_url: string | null;
