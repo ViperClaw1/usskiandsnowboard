@@ -867,7 +867,7 @@ const AthleteDirectory = () => {
                         rel="noopener noreferrer"
                         className="text-sm text-primary hover:underline flex items-center gap-2"
                       >
-                        <Instagram className="h-4 w-4" /> View Profile
+                        <Instagram className="h-4 w-4" /> Open Instagram
                       </a>
                     </div>
                   )}

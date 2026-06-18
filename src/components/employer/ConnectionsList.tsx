@@ -433,7 +433,7 @@ const ConnectionsList = ({ employerProfileId, status }: ConnectionsListProps) =>
                       rel="noopener noreferrer"
                       className="text-sm text-primary hover:underline"
                     >
-                      View Profile
+                      Open Instagram
                     </a>
                   </div>
                 )}
