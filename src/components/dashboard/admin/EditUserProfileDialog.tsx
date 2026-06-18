@@ -114,9 +114,16 @@ export const EditUserProfileDialog = ({
   const handleSave = async () => {
     if (!profileId) return;
     setSaving(true);
+    const payload: Record<string, any> = {
+      photo_url: photoUrl || null,
+      bio: bio || null,
+    };
+    if (role === "expert") {
+      payload.job_title = title || null;
+    }
     const { error } = await supabase
       .from(tableFor(role))
-      .update({ photo_url: photoUrl || null, bio: bio || null })
+      .update(payload)
       .eq("id", profileId);
     setSaving(false);
     if (error) {
