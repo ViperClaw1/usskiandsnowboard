@@ -224,7 +224,7 @@ const AthleteDirectory = () => {
   const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterSkills, setFilterSkills] = useState<string>("");
   const [filterCareerInterests, setFilterCareerInterests] = useState<string>("");
-  const [page, setPage] = useState(1);
+  
 
   // ==============================
   // Data Fetching — Athletes
