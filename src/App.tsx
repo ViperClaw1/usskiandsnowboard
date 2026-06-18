@@ -77,6 +77,7 @@ const AppRoutes = () => (
       <Route path="/admin/experts" element={<AllExperts />} />
       <Route path="/admin/requests" element={<AllRequests />} />
       <Route path="/admin/connections" element={<AcceptedConnections />} />
+      <Route path="/admin/expert-connections" element={<AcceptedExpertConnections />} />
       <Route path="/admin/rejected" element={<RejectedRequests />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/privacy" element={<Privacy />} />
