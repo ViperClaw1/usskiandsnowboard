@@ -17,17 +17,9 @@ const Schedule = () => (
       {/* Page header with download CTA */}
       <section className="py-6 sm:py-8 bg-gradient-to-b from-background to-muted">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">2026-27 World Cup Schedule</h1>
-              <p className="text-base sm:text-lg text-muted-foreground">U.S. Ski &amp; Snowboard World Cup events</p>
-            </div>
-            <a href={`${import.meta.env.BASE_URL}schedule.pdf`} download>
-              <Button size="lg" className="gap-2">
-                <Download className="h-4 w-4" />
-                Download PDF
-              </Button>
-            </a>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">2026-27 World Cup Schedule</h1>
+            <p className="text-base sm:text-lg text-muted-foreground">U.S. Ski &amp; Snowboard World Cup events</p>
           </div>
         </div>
       </section>
