@@ -31,7 +31,7 @@ interface ExpertFormState {
   headshot: string;
   bio: string;
   industry: string[];
-  ussa_affiliate: "" | "Athlete Alum" | "Trustee" | "Ambassador" | "Next Gen Council";
+  ussa_affiliate: "" | "Athlete Alum" | "Trustee" | "Ambassador" | "Gold Pass" | "Next Gen Council" | "No formal affiliation";
   is_alum: boolean;
   email: string;
   photo_url: string;
@@ -52,7 +52,7 @@ const EMPTY: ExpertFormState = {
   photo_url: "",
 };
 
-const AFFILIATE_OPTIONS = ["Athlete Alum", "Trustee", "Ambassador", "Next Gen Council"] as const;
+const AFFILIATE_OPTIONS = ["Athlete Alum", "Trustee", "Ambassador", "Gold Pass", "Next Gen Council", "No formal affiliation"] as const;
 
 export const ExpertProfileForm = ({
   initialData,
@@ -270,7 +270,7 @@ export const ExpertProfileForm = ({
         <div className="space-y-1.5">
           <Label className="flex items-center gap-1.5">
             <img src={usLogo} alt="US Ski & Snowboard" className="h-4 w-4 object-contain" />
-            US Ski &amp; Snowboard Affiliate
+            US Ski &amp; Snowboard Affiliation
           </Label>
           <Select value={form.ussa_affiliate} onValueChange={(v) => set("ussa_affiliate", v)}>
             <SelectTrigger className="w-full">
