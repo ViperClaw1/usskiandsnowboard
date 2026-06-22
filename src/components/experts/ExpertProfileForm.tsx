@@ -323,38 +323,6 @@ export const ExpertProfileForm = ({
         </div>
       </div>
 
-      {/* Photo uploader */}
-      <div className="space-y-1.5">
-        <Label>Profile Photo</Label>
-        <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            {form.photo_url ? <AvatarImage src={form.photo_url} alt="Profile photo" /> : null}
-            <AvatarFallback className="text-lg">
-              {form.full_name ? form.full_name.charAt(0).toUpperCase() : "?"}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex gap-2">
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingPhoto}
-            >
-              {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
-              {uploadingPhoto ? "Uploading..." : "Upload Photo"}
-            </Button>
-            {form.photo_url && (
-              <Button type="button" variant="ghost" size="sm" onClick={handleRemovePhoto}>
-                <X className="h-4 w-4 mr-1" />
-                Remove
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* <div className="space-y-1.5">
         <Label>Headshot</Label>
         <Textarea
