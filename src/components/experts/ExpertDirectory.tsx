@@ -323,7 +323,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                         {getPrimaryIndustry(expert.industry)}
                       </Badge>
                     )}
-                    {expert.ussa_affiliate && (
+                    {expert.ussa_affiliate && expert.ussa_affiliate !== "No formal affiliation" && (
                       <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
                         <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
                         {expert.ussa_affiliate}
@@ -402,7 +402,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
               <div className="flex flex-wrap gap-2">
                 {selectedExpert.industry && <Badge variant="secondary">{selectedExpert.industry}</Badge>}
-                {selectedExpert.ussa_affiliate && (
+                {selectedExpert.ussa_affiliate && selectedExpert.ussa_affiliate !== "No formal affiliation" && (
                   <Badge className="bg-primary/10 text-primary border-primary/20">
                     <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
                     {selectedExpert.ussa_affiliate}
