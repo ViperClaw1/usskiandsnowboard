@@ -136,6 +136,10 @@ export const ExpertProfileForm = ({
   };
 
   const handleSave = async () => {
+    if (!form.photo_url.trim()) {
+      toast.error("Profile photo is required.");
+      return;
+    }
     if (!form.full_name.trim()) {
       toast.error("Full name is required.");
       return;
