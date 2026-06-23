@@ -174,11 +174,7 @@ const ATHLETE_TOOL = {
         last_name: { type: "string" },
         sport_discipline: {
           type: "string",
-          enum: [
-            "Alpine Skiing", "Cross-Country Skiing", "Freestyle Skiing",
-            "Ski Jumping", "Nordic Combined", "Snowboarding", "Biathlon",
-            "Freeski", "Other",
-          ],
+          description: "Athlete's primary sport discipline (e.g. Alpine Skiing, Moguls, Snowboard Halfpipe). Use exactly the discipline provided in the prompt.",
         },
         bio: { type: "string", description: "Athletic bio, 2-4 sentences" },
         career_interests: {
