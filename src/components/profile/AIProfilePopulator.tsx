@@ -295,6 +295,45 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
                     />
                   </div>
                 </>
+              ) : isAthlete ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-discipline">
+                      <Snowflake className="inline h-3.5 w-3.5 mr-1" />
+                      Sport Discipline
+                    </Label>
+                    <Select value={discipline} onValueChange={setDiscipline}>
+                      <SelectTrigger id="ai-discipline">
+                        <SelectValue placeholder="Select your discipline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SPORT_DISCIPLINE_GROUPS.map((g) => (
+                          <SelectGroup key={g.group}>
+                            <SelectLabel>{g.group}</SelectLabel>
+                            {g.options.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>
+                                {o.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-instagram">
+                      <Instagram className="inline h-3.5 w-3.5 mr-1" />
+                      Instagram URL <span className="text-muted-foreground font-normal">(optional)</span>
+                    </Label>
+                    <Input
+                      id="ai-instagram"
+                      type="url"
+                      placeholder="https://www.instagram.com/username"
+                      value={instagramUrl}
+                      onChange={(e) => setInstagramUrl(e.target.value)}
+                    />
+                  </div>
+                </>
               ) : (
                 <div className="space-y-2">
                   <Label htmlFor="ai-url">
