@@ -42,7 +42,7 @@ This platform was built specifically for U.S. Ski & Snowboard athletes — to he
   ],
   outro: `Whether you're actively exploring your next step or just starting to think about it, this platform exists to make the transition smoother, faster, and more empowering.
 
-Your first step is completing your profile. This helps mentors and employers understand your interests, goals, and background — and allows the system to match you with relevant opportunities.`,
+Your first step is completing your profile. This helps mentors and experts understand your interests, goals, and background — and allows the system to match you with relevant opportunities.`,
 };
 
 const partnerWelcome = {

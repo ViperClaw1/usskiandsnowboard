@@ -519,10 +519,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("directory")}>
-                  <Users className="mr-2 h-4 w-4" />
-                  {getText("quick_actions.browse_directory", "Browse Partner Directory")}
-                </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("profile")}>
                   <UserCircle className="mr-2 h-4 w-4" />
                   {getText("quick_actions.update_profile", "Update Profile")}
@@ -540,7 +536,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Profile Preview - How Employers See You</DialogTitle>
+                      <DialogTitle>Profile Preview - How Others See You</DialogTitle>
                     </DialogHeader>
                     {profile && (
                       <AthleteProfilePreview
@@ -603,51 +599,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{getText("featured.title", "Featured Partners")}</CardTitle>
-              <Button variant="link" onClick={() => onNavigate("directory")}>
-                {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {featuredPartners.map((partner) => (
-                <Card
-                  key={partner.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => {
-                    setSelectedPartner(partner);
-                    setPartnerDialogOpen(true);
-                  }}
-                >
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col items-center text-center space-y-3">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={partner.logo_url || ""} />
-                        <AvatarFallback>{partner.company_name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-sm">{partner.company_name}</p>
-                        {partner.industry && (
-                          <Badge
-                            variant="grayout"
-                            className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                            title={partner.industry}
-                          >
-                            {getShortIndustryBadgeLabel(partner.industry)}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </section>
 
       <Dialog
