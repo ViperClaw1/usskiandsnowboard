@@ -53,13 +53,16 @@ function getInitials(name: string) {
     .join("");
 }
 
-function getPrimaryIndustry(industry: string | null): string | null {
-  if (!industry) return null;
-  const first = industry
-    .split(",")
+function splitIndustries(industry: string | null): string[] {
+  if (!industry) return [];
+  return industry
+    .split(/[,;|]/)
     .map((v) => v.trim())
-    .find(Boolean);
-  return first || null;
+    .filter(Boolean);
+}
+
+function getPrimaryIndustry(industry: string | null): string | null {
+  return splitIndustries(industry)[0] ?? null;
 }
 
 // ==============================
