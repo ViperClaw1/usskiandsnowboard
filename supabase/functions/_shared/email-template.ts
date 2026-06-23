@@ -22,12 +22,26 @@ export function emailTemplate(title: string, bodyHtml: string): string {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light only">
+    <style>
+      /* Keep header text white even when mail clients force dark mode */
+      .hero-title { color: #ffffff !important; }
+      .hero-title font { color: #ffffff !important; }
+      @media (prefers-color-scheme: dark) {
+        .hero-title, .hero-title font { color: #ffffff !important; }
+      }
+      /* Outlook.com / Gmail dark-mode overrides */
+      [data-ogsc] .hero-title,
+      [data-ogsb] .hero-title,
+      u + .body .hero-title { color: #ffffff !important; }
+    </style>
   </head>
-  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
+  <body class="body" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
       <!-- Branded hero header -->
       <tr>
-        <td style="padding: 50px 30px 40px; text-align: center; background-image: url('${MOUNTAIN_BG_URL}'); background-size: cover; background-position: center; background-repeat: no-repeat; position: relative;">
+        <td style="padding: 50px 30px 40px; text-align: center; background-image: url('${MOUNTAIN_BG_URL}'); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #002a5c; position: relative;">
           <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,60,120,0.72) 0%, rgba(0,30,80,0.82) 100%); border-radius: 0;"></div>
           <div style="position: relative; z-index: 1; margin-bottom: 16px;">
             <img
@@ -38,8 +52,8 @@ export function emailTemplate(title: string, bodyHtml: string): string {
               style="display: inline-block; border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); object-fit: contain; background-color: rgba(255,255,255,0.1);"
             />
           </div>
-          <h1 style="position: relative; z-index: 1; margin: 0; color: #ffffff; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
-            ${title}
+          <h1 class="hero-title" style="position: relative; z-index: 1; margin: 0; color: #ffffff !important; font-size: 26px; font-weight: bold; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.3px;">
+            <font color="#ffffff"><span style="color:#ffffff !important;">${title}</span></font>
           </h1>
         </td>
       </tr>
