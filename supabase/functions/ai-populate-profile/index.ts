@@ -465,7 +465,18 @@ ABSOLUTE RULES — read carefully:
 ${mustCallInstruction}`
       : isEmployer
       ? `You are extracting company profile information from a website for a U.S. Ski & Snowboard partner directory. The company name is "${name}". Extract ONLY fields explicitly supported by the scraped content. Do NOT invent or guess. If a field is not present, omit it. Do NOT assume the company is sports-related unless the content explicitly says so. ${mustCallInstruction}`
-      : `You are extracting athlete profile information from an Instagram profile for a U.S. Ski & Snowboard athlete directory. The athlete's name is "${name}". Extract ONLY fields explicitly supported by the scraped content. Do NOT invent or guess. If a field is not present, omit it. ${mustCallInstruction}`;
+      : `You are extracting an athlete profile for "${name}", a "${discipline}" athlete in the U.S. Ski & Snowboard community. The provided content includes public web search results that mention the athlete, and (optionally) their Instagram profile.
+
+ABSOLUTE RULES — read carefully:
+- NEVER invent, guess, or infer facts that are not literally in the provided content. Do not guess based on the athlete's name, the URL, or what's common in their discipline.
+- Only attribute information to "${name}" if the content explicitly mentions them by name (or an obvious variation). Do NOT attribute generic team/discipline information to this individual.
+- sport_discipline MUST be "${discipline}" — do not change it.
+- first_name and last_name: split from "${name}".
+- bio: 2-4 sentences summarizing ONLY facts found about this specific athlete in the content. If almost nothing is available, write one sentence stating the athlete's name and discipline.
+- home_mountain, sponsors, professional_highlights, photo_url, instagram_url: only include if explicitly stated in the content.
+- Do NOT fabricate career_interests, skills, availability, or affiliation if not stated.
+
+${mustCallInstruction}`;
 
     const tool = role === "expert" ? EXPERT_TOOL : isEmployer ? EMPLOYER_TOOL : ATHLETE_TOOL;
     const toolName = role === "expert" ? "populate_expert_profile" : isEmployer ? "populate_employer_profile" : "populate_athlete_profile";
@@ -475,6 +486,8 @@ ${mustCallInstruction}`
 
     const userMessage = isExpert
       ? `Here is the gathered content about "${name}" at "${companyName}":\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information about this specific person found in the content above. ${linkedinUrl ? `Set linkedin_url to ${ensureProtocol(linkedinUrl)}.` : ""}`
+      : isAthlete
+      ? `Here is the gathered content about "${name}" (${discipline}):\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information about this specific athlete found in the content above. Set sport_discipline to "${discipline}". ${instagramUrl ? `Set instagram_url to ${ensureProtocol(instagramUrl)}.` : ""}`
       : combinedContent
       ? `Here is the scraped content from ${formattedUrl}:\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information explicitly found in the content above. Use ${formattedUrl} as the ${urlFieldName} value.`
       : `I could not scrape ${formattedUrl}. Call the ${toolName} function with ONLY the values you can derive from the URL itself and the name "${name}". Set ${urlFieldName} to ${formattedUrl}. Do NOT invent any other content — leave all other fields empty.`;
