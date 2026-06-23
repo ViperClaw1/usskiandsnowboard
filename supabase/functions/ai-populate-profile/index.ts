@@ -508,8 +508,8 @@ ${mustCallInstruction}`;
       });
     };
 
-    // Experts: prefer the stronger model first since content is sparse and identity matters.
-    const models = isExpert
+    // Experts & athletes: prefer the stronger model first since content is sparse and identity matters.
+    const models = isExpert || isAthlete
       ? ["openai/gpt-5-mini", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"]
       : ["google/gemini-3-flash-preview", "openai/gpt-5-mini", "google/gemini-2.5-flash"];
     let aiResp: Response | null = null;
