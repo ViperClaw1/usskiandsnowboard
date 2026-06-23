@@ -238,7 +238,7 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
                 ? "Enter your company details and we'll extract your profile info from your website."
                 : isExpert
                 ? "Tell us your name and current company — we'll find your professional details from the public web."
-                : "Enter your name and Instagram URL and we'll build your profile automatically."}
+                : "Tell us your name and discipline — we'll build your profile from public sources. Adding Instagram makes it more accurate."}
             </p>
             <div className="space-y-4 mt-2">
               <div className="space-y-2">
