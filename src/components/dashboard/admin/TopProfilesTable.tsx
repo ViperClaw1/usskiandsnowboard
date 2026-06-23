@@ -67,7 +67,11 @@ export const TopProfilesTable = () => {
                   topAthletes.map((athlete) => (
                     <TableRow key={athlete.id}>
                       <TableCell className="font-medium">{athlete.full_name}</TableCell>
-                      <TableCell className="text-muted-foreground">{athlete.sport_discipline}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {Array.isArray(athlete.sport_discipline)
+                          ? athlete.sport_discipline.join(", ")
+                          : athlete.sport_discipline}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Eye className="h-3 w-3 text-muted-foreground" />
