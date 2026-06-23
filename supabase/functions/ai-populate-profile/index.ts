@@ -217,15 +217,37 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { role, url, name } = await req.json();
-    if (!role || !url || !name) {
-      return new Response(JSON.stringify({ error: "Missing required fields: role, url, name" }), {
+    const body = await req.json();
+    const { role, name } = body;
+    const url: string | undefined = body.url;
+    const companyName: string | undefined = body.companyName;
+    const companyWebsite: string | undefined = body.companyWebsite;
+    const linkedinUrl: string | undefined = body.linkedinUrl;
+
+    if (!role || !name) {
+      return new Response(JSON.stringify({ error: "Missing required fields: role, name" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Step 1: Scrape URL with Firecrawl
+    const isEmployer = role === "employer";
+    const isExpert = role === "expert";
+
+    if (isExpert) {
+      if (!companyName) {
+        return new Response(
+          JSON.stringify({ error: "Missing required field for experts: companyName" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else if (!url) {
+      return new Response(JSON.stringify({ error: "Missing required field: url" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY_1") || Deno.env.get("FIRECRAWL_API_KEY");
     if (!firecrawlKey) {
       return new Response(JSON.stringify({ error: "Firecrawl not configured" }), {
@@ -234,40 +256,139 @@ Deno.serve(async (req) => {
       });
     }
 
-    let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
+    const ensureProtocol = (u: string) => {
+      const t = u.trim();
+      if (!t) return "";
+      if (t.startsWith("http://") || t.startsWith("https://")) return t;
+      return `https://${t}`;
+    };
 
-    console.log("Scraping URL:", formattedUrl);
-    let truncatedMarkdown = "";
-    const isLinkedIn = /(^|\.)linkedin\.com/i.test(formattedUrl);
-
-    try {
-      const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${firecrawlKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: formattedUrl,
-          formats: ["markdown", "links"],
-          onlyMainContent: true,
-          waitFor: isLinkedIn ? 3000 : 0,
-          timeout: 30000,
-        }),
-      });
-
-      const scrapeData = await scrapeResp.json();
-      if (scrapeResp.ok) {
-        const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
-        truncatedMarkdown = markdown.slice(0, 15000);
-      } else {
-        console.warn("Firecrawl scrape failed:", scrapeData?.error);
+    const scrapeUrl = async (target: string, opts?: { waitFor?: number }): Promise<string> => {
+      try {
+        const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${firecrawlKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: target,
+            formats: ["markdown"],
+            onlyMainContent: true,
+            waitFor: opts?.waitFor ?? 0,
+            timeout: 30000,
+          }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          console.warn("Firecrawl scrape failed:", target, data?.error);
+          return "";
+        }
+        return (data.data?.markdown || data.markdown || "").toString();
+      } catch (err) {
+        console.warn("Firecrawl scrape error:", target, err);
+        return "";
       }
-    } catch (scrapeErr) {
-      console.warn("Firecrawl request error:", scrapeErr);
+    };
+
+    const searchWeb = async (query: string, limit = 4): Promise<string> => {
+      try {
+        const resp = await fetch("https://api.firecrawl.dev/v1/search", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${firecrawlKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query,
+            limit,
+            scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+          }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          console.warn("Firecrawl search failed:", data?.error);
+          return "";
+        }
+        const results = (data.data || data.results || []) as Array<{
+          url?: string;
+          title?: string;
+          description?: string;
+          markdown?: string;
+        }>;
+        return results
+          .map((r) => {
+            const parts = [
+              r.title ? `# ${r.title}` : "",
+              r.url ? `Source: ${r.url}` : "",
+              r.description || "",
+              (r.markdown || "").slice(0, 4000),
+            ].filter(Boolean);
+            return parts.join("\n");
+          })
+          .join("\n\n---\n\n");
+      } catch (err) {
+        console.warn("Firecrawl search error:", err);
+        return "";
+      }
+    };
+
+    let combinedContent = "";
+    let formattedUrl = "";
+    let isLinkedIn = false;
+
+    if (isExpert) {
+      const segments: string[] = [];
+
+      // 1) Company website (or search for it)
+      let site = companyWebsite ? ensureProtocol(companyWebsite) : "";
+      if (site) {
+        console.log("Scraping company website:", site);
+        const md = await scrapeUrl(site);
+        if (md) segments.push(`## Company website (${site})\n\n${md.slice(0, 8000)}`);
+      }
+
+      // 2) Web search for the person at the company (always run — finds bio/about/team pages and press)
+      const searchQuery = `"${name}" "${companyName}"`;
+      console.log("Searching web:", searchQuery);
+      const searchMd = await searchWeb(searchQuery, 4);
+      if (searchMd) segments.push(`## Web search results for ${searchQuery}\n\n${searchMd}`);
+
+      // 3) Optional LinkedIn (best-effort; do NOT fail if blocked)
+      if (linkedinUrl) {
+        const lnUrl = ensureProtocol(linkedinUrl);
+        console.log("Scraping LinkedIn (best effort):", lnUrl);
+        const lnMd = await scrapeUrl(lnUrl, { waitFor: 3000 });
+        const lnTrim = lnMd.trim();
+        const looksLikeWall =
+          lnTrim.length < 600 ||
+          /sign in to (view|see)|join linkedin|to view .* profile|security verification|authwall/i.test(
+            lnTrim.toLowerCase(),
+          );
+        if (lnMd && !looksLikeWall) {
+          segments.push(`## LinkedIn profile (${lnUrl})\n\n${lnMd.slice(0, 8000)}`);
+        } else {
+          console.log("LinkedIn unusable, skipping.");
+        }
+      }
+
+      combinedContent = segments.join("\n\n===\n\n").slice(0, 28000);
+
+      if (!combinedContent.trim()) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "We couldn't find enough public information about this person. Try adding the company website or LinkedIn URL, or fill the fields in manually.",
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else {
+      formattedUrl = ensureProtocol(url!);
+      isLinkedIn = /(^|\.)linkedin\.com/i.test(formattedUrl);
+      console.log("Scraping URL:", formattedUrl);
+      const md = await scrapeUrl(formattedUrl, { waitFor: isLinkedIn ? 3000 : 0 });
+      combinedContent = md.slice(0, 15000);
     }
 
     // Step 2: Call Lovable AI with tool calling
@@ -279,44 +400,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const isEmployer = role === "employer";
-    const isExpert = role === "expert";
-
-    // Detect LinkedIn login/auth walls so we don't let the model hallucinate.
-    const cleaned = truncatedMarkdown.trim();
-    const lowered = cleaned.toLowerCase();
-    const looksLikeAuthWall =
-      isLinkedIn &&
-      (cleaned.length < 600 ||
-        /sign in to (view|see)|join linkedin|to view .* profile|security verification|please enable javascript|authwall/i.test(
-          lowered,
-        ));
-
-    if (isExpert && (looksLikeAuthWall || (isLinkedIn && cleaned.length < 600))) {
-      console.warn("LinkedIn scrape unusable. length=", cleaned.length);
-      return new Response(
-        JSON.stringify({
-          error:
-            "We couldn't read enough from this LinkedIn profile — LinkedIn blocks automated access for many profiles. Please make sure the profile is fully public, or fill the fields in manually.",
-        }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
     const mustCallInstruction = `You MUST call the ${isExpert ? "populate_expert_profile" : isEmployer ? "populate_employer_profile" : "populate_athlete_profile"} function. Do NOT ask clarifying questions. Do NOT respond with text.`;
     const systemPrompt = isExpert
-      ? `You are extracting professional profile information from a LinkedIn profile for "${name}". This profile will be listed in a U.S. Ski & Snowboard expert/mentor directory, but the person may work in ANY industry. Extract ONLY information that is EXPLICITLY present in the scraped content below.
+      ? `You are extracting a professional profile for "${name}" who currently works at "${companyName}". The provided content includes the company's website, public web search results that mention the person, and (optionally) their LinkedIn profile.
 
 ABSOLUTE RULES — read carefully:
-- NEVER invent, guess, or infer facts that are not literally in the scraped content. Do not guess based on the URL slug, the person's name, or what is common in their industry.
-- If a field is not clearly supported by the scraped text, OMIT it entirely. Required fields (job_title, area_of_expertise, bio) must come from the actual content — if you cannot derive them from the content, return a short bio that ONLY states the person's name and that no further details were available, and leave job_title / area_of_expertise as the literal string "Unknown".
-- Do NOT assume the person is sports-related. Use only what the profile actually says.
-- bio: 2-4 sentences, summarizing ONLY facts found in the content. No filler, no marketing language, no invented accomplishments.
-- job_title: their CURRENT role as stated on the profile. If multiple roles are listed, pick the most recent.
-- company_name: current employer as stated on the profile.
-- area_of_expertise: short phrase derived from their actual stated role/domain.
-- industry: prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. If none of those clearly fit the actual content, return a short 2-5 word industry phrase taken from the profile.
-- photo_url: only return if an actual headshot image URL is in the content.
+- NEVER invent, guess, or infer facts that are not literally in the provided content. Do not guess based on the person's name, the URL slug, or what's common in their industry.
+- Only attribute information to "${name}" if the content explicitly mentions them by name (or by an obvious variation/initials). Do NOT attribute generic company information to this individual.
+- If a field is not clearly supported by the content, OMIT it. For required fields (job_title, area_of_expertise, bio): if you can't derive them from content that explicitly mentions the person, use "Unknown" for job_title / area_of_expertise, and write a one-sentence bio stating the person's name, the company, and that no further public details were available.
+- company_name MUST be "${companyName}" unless content clearly shows they no longer work there.
+- bio: 2-4 sentences, ONLY facts found about this specific person in the content.
+- job_title: their CURRENT role at "${companyName}" as stated in the content.
+- area_of_expertise: short phrase reflecting their actual stated domain.
+- industry: prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. Otherwise a short 2-5 word phrase taken from the content.
+- photo_url: only if an actual headshot URL appears in the content.
 
 ${mustCallInstruction}`
       : isEmployer
@@ -329,6 +426,12 @@ ${mustCallInstruction}`
 
     console.log("Calling Lovable AI for extraction...");
 
+    const userMessage = isExpert
+      ? `Here is the gathered content about "${name}" at "${companyName}":\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information about this specific person found in the content above. ${linkedinUrl ? `Set linkedin_url to ${ensureProtocol(linkedinUrl)}.` : ""}`
+      : combinedContent
+      ? `Here is the scraped content from ${formattedUrl}:\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information explicitly found in the content above. Use ${formattedUrl} as the ${urlFieldName} value.`
+      : `I could not scrape ${formattedUrl}. Call the ${toolName} function with ONLY the values you can derive from the URL itself and the name "${name}". Set ${urlFieldName} to ${formattedUrl}. Do NOT invent any other content — leave all other fields empty.`;
+
     const makeAiCall = async (model: string) => {
       return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -340,9 +443,7 @@ ${mustCallInstruction}`
           model,
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: truncatedMarkdown
-              ? `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}\n\nCall the ${toolName} function using ONLY information explicitly found in the content above. Use ${formattedUrl} as the ${urlFieldName} value.`
-              : `I could not scrape ${formattedUrl}. Call the ${toolName} function with ONLY the values you can derive from the URL itself and the name "${name}". Set ${urlFieldName} to ${formattedUrl}. Do NOT invent any other content — leave all other fields empty.` },
+            { role: "user", content: userMessage },
           ],
           tools: [tool],
           tool_choice: { type: "function", function: { name: toolName } },
@@ -350,6 +451,19 @@ ${mustCallInstruction}`
         }),
       });
     };
+
+    // Experts: prefer the stronger model first since content is sparse and identity matters.
+    const models = isExpert
+      ? ["openai/gpt-5-mini", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"]
+      : ["google/gemini-3-flash-preview", "openai/gpt-5-mini", "google/gemini-2.5-flash"];
+    let aiResp: Response | null = null;
+    for (const model of models) {
+      console.log("Trying model:", model);
+      aiResp = await makeAiCall(model);
+      if (aiResp.ok) break;
+      console.error(`Model ${model} failed with status ${aiResp.status}`);
+    }
+
 
     // Experts: prefer the stronger model first since LinkedIn content is sparse.
     const models = isExpert
