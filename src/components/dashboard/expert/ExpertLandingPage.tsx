@@ -589,10 +589,6 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("employers")}>
-                  <Users className="mr-2 h-4 w-4" />
-                  {getText("quick_actions.browse_partners", "Browse Partner Directory")}
-                </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("athletes")}>
                   <Users className="mr-2 h-4 w-4" />
                   {getText("quick_actions.browse_athletes", "Browse Athlete Directory")}
@@ -725,51 +721,6 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{getText("featured_partners.title", "Featured Partners")}</CardTitle>
-              <Button variant="link" onClick={() => onNavigate("employers")}>
-                {getText("featured_partners.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {featuredPartners.map((partner) => (
-                <Card
-                  key={partner.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => {
-                    setSelectedPartner(partner);
-                    setPartnerDialogOpen(true);
-                  }}
-                >
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col items-center text-center space-y-3">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={partner.logo_url || ""} />
-                        <AvatarFallback>{partner.company_name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-sm">{partner.company_name}</p>
-                        {getShortIndustryBadgeLabel(partner.industry) && (
-                          <Badge
-                            variant="secondary"
-                            className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                            title={partner.industry ?? undefined}
-                          >
-                            {getShortIndustryBadgeLabel(partner.industry)}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </section>
 
       <Dialog
