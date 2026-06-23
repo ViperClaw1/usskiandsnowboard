@@ -4,11 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Globe, User, Loader2, CheckCircle2, Building2, Linkedin } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Sparkles, Globe, User, Loader2, CheckCircle2, Building2, Linkedin, Instagram, Snowflake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AI_LOADING_MESSAGES, useAiLoadingProgress } from "./aiLoadingProgress";
 import { upsertAthleteProfile, upsertEmployerProfile, upsertExpertProfile } from "@/services/profileUpsertService";
+import { SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 
 interface AIProfilePopulatorProps {
   role: "athlete" | "employer" | "expert";
