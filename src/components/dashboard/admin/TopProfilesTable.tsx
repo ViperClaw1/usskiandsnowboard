@@ -149,7 +149,7 @@ export const TopProfilesTable = () => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Job Title</TableHead>
-                  <TableHead>Expertise</TableHead>
+                  <TableHead>Industry</TableHead>
                   <TableHead className="text-right">Views</TableHead>
                 </TableRow>
               </TableHeader>
