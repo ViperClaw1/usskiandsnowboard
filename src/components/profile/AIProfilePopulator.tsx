@@ -34,12 +34,15 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [discipline, setDiscipline] = useState("");
   const [progress, setProgress] = useState(0);
   const [loadingMsg, setLoadingMsg] = useState(AI_LOADING_MESSAGES[0]);
   const [error, setError] = useState("");
 
   const isEmployer = role === "employer";
   const isExpert = role === "expert";
+  const isAthlete = role === "athlete";
   const nameLabel = isEmployer ? "Company Name" : "Full Name";
   const namePlaceholder = isEmployer ? "Acme Corporation" : "Jane Smith";
   const urlLabel = isEmployer ? "Company Website" : "Instagram Profile URL";
