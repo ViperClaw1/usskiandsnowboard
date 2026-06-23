@@ -110,19 +110,19 @@ const EXPERT_TOOL = {
   type: "function",
   function: {
     name: "populate_expert_profile",
-    description: "Populate an expert professional profile with extracted data from LinkedIn. You MUST provide job_title, area_of_expertise, and bio — never leave them empty. If the scraped content is sparse, infer reasonable values from the person's name, URL, and any available context.",
+    description: "Populate an expert professional profile using ONLY information explicitly present in the scraped LinkedIn content. Never fabricate or guess.",
     parameters: {
       type: "object",
       properties: {
         full_name: { type: "string" },
-        job_title: { type: "string", description: "Current role/title as shown on their profile. If not explicitly found, infer from any available context (e.g. headline, experience section). Never leave blank." },
-        company_name: { type: "string", description: "Current company/employer name where the person works, as shown on their LinkedIn experience section." },
-        area_of_expertise: { type: "string", description: "Primary area of professional expertise based on their actual profile content — use their real industry/domain, NOT sports unless their profile is actually sports-related. Never leave blank." },
+        job_title: { type: "string", description: "Current role/title exactly as stated on the profile. If not present in the content, use 'Unknown' — do not guess." },
+        company_name: { type: "string", description: "Current employer exactly as stated in the experience section. Omit if not present." },
+        area_of_expertise: { type: "string", description: "Short phrase reflecting the person's stated professional domain. If not derivable from the content, use 'Unknown'." },
         industry: {
           type: "string",
-          description: `LinkedIn industry/domain. Prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. If none clearly fit, provide a short industry phrase from profile content.`,
+          description: `Industry. Prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. Otherwise a short 2-5 word industry phrase taken from the content. Omit if not derivable.`,
         },
-        bio: { type: "string", description: "Professional bio, 2-4 sentences summarizing their career based on actual profile data. Never leave blank." },
+        bio: { type: "string", description: "2-4 sentence professional bio summarizing ONLY facts present in the scraped content. If almost nothing is available, write a single sentence stating the person's name and that no public details were available." },
         photo_url: { type: "string", description: "URL to profile headshot" },
         linkedin_url: { type: "string" },
       },
@@ -241,7 +241,8 @@ Deno.serve(async (req) => {
 
     console.log("Scraping URL:", formattedUrl);
     let truncatedMarkdown = "";
-    
+    const isLinkedIn = /(^|\.)linkedin\.com/i.test(formattedUrl);
+
     try {
       const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
         method: "POST",
@@ -253,6 +254,8 @@ Deno.serve(async (req) => {
           url: formattedUrl,
           formats: ["markdown", "links"],
           onlyMainContent: true,
+          waitFor: isLinkedIn ? 3000 : 0,
+          timeout: 30000,
         }),
       });
 
@@ -261,10 +264,10 @@ Deno.serve(async (req) => {
         const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
         truncatedMarkdown = markdown.slice(0, 15000);
       } else {
-        console.warn("Firecrawl scrape failed, falling back to AI-only:", scrapeData?.error);
+        console.warn("Firecrawl scrape failed:", scrapeData?.error);
       }
     } catch (scrapeErr) {
-      console.warn("Firecrawl request error, falling back to AI-only:", scrapeErr);
+      console.warn("Firecrawl request error:", scrapeErr);
     }
 
     // Step 2: Call Lovable AI with tool calling
@@ -278,24 +281,47 @@ Deno.serve(async (req) => {
 
     const isEmployer = role === "employer";
     const isExpert = role === "expert";
+
+    // Detect LinkedIn login/auth walls so we don't let the model hallucinate.
+    const cleaned = truncatedMarkdown.trim();
+    const lowered = cleaned.toLowerCase();
+    const looksLikeAuthWall =
+      isLinkedIn &&
+      (cleaned.length < 600 ||
+        /sign in to (view|see)|join linkedin|to view .* profile|security verification|please enable javascript|authwall/i.test(
+          lowered,
+        ));
+
+    if (isExpert && (looksLikeAuthWall || (isLinkedIn && cleaned.length < 600))) {
+      console.warn("LinkedIn scrape unusable. length=", cleaned.length);
+      return new Response(
+        JSON.stringify({
+          error:
+            "We couldn't read enough from this LinkedIn profile — LinkedIn blocks automated access for many profiles. Please make sure the profile is fully public, or fill the fields in manually.",
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const mustCallInstruction = `You MUST call the ${isExpert ? "populate_expert_profile" : isEmployer ? "populate_employer_profile" : "populate_athlete_profile"} function. Do NOT ask clarifying questions. Do NOT respond with text.`;
     const systemPrompt = isExpert
-      ? `You are extracting professional profile information from a LinkedIn profile. The person's name is "${name}". This profile will be listed in a U.S. Ski & Snowboard expert/mentor directory, but the person themselves may or may NOT be related to sports at all — they could be from ANY industry (tech, finance, law, marketing, etc.). Your job is to ACCURATELY extract their REAL information as shown on their LinkedIn profile. Do NOT invent or assume sports-related content. Use the person's ACTUAL job title, industry, expertise, and bio as found on their profile.
+      ? `You are extracting professional profile information from a LinkedIn profile for "${name}". This profile will be listed in a U.S. Ski & Snowboard expert/mentor directory, but the person may work in ANY industry. Extract ONLY information that is EXPLICITLY present in the scraped content below.
 
-CRITICAL RULES for job_title, area_of_expertise, and bio:
-- These three fields MUST ALWAYS be filled — never return them as null or empty.
-- Extract them directly from the LinkedIn profile content (headline, experience, about section, etc.).
-- If the scraped content is empty or blocked, make a reasonable inference from the person's name and the LinkedIn URL slug (e.g. "linkedin.com/in/john-doe-cto" → job_title could be "CTO").
-- For area_of_expertise, use their ACTUAL professional domain (e.g. "Software Engineering", "Corporate Finance", "Digital Marketing") — NOT sports.
-- For bio, write 2-4 professional sentences based on available data. If data is very limited, write a brief generic professional bio using their name and any inferred role.
-CRITICAL RULES for industry:
-- Always return the industry field.
-- First, try to map the profile to one of these exact values: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}.
-- If no close match exists, return a short industry phrase exactly as inferred from LinkedIn (2-5 words, no long explanation).
+ABSOLUTE RULES — read carefully:
+- NEVER invent, guess, or infer facts that are not literally in the scraped content. Do not guess based on the URL slug, the person's name, or what is common in their industry.
+- If a field is not clearly supported by the scraped text, OMIT it entirely. Required fields (job_title, area_of_expertise, bio) must come from the actual content — if you cannot derive them from the content, return a short bio that ONLY states the person's name and that no further details were available, and leave job_title / area_of_expertise as the literal string "Unknown".
+- Do NOT assume the person is sports-related. Use only what the profile actually says.
+- bio: 2-4 sentences, summarizing ONLY facts found in the content. No filler, no marketing language, no invented accomplishments.
+- job_title: their CURRENT role as stated on the profile. If multiple roles are listed, pick the most recent.
+- company_name: current employer as stated on the profile.
+- area_of_expertise: short phrase derived from their actual stated role/domain.
+- industry: prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. If none of those clearly fit the actual content, return a short 2-5 word industry phrase taken from the profile.
+- photo_url: only return if an actual headshot image URL is in the content.
+
 ${mustCallInstruction}`
       : isEmployer
-      ? `You are extracting company profile information from a website for a U.S. Ski & Snowboard partner directory. The company name is "${name}". Extract all available fields ACCURATELY from the scraped content. Use the company's ACTUAL industry, description, and details as found on their website. Do NOT assume the company is sports-related unless the content explicitly says so. For fields that cannot be determined, make reasonable suggestions based on actual scraped content. If no content was scraped, use only the company name — leave fields empty rather than inventing details. ${mustCallInstruction}`
-      : `You are extracting athlete profile information from an Instagram profile for a U.S. Ski & Snowboard athlete directory. The athlete's name is "${name}". Extract all available fields from the scraped content. The athlete is associated with U.S. Ski & Snowboard. For fields that cannot be determined from the content, make a reasonable suggestion based on winter sports context. ${mustCallInstruction}`;
+      ? `You are extracting company profile information from a website for a U.S. Ski & Snowboard partner directory. The company name is "${name}". Extract ONLY fields explicitly supported by the scraped content. Do NOT invent or guess. If a field is not present, omit it. Do NOT assume the company is sports-related unless the content explicitly says so. ${mustCallInstruction}`
+      : `You are extracting athlete profile information from an Instagram profile for a U.S. Ski & Snowboard athlete directory. The athlete's name is "${name}". Extract ONLY fields explicitly supported by the scraped content. Do NOT invent or guess. If a field is not present, omit it. ${mustCallInstruction}`;
 
     const tool = role === "expert" ? EXPERT_TOOL : isEmployer ? EMPLOYER_TOOL : ATHLETE_TOOL;
     const toolName = role === "expert" ? "populate_expert_profile" : isEmployer ? "populate_employer_profile" : "populate_athlete_profile";
@@ -315,20 +341,20 @@ ${mustCallInstruction}`
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: truncatedMarkdown
-              ? `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}\n\nPlease call the ${toolName} function with all extracted data.`
-              : `I could not scrape the URL ${formattedUrl}. Based on the name "${name}" and the URL provided, please call the ${toolName} function with your best suggestions for all fields. Use the URL as the ${urlFieldName} value when relevant.` },
+              ? `Here is the scraped content from ${formattedUrl}:\n\n${truncatedMarkdown}\n\nCall the ${toolName} function using ONLY information explicitly found in the content above. Use ${formattedUrl} as the ${urlFieldName} value.`
+              : `I could not scrape ${formattedUrl}. Call the ${toolName} function with ONLY the values you can derive from the URL itself and the name "${name}". Set ${urlFieldName} to ${formattedUrl}. Do NOT invent any other content — leave all other fields empty.` },
           ],
           tools: [tool],
           tool_choice: { type: "function", function: { name: toolName } },
+          temperature: 0.1,
         }),
       });
     };
 
-    const models = [
-      "google/gemini-3-flash-preview",
-      "openai/gpt-5-mini",
-      "google/gemini-2.5-flash",
-    ];
+    // Experts: prefer the stronger model first since LinkedIn content is sparse.
+    const models = isExpert
+      ? ["openai/gpt-5-mini", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"]
+      : ["google/gemini-3-flash-preview", "openai/gpt-5-mini", "google/gemini-2.5-flash"];
     let aiResp: Response | null = null;
     for (const model of models) {
       console.log("Trying model:", model);
