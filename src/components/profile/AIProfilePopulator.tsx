@@ -84,6 +84,25 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
           return;
         }
 
+        if (isAthlete) {
+          const [{ data: prof }, { data: athlete }] = await Promise.all([
+            supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+            supabase
+              .from("athlete_profiles")
+              .select("sport_discipline, instagram_url")
+              .eq("user_id", userId)
+              .maybeSingle(),
+          ]);
+          if (!isMounted) return;
+          if (prof?.full_name) setName(prof.full_name);
+          if (athlete?.instagram_url) setInstagramUrl(athlete.instagram_url);
+          const firstDiscipline = Array.isArray(athlete?.sport_discipline)
+            ? (athlete?.sport_discipline as string[])[0]
+            : null;
+          if (firstDiscipline) setDiscipline(firstDiscipline);
+          return;
+        }
+
         const { data } = await supabase
           .from("profiles")
           .select("full_name")
@@ -99,7 +118,7 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
     return () => {
       isMounted = false;
     };
-  }, [open, step, userId, isEmployer, isExpert]);
+  }, [open, step, userId, isEmployer, isExpert, isAthlete]);
 
   const handleSubmit = async () => {
     if (isExpert) {
