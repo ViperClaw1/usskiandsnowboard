@@ -105,7 +105,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
     area_of_expertise: profileData.area_of_expertise || null,
     bio: profileData.bio || null,
     photo_url: uploadedPhotoUrl || existing?.photo_url || null,
-    linkedin_url: profileData.linkedin_url || url.trim(),
+    linkedin_url: profileData.linkedin_url || (url?.trim() || null),
     ...(accountEmail ? { email: accountEmail } : {}),
   };
 
