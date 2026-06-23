@@ -393,6 +393,43 @@ Deno.serve(async (req) => {
           { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
+    } else if (isAthlete) {
+      const segments: string[] = [];
+
+      // 1) Instagram (optional)
+      let ig = instagramUrl ? ensureProtocol(instagramUrl) : "";
+      if (ig) {
+        console.log("Scraping Instagram (best effort):", ig);
+        const md = await scrapeUrl(ig, { waitFor: 3000 });
+        const trim = md.trim();
+        const looksLikeWall =
+          trim.length < 400 ||
+          /log in to see|see photos and videos|please wait|sign up to see|something went wrong/i.test(trim.toLowerCase());
+        if (md && !looksLikeWall) {
+          segments.push(`## Instagram profile (${ig})\n\n${md.slice(0, 8000)}`);
+        } else {
+          console.log("Instagram unusable, skipping.");
+        }
+      }
+
+      // 2) Web search for athlete + discipline
+      const query = `"${name}" ${discipline} U.S. Ski Snowboard`;
+      console.log("Searching web:", query);
+      const searchMd = await searchWeb(query, 5);
+      if (searchMd) segments.push(`## Web search results for ${query}\n\n${searchMd}`);
+
+      combinedContent = segments.join("\n\n===\n\n").slice(0, 28000);
+      formattedUrl = ig;
+
+      if (!combinedContent.trim()) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "We couldn't find enough public information about this athlete. Try adding an Instagram URL, or fill the fields in manually.",
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     } else {
       formattedUrl = ensureProtocol(url!);
       isLinkedIn = /(^|\.)linkedin\.com/i.test(formattedUrl);
