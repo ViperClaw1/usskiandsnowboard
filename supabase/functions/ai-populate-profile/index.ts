@@ -223,6 +223,8 @@ Deno.serve(async (req) => {
     const companyName: string | undefined = body.companyName;
     const companyWebsite: string | undefined = body.companyWebsite;
     const linkedinUrl: string | undefined = body.linkedinUrl;
+    const discipline: string | undefined = body.discipline;
+    const instagramUrl: string | undefined = body.instagramUrl;
 
     if (!role || !name) {
       return new Response(JSON.stringify({ error: "Missing required fields: role, name" }), {
@@ -233,11 +235,19 @@ Deno.serve(async (req) => {
 
     const isEmployer = role === "employer";
     const isExpert = role === "expert";
+    const isAthlete = role === "athlete";
 
     if (isExpert) {
       if (!companyName) {
         return new Response(
           JSON.stringify({ error: "Missing required field for experts: companyName" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else if (isAthlete) {
+      if (!discipline) {
+        return new Response(
+          JSON.stringify({ error: "Missing required field for athletes: discipline" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
