@@ -1140,6 +1140,7 @@ export type Database = {
           area_of_expertise: string | null
           full_name: string | null
           id: string | null
+          industry: string | null
           job_title: string | null
           profile_completeness: number | null
           profile_views: number | null
