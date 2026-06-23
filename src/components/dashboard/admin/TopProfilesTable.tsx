@@ -225,8 +225,10 @@ export const TopProfilesTable = () => {
                   {expert.job_title && (
                     <p className="mt-0.5 text-xs text-muted-foreground">{expert.job_title}</p>
                   )}
-                  {expert.area_of_expertise && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{expert.area_of_expertise}</p>
+                  {expert.industry && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {expert.industry.split(",").map((s) => s.trim()).join(", ")}
+                    </p>
                   )}
                 </div>
               ))
