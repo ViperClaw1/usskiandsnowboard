@@ -174,11 +174,7 @@ const ATHLETE_TOOL = {
         last_name: { type: "string" },
         sport_discipline: {
           type: "string",
-          enum: [
-            "Alpine Skiing", "Cross-Country Skiing", "Freestyle Skiing",
-            "Ski Jumping", "Nordic Combined", "Snowboarding", "Biathlon",
-            "Freeski", "Other",
-          ],
+          description: "Athlete's primary sport discipline (e.g. Alpine Skiing, Moguls, Snowboard Halfpipe). Use exactly the discipline provided in the prompt.",
         },
         bio: { type: "string", description: "Athletic bio, 2-4 sentences" },
         career_interests: {
@@ -223,6 +219,8 @@ Deno.serve(async (req) => {
     const companyName: string | undefined = body.companyName;
     const companyWebsite: string | undefined = body.companyWebsite;
     const linkedinUrl: string | undefined = body.linkedinUrl;
+    const discipline: string | undefined = body.discipline;
+    const instagramUrl: string | undefined = body.instagramUrl;
 
     if (!role || !name) {
       return new Response(JSON.stringify({ error: "Missing required fields: role, name" }), {
@@ -233,11 +231,19 @@ Deno.serve(async (req) => {
 
     const isEmployer = role === "employer";
     const isExpert = role === "expert";
+    const isAthlete = role === "athlete";
 
     if (isExpert) {
       if (!companyName) {
         return new Response(
           JSON.stringify({ error: "Missing required field for experts: companyName" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else if (isAthlete) {
+      if (!discipline) {
+        return new Response(
+          JSON.stringify({ error: "Missing required field for athletes: discipline" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
@@ -383,6 +389,43 @@ Deno.serve(async (req) => {
           { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
+    } else if (isAthlete) {
+      const segments: string[] = [];
+
+      // 1) Instagram (optional)
+      let ig = instagramUrl ? ensureProtocol(instagramUrl) : "";
+      if (ig) {
+        console.log("Scraping Instagram (best effort):", ig);
+        const md = await scrapeUrl(ig, { waitFor: 3000 });
+        const trim = md.trim();
+        const looksLikeWall =
+          trim.length < 400 ||
+          /log in to see|see photos and videos|please wait|sign up to see|something went wrong/i.test(trim.toLowerCase());
+        if (md && !looksLikeWall) {
+          segments.push(`## Instagram profile (${ig})\n\n${md.slice(0, 8000)}`);
+        } else {
+          console.log("Instagram unusable, skipping.");
+        }
+      }
+
+      // 2) Web search for athlete + discipline
+      const query = `"${name}" ${discipline} U.S. Ski Snowboard`;
+      console.log("Searching web:", query);
+      const searchMd = await searchWeb(query, 5);
+      if (searchMd) segments.push(`## Web search results for ${query}\n\n${searchMd}`);
+
+      combinedContent = segments.join("\n\n===\n\n").slice(0, 28000);
+      formattedUrl = ig;
+
+      if (!combinedContent.trim()) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "We couldn't find enough public information about this athlete. Try adding an Instagram URL, or fill the fields in manually.",
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     } else {
       formattedUrl = ensureProtocol(url!);
       isLinkedIn = /(^|\.)linkedin\.com/i.test(formattedUrl);
@@ -418,7 +461,18 @@ ABSOLUTE RULES — read carefully:
 ${mustCallInstruction}`
       : isEmployer
       ? `You are extracting company profile information from a website for a U.S. Ski & Snowboard partner directory. The company name is "${name}". Extract ONLY fields explicitly supported by the scraped content. Do NOT invent or guess. If a field is not present, omit it. Do NOT assume the company is sports-related unless the content explicitly says so. ${mustCallInstruction}`
-      : `You are extracting athlete profile information from an Instagram profile for a U.S. Ski & Snowboard athlete directory. The athlete's name is "${name}". Extract ONLY fields explicitly supported by the scraped content. Do NOT invent or guess. If a field is not present, omit it. ${mustCallInstruction}`;
+      : `You are extracting an athlete profile for "${name}", a "${discipline}" athlete in the U.S. Ski & Snowboard community. The provided content includes public web search results that mention the athlete, and (optionally) their Instagram profile.
+
+ABSOLUTE RULES — read carefully:
+- NEVER invent, guess, or infer facts that are not literally in the provided content. Do not guess based on the athlete's name, the URL, or what's common in their discipline.
+- Only attribute information to "${name}" if the content explicitly mentions them by name (or an obvious variation). Do NOT attribute generic team/discipline information to this individual.
+- sport_discipline MUST be "${discipline}" — do not change it.
+- first_name and last_name: split from "${name}".
+- bio: 2-4 sentences summarizing ONLY facts found about this specific athlete in the content. If almost nothing is available, write one sentence stating the athlete's name and discipline.
+- home_mountain, sponsors, professional_highlights, photo_url, instagram_url: only include if explicitly stated in the content.
+- Do NOT fabricate career_interests, skills, availability, or affiliation if not stated.
+
+${mustCallInstruction}`;
 
     const tool = role === "expert" ? EXPERT_TOOL : isEmployer ? EMPLOYER_TOOL : ATHLETE_TOOL;
     const toolName = role === "expert" ? "populate_expert_profile" : isEmployer ? "populate_employer_profile" : "populate_athlete_profile";
@@ -428,6 +482,8 @@ ${mustCallInstruction}`
 
     const userMessage = isExpert
       ? `Here is the gathered content about "${name}" at "${companyName}":\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information about this specific person found in the content above. ${linkedinUrl ? `Set linkedin_url to ${ensureProtocol(linkedinUrl)}.` : ""}`
+      : isAthlete
+      ? `Here is the gathered content about "${name}" (${discipline}):\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information about this specific athlete found in the content above. Set sport_discipline to "${discipline}". ${instagramUrl ? `Set instagram_url to ${ensureProtocol(instagramUrl)}.` : ""}`
       : combinedContent
       ? `Here is the scraped content from ${formattedUrl}:\n\n${combinedContent}\n\nCall the ${toolName} function using ONLY information explicitly found in the content above. Use ${formattedUrl} as the ${urlFieldName} value.`
       : `I could not scrape ${formattedUrl}. Call the ${toolName} function with ONLY the values you can derive from the URL itself and the name "${name}". Set ${urlFieldName} to ${formattedUrl}. Do NOT invent any other content — leave all other fields empty.`;
@@ -452,8 +508,8 @@ ${mustCallInstruction}`
       });
     };
 
-    // Experts: prefer the stronger model first since content is sparse and identity matters.
-    const models = isExpert
+    // Experts & athletes: prefer the stronger model first since content is sparse and identity matters.
+    const models = isExpert || isAthlete
       ? ["openai/gpt-5-mini", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"]
       : ["google/gemini-3-flash-preview", "openai/gpt-5-mini", "google/gemini-2.5-flash"];
     let aiResp: Response | null = null;

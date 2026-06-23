@@ -4,11 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Globe, User, Loader2, CheckCircle2, Building2, Linkedin } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Sparkles, Globe, User, Loader2, CheckCircle2, Building2, Linkedin, Instagram, Snowflake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AI_LOADING_MESSAGES, useAiLoadingProgress } from "./aiLoadingProgress";
 import { upsertAthleteProfile, upsertEmployerProfile, upsertExpertProfile } from "@/services/profileUpsertService";
+import { SPORT_DISCIPLINE_GROUPS } from "@/data/suggestions";
 
 interface AIProfilePopulatorProps {
   role: "athlete" | "employer" | "expert";
@@ -24,12 +34,15 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [discipline, setDiscipline] = useState("");
   const [progress, setProgress] = useState(0);
   const [loadingMsg, setLoadingMsg] = useState(AI_LOADING_MESSAGES[0]);
   const [error, setError] = useState("");
 
   const isEmployer = role === "employer";
   const isExpert = role === "expert";
+  const isAthlete = role === "athlete";
   const nameLabel = isEmployer ? "Company Name" : "Full Name";
   const namePlaceholder = isEmployer ? "Acme Corporation" : "Jane Smith";
   const urlLabel = isEmployer ? "Company Website" : "Instagram Profile URL";
@@ -71,6 +84,25 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
           return;
         }
 
+        if (isAthlete) {
+          const [{ data: prof }, { data: athlete }] = await Promise.all([
+            supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+            supabase
+              .from("athlete_profiles")
+              .select("sport_discipline, instagram_url")
+              .eq("user_id", userId)
+              .maybeSingle(),
+          ]);
+          if (!isMounted) return;
+          if (prof?.full_name) setName(prof.full_name);
+          if (athlete?.instagram_url) setInstagramUrl(athlete.instagram_url);
+          const firstDiscipline = Array.isArray(athlete?.sport_discipline)
+            ? (athlete?.sport_discipline as string[])[0]
+            : null;
+          if (firstDiscipline) setDiscipline(firstDiscipline);
+          return;
+        }
+
         const { data } = await supabase
           .from("profiles")
           .select("full_name")
@@ -86,12 +118,17 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
     return () => {
       isMounted = false;
     };
-  }, [open, step, userId, isEmployer, isExpert]);
+  }, [open, step, userId, isEmployer, isExpert, isAthlete]);
 
   const handleSubmit = async () => {
     if (isExpert) {
       if (!name.trim() || !companyName.trim()) {
         setError("Please provide your full name and company name.");
+        return;
+      }
+    } else if (isAthlete) {
+      if (!name.trim() || !discipline.trim()) {
+        setError("Please provide your full name and sport discipline.");
         return;
       }
     } else if (!name.trim() || !url.trim()) {
@@ -110,6 +147,11 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
         if (linkedinUrl.trim()) body.linkedinUrl = linkedinUrl.trim();
         // Legacy field still expected by older code paths
         body.url = linkedinUrl.trim() || companyWebsite.trim() || "";
+      } else if (isAthlete) {
+        body.discipline = discipline.trim();
+        if (instagramUrl.trim()) body.instagramUrl = instagramUrl.trim();
+        // Legacy "url" field — IG when provided, else empty
+        body.url = instagramUrl.trim();
       } else {
         body.url = url.trim();
       }
@@ -127,11 +169,13 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
       setProgress(92);
 
       if (isExpert) {
-        // Pass linkedinUrl as the URL (used to fill linkedin_url field) when provided.
         await upsertExpertProfile(userId, profileData, name, linkedinUrl.trim());
       } else if (isEmployer) {
         await upsertEmployerProfile(userId, profileData, url);
       } else {
+        // Athlete: force discipline + IG from form input (override anything AI returned).
+        profileData.sport_discipline = [discipline.trim()];
+        if (instagramUrl.trim()) profileData.instagram_url = instagramUrl.trim();
         await upsertAthleteProfile(userId, profileData);
       }
 
@@ -148,6 +192,8 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
         setCompanyName("");
         setCompanyWebsite("");
         setLinkedinUrl("");
+        setInstagramUrl("");
+        setDiscipline("");
         onComplete();
       }, 1500);
     } catch (err: unknown) {
@@ -192,7 +238,7 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
                 ? "Enter your company details and we'll extract your profile info from your website."
                 : isExpert
                 ? "Tell us your name and current company — we'll find your professional details from the public web."
-                : "Enter your name and Instagram URL and we'll build your profile automatically."}
+                : "Tell us your name and discipline — we'll build your profile from public sources. Adding Instagram makes it more accurate."}
             </p>
             <div className="space-y-4 mt-2">
               <div className="space-y-2">
@@ -246,6 +292,45 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
                       placeholder="https://linkedin.com/in/username"
                       value={linkedinUrl}
                       onChange={(e) => setLinkedinUrl(e.target.value)}
+                    />
+                  </div>
+                </>
+              ) : isAthlete ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-discipline">
+                      <Snowflake className="inline h-3.5 w-3.5 mr-1" />
+                      Sport Discipline
+                    </Label>
+                    <Select value={discipline} onValueChange={setDiscipline}>
+                      <SelectTrigger id="ai-discipline">
+                        <SelectValue placeholder="Select your discipline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SPORT_DISCIPLINE_GROUPS.map((g) => (
+                          <SelectGroup key={g.group}>
+                            <SelectLabel>{g.group}</SelectLabel>
+                            {g.options.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>
+                                {o.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-instagram">
+                      <Instagram className="inline h-3.5 w-3.5 mr-1" />
+                      Instagram URL <span className="text-muted-foreground font-normal">(optional)</span>
+                    </Label>
+                    <Input
+                      id="ai-instagram"
+                      type="url"
+                      placeholder="https://www.instagram.com/username"
+                      value={instagramUrl}
+                      onChange={(e) => setInstagramUrl(e.target.value)}
                     />
                   </div>
                 </>
