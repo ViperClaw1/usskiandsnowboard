@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: []
+      }
       athlete_achievements: {
         Row: {
           achievement_date: string
@@ -1148,6 +1178,7 @@ export type Database = {
         Args: { expert_profile_id: string }
         Returns: undefined
       }
+      purge_old_email_verification_logs: { Args: never; Returns: number }
       setup_admin_user: {
         Args: { user_email: string; user_password: string }
         Returns: string
