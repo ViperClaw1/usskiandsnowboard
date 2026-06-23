@@ -126,6 +126,11 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
         setError("Please provide your full name and company name.");
         return;
       }
+    } else if (isAthlete) {
+      if (!name.trim() || !discipline.trim()) {
+        setError("Please provide your full name and sport discipline.");
+        return;
+      }
     } else if (!name.trim() || !url.trim()) {
       setError("Please fill in both fields.");
       return;
@@ -142,6 +147,11 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
         if (linkedinUrl.trim()) body.linkedinUrl = linkedinUrl.trim();
         // Legacy field still expected by older code paths
         body.url = linkedinUrl.trim() || companyWebsite.trim() || "";
+      } else if (isAthlete) {
+        body.discipline = discipline.trim();
+        if (instagramUrl.trim()) body.instagramUrl = instagramUrl.trim();
+        // Legacy "url" field — IG when provided, else empty
+        body.url = instagramUrl.trim();
       } else {
         body.url = url.trim();
       }
@@ -159,11 +169,13 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
       setProgress(92);
 
       if (isExpert) {
-        // Pass linkedinUrl as the URL (used to fill linkedin_url field) when provided.
         await upsertExpertProfile(userId, profileData, name, linkedinUrl.trim());
       } else if (isEmployer) {
         await upsertEmployerProfile(userId, profileData, url);
       } else {
+        // Athlete: force discipline + IG from form input (override anything AI returned).
+        profileData.sport_discipline = [discipline.trim()];
+        if (instagramUrl.trim()) profileData.instagram_url = instagramUrl.trim();
         await upsertAthleteProfile(userId, profileData);
       }
 
@@ -180,6 +192,8 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
         setCompanyName("");
         setCompanyWebsite("");
         setLinkedinUrl("");
+        setInstagramUrl("");
+        setDiscipline("");
         onComplete();
       }, 1500);
     } catch (err: unknown) {
