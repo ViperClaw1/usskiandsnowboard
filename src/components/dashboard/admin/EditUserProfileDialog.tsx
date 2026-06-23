@@ -5,12 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { INDUSTRY_OPTIONS } from "@/data/suggestions";
+import {
+  INDUSTRY_OPTIONS,
+  SPORT_DISCIPLINES_OPTIONS,
+  CAREER_INTERESTS_OPTIONS,
+  SKILLS_OPTIONS,
+  SPONSORS_OPTIONS,
+} from "@/data/suggestions";
 
 type EditableRole = "athlete" | "expert";
 
@@ -27,6 +35,16 @@ const tableFor = (role: EditableRole) =>
 const bucketFor = (role: EditableRole) =>
   role === "athlete" ? "athlete-photos" : "expert-photos";
 
+const toArray = (val: unknown): string[] => {
+  if (Array.isArray(val)) return val.filter(Boolean);
+  if (typeof val === "string" && val.trim()) {
+    return val.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+};
+
+const opts = (arr: readonly string[]) => arr.map((v) => ({ label: v, value: v }));
+
 export const EditUserProfileDialog = ({
   open,
   onOpenChange,
@@ -39,64 +57,93 @@ export const EditUserProfileDialog = ({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string>("");
-  const [bio, setBio] = useState<string>("");
-  const [title, setTitle] = useState<string>("");
-  const [companyName, setCompanyName] = useState<string>("");
-  const [industry, setIndustry] = useState<string[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
+
+  // Shared
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [bio, setBio] = useState("");
+  const [email, setEmail] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState("");
+
+  // Athlete
+  const [sportDiscipline, setSportDiscipline] = useState<string[]>([]);
+  const [careerInterests, setCareerInterests] = useState<string[]>([]);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [geographicPreferences, setGeographicPreferences] = useState("");
+  const [availability, setAvailability] = useState("");
+  const [professionalHighlights, setProfessionalHighlights] = useState("");
+  const [yearsOfMembership, setYearsOfMembership] = useState<string>("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [sponsors, setSponsors] = useState<string[]>([]);
+  const [affiliation, setAffiliation] = useState<string>("");
+  const [homeMountain, setHomeMountain] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // Expert
+  const [fullName, setFullName] = useState("");
+  const [title, setTitle] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [industry, setIndustry] = useState<string[]>([]);
+  const [areaOfExpertise, setAreaOfExpertise] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [isAlum, setIsAlum] = useState(false);
+  const [ussaAffiliate, setUssaAffiliate] = useState("");
+  const [headshot, setHeadshot] = useState("");
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
-      setTitle("");
-      setCompanyName("");
-      setIndustry([]);
-      let data: any = null;
-      let error: any = null;
-      if (role === "expert") {
-        const result = await supabase
-          .from("expert_profiles")
-          .select("id, photo_url, bio, job_title, company_name, industry")
-          .eq("user_id", userId)
-          .maybeSingle();
-        data = result.data;
-        error = result.error;
-      } else {
-        const result = await supabase
-          .from("athlete_profiles")
-          .select("id, photo_url, bio")
-          .eq("user_id", userId)
-          .maybeSingle();
-        data = result.data;
-        error = result.error;
-      }
+      const { data, error } = await supabase
+        .from(tableFor(role))
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
       if (cancelled) return;
       if (error) {
         toast.error(`Failed to load profile: ${error.message}`);
-      } else if (data) {
-        setProfileId(data.id);
-        setPhotoUrl(data.photo_url ?? "");
-        setBio(data.bio ?? "");
-        if (role === "expert") {
-          setTitle(data.job_title ?? "");
-          setCompanyName(data.company_name ?? "");
-          const ind = data.industry;
-          setIndustry(
-            Array.isArray(ind)
-              ? ind
-              : typeof ind === "string" && ind.trim()
-                ? ind.split(",").map((s: string) => s.trim()).filter(Boolean)
-                : []
-          );
-        }
-      } else {
+        setLoading(false);
+        return;
+      }
+      if (!data) {
         setProfileId(null);
-        setPhotoUrl("");
-        setBio("");
         toast.error("No profile exists yet for this user.");
+        setLoading(false);
+        return;
+      }
+      const d = data as any;
+      setProfileId(d.id);
+      setPhotoUrl(d.photo_url ?? "");
+      setBio(d.bio ?? "");
+      setEmail(d.email ?? "");
+      setIsPublic(d.is_public ?? true);
+      setBackgroundImageUrl(d.background_image_url ?? "");
+
+      if (role === "athlete") {
+        setSportDiscipline(toArray(d.sport_discipline));
+        setCareerInterests(toArray(d.career_interests));
+        setSkills(toArray(d.skills));
+        setGeographicPreferences(toArray(d.geographic_preferences).join(", "));
+        setAvailability(d.availability ?? "");
+        setProfessionalHighlights(d.professional_highlights ?? "");
+        setYearsOfMembership(d.years_of_membership != null ? String(d.years_of_membership) : "");
+        setInstagramUrl(d.instagram_url ?? "");
+        setSponsors(toArray(d.sponsors));
+        setAffiliation(d.affiliation ?? "");
+        setHomeMountain(d.home_mountain ?? "");
+        setPhone(d.phone ?? "");
+      } else {
+        setFullName(d.full_name ?? "");
+        setTitle(d.job_title ?? "");
+        setCompanyName(d.company_name ?? "");
+        setIndustry(toArray(d.industry));
+        setAreaOfExpertise(d.area_of_expertise ?? "");
+        setLinkedinUrl(d.linkedin_url ?? "");
+        setIsAlum(!!d.is_alum);
+        setUssaAffiliate(d.ussa_affiliate ?? "");
+        setHeadshot(d.headshot ?? "");
       }
       setLoading(false);
     })();
@@ -105,7 +152,7 @@ export const EditUserProfileDialog = ({
     };
   }, [open, userId, role]);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, setter: (v: string) => void) => {
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be under 5MB");
       return;
@@ -119,7 +166,7 @@ export const EditUserProfileDialog = ({
         .upload(path, file, { upsert: true, contentType: file.type });
       if (upErr) throw upErr;
       const { data } = supabase.storage.from(bucketFor(role)).getPublicUrl(path);
-      setPhotoUrl(data.publicUrl);
+      setter(data.publicUrl);
       toast.success("Photo uploaded");
     } catch (e) {
       toast.error(`Upload failed: ${(e as Error).message}`);
@@ -131,15 +178,46 @@ export const EditUserProfileDialog = ({
   const handleSave = async () => {
     if (!profileId) return;
     setSaving(true);
-    const payload: Record<string, any> = {
-      photo_url: photoUrl || null,
-      bio: bio || null,
-    };
-    if (role === "expert") {
-      payload.job_title = title || null;
-      payload.company_name = companyName || null;
-      payload.industry = industry.length ? industry.join(", ") : null;
-    }
+    const payload: Record<string, any> =
+      role === "athlete"
+        ? {
+            photo_url: photoUrl || null,
+            bio: bio || null,
+            email: email || null,
+            is_public: isPublic,
+            background_image_url: backgroundImageUrl || null,
+            sport_discipline: sportDiscipline.length ? sportDiscipline : null,
+            career_interests: careerInterests.length ? careerInterests : null,
+            skills: skills.length ? skills : null,
+            geographic_preferences: toArray(geographicPreferences).length
+              ? toArray(geographicPreferences)
+              : null,
+            availability: availability || null,
+            professional_highlights: professionalHighlights || null,
+            years_of_membership: yearsOfMembership ? parseInt(yearsOfMembership, 10) : null,
+            instagram_url: instagramUrl || null,
+            sponsors: sponsors.length ? sponsors : null,
+            affiliation: affiliation || null,
+            home_mountain: homeMountain || null,
+            phone: phone || null,
+          }
+        : {
+            photo_url: photoUrl || null,
+            bio: bio || null,
+            email: email || null,
+            is_public: isPublic,
+            background_image_url: backgroundImageUrl || null,
+            full_name: fullName || userName || "",
+            job_title: title || null,
+            company_name: companyName || null,
+            industry: industry.length ? industry.join(", ") : null,
+            area_of_expertise: areaOfExpertise || null,
+            linkedin_url: linkedinUrl || null,
+            is_alum: isAlum,
+            ussa_affiliate: ussaAffiliate || null,
+            headshot: headshot || null,
+          };
+
     const { error } = await supabase
       .from(tableFor(role))
       .update(payload)
@@ -151,6 +229,8 @@ export const EditUserProfileDialog = ({
     }
     toast.success("Profile updated");
     queryClient.invalidateQueries({ queryKey: ["all-users-full"] });
+    queryClient.invalidateQueries({ queryKey: ["all-athletes"] });
+    queryClient.invalidateQueries({ queryKey: ["all-experts"] });
     onOpenChange(false);
   };
 
@@ -164,11 +244,11 @@ export const EditUserProfileDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit {role === "athlete" ? "Athlete" : "Expert"} Profile</DialogTitle>
           <DialogDescription>
-            Update {userName || "this user"}'s profile picture{role === "expert" ? ", title, and description" : " and description"}.
+            Update all fields for {userName || "this user"}'s profile.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,6 +258,7 @@ export const EditUserProfileDialog = ({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Photo */}
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={photoUrl || undefined} alt={userName} />
@@ -191,7 +272,7 @@ export const EditUserProfileDialog = ({
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) handleUpload(f);
+                    if (f) handleUpload(f, setPhotoUrl);
                     e.target.value = "";
                   }}
                 />
@@ -224,26 +305,179 @@ export const EditUserProfileDialog = ({
             </div>
 
             {role === "expert" && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-edit-fullname">Full Name</Label>
+                <Input
+                  id="admin-edit-fullname"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={!profileId}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="admin-edit-email">Email</Label>
+                <Input
+                  id="admin-edit-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={!profileId}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admin-edit-bg">Background Image URL</Label>
+                <Input
+                  id="admin-edit-bg"
+                  value={backgroundImageUrl}
+                  onChange={(e) => setBackgroundImageUrl(e.target.value)}
+                  placeholder="https://..."
+                  disabled={!profileId}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <Label htmlFor="admin-edit-public">Public Profile</Label>
+                <p className="text-xs text-muted-foreground">Visible in the directory.</p>
+              </div>
+              <Switch id="admin-edit-public" checked={isPublic} onCheckedChange={setIsPublic} disabled={!profileId} />
+            </div>
+
+            {role === "athlete" && (
               <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-phone">Phone</Label>
+                    <Input id="admin-edit-phone" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-home-mtn">Home Mountain</Label>
+                    <Input id="admin-edit-home-mtn" value={homeMountain} onChange={(e) => setHomeMountain(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-ig">Instagram URL</Label>
+                    <Input id="admin-edit-ig" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-years">Years of Membership</Label>
+                    <Input
+                      id="admin-edit-years"
+                      type="number"
+                      min={0}
+                      value={yearsOfMembership}
+                      onChange={(e) => setYearsOfMembership(e.target.value)}
+                      disabled={!profileId}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-availability">Availability</Label>
+                    <Input id="admin-edit-availability" value={availability} onChange={(e) => setAvailability(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Affiliation</Label>
+                    <Select value={affiliation || "none"} onValueChange={(v) => setAffiliation(v === "none" ? "" : v)} disabled={!profileId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select affiliation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No formal affiliation</SelectItem>
+                        <SelectItem value="Current Team Member">Current Team Member</SelectItem>
+                        <SelectItem value="Former Team Member">Former Team Member</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="admin-edit-title">Title</Label>
+                  <Label>Sport Discipline</Label>
+                  <MultiSelect
+                    options={opts(SPORT_DISCIPLINES_OPTIONS)}
+                    selected={sportDiscipline}
+                    onChange={setSportDiscipline}
+                    placeholder="Select sports..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Career Interests</Label>
+                  <MultiSelect
+                    options={opts(CAREER_INTERESTS_OPTIONS)}
+                    selected={careerInterests}
+                    onChange={setCareerInterests}
+                    placeholder="Select interests..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Skills</Label>
+                  <MultiSelect
+                    options={opts(SKILLS_OPTIONS)}
+                    selected={skills}
+                    onChange={setSkills}
+                    placeholder="Select skills..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sponsors</Label>
+                  <MultiSelect
+                    options={opts(SPONSORS_OPTIONS)}
+                    selected={sponsors}
+                    onChange={setSponsors}
+                    placeholder="Select sponsors..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-edit-geo">Geographic Preferences</Label>
                   <Input
-                    id="admin-edit-title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Marketing Specialist"
+                    id="admin-edit-geo"
+                    value={geographicPreferences}
+                    onChange={(e) => setGeographicPreferences(e.target.value)}
+                    placeholder="Comma-separated (e.g. Denver CO, Park City UT)"
                     disabled={!profileId}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="admin-edit-company">Company Name</Label>
-                  <Input
-                    id="admin-edit-company"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="e.g. Acme Corp"
+                  <Label htmlFor="admin-edit-highlights">Professional Highlights</Label>
+                  <Textarea
+                    id="admin-edit-highlights"
+                    rows={3}
+                    value={professionalHighlights}
+                    onChange={(e) => setProfessionalHighlights(e.target.value)}
                     disabled={!profileId}
                   />
+                </div>
+              </>
+            )}
+
+            {role === "expert" && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-title">Job Title</Label>
+                    <Input id="admin-edit-title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-company">Company Name</Label>
+                    <Input id="admin-edit-company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-expertise">Area of Expertise</Label>
+                    <Input id="admin-edit-expertise" value={areaOfExpertise} onChange={(e) => setAreaOfExpertise(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-linkedin">LinkedIn URL</Label>
+                    <Input id="admin-edit-linkedin" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-ussa">USSA Affiliation</Label>
+                    <Input id="admin-edit-ussa" value={ussaAffiliate} onChange={(e) => setUssaAffiliate(e.target.value)} disabled={!profileId} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-edit-headshot">Headshot URL</Label>
+                    <Input id="admin-edit-headshot" value={headshot} onChange={(e) => setHeadshot(e.target.value)} disabled={!profileId} />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Industry</Label>
@@ -254,11 +488,18 @@ export const EditUserProfileDialog = ({
                     placeholder="Select industries..."
                   />
                 </div>
+                <div className="flex items-center justify-between rounded-md border p-3">
+                  <div>
+                    <Label htmlFor="admin-edit-alum">Alum</Label>
+                    <p className="text-xs text-muted-foreground">Mark as a U.S. Ski &amp; Snowboard alum.</p>
+                  </div>
+                  <Switch id="admin-edit-alum" checked={isAlum} onCheckedChange={setIsAlum} disabled={!profileId} />
+                </div>
               </>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="admin-edit-bio">Description / Bio</Label>
+              <Label htmlFor="admin-edit-bio">Bio</Label>
               <Textarea
                 id="admin-edit-bio"
                 rows={6}
