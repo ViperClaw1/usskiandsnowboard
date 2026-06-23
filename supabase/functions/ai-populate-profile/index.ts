@@ -241,7 +241,8 @@ Deno.serve(async (req) => {
 
     console.log("Scraping URL:", formattedUrl);
     let truncatedMarkdown = "";
-    
+    const isLinkedIn = /(^|\.)linkedin\.com/i.test(formattedUrl);
+
     try {
       const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
         method: "POST",
@@ -253,6 +254,8 @@ Deno.serve(async (req) => {
           url: formattedUrl,
           formats: ["markdown", "links"],
           onlyMainContent: true,
+          waitFor: isLinkedIn ? 3000 : 0,
+          timeout: 30000,
         }),
       });
 
@@ -261,10 +264,10 @@ Deno.serve(async (req) => {
         const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
         truncatedMarkdown = markdown.slice(0, 15000);
       } else {
-        console.warn("Firecrawl scrape failed, falling back to AI-only:", scrapeData?.error);
+        console.warn("Firecrawl scrape failed:", scrapeData?.error);
       }
     } catch (scrapeErr) {
-      console.warn("Firecrawl request error, falling back to AI-only:", scrapeErr);
+      console.warn("Firecrawl request error:", scrapeErr);
     }
 
     // Step 2: Call Lovable AI with tool calling
