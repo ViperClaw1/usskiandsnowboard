@@ -670,7 +670,7 @@ const ProfileForm = ({ userId, onComplete }: ProfileFormProps) => {
           className="h-4 w-4 rounded border-input"
         />
         <Label htmlFor="public" className="cursor-pointer">
-          Make my profile visible to employers
+          Make my profile publicly visible
         </Label>
       </div>
 

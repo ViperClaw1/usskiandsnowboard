@@ -519,10 +519,6 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("directory")}>
-                  <Users className="mr-2 h-4 w-4" />
-                  {getText("quick_actions.browse_directory", "Browse Partner Directory")}
-                </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("profile")}>
                   <UserCircle className="mr-2 h-4 w-4" />
                   {getText("quick_actions.update_profile", "Update Profile")}
@@ -540,7 +536,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Profile Preview - How Employers See You</DialogTitle>
+                      <DialogTitle>Profile Preview - How Others See You</DialogTitle>
                     </DialogHeader>
                     {profile && (
                       <AthleteProfilePreview
