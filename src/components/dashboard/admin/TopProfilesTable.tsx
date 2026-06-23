@@ -114,7 +114,11 @@ export const TopProfilesTable = () => {
 
                   <p className="pr-16 font-semibold text-sm text-foreground">{athlete.full_name}</p>
                   {athlete.sport_discipline && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{athlete.sport_discipline}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {Array.isArray(athlete.sport_discipline)
+                        ? athlete.sport_discipline.join(", ")
+                        : athlete.sport_discipline}
+                    </p>
                   )}
                 </div>
               ))
