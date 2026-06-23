@@ -404,7 +404,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {selectedExpert.industry && <Badge variant="secondary">{selectedExpert.industry}</Badge>}
+                {splitIndustries(selectedExpert.industry).map((ind) => (
+                  <Badge key={ind} variant="secondary">{ind}</Badge>
+                ))}
                 {selectedExpert.ussa_affiliate && selectedExpert.ussa_affiliate !== "No formal affiliation" && (
                   <Badge className="bg-primary/10 text-primary border-primary/20">
                     <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
