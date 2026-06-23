@@ -117,14 +117,15 @@ const getInitials = (name: string) =>
     .map((n) => n[0].toUpperCase())
     .join("");
 
-const getPrimaryIndustry = (industry: string | null) => {
-  if (!industry) return null;
-  const first = industry
+const splitIndustries = (industry: string | null): string[] => {
+  if (!industry) return [];
+  return industry
     .split(/[,;|]/)
     .map((v) => v.trim())
-    .find(Boolean);
-  return first || null;
+    .filter(Boolean);
 };
+
+const getPrimaryIndustry = (industry: string | null) => splitIndustries(industry)[0] ?? null;
 
 const getShortIndustryBadgeLabel = (industry: string | null) => {
   const primary = getPrimaryIndustry(industry);
