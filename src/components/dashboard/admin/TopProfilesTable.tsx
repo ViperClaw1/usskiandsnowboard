@@ -44,7 +44,7 @@ export const TopProfilesTable = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Sport</TableHead>
+                  <TableHead>Sport Discipline(s)</TableHead>
                   <TableHead className="text-right">Views</TableHead>
                 </TableRow>
               </TableHeader>
@@ -67,7 +67,11 @@ export const TopProfilesTable = () => {
                   topAthletes.map((athlete) => (
                     <TableRow key={athlete.id}>
                       <TableCell className="font-medium">{athlete.full_name}</TableCell>
-                      <TableCell className="text-muted-foreground">{athlete.sport_discipline}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {Array.isArray(athlete.sport_discipline)
+                          ? athlete.sport_discipline.join(", ")
+                          : athlete.sport_discipline}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Eye className="h-3 w-3 text-muted-foreground" />
@@ -110,7 +114,11 @@ export const TopProfilesTable = () => {
 
                   <p className="pr-16 font-semibold text-sm text-foreground">{athlete.full_name}</p>
                   {athlete.sport_discipline && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{athlete.sport_discipline}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {Array.isArray(athlete.sport_discipline)
+                        ? athlete.sport_discipline.join(", ")
+                        : athlete.sport_discipline}
+                    </p>
                   )}
                 </div>
               ))
@@ -141,7 +149,7 @@ export const TopProfilesTable = () => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Job Title</TableHead>
-                  <TableHead>Expertise</TableHead>
+                  <TableHead>Industry</TableHead>
                   <TableHead className="text-right">Views</TableHead>
                 </TableRow>
               </TableHeader>
@@ -168,7 +176,11 @@ export const TopProfilesTable = () => {
                     <TableRow key={expert.id}>
                       <TableCell className="font-medium">{expert.full_name}</TableCell>
                       <TableCell className="text-muted-foreground">{expert.job_title}</TableCell>
-                      <TableCell className="text-muted-foreground">{expert.area_of_expertise}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {expert.industry
+                          ? expert.industry.split(",").map((s) => s.trim()).join(", ")
+                          : expert.industry}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Eye className="h-3 w-3 text-muted-foreground" />
@@ -213,8 +225,10 @@ export const TopProfilesTable = () => {
                   {expert.job_title && (
                     <p className="mt-0.5 text-xs text-muted-foreground">{expert.job_title}</p>
                   )}
-                  {expert.area_of_expertise && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{expert.area_of_expertise}</p>
+                  {expert.industry && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {expert.industry.split(",").map((s) => s.trim()).join(", ")}
+                    </p>
                   )}
                 </div>
               ))
