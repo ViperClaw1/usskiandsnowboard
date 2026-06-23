@@ -44,7 +44,7 @@ export const TopProfilesTable = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Sport</TableHead>
+                  <TableHead>Sport Discipline(s)</TableHead>
                   <TableHead className="text-right">Views</TableHead>
                 </TableRow>
               </TableHeader>
