@@ -110,19 +110,19 @@ const EXPERT_TOOL = {
   type: "function",
   function: {
     name: "populate_expert_profile",
-    description: "Populate an expert professional profile with extracted data from LinkedIn. You MUST provide job_title, area_of_expertise, and bio — never leave them empty. If the scraped content is sparse, infer reasonable values from the person's name, URL, and any available context.",
+    description: "Populate an expert professional profile using ONLY information explicitly present in the scraped LinkedIn content. Never fabricate or guess.",
     parameters: {
       type: "object",
       properties: {
         full_name: { type: "string" },
-        job_title: { type: "string", description: "Current role/title as shown on their profile. If not explicitly found, infer from any available context (e.g. headline, experience section). Never leave blank." },
-        company_name: { type: "string", description: "Current company/employer name where the person works, as shown on their LinkedIn experience section." },
-        area_of_expertise: { type: "string", description: "Primary area of professional expertise based on their actual profile content — use their real industry/domain, NOT sports unless their profile is actually sports-related. Never leave blank." },
+        job_title: { type: "string", description: "Current role/title exactly as stated on the profile. If not present in the content, use 'Unknown' — do not guess." },
+        company_name: { type: "string", description: "Current employer exactly as stated in the experience section. Omit if not present." },
+        area_of_expertise: { type: "string", description: "Short phrase reflecting the person's stated professional domain. If not derivable from the content, use 'Unknown'." },
         industry: {
           type: "string",
-          description: `LinkedIn industry/domain. Prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. If none clearly fit, provide a short industry phrase from profile content.`,
+          description: `Industry. Prefer one of: ${EXPERT_INDUSTRY_OPTIONS.join(", ")}. Otherwise a short 2-5 word industry phrase taken from the content. Omit if not derivable.`,
         },
-        bio: { type: "string", description: "Professional bio, 2-4 sentences summarizing their career based on actual profile data. Never leave blank." },
+        bio: { type: "string", description: "2-4 sentence professional bio summarizing ONLY facts present in the scraped content. If almost nothing is available, write a single sentence stating the person's name and that no public details were available." },
         photo_url: { type: "string", description: "URL to profile headshot" },
         linkedin_url: { type: "string" },
       },
