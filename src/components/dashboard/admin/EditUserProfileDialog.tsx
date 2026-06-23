@@ -43,7 +43,8 @@ const toArray = (val: unknown): string[] => {
   return [];
 };
 
-const opts = (arr: readonly string[]) => arr.map((v) => ({ label: v, value: v }));
+const opts = (arr: readonly (string | { label: string; value: string })[]) =>
+  arr.map((v) => (typeof v === "string" ? { label: v, value: v } : v));
 
 export const EditUserProfileDialog = ({
   open,
