@@ -465,17 +465,6 @@ ${mustCallInstruction}`
     }
 
 
-    // Experts: prefer the stronger model first since LinkedIn content is sparse.
-    const models = isExpert
-      ? ["openai/gpt-5-mini", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"]
-      : ["google/gemini-3-flash-preview", "openai/gpt-5-mini", "google/gemini-2.5-flash"];
-    let aiResp: Response | null = null;
-    for (const model of models) {
-      console.log("Trying model:", model);
-      aiResp = await makeAiCall(model);
-      if (aiResp.ok) break;
-      console.error(`Model ${model} failed with status ${aiResp.status}`);
-    }
 
     if (!aiResp || !aiResp.ok) {
       const status = aiResp?.status || 0;
