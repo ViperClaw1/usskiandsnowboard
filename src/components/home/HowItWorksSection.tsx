@@ -6,7 +6,7 @@
 // ==============================
 
 import { memo } from "react";
-import { Users, Briefcase, TrendingUp } from "lucide-react";
+import { Users, GraduationCap, TrendingUp } from "lucide-react";
 
 /** Three-card explainer grid shown on both the marketing landing and the auth home. */
 export const HowItWorksSection = memo(() => (
