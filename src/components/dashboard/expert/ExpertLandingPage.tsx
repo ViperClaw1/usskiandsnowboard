@@ -117,14 +117,15 @@ const getInitials = (name: string) =>
     .map((n) => n[0].toUpperCase())
     .join("");
 
-const getPrimaryIndustry = (industry: string | null) => {
-  if (!industry) return null;
-  const first = industry
+const splitIndustries = (industry: string | null): string[] => {
+  if (!industry) return [];
+  return industry
     .split(/[,;|]/)
     .map((v) => v.trim())
-    .find(Boolean);
-  return first || null;
+    .filter(Boolean);
 };
+
+const getPrimaryIndustry = (industry: string | null) => splitIndustries(industry)[0] ?? null;
 
 const getShortIndustryBadgeLabel = (industry: string | null) => {
   const primary = getPrimaryIndustry(industry);
@@ -425,15 +426,16 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                         {getText("hero.edit_profile", "Edit profile")}
                       </Button>
                       <div ref={badgesRowRef} className="flex flex-wrap gap-2 mt-1">
-                        {primaryIndustry && (
+                        {splitIndustries(profile?.industry ?? null).map((ind, i) => (
                           <Badge
-                            ref={industryBadgeRef}
+                            key={ind}
+                            ref={i === 0 ? industryBadgeRef : undefined}
                             variant="secondary"
                             className="w-fit max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
                           >
-                            {primaryIndustry}
+                            {ind}
                           </Badge>
-                        )}
+                        ))}
                         {disciplinePreview && (
                           <Badge
                             ref={disciplineBadgeRef}

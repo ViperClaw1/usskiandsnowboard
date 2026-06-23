@@ -53,13 +53,16 @@ function getInitials(name: string) {
     .join("");
 }
 
-function getPrimaryIndustry(industry: string | null): string | null {
-  if (!industry) return null;
-  const first = industry
-    .split(",")
+function splitIndustries(industry: string | null): string[] {
+  if (!industry) return [];
+  return industry
+    .split(/[,;|]/)
     .map((v) => v.trim())
-    .find(Boolean);
-  return first || null;
+    .filter(Boolean);
+}
+
+function getPrimaryIndustry(industry: string | null): string | null {
+  return splitIndustries(industry)[0] ?? null;
 }
 
 // ==============================
@@ -318,11 +321,11 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                           New
                         </Badge>
                       )}
-                    {getPrimaryIndustry(expert.industry) && (
-                      <Badge variant="secondary" className="text-xs">
-                        {getPrimaryIndustry(expert.industry)}
+                    {splitIndustries(expert.industry).map((ind) => (
+                      <Badge key={ind} variant="secondary" className="text-xs">
+                        {ind}
                       </Badge>
-                    )}
+                    ))}
                     {expert.ussa_affiliate && expert.ussa_affiliate !== "No formal affiliation" && (
                       <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
                         <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
@@ -401,7 +404,9 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {selectedExpert.industry && <Badge variant="secondary">{selectedExpert.industry}</Badge>}
+                {splitIndustries(selectedExpert.industry).map((ind) => (
+                  <Badge key={ind} variant="secondary">{ind}</Badge>
+                ))}
                 {selectedExpert.ussa_affiliate && selectedExpert.ussa_affiliate !== "No formal affiliation" && (
                   <Badge className="bg-primary/10 text-primary border-primary/20">
                     <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
