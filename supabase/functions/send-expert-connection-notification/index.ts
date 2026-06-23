@@ -8,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org", "bryanhdunn@gmail.com"];
+const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org"];
 const CC_INTRO_EXTRA = ["bryan@cardinallands.com"];
 
 const uniqEmails = (arr: (string | null | undefined)[]) =>
