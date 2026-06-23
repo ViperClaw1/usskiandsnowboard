@@ -472,8 +472,21 @@ export const EditUserProfileDialog = ({
                     <Input id="admin-edit-linkedin" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} disabled={!profileId} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="admin-edit-ussa">USSA Affiliation</Label>
-                    <Input id="admin-edit-ussa" value={ussaAffiliate} onChange={(e) => setUssaAffiliate(e.target.value)} disabled={!profileId} />
+                    <Label>USSA Affiliation</Label>
+                    <Select value={ussaAffiliate || "none"} onValueChange={(v) => setUssaAffiliate(v === "none" ? "" : v)} disabled={!profileId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select affiliation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        <SelectItem value="Athlete Alum">Athlete Alum</SelectItem>
+                        <SelectItem value="Trustee">Trustee</SelectItem>
+                        <SelectItem value="Ambassador">Ambassador</SelectItem>
+                        <SelectItem value="Gold Pass">Gold Pass</SelectItem>
+                        <SelectItem value="Next Gen Council">Next Gen Council</SelectItem>
+                        <SelectItem value="No formal affiliation">No formal affiliation</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="admin-edit-headshot">Headshot URL</Label>
