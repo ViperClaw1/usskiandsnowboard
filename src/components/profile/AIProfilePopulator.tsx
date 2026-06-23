@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Globe, User, Loader2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Globe, User, Loader2, CheckCircle2, Building2, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AI_LOADING_MESSAGES, useAiLoadingProgress } from "./aiLoadingProgress";
@@ -21,6 +21,9 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
   const [step, setStep] = useState<"input" | "loading" | "done">("input");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
   const [progress, setProgress] = useState(0);
   const [loadingMsg, setLoadingMsg] = useState(AI_LOADING_MESSAGES[0]);
   const [error, setError] = useState("");
@@ -29,8 +32,8 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
   const isExpert = role === "expert";
   const nameLabel = isEmployer ? "Company Name" : "Full Name";
   const namePlaceholder = isEmployer ? "Acme Corporation" : "Jane Smith";
-  const urlLabel = isExpert ? "LinkedIn Profile URL" : isEmployer ? "Company Website" : "Instagram Profile URL";
-  const urlPlaceholder = isExpert ? "https://linkedin.com/in/username" : isEmployer ? "https://www.example.com" : "https://www.instagram.com/username";
+  const urlLabel = isEmployer ? "Company Website" : "Instagram Profile URL";
+  const urlPlaceholder = isEmployer ? "https://www.example.com" : "https://www.instagram.com/username";
 
   useAiLoadingProgress({
     isLoadingStep: step === "loading",
@@ -38,12 +41,12 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
     setProgress,
   });
 
-  // Prefill name from existing profile data when dialog opens.
+  // Prefill from existing profile data when dialog opens.
   useEffect(() => {
     if (!open || step !== "input") return;
 
     let isMounted = true;
-    const loadDefaultName = async () => {
+    const loadDefaults = async () => {
       try {
         if (isEmployer) {
           const { data } = await supabase
@@ -58,10 +61,13 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
         if (isExpert) {
           const { data } = await supabase
             .from("expert_profiles")
-            .select("full_name")
+            .select("full_name, company_name, linkedin_url")
             .eq("user_id", userId)
             .maybeSingle();
-          if (isMounted && data?.full_name) setName(data.full_name);
+          if (!isMounted) return;
+          if (data?.full_name) setName(data.full_name);
+          if (data?.company_name) setCompanyName(data.company_name);
+          if (data?.linkedin_url) setLinkedinUrl(data.linkedin_url);
           return;
         }
 
@@ -72,18 +78,23 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
           .maybeSingle();
         if (isMounted && data?.full_name) setName(data.full_name);
       } catch {
-        // Silent fallback: keep manual entry/placeholder behavior if lookup fails.
+        // Silent fallback
       }
     };
 
-    void loadDefaultName();
+    void loadDefaults();
     return () => {
       isMounted = false;
     };
   }, [open, step, userId, isEmployer, isExpert]);
 
   const handleSubmit = async () => {
-    if (!name.trim() || !url.trim()) {
+    if (isExpert) {
+      if (!name.trim() || !companyName.trim()) {
+        setError("Please provide your full name and company name.");
+        return;
+      }
+    } else if (!name.trim() || !url.trim()) {
       setError("Please fill in both fields.");
       return;
     }
@@ -92,9 +103,19 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
     setProgress(5);
 
     try {
-      // Call edge function
+      const body: Record<string, unknown> = { role, name: name.trim() };
+      if (isExpert) {
+        body.companyName = companyName.trim();
+        if (companyWebsite.trim()) body.companyWebsite = companyWebsite.trim();
+        if (linkedinUrl.trim()) body.linkedinUrl = linkedinUrl.trim();
+        // Legacy field still expected by older code paths
+        body.url = linkedinUrl.trim() || companyWebsite.trim() || "";
+      } else {
+        body.url = url.trim();
+      }
+
       const { data: fnData, error: fnError } = await supabase.functions.invoke("ai-populate-profile", {
-        body: { role, url: url.trim(), name: name.trim() },
+        body,
       });
 
       if (fnError) throw new Error(fnError.message || "Failed to process");
@@ -106,7 +127,8 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
       setProgress(92);
 
       if (isExpert) {
-        await upsertExpertProfile(userId, profileData, name, url);
+        // Pass linkedinUrl as the URL (used to fill linkedin_url field) when provided.
+        await upsertExpertProfile(userId, profileData, name, linkedinUrl.trim());
       } else if (isEmployer) {
         await upsertEmployerProfile(userId, profileData, url);
       } else {
@@ -117,13 +139,15 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
       setStep("done");
       toast.success("Profile auto-populated successfully!");
 
-      // Small delay then close
       setTimeout(() => {
         setOpen(false);
         setStep("input");
         setProgress(0);
         setName("");
         setUrl("");
+        setCompanyName("");
+        setCompanyWebsite("");
+        setLinkedinUrl("");
         onComplete();
       }, 1500);
     } catch (err: unknown) {
@@ -166,7 +190,9 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
             <p className="text-sm text-muted-foreground">
               {isEmployer
                 ? "Enter your company details and we'll extract your profile info from your website."
-                : "Enter your name and LinkedIn URL and we'll build your profile automatically."}
+                : isExpert
+                ? "Tell us your name and current company — we'll find your professional details from the public web."
+                : "Enter your name and Instagram URL and we'll build your profile automatically."}
             </p>
             <div className="space-y-4 mt-2">
               <div className="space-y-2">
@@ -181,19 +207,64 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="ai-url">
-                  <Globe className="inline h-3.5 w-3.5 mr-1" />
-                  {urlLabel}
-                </Label>
-                <Input
-                  id="ai-url"
-                  type="url"
-                  placeholder={urlPlaceholder}
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                />
-              </div>
+
+              {isExpert ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-company">
+                      <Building2 className="inline h-3.5 w-3.5 mr-1" />
+                      Company Name
+                    </Label>
+                    <Input
+                      id="ai-company"
+                      placeholder="Acme Corporation"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-company-site">
+                      <Globe className="inline h-3.5 w-3.5 mr-1" />
+                      Company Website <span className="text-muted-foreground font-normal">(optional)</span>
+                    </Label>
+                    <Input
+                      id="ai-company-site"
+                      type="url"
+                      placeholder="https://www.example.com"
+                      value={companyWebsite}
+                      onChange={(e) => setCompanyWebsite(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-linkedin">
+                      <Linkedin className="inline h-3.5 w-3.5 mr-1" />
+                      LinkedIn URL <span className="text-muted-foreground font-normal">(optional)</span>
+                    </Label>
+                    <Input
+                      id="ai-linkedin"
+                      type="url"
+                      placeholder="https://linkedin.com/in/username"
+                      value={linkedinUrl}
+                      onChange={(e) => setLinkedinUrl(e.target.value)}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="ai-url">
+                    <Globe className="inline h-3.5 w-3.5 mr-1" />
+                    {urlLabel}
+                  </Label>
+                  <Input
+                    id="ai-url"
+                    type="url"
+                    placeholder={urlPlaceholder}
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                  />
+                </div>
+              )}
+
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button className="w-full" onClick={handleSubmit}>
                 <Sparkles className="mr-2 h-4 w-4" />
@@ -219,7 +290,7 @@ export const AIProfilePopulator = ({ role, userId, onComplete }: AIProfilePopula
               <p className="text-xs text-muted-foreground text-center">{Math.round(progress)}%</p>
             </div>
             <p className="text-xs text-muted-foreground text-center max-w-xs">
-              Our AI is scanning the website and extracting relevant information to build your complete profile.
+              Our AI is scanning public sources and extracting relevant information to build your profile.
             </p>
           </div>
         )}
