@@ -29,15 +29,15 @@ export const HowItWorksSection = memo(() => (
           </p>
         </div>
 
-        {/* Partners card */}
+        {/* Experts card */}
         <div className="bg-card p-6 sm:p-8 rounded-lg shadow-elegant text-center">
           <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-            <Briefcase className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
+            <GraduationCap className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
           </div>
-          <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Partners</h3>
+          <h3 className="text-lg sm:text-xl font-semibold mb-3 text-foreground">For Experts</h3>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Connect with world-class talent. Our athletes bring unmatched dedication, resilience, and
-            excellence to every challenge.
+            Share your experience and guide the next generation. Mentor athletes as they transition
+            from competition to their next chapter.
           </p>
         </div>
 
