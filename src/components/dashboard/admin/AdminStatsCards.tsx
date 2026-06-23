@@ -22,7 +22,7 @@ export const AdminStatsCards = () => {
   const statsCards = [
     {
       title: "Total Users",
-      value: stats?.total_users || 0,
+      value: (stats?.total_athletes || 0) + (stats?.total_experts || 0),
       subtitle: `${stats?.total_athletes || 0} athletes • ${stats?.total_experts || 0} experts`,
       icon: Users,
       color: "text-primary",
