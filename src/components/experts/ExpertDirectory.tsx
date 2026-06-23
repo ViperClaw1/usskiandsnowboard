@@ -321,11 +321,11 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                           New
                         </Badge>
                       )}
-                    {getPrimaryIndustry(expert.industry) && (
-                      <Badge variant="secondary" className="text-xs">
-                        {getPrimaryIndustry(expert.industry)}
+                    {splitIndustries(expert.industry).map((ind) => (
+                      <Badge key={ind} variant="secondary" className="text-xs">
+                        {ind}
                       </Badge>
-                    )}
+                    ))}
                     {expert.ussa_affiliate && expert.ussa_affiliate !== "No formal affiliation" && (
                       <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
                         <img src={usLogo} alt="" className="h-3.5 w-3.5 object-contain mr-1" />
