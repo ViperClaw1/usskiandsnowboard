@@ -176,7 +176,11 @@ export const TopProfilesTable = () => {
                     <TableRow key={expert.id}>
                       <TableCell className="font-medium">{expert.full_name}</TableCell>
                       <TableCell className="text-muted-foreground">{expert.job_title}</TableCell>
-                      <TableCell className="text-muted-foreground">{expert.area_of_expertise}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {expert.industry
+                          ? expert.industry.split(",").map((s) => s.trim()).join(", ")
+                          : expert.industry}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Eye className="h-3 w-3 text-muted-foreground" />
