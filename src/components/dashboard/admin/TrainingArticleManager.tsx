@@ -588,6 +588,28 @@ export const TrainingArticleManager = () => {
                     <Button
                       size="sm"
                       variant="ghost"
+                      className="h-8 gap-1.5 px-2 text-xs"
+                      onClick={() => setPreviewArticle(a)}
+                    >
+                      <ScanEye className="h-3.5 w-3.5" />
+                      Preview
+                    </Button>
+                    {a.status === "published" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        asChild
+                        className="h-8 gap-1.5 px-2 text-xs"
+                      >
+                        <a href={`/training/${a.slug}`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Link
+                        </a>
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       className="ml-auto h-8 gap-1.5 px-2 text-xs text-destructive hover:text-destructive"
                       onClick={() => setDeleteId(a.id)}
                     >
