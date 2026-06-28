@@ -17,11 +17,27 @@ import { useTrainingTypography } from "@/hooks/useTrainingTypography";
 // Utility Functions
 // ==============================
 
-/** Strips HTML tags and truncates to 160 chars for article card excerpts */
+/** Strips HTML tags and truncates to 160 chars for article card excerpts.
+ *  Replaces block-level tags with spaces (so "...Development</p><p>Artificial..."
+ *  doesn't collapse into "DevelopmentArtificial"), decodes common HTML entities
+ *  (&nbsp;, &amp;, &lt;, &gt;, &quot;, &#39;, numeric), and normalizes whitespace. */
 const getExcerpt = (body: string): string => {
-  const text = body.replace(/<[^>]*>/g, "");
+  const withSpaces = body
+    .replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr|\/td|\/th)\b[^>]*>/gi, " ")
+    .replace(/<[^>]*>/g, "");
+  const decoded = withSpaces
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&[a-z]+;/gi, " ");
+  const text = decoded.replace(/\s+/g, " ").trim();
   return text.length > 160 ? text.slice(0, 160) + "…" : text;
 };
+
 
 // ==============================
 // Query Functions
