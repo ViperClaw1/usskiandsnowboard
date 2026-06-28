@@ -10,16 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Plus, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobCard, type JobPostListItem } from "@/components/jobs/JobCard";
-import {
-  EMPLOYMENT_TYPES,
-  DEFAULT_INDUSTRIES,
-  ARCHIVE_AFTER_DAYS,
-} from "@/constants/jobBoard";
-
-const fetchSettings = async () => {
-  const { data } = await supabase.from("job_board_settings").select("*").eq("id", 1).maybeSingle();
-  return data;
-};
+import { EMPLOYMENT_TYPES, ARCHIVE_AFTER_DAYS } from "@/constants/jobBoard";
+import { INDUSTRY_OPTIONS } from "@/data/suggestions";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ExpertConnectionRequestDialog } from "@/components/experts/ExpertConnectionRequestDialog";
+import type { ExpertProfile } from "@/components/experts/ExpertDirectory";
+import { Linkedin, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import usLogo from "@/assets/us-logo-new.png";
 
 const fetchJobs = async (): Promise<JobPostListItem[]> => {
   const cutoff = new Date(Date.now() - ARCHIVE_AFTER_DAYS * 24 * 60 * 60 * 1000).toISOString();
