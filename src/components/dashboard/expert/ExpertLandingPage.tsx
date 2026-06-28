@@ -595,6 +595,18 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                   <Users className="mr-2 h-4 w-4" />
                   {getText("quick_actions.browse_athletes", "Browse Athlete Directory")}
                 </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/jobs/post">
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    Post a Job
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/jobs">
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    View Job Board
+                  </a>
+                </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate("profile")}>
                   <UserCircle className="mr-2 h-4 w-4" />
                   {getText("quick_actions.update_profile", "Update Profile")}
