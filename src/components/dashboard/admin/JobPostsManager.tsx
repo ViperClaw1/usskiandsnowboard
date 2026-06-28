@@ -1,16 +1,12 @@
-import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, X, ExternalLink, Loader2 } from "lucide-react";
+import { Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_INDUSTRIES, EMPLOYMENT_TYPES } from "@/constants/jobBoard";
 import { formatDistanceToNow } from "date-fns";
 
 interface AdminJob {
@@ -29,7 +25,6 @@ interface AdminJob {
 
 export const JobPostsManager = () => {
   const qc = useQueryClient();
-  const [newIndustry, setNewIndustry] = useState("");
 
   const { data: settings } = useQuery({
     queryKey: ["job-board-settings"],
@@ -50,7 +45,6 @@ export const JobPostsManager = () => {
     },
   });
 
-  const industries = (settings?.industries as string[] | undefined) ?? [...DEFAULT_INDUSTRIES];
   const requireApproval = settings?.require_approval ?? false;
 
   const saveSettings = async (next: { industries?: string[]; require_approval?: boolean }) => {
@@ -104,38 +98,12 @@ export const JobPostsManager = () => {
             <Switch checked={requireApproval} onCheckedChange={(v) => saveSettings({ require_approval: v })} />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label className="text-base">Industries</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {industries.map((ind) => (
-                <Badge key={ind} variant="secondary" className="gap-1">
-                  {ind}
-                  <button
-                    className="hover:text-destructive"
-                    onClick={() => saveSettings({ industries: industries.filter((i) => i !== ind) })}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <Input
-                placeholder="Add industry"
-                value={newIndustry}
-                onChange={(e) => setNewIndustry(e.target.value)}
-              />
-              <Button
-                onClick={() => {
-                  const v = newIndustry.trim();
-                  if (!v || industries.includes(v)) return;
-                  saveSettings({ industries: [...industries, v] });
-                  setNewIndustry("");
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              The Job Board uses the same industry list as Expert profiles, so the two stay in sync.
+              To change the available industries, update the shared Expert industry list.
+            </p>
           </div>
         </CardContent>
       </Card>

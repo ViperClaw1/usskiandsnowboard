@@ -9,19 +9,10 @@ export const EMPLOYMENT_TYPES = [
 
 export const REMOTE_STATUSES = ["Remote", "Hybrid", "On-site"] as const;
 
-export const DEFAULT_INDUSTRIES = [
-  "Sports & Recreation",
-  "Marketing & Media",
-  "Finance",
-  "Technology",
-  "Hospitality",
-  "Healthcare",
-  "Education",
-  "Nonprofit",
-  "Sales",
-  "Operations",
-  "Other",
-] as const;
+import { INDUSTRY_OPTIONS } from "@/data/suggestions";
+
+// Job Board uses the same industry list as Expert profiles so the two stay in sync.
+export const DEFAULT_INDUSTRIES = INDUSTRY_OPTIONS;
 
 export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 export type RemoteStatus = (typeof REMOTE_STATUSES)[number];

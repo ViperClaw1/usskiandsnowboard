@@ -1,9 +1,8 @@
-import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MapPin, Briefcase, Factory } from "lucide-react";
+import { ExternalLink, MapPin, Briefcase, Factory, Pencil, Trash2 } from "lucide-react";
 import { isNewPost } from "@/constants/jobBoard";
 import { formatDistanceToNow } from "date-fns";
 
@@ -33,13 +32,15 @@ function initials(name: string | null | undefined) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join("");
 }
 
-export const JobCard = ({
-  job,
-  onExpertClick,
-}: {
+interface JobCardProps {
   job: JobPostListItem;
+  isOwner?: boolean;
   onExpertClick?: (expertId: string) => void;
-}) => {
+  onEdit?: () => void;
+  onDelete?: () => void;
+}
+
+export const JobCard = ({ job, isOwner, onExpertClick, onEdit, onDelete }: JobCardProps) => {
   const isNew = isNewPost(job.created_at);
 
   return (
@@ -107,11 +108,23 @@ export const JobCard = ({
               </p>
             </div>
           </button>
-          <Button asChild size="sm" variant="outline">
-            <a href={job.source_url} target="_blank" rel="noopener noreferrer">
-              View <ExternalLink className="ml-1 h-3 w-3" />
-            </a>
-          </Button>
+          <div className="flex items-center gap-1">
+            {isOwner && (
+              <>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit post" onClick={onEdit}>
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Delete post" onClick={onDelete}>
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              </>
+            )}
+            <Button asChild size="sm" variant="outline">
+              <a href={job.source_url} target="_blank" rel="noopener noreferrer">
+                View <ExternalLink className="ml-1 h-3 w-3" />
+              </a>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -12,21 +11,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import {
-  EMPLOYMENT_TYPES,
-  REMOTE_STATUSES,
-  DEFAULT_INDUSTRIES,
-} from "@/constants/jobBoard";
+import { EMPLOYMENT_TYPES, REMOTE_STATUSES } from "@/constants/jobBoard";
+import { INDUSTRY_OPTIONS } from "@/data/suggestions";
 
 const PostJob = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const editId = params.get("edit");
   const { user } = useAuth();
   const { role } = useUserRole(user?.id);
 
-  const [step, setStep] = useState<"url" | "details">("url");
+  const [step, setStep] = useState<"url" | "details">(editId ? "details" : "url");
   const [url, setUrl] = useState("");
   const [parsing, setParsing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
 
   const [form, setForm] = useState({
     job_title: "",
@@ -38,11 +37,7 @@ const PostJob = () => {
     expert_note: "",
   });
 
-  const { data: settings } = useQuery({
-    queryKey: ["job-board-settings"],
-    queryFn: async () => (await supabase.from("job_board_settings").select("*").eq("id", 1).maybeSingle()).data,
-  });
-  const industries = (settings?.industries as string[] | undefined) ?? [...DEFAULT_INDUSTRIES];
+  const industries = INDUSTRY_OPTIONS;
 
   useEffect(() => {
     if (!user) return;
@@ -51,6 +46,44 @@ const PostJob = () => {
       navigate("/jobs");
     }
   }, [user, role, navigate]);
+
+  // Load existing post for edit mode and verify ownership
+  useEffect(() => {
+    if (!editId || !user) return;
+    (async () => {
+      const { data: post, error } = await supabase
+        .from("job_posts")
+        .select("*")
+        .eq("id", editId)
+        .maybeSingle();
+      if (error || !post) {
+        toast.error("Couldn't load post.");
+        navigate("/jobs");
+        return;
+      }
+      const { data: ep } = await supabase
+        .from("expert_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!ep || ep.id !== post.expert_id) {
+        toast.error("You can only edit your own posts.");
+        navigate("/jobs");
+        return;
+      }
+      setUrl(post.source_url);
+      setForm({
+        job_title: post.job_title ?? "",
+        company: post.company ?? "",
+        location: post.location ?? "",
+        remote_status: post.remote_status ?? "",
+        employment_type: post.employment_type ?? "",
+        industry: post.industry ?? "",
+        expert_note: post.expert_note ?? "",
+      });
+      setLoadingEdit(false);
+    })();
+  }, [editId, user, navigate]);
 
   const handleParse = async () => {
     if (!/^https?:\/\//i.test(url.trim())) {
@@ -103,19 +136,7 @@ const PostJob = () => {
     }
     setSubmitting(true);
     try {
-      const { data: expertProfile, error: expertErr } = await supabase
-        .from("expert_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (expertErr) throw expertErr;
-      if (!expertProfile) {
-        toast.error("Complete your expert profile before posting.");
-        setSubmitting(false);
-        return;
-      }
-      const { error } = await supabase.from("job_posts").insert({
-        expert_id: expertProfile.id,
+      const payload = {
         source_url: url.trim(),
         job_title: form.job_title.trim(),
         company: form.company.trim() || null,
@@ -124,17 +145,39 @@ const PostJob = () => {
         employment_type: form.employment_type || null,
         industry: form.industry || null,
         expert_note: form.expert_note.trim() || null,
-        status: "active",
-      });
-      if (error) {
-        if (error.code === "23505") {
-          toast.error("You've already posted this job URL.");
-        } else {
-          throw error;
+      };
+
+      if (editId) {
+        const { error } = await supabase.from("job_posts").update(payload).eq("id", editId);
+        if (error) throw error;
+        toast.success("Job updated!");
+      } else {
+        const { data: expertProfile, error: expertErr } = await supabase
+          .from("expert_profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (expertErr) throw expertErr;
+        if (!expertProfile) {
+          toast.error("Complete your expert profile before posting.");
+          setSubmitting(false);
+          return;
         }
-        return;
+        const { error } = await supabase.from("job_posts").insert({
+          ...payload,
+          expert_id: expertProfile.id,
+          status: "active",
+        });
+        if (error) {
+          if (error.code === "23505") {
+            toast.error("You've already posted this job URL.");
+          } else {
+            throw error;
+          }
+          return;
+        }
+        toast.success("Job posted!");
       }
-      toast.success("Job posted!");
       navigate("/jobs");
     } catch (e: any) {
       console.error(e);
@@ -143,6 +186,14 @@ const PostJob = () => {
       setSubmitting(false);
     }
   };
+
+  if (loadingEdit) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -153,10 +204,10 @@ const PostJob = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Post a Job</CardTitle>
+            <CardTitle>{editId ? "Edit Job Post" : "Post a Job"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {step === "url" ? (
+            {step === "url" && !editId ? (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="job-url">Job posting URL</Label>
@@ -244,10 +295,12 @@ const PostJob = () => {
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setStep("url")}>Back</Button>
+                  {!editId && (
+                    <Button variant="outline" onClick={() => setStep("url")}>Back</Button>
+                  )}
                   <Button onClick={handlePublish} disabled={submitting}>
                     {submitting && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-                    Publish
+                    {editId ? "Save changes" : "Publish"}
                   </Button>
                 </div>
               </>
