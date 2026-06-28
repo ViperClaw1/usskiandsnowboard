@@ -1,4 +1,3 @@
-import { AppLayout } from "@/components/AppLayout";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Navigate } from "react-router-dom";
