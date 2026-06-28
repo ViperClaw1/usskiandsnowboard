@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save, ExternalLink, ScanEye, Clock, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { ARTICLE_CATEGORIES } from "@/constants/training";
@@ -147,6 +147,7 @@ export const TrainingArticleManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [previewArticle, setPreviewArticle] = useState<TrainingArticle | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<ArticleForm>(EMPTY_FORM);
   const [heroFile, setHeroFile] = useState<File | null>(null);
@@ -478,6 +479,30 @@ export const TrainingArticleManager = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setPreviewArticle(a)}
+                            title="Preview"
+                          >
+                            <ScanEye className="h-4 w-4" />
+                          </Button>
+                          {a.status === "published" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              asChild
+                              title="Open public link"
+                            >
+                              <a
+                                href={`/training/${a.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
                           <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -560,6 +585,28 @@ export const TrainingArticleManager = () => {
                         </>
                       )}
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 gap-1.5 px-2 text-xs"
+                      onClick={() => setPreviewArticle(a)}
+                    >
+                      <ScanEye className="h-3.5 w-3.5" />
+                      Preview
+                    </Button>
+                    {a.status === "published" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        asChild
+                        className="h-8 gap-1.5 px-2 text-xs"
+                      >
+                        <a href={`/training/${a.slug}`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Link
+                        </a>
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -751,6 +798,57 @@ export const TrainingArticleManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview Dialog — renders article as it appears to readers, works for drafts too */}
+      <Dialog open={!!previewArticle} onOpenChange={(o) => !o && setPreviewArticle(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Article Preview
+              {previewArticle && (
+                <Badge variant={previewArticle.status === "published" ? "default" : "secondary"} className="capitalize">
+                  {previewArticle.status}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {previewArticle && (
+            <article className="space-y-4">
+              {previewArticle.hero_image_url && (
+                <img
+                  src={previewArticle.hero_image_url}
+                  alt={previewArticle.title}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              )}
+              {previewArticle.category && (
+                <Badge variant="outline">{previewArticle.category}</Badge>
+              )}
+              <h1 className="text-3xl font-bold leading-tight">{previewArticle.title}</h1>
+              {previewArticle.subtitle && (
+                <p className="text-lg italic text-muted-foreground">{previewArticle.subtitle}</p>
+              )}
+              <div className="flex items-center gap-4 text-sm text-muted-foreground border-y border-border py-3">
+                <div className="flex items-center gap-1.5">
+                  <UserIcon className="h-4 w-4" />
+                  <span>{previewArticle.author_name || "U.S. Ski & Snowboard"}</span>
+                </div>
+                {previewArticle.reading_time_minutes && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" />
+                    <span>{previewArticle.reading_time_minutes} min read</span>
+                  </div>
+                )}
+              </div>
+              <div
+                className="prose prose-sm max-w-none dark:prose-invert"
+                style={typographyStyle}
+                dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(previewArticle.body) }}
+              />
+            </article>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
