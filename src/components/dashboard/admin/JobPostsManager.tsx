@@ -45,7 +45,6 @@ export const JobPostsManager = () => {
     },
   });
 
-  const industries = (settings?.industries as string[] | undefined) ?? [...DEFAULT_INDUSTRIES];
   const requireApproval = settings?.require_approval ?? false;
 
   const saveSettings = async (next: { industries?: string[]; require_approval?: boolean }) => {
