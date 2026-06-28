@@ -608,13 +608,11 @@ export const TrainingArticleManager = () => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        asChild
                         className="h-8 gap-1.5 px-2 text-xs"
+                        onClick={() => handleCopyLink(a.slug)}
                       >
-                        <a href={`/training/${a.slug}`} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          Link
-                        </a>
+                        <LinkIcon className="h-3.5 w-3.5" />
+                        Copy Link
                       </Button>
                     )}
                     <Button
