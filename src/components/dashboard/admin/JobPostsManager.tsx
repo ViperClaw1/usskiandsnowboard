@@ -104,38 +104,12 @@ export const JobPostsManager = () => {
             <Switch checked={requireApproval} onCheckedChange={(v) => saveSettings({ require_approval: v })} />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label className="text-base">Industries</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {industries.map((ind) => (
-                <Badge key={ind} variant="secondary" className="gap-1">
-                  {ind}
-                  <button
-                    className="hover:text-destructive"
-                    onClick={() => saveSettings({ industries: industries.filter((i) => i !== ind) })}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <Input
-                placeholder="Add industry"
-                value={newIndustry}
-                onChange={(e) => setNewIndustry(e.target.value)}
-              />
-              <Button
-                onClick={() => {
-                  const v = newIndustry.trim();
-                  if (!v || industries.includes(v)) return;
-                  saveSettings({ industries: [...industries, v] });
-                  setNewIndustry("");
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              The Job Board uses the same industry list as Expert profiles, so the two stay in sync.
+              To change the available industries, update the shared Expert industry list.
+            </p>
           </div>
         </CardContent>
       </Card>
