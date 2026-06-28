@@ -139,7 +139,9 @@ const JobBoard = () => {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
-              No jobs match these filters yet. Check back soon.
+              {jobs.length === 0 && !search && !locationFilter && typeFilter === "all" && industryFilter === "all"
+                ? "Job Board launching summer 2026"
+                : "No jobs match these filters yet. Check back soon."}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
