@@ -507,16 +507,10 @@ export const TrainingArticleManager = () => {
                             <Button
                               size="icon"
                               variant="ghost"
-                              asChild
-                              title="Open public link"
+                              onClick={() => handleCopyLink(a.slug)}
+                              title="Copy public link"
                             >
-                              <a
-                                href={`/training/${a.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
+                              <LinkIcon className="h-4 w-4" />
                             </Button>
                           )}
                           <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
