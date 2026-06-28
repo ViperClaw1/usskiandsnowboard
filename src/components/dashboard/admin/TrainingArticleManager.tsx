@@ -27,11 +27,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save, ExternalLink, ScanEye, Clock, User as UserIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save, Link as LinkIcon, ScanEye, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
-import { ARTICLE_CATEGORIES } from "@/constants/training";
+import { ARTICLE_CATEGORIES, getCategoryColor } from "@/constants/training";
 import { sanitizeArticleHtml } from "@/lib/sanitizeArticleHtml";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import usLogo from "@/assets/us-logo-new.png";
 
 // ==============================
 // Utility Functions
