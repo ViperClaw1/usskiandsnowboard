@@ -298,6 +298,26 @@ const PostJob = () => {
                   {!editId && (
                     <Button variant="outline" onClick={() => setStep("url")}>Back</Button>
                   )}
+                  {editId && (
+                    <Button
+                      variant="destructive"
+                      disabled={submitting}
+                      onClick={async () => {
+                        if (!confirm("Delete this job post? This cannot be undone.")) return;
+                        setSubmitting(true);
+                        const { error } = await supabase.from("job_posts").delete().eq("id", editId);
+                        setSubmitting(false);
+                        if (error) {
+                          toast.error("Failed to delete post.");
+                        } else {
+                          toast.success("Job post deleted.");
+                          navigate("/jobs");
+                        }
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  )}
                   <Button onClick={handlePublish} disabled={submitting}>
                     {submitting && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
                     {editId ? "Save changes" : "Publish"}
