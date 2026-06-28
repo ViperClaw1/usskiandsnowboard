@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MapPin, Briefcase, Factory } from "lucide-react";
+import { ExternalLink, MapPin, Briefcase, Factory, Pencil, Trash2 } from "lucide-react";
 import { isNewPost } from "@/constants/jobBoard";
 import { formatDistanceToNow } from "date-fns";
 
