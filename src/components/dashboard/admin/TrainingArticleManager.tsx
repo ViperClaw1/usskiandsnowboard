@@ -798,6 +798,57 @@ export const TrainingArticleManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview Dialog — renders article as it appears to readers, works for drafts too */}
+      <Dialog open={!!previewArticle} onOpenChange={(o) => !o && setPreviewArticle(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Article Preview
+              {previewArticle && (
+                <Badge variant={previewArticle.status === "published" ? "default" : "secondary"} className="capitalize">
+                  {previewArticle.status}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {previewArticle && (
+            <article className="space-y-4">
+              {previewArticle.hero_image_url && (
+                <img
+                  src={previewArticle.hero_image_url}
+                  alt={previewArticle.title}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              )}
+              {previewArticle.category && (
+                <Badge variant="outline">{previewArticle.category}</Badge>
+              )}
+              <h1 className="text-3xl font-bold leading-tight">{previewArticle.title}</h1>
+              {previewArticle.subtitle && (
+                <p className="text-lg italic text-muted-foreground">{previewArticle.subtitle}</p>
+              )}
+              <div className="flex items-center gap-4 text-sm text-muted-foreground border-y border-border py-3">
+                <div className="flex items-center gap-1.5">
+                  <UserIcon className="h-4 w-4" />
+                  <span>{previewArticle.author_name || "U.S. Ski & Snowboard"}</span>
+                </div>
+                {previewArticle.reading_time_minutes && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" />
+                    <span>{previewArticle.reading_time_minutes} min read</span>
+                  </div>
+                )}
+              </div>
+              <div
+                className="prose prose-sm max-w-none dark:prose-invert"
+                style={typographyStyle}
+                dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(previewArticle.body) }}
+              />
+            </article>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
