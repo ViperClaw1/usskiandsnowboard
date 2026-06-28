@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save, ExternalLink, ScanEye, Clock, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { ARTICLE_CATEGORIES } from "@/constants/training";
