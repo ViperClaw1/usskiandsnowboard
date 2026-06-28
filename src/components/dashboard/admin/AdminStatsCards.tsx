@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Briefcase, Link as LinkIcon, TrendingUp, CheckCircle, XCircle } from "lucide-react";
+import { Users, Briefcase, Link as LinkIcon, TrendingUp, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { NEW_BADGE_WINDOW_MS } from "@/constants/jobBoard";
 
 export const AdminStatsCards = () => {
   const navigate = useNavigate();
@@ -16,6 +17,18 @@ export const AdminStatsCards = () => {
       
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: jobStats } = useQuery({
+    queryKey: ['admin-job-stats'],
+    queryFn: async () => {
+      const cutoff = new Date(Date.now() - NEW_BADGE_WINDOW_MS).toISOString();
+      const [{ count: total }, { count: recent }] = await Promise.all([
+        supabase.from('job_posts').select('*', { count: 'exact', head: true }),
+        supabase.from('job_posts').select('*', { count: 'exact', head: true }).gte('created_at', cutoff),
+      ]);
+      return { total: total ?? 0, recent: recent ?? 0 };
     },
   });
 
@@ -73,6 +86,24 @@ export const AdminStatsCards = () => {
       color: "text-primary",
       bgColor: "bg-primary/10",
       route: "/admin/experts"
+    },
+    {
+      title: "Total Jobs Posted",
+      value: jobStats?.total ?? 0,
+      subtitle: "All-time job board posts",
+      icon: Briefcase,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      route: "/admin/jobs"
+    },
+    {
+      title: "Jobs Posted, Last 30 Days",
+      value: jobStats?.recent ?? 0,
+      subtitle: "Posted in the last 30 days",
+      icon: Sparkles,
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+      route: "/admin/jobs"
     }
   ];
 

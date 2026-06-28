@@ -19,6 +19,7 @@ export const NAV_ITEMS: NavItem[] = [
   ...(EMPLOYER_REGISTRATION_ENABLED
     ? ([{ to: "/employers", label: "Employers" }] as NavItem[])
     : []),
+  { to: "/jobs", label: "Jobs" },
   { to: "/schedule", label: "Schedule" },
   { to: "/news", label: "News" },
   { to: "/training", label: "Training", allowedRoles: ["athlete", "admin"] },

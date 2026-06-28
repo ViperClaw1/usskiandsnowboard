@@ -814,6 +814,94 @@ export type Database = {
         }
         Relationships: []
       }
+      job_board_settings: {
+        Row: {
+          id: number
+          industries: string[]
+          require_approval: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          industries?: string[]
+          require_approval?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          industries?: string[]
+          require_approval?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      job_posts: {
+        Row: {
+          company: string | null
+          created_at: string
+          employment_type: string | null
+          expert_id: string
+          expert_note: string | null
+          id: string
+          industry: string | null
+          job_title: string
+          location: string | null
+          remote_status: Database["public"]["Enums"]["job_remote_status"] | null
+          source_url: string
+          status: Database["public"]["Enums"]["job_post_status"]
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          employment_type?: string | null
+          expert_id: string
+          expert_note?: string | null
+          id?: string
+          industry?: string | null
+          job_title: string
+          location?: string | null
+          remote_status?:
+            | Database["public"]["Enums"]["job_remote_status"]
+            | null
+          source_url: string
+          status?: Database["public"]["Enums"]["job_post_status"]
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          employment_type?: string | null
+          expert_id?: string
+          expert_note?: string | null
+          id?: string
+          industry?: string | null
+          job_title?: string
+          location?: string | null
+          remote_status?:
+            | Database["public"]["Enums"]["job_remote_status"]
+            | null
+          source_url?: string
+          status?: Database["public"]["Enums"]["job_post_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_posts_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "expert_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_posts_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "top_expert_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news_articles: {
         Row: {
           created_at: string
@@ -1187,6 +1275,8 @@ export type Database = {
     }
     Enums: {
       app_role: "athlete" | "employer" | "admin" | "expert"
+      job_post_status: "active" | "filled" | "expired" | "pending"
+      job_remote_status: "Remote" | "Hybrid" | "On-site"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1315,6 +1405,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["athlete", "employer", "admin", "expert"],
+      job_post_status: ["active", "filled", "expired", "pending"],
+      job_remote_status: ["Remote", "Hybrid", "On-site"],
     },
   },
 } as const
