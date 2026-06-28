@@ -821,36 +821,81 @@ export const TrainingArticleManager = () => {
             </DialogTitle>
           </DialogHeader>
           {previewArticle && (
-            <article className="space-y-4">
+            <article className="space-y-0">
               {previewArticle.hero_image_url && (
-                <img
-                  src={previewArticle.hero_image_url}
-                  alt={previewArticle.title}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-              )}
-              {previewArticle.category && (
-                <Badge variant="outline">{previewArticle.category}</Badge>
-              )}
-              <h1 className="text-3xl font-bold leading-tight">{previewArticle.title}</h1>
-              {previewArticle.subtitle && (
-                <p className="text-lg italic text-muted-foreground">{previewArticle.subtitle}</p>
-              )}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground border-y border-border py-3">
-                <div className="flex items-center gap-1.5">
-                  <UserIcon className="h-4 w-4" />
-                  <span>{previewArticle.author_name || "U.S. Ski & Snowboard"}</span>
+                <div className="rounded-xl overflow-hidden max-h-[420px] mb-6">
+                  <img
+                    src={previewArticle.hero_image_url}
+                    alt={previewArticle.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
+              )}
+
+              {/* Meta row — category badge, reading time, publish date */}
+              <div className="flex flex-wrap items-center gap-3 text-muted-foreground mb-4" style={typographyStyle}>
+                {previewArticle.category && (
+                  <Badge className={`${getCategoryColor(previewArticle.category).bg} border-0 font-semibold uppercase tracking-wide`}>
+                    {previewArticle.category}
+                  </Badge>
+                )}
                 {previewArticle.reading_time_minutes && (
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" />
-                    <span>{previewArticle.reading_time_minutes} min read</span>
-                  </div>
+                  <span className="flex items-center gap-1 text-sm">
+                    <Clock className="h-3.5 w-3.5" />
+                    {previewArticle.reading_time_minutes} min read
+                  </span>
+                )}
+                {previewArticle.published_at && (
+                  <span className="flex items-center gap-1 text-sm">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {format(new Date(previewArticle.published_at), "MMMM d, yyyy")}
+                  </span>
                 )}
               </div>
+
+              {/* Title */}
+              <h1
+                className="font-extrabold text-foreground leading-tight mb-3"
+                style={{ ...typographyStyle, fontSize: typographyStyle.fontSize ? `calc(${typographyStyle.fontSize} * 2)` : undefined }}
+              >
+                {previewArticle.title}
+              </h1>
+
+              {/* Subtitle */}
+              {previewArticle.subtitle && (
+                <p className="text-muted-foreground italic mb-6" style={typographyStyle}>
+                  {previewArticle.subtitle}
+                </p>
+              )}
+
+              {/* Author row */}
+              <div className="flex items-center gap-3 mb-8 pb-8 border-b border-border">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={previewArticle.author_image_url || usLogo} alt={previewArticle.author_name || "Author"} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold" style={typographyStyle}>
+                    {(previewArticle.author_name || "US")[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-semibold text-foreground" style={typographyStyle}>
+                  {previewArticle.author_name || "U.S. Ski & Snowboard Training & Development"}
+                </span>
+              </div>
+
+              {/* Article body */}
               <div
-                className="prose prose-sm max-w-none dark:prose-invert"
-                style={typographyStyle}
+                className="article-body prose max-w-none text-foreground
+                  prose-headings:font-bold prose-headings:text-foreground
+                  prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+                  prose-p:leading-relaxed prose-p:text-foreground/90
+                  prose-li:text-foreground/90
+                  prose-strong:text-foreground
+                  prose-a:text-primary prose-a:underline
+                  prose-ul:my-4 prose-ol:my-4"
+                style={{
+                  '--article-font-size': typographyStyle.fontSize ?? 'inherit',
+                  '--article-font-family': typographyStyle.fontFamily ?? 'inherit',
+                  fontFamily: typographyStyle.fontFamily,
+                } as React.CSSProperties}
                 dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(previewArticle.body) }}
               />
             </article>
