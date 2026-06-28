@@ -1,33 +1,70 @@
-# Fix Expert Detail Dialog on Mobile
+# Job Board Feature Plan
 
-## Problems observed
-1. Opening an expert card on mobile shows a dialog that can't be scrolled or zoomed, and the X close button is often off-screen.
-2. The only way to dismiss it is the device Back button, which then navigates the user away from `/experts` (often to `/athletes`) instead of just closing the dialog.
+Adding a job board where experts post openings and athletes browse them. Reuses existing expert profiles, "New" badge styling, and connection request flow.
 
-## Proposed solution
+## 1. Database (new migration)
 
-### 1. Make the dialog mobile-friendly (in `src/components/experts/ExpertDirectory.tsx`)
-- Constrain `DialogContent` height: `max-h-[90vh]` with internal scroll (`overflow-y-auto`) so long bios/expertise text don't push the close button off-screen.
-- On small screens, make it nearly full-width with safe-area padding so the built-in X (top-right) is always reachable.
-- Add an explicit, always-visible **Close** button at the bottom of the dialog (in addition to the X) so users on small viewports never have to hunt for it.
-- Keep the banner image as a fixed-height header that doesn't grow; only the body section scrolls.
+**Table: `job_posts`**
+- `id`, `expert_id` (FK → `expert_profiles.id`), `source_url`, `job_title`, `company`
+- `location` (text), `remote_status` (enum: remote/hybrid/onsite)
+- `employment_type` (text), `industry` (text), `expert_note` (text)
+- `status` (enum: active/filled/expired/pending), `created_at`, `updated_at`
+- UNIQUE (`expert_id`, `source_url`) — prevents duplicate posts
 
-### 2. Make the device Back button close the dialog (not leave the page)
-When a user opens an expert dialog, push a temporary history entry (e.g. `history.pushState({ expertDialog: true }, "")`). Listen for `popstate`:
-- If the dialog is open and the user hits Back → close the dialog and stay on `/experts`.
-- If the user closes the dialog via X / Close button / overlay click → call `history.back()` once to clean up the temporary entry.
+**Table: `job_board_settings`** (single row, admin-managed)
+- `require_approval` (bool, default false)
+- `industries` (text[]) — editable list
 
-This is a small, isolated effect tied to `selectedExpert` state. It fixes the "Back takes me to Athletes" problem at its root: the back button now consumes the temporary history entry instead of popping `/experts` off the stack.
+**RLS + GRANTs:**
+- Public SELECT on `job_posts` WHERE `status = 'active'` (anon + authenticated)
+- Experts INSERT/UPDATE/DELETE own posts (`expert_id` resolves via `auth.uid()`)
+- Admins ALL via `has_role(auth.uid(), 'admin')`
+- `job_board_settings`: public SELECT, admin UPDATE
 
-### 3. Optional polish
-- Same treatment applied to the connection-request dialog opened from inside the detail dialog, so back behavior is consistent there too.
+**Cron:** Daily job to auto-archive posts older than 60 days (set status='expired').
 
-## Technical details
-- File touched: `src/components/experts/ExpertDirectory.tsx` only. No backend, schema, or routing changes.
-- Classes added to `DialogContent`: `max-h-[90vh] overflow-hidden flex flex-col` on the wrapper; inner content wrapper becomes `flex-1 overflow-y-auto`.
-- New `useEffect` keyed on `selectedExpert` for the history push / popstate listener, with cleanup that removes the listener and (if needed) pops the temporary entry.
-- No change to how the dialog is opened from the grid card; only how it renders and how it dismisses.
+## 2. Edge function: `parse-job-url`
 
-## Out of scope
-- No change to filters, data fetching, or the directory grid.
-- No change to the global router or navigation behavior outside this dialog.
+- Auth-guarded (require expert or admin role)
+- Uses existing Firecrawl connector to scrape the URL (markdown + metadata)
+- Falls back to Lovable AI Gateway (`google/gemini-3-flash-preview`) with structured output to extract: title, company, location, employment_type, industry, remote_status
+- Returns parsed fields + a `parse_status` flag; never blocks on failure (returns blanks so expert fills manually)
+
+## 3. Frontend
+
+**New routes:**
+- `/jobs` — public job board (feed/grid, filters, search)
+- `/jobs/post` — expert posting flow (2-step: paste URL → review/edit → publish)
+- `/admin/jobs` — admin management table
+
+**New components:**
+- `src/pages/JobBoard.tsx`, `src/pages/PostJob.tsx`
+- `src/components/jobs/JobCard.tsx` — title, company, 3 tag badges, expert chip (clickable → `/experts` profile), "New" badge (reuses existing 30-day pill styling from `ExpertBadgeManager`/expert cards), date, external link
+- `src/components/jobs/JobFilters.tsx` — Location, Type, Industry filters + search
+- `src/components/jobs/PostJobWizard.tsx` — paste URL → call edge fn → editable confirmation form → submit
+- `src/components/jobs/ExpertJobsManager.tsx` — expert's "My Posts" w/ Filled/Expired controls (added to ExpertLandingPage)
+- `src/components/dashboard/admin/JobPostsManager.tsx` — admin CRUD + industry list editor + approval toggle
+- `src/components/dashboard/admin/JobBoardStatsCards.tsx` — Total Jobs Posted + Last 30 Days, added to `AdminStatsCards` block
+
+**Nav:** Add "Jobs" entry to authenticated nav + mobile nav.
+
+**Controlled lists (constants file `src/constants/jobBoard.ts`):**
+- `EMPLOYMENT_TYPES = ['Full-time','Part-time','Contract','Internship','Seasonal','Temporary']`
+- `DEFAULT_INDUSTRIES = ['Sports & Recreation','Marketing & Media','Finance','Technology','Hospitality','Healthcare','Education','Nonprofit','Sales','Operations','Other']` (overridden by `job_board_settings.industries`)
+- `REMOTE_STATUSES = ['Remote','Hybrid','On-site']`
+
+## 4. Connection flow
+
+No new code — JobCard's expert chip links to the existing expert profile route, where the existing Request Connection button handles everything.
+
+## 5. Mobile
+
+All new screens use existing responsive patterns (grid → stack, badges wrap, same Tailwind tokens). Filters collapse into a Sheet on mobile (matches existing pattern).
+
+## Open questions
+
+1. **Approval default off** — confirmed in spec, but should pending posts be visible to the posting expert before approval? (Assuming yes.)
+2. **Industry list edits** — should renaming an industry retroactively update existing posts, or leave old values orphaned in filters? (Default: leave as-is, show all distinct values in filter.)
+3. **Auto-archive** — needs `pg_cron` + `pg_net` enabled. OK to enable?
+
+Approve and I'll ship it.
