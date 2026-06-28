@@ -104,8 +104,7 @@ const Training = () => {
             Resources to Help You Thrive Beyond the Mountain
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            Practical guides, expert insights, and career resources — published by U.S. Ski &amp; Snowboard's Training
-            &amp; Development team.
+            Practical guides, expert insights, and career resources.
           </p>
         </div>
       </section>
