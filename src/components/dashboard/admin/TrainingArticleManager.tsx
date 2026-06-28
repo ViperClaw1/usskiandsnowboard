@@ -479,6 +479,30 @@ export const TrainingArticleManager = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setPreviewArticle(a)}
+                            title="Preview"
+                          >
+                            <ScanEye className="h-4 w-4" />
+                          </Button>
+                          {a.status === "published" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              asChild
+                              title="Open public link"
+                            >
+                              <a
+                                href={`/training/${a.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
                           <Button size="icon" variant="ghost" onClick={() => openEdit(a)} title="Edit">
                             <Pencil className="h-4 w-4" />
                           </Button>
