@@ -1,16 +1,12 @@
-import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, X, ExternalLink, Loader2 } from "lucide-react";
+import { Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_INDUSTRIES, EMPLOYMENT_TYPES } from "@/constants/jobBoard";
 import { formatDistanceToNow } from "date-fns";
 
 interface AdminJob {
@@ -29,7 +25,6 @@ interface AdminJob {
 
 export const JobPostsManager = () => {
   const qc = useQueryClient();
-  const [newIndustry, setNewIndustry] = useState("");
 
   const { data: settings } = useQuery({
     queryKey: ["job-board-settings"],
