@@ -362,6 +362,20 @@ export const TrainingArticleManager = () => {
   };
 
   // ==============================
+  // Event Handlers — Copy Public Link
+  // ==============================
+
+  const handleCopyLink = async (slug: string) => {
+    const url = `${window.location.origin}/training/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  // ==============================
   // Derived Values
   // ==============================
 
