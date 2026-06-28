@@ -147,6 +147,7 @@ export const TrainingArticleManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [previewArticle, setPreviewArticle] = useState<TrainingArticle | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<ArticleForm>(EMPTY_FORM);
   const [heroFile, setHeroFile] = useState<File | null>(null);
