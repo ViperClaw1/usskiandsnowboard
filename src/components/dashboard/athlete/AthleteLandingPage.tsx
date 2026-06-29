@@ -67,20 +67,20 @@ interface AthleteProfile {
   } | null;
 }
 
-interface EmployerProfile {
+interface ExpertProfile {
   id: string;
-  company_name: string;
-  logo_url: string | null;
-  industry: string | null;
-  opportunities_offered: string | null;
+  user_id: string;
+  full_name: string;
+  photo_url: string | null;
   background_image_url: string | null;
-  company_size: string | null;
-  hq_location: string | null;
-  about: string | null;
-  contact_person: string | null;
-  contact_title: string | null;
-  website: string | null;
+  job_title: string | null;
+  company_name: string | null;
+  area_of_expertise: string | null;
+  bio: string | null;
+  industry: string | null;
   linkedin_url: string | null;
+  ussa_affiliate: string | null;
+  profile_views: number | null;
 }
 
 interface ConnectionStats {
@@ -102,7 +102,10 @@ interface AthleteHomeProps {
 }
 
 export const athleteDashboardKey = (userId: string) => ["athlete-landing-dashboard", userId];
-const athleteFeaturedPartnersKey = ["athlete-landing-featured-partners"];
+const athleteFeaturedExpertsKey = (interests: string[]) => [
+  "athlete-landing-featured-experts",
+  ...[...interests].sort(),
+];
 
 const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardData> => {
   const { data: profileData } = await supabase
@@ -141,16 +144,41 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
   };
 };
 
-const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
-  const { data } = await supabase
-    .from("employer_profiles")
-    .select(
-      "id, company_name, logo_url, industry, opportunities_offered, background_image_url, company_size, hq_location, about, contact_person, contact_title, website, linkedin_url",
-    )
-    .order("profile_views", { ascending: false })
-    .limit(4);
+const normalizeIndustries = (industry: string | null): string[] =>
+  (industry ?? "")
+    .split(/[,;|]/)
+    .map((v) => v.trim().toLowerCase())
+    .filter(Boolean);
 
-  return (data as EmployerProfile[]) ?? [];
+const fetchFeaturedExperts = async (interests: string[]): Promise<ExpertProfile[]> => {
+  const { data } = await supabase
+    .from("expert_profiles")
+    .select(
+      "id, user_id, full_name, photo_url, background_image_url, job_title, company_name, area_of_expertise, bio, industry, linkedin_url, ussa_affiliate, profile_views",
+    )
+    .eq("is_public", true)
+    .order("profile_views", { ascending: false })
+    .limit(24);
+
+  const experts = (data as ExpertProfile[]) ?? [];
+  const normalizedInterests = interests.map((i) => i.toLowerCase().trim()).filter(Boolean);
+
+  if (normalizedInterests.length === 0) return experts.slice(0, 4);
+
+  const scored = experts
+    .map((e) => {
+      const inds = normalizeIndustries(e.industry);
+      const matches = inds.filter((i) =>
+        normalizedInterests.some((ni) => i.includes(ni) || ni.includes(i)),
+      ).length;
+      return { expert: e, matches };
+    })
+    .sort((a, b) => b.matches - a.matches || (b.expert.profile_views ?? 0) - (a.expert.profile_views ?? 0));
+
+  const matched = scored.filter((s) => s.matches > 0).map((s) => s.expert);
+  if (matched.length >= 4) return matched.slice(0, 4);
+  const fillers = experts.filter((e) => !matched.find((m) => m.id === e.id));
+  return [...matched, ...fillers].slice(0, 4);
 };
 
 const getShortIndustryBadgeLabel = (industry: string | null) => {
@@ -168,8 +196,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
-  const [selectedPartner, setSelectedPartner] = useState<EmployerProfile | null>(null);
-  const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
+  const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
+  const [expertDialogOpen, setExpertDialogOpen] = useState(false);
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -214,11 +242,13 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     retryDelay: (attempt) => 1000 * (attempt + 1),
   });
 
-  const { data: featuredPartners = [], isLoading: partnersLoading } = useQuery<EmployerProfile[]>({
-    queryKey: athleteFeaturedPartnersKey,
-    queryFn: fetchFeaturedPartners,
-    initialData: () => queryClient.getQueryData<EmployerProfile[]>(athleteFeaturedPartnersKey),
+  const athleteInterests = dashboardData?.profile?.career_interests ?? [];
+  const { data: featuredExperts = [], isLoading: expertsLoading } = useQuery<ExpertProfile[]>({
+    queryKey: athleteFeaturedExpertsKey(athleteInterests),
+    queryFn: () => fetchFeaturedExperts(athleteInterests),
+    initialData: () => queryClient.getQueryData<ExpertProfile[]>(athleteFeaturedExpertsKey(athleteInterests)),
     staleTime: 5 * 60 * 1000,
+    enabled: !!dashboardData?.profile,
   });
 
   const profile = dashboardData?.profile ?? null;
@@ -247,7 +277,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     };
   }, [user.id, profile?.id, queryClient]);
 
-  if (dashboardLoading || partnersLoading) {
+  if (dashboardLoading || expertsLoading) {
     return (
       <div className="flex items-center justify-center py-24">
         <LoadingSpinner />
@@ -599,17 +629,82 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
           </Card>
         )}
 
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>{getText("featured.title", "Featured Experts")}</CardTitle>
+              <Button variant="link" onClick={() => onNavigate("experts")}>
+                {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {featuredExperts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No experts match your interests yet — explore the full directory.
+              </p>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {featuredExperts.map((expert) => (
+                  <Card
+                    key={expert.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => {
+                      setSelectedExpert(expert);
+                      setExpertDialogOpen(true);
+                    }}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={expert.photo_url || ""} />
+                          <AvatarFallback>
+                            {(expert.full_name || "EX")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-sm">{expert.full_name}</p>
+                          {expert.job_title && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{expert.job_title}</p>
+                          )}
+                          {expert.company_name && (
+                            <p className="text-xs text-muted-foreground">{expert.company_name}</p>
+                          )}
+                          {expert.industry && (
+                            <Badge
+                              variant="grayout"
+                              className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                              title={expert.industry}
+                            >
+                              {getShortIndustryBadgeLabel(expert.industry)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
       </section>
 
       <Dialog
-        open={partnerDialogOpen}
+        open={expertDialogOpen}
         onOpenChange={(open) => {
-          setPartnerDialogOpen(open);
-          if (!open) setSelectedPartner(null);
+          setExpertDialogOpen(open);
+          if (!open) setSelectedExpert(null);
         }}
       >
         <DialogContent className="max-w-3xl">
-          {!selectedPartner ? (
+          {!selectedExpert ? (
             <div className="py-8">
               <LoadingSpinner />
             </div>
@@ -617,44 +712,60 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
-                  {selectedPartner.background_image_url ? (
+                  {selectedExpert.background_image_url ? (
                     <div
                       className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
-                      style={{ backgroundImage: `url(${selectedPartner.background_image_url})` }}
+                      style={{ backgroundImage: `url(${selectedExpert.background_image_url})` }}
                     />
                   ) : (
-                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
-                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
-                    </div>
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
                   )}
                   <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
-                    <AvatarImage src={selectedPartner.logo_url ?? undefined} className="object-contain p-1" />
-                    <AvatarFallback>{selectedPartner.company_name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={selectedExpert.photo_url ?? undefined} />
+                    <AvatarFallback>
+                      {(selectedExpert.full_name || "EX")
+                        .split(" ")
+                        .map((n) => n[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="pt-10">
-                  <h3 className="font-semibold text-lg">{selectedPartner.company_name}</h3>
-                  {selectedPartner.industry ? <p className="text-sm text-muted-foreground">{selectedPartner.industry}</p> : null}
+                  <h3 className="font-semibold text-lg">{selectedExpert.full_name}</h3>
+                  {selectedExpert.job_title && (
+                    <p className="text-sm text-muted-foreground">{selectedExpert.job_title}</p>
+                  )}
+                  {selectedExpert.company_name && (
+                    <p className="text-sm text-muted-foreground">{selectedExpert.company_name}</p>
+                  )}
                 </div>
                 {[
-                  { label: "About", value: selectedPartner.about },
-                  { label: "Opportunities Offered", value: selectedPartner.opportunities_offered },
-                  { label: "Company Size", value: selectedPartner.company_size },
-                  { label: "Location", value: selectedPartner.hq_location },
+                  { label: "Bio", value: selectedExpert.bio, preserveWhitespace: true },
+                  { label: "Area of Expertise", value: selectedExpert.area_of_expertise },
+                  { label: "Industry", value: selectedExpert.industry },
                   {
-                    label: "Contact Person",
-                    value: selectedPartner.contact_person
-                      ? `${selectedPartner.contact_person}${selectedPartner.contact_title ? ` (${selectedPartner.contact_title})` : ""}`
-                      : null,
+                    label: "US Ski & Snowboard Affiliation",
+                    value:
+                      selectedExpert.ussa_affiliate && selectedExpert.ussa_affiliate !== "No formal affiliation"
+                        ? selectedExpert.ussa_affiliate
+                        : null,
                   },
-                  { label: "Website", value: selectedPartner.website },
-                  { label: "LinkedIn", value: selectedPartner.linkedin_url },
+                  { label: "LinkedIn", value: selectedExpert.linkedin_url },
                 ].map((item) => (
                   <div key={item.label}>
                     <h4 className="font-medium mb-1">{item.label}</h4>
-                    <p className="text-sm text-muted-foreground break-all">{item.value || "Not specified"}</p>
+                    <p
+                      className={`text-sm text-muted-foreground break-all ${item.preserveWhitespace ? "whitespace-pre-line" : ""}`}
+                    >
+                      {item.value || "Not specified"}
+                    </p>
                   </div>
                 ))}
+                <Button className="w-full" onClick={() => onNavigate("experts")}>
+                  Request Connection
+                </Button>
               </div>
             </div>
           )}
