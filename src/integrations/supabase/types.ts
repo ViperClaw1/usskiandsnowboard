@@ -1051,8 +1051,10 @@ export type Database = {
       }
       training_articles: {
         Row: {
+          author_affiliation: string | null
           author_image_url: string | null
           author_name: string | null
+          author_title: string | null
           body: string
           category: string | null
           created_at: string
@@ -1070,8 +1072,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          author_affiliation?: string | null
           author_image_url?: string | null
           author_name?: string | null
+          author_title?: string | null
           body: string
           category?: string | null
           created_at?: string
@@ -1089,8 +1093,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          author_affiliation?: string | null
           author_image_url?: string | null
           author_name?: string | null
+          author_title?: string | null
           body?: string
           category?: string | null
           created_at?: string
