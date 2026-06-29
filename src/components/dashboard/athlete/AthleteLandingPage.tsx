@@ -33,10 +33,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Connection {
   id: string;
-  employer_id: string;
-  employer_profiles: {
-    company_name: string;
-    logo_url: string | null;
+  expert_id: string;
+  expert_profiles: {
+    full_name: string;
+    photo_url: string | null;
+    job_title: string | null;
+    company_name: string | null;
     industry: string | null;
   };
 }
@@ -123,10 +125,10 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
   }
 
   const [{ data: allConnections }, { data: acceptedConnections }] = await Promise.all([
-    supabase.from("connection_requests").select("status").eq("athlete_id", profileData.id),
+    supabase.from("expert_connection_requests").select("status").eq("athlete_id", profileData.id),
     supabase
-      .from("connection_requests")
-      .select("id, employer_id, employer_profiles(company_name, logo_url, industry)")
+      .from("expert_connection_requests")
+      .select("id, expert_id, expert_profiles!inner(full_name, photo_url, job_title, company_name, industry)")
       .eq("athlete_id", profileData.id)
       .eq("status", "accepted"),
   ]);
@@ -140,7 +142,7 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
   return {
     profile: profileData as AthleteProfile,
     connectionStats,
-    connections: (acceptedConnections as Connection[]) ?? [],
+    connections: (acceptedConnections as unknown as Connection[]) ?? [],
   };
 };
 
@@ -603,20 +605,23 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                     <CardContent className="pt-6">
                       <div className="flex flex-col items-center text-center space-y-3">
                         <Avatar className="h-16 w-16">
-                          <AvatarImage src={connection.employer_profiles.logo_url || ""} />
+                          <AvatarImage src={connection.expert_profiles.photo_url || ""} />
                           <AvatarFallback>
-                            {connection.employer_profiles.company_name.substring(0, 2).toUpperCase()}
+                            {connection.expert_profiles.full_name.split(" ").map((n) => n[0]).join("").toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-semibold text-sm">{connection.employer_profiles.company_name}</p>
-                          {connection.employer_profiles.industry && (
+                          <p className="font-semibold text-sm">{connection.expert_profiles.full_name}</p>
+                          {connection.expert_profiles.job_title && (
+                            <p className="text-xs text-muted-foreground mt-1">{connection.expert_profiles.job_title}</p>
+                          )}
+                          {connection.expert_profiles.industry && (
                             <Badge
                               variant="grayout"
                               className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                              title={connection.employer_profiles.industry}
+                              title={connection.expert_profiles.industry}
                             >
-                              {getShortIndustryBadgeLabel(connection.employer_profiles.industry)}
+                              {getShortIndustryBadgeLabel(connection.expert_profiles.industry)}
                             </Badge>
                           )}
                         </div>
