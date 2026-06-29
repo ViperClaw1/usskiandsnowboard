@@ -102,7 +102,10 @@ interface AthleteHomeProps {
 }
 
 export const athleteDashboardKey = (userId: string) => ["athlete-landing-dashboard", userId];
-const athleteFeaturedPartnersKey = ["athlete-landing-featured-partners"];
+const athleteFeaturedExpertsKey = (interests: string[]) => [
+  "athlete-landing-featured-experts",
+  ...[...interests].sort(),
+];
 
 const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardData> => {
   const { data: profileData } = await supabase
@@ -141,16 +144,41 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
   };
 };
 
-const fetchFeaturedPartners = async (): Promise<EmployerProfile[]> => {
-  const { data } = await supabase
-    .from("employer_profiles")
-    .select(
-      "id, company_name, logo_url, industry, opportunities_offered, background_image_url, company_size, hq_location, about, contact_person, contact_title, website, linkedin_url",
-    )
-    .order("profile_views", { ascending: false })
-    .limit(4);
+const normalizeIndustries = (industry: string | null): string[] =>
+  (industry ?? "")
+    .split(/[,;|]/)
+    .map((v) => v.trim().toLowerCase())
+    .filter(Boolean);
 
-  return (data as EmployerProfile[]) ?? [];
+const fetchFeaturedExperts = async (interests: string[]): Promise<ExpertProfile[]> => {
+  const { data } = await supabase
+    .from("expert_profiles")
+    .select(
+      "id, user_id, full_name, photo_url, background_image_url, job_title, company_name, area_of_expertise, bio, industry, linkedin_url, ussa_affiliate, profile_views",
+    )
+    .eq("is_public", true)
+    .order("profile_views", { ascending: false })
+    .limit(24);
+
+  const experts = (data as ExpertProfile[]) ?? [];
+  const normalizedInterests = interests.map((i) => i.toLowerCase().trim()).filter(Boolean);
+
+  if (normalizedInterests.length === 0) return experts.slice(0, 4);
+
+  const scored = experts
+    .map((e) => {
+      const inds = normalizeIndustries(e.industry);
+      const matches = inds.filter((i) =>
+        normalizedInterests.some((ni) => i.includes(ni) || ni.includes(i)),
+      ).length;
+      return { expert: e, matches };
+    })
+    .sort((a, b) => b.matches - a.matches || (b.expert.profile_views ?? 0) - (a.expert.profile_views ?? 0));
+
+  const matched = scored.filter((s) => s.matches > 0).map((s) => s.expert);
+  if (matched.length >= 4) return matched.slice(0, 4);
+  const fillers = experts.filter((e) => !matched.find((m) => m.id === e.id));
+  return [...matched, ...fillers].slice(0, 4);
 };
 
 const getShortIndustryBadgeLabel = (industry: string | null) => {
