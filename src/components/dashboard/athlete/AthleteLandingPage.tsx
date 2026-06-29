@@ -277,7 +277,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     };
   }, [user.id, profile?.id, queryClient]);
 
-  if (dashboardLoading || partnersLoading) {
+  if (dashboardLoading || expertsLoading) {
     return (
       <div className="flex items-center justify-center py-24">
         <LoadingSpinner />
