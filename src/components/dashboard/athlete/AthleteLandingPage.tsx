@@ -33,10 +33,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Connection {
   id: string;
-  employer_id: string;
-  employer_profiles: {
-    company_name: string;
-    logo_url: string | null;
+  expert_id: string;
+  expert_profiles: {
+    full_name: string;
+    photo_url: string | null;
+    job_title: string | null;
+    company_name: string | null;
     industry: string | null;
   };
 }
