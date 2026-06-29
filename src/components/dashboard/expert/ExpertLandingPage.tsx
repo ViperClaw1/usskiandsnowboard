@@ -83,21 +83,6 @@ interface FeaturedAthlete {
   } | null;
 }
 
-interface FeaturedPartner {
-  id: string;
-  company_name: string;
-  logo_url: string | null;
-  industry: string | null;
-  background_image_url: string | null;
-  company_size: string | null;
-  hq_location: string | null;
-  opportunities_offered: string | null;
-  about: string | null;
-  contact_person: string | null;
-  contact_title: string | null;
-  website: string | null;
-  linkedin_url: string | null;
-}
 
 interface ExpertDashboardData {
   profile: ExpertProfile | null;
@@ -107,7 +92,7 @@ interface ExpertDashboardData {
 
 export const expertDashboardKey = (userId: string) => ["expert-landing-dashboard", userId];
 const expertFeaturedAthletesKey = ["expert-landing-featured-athletes"];
-const expertFeaturedPartnersKey = ["expert-landing-featured-partners"];
+
 
 const getInitials = (name: string) =>
   name
@@ -180,17 +165,6 @@ const fetchFeaturedAthletes = async (): Promise<FeaturedAthlete[]> => {
   return (data as FeaturedAthlete[]) ?? [];
 };
 
-const fetchFeaturedPartners = async (): Promise<FeaturedPartner[]> => {
-  const { data } = await supabase
-    .from("employer_profiles")
-    .select(
-      "id, company_name, logo_url, industry, background_image_url, company_size, hq_location, opportunities_offered, about, contact_person, contact_title, website, linkedin_url",
-    )
-    .order("profile_views", { ascending: false })
-    .limit(4);
-
-  return (data as FeaturedPartner[]) ?? [];
-};
 
 export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: ExpertLandingPageProps) => {
   const queryClient = useQueryClient();
