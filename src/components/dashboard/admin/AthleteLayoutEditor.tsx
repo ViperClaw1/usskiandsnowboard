@@ -348,17 +348,18 @@ export const AthleteLayoutEditor = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {MOCK.partners.map((p) => (
-                <Card key={p.id} className="cursor-default hover:shadow-md transition-shadow">
+              {MOCK.experts.map((e) => (
+                <Card key={e.id} className="cursor-default hover:shadow-md transition-shadow">
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
                       <Avatar className="h-16 w-16">
-                        <AvatarFallback>{p.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{e.name.split(" ").map((n) => n[0]).join("").toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold">{p.name}</p>
+                        <p className="font-semibold">{e.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{e.title}</p>
                         <Badge variant="secondary" className="mt-2">
-                          {p.industry}
+                          {e.company}
                         </Badge>
                       </div>
                     </div>
