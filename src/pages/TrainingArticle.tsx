@@ -151,9 +151,21 @@ const TrainingArticlePage = () => {
               {(article.author_name || "US")[0]}
             </AvatarFallback>
           </Avatar>
-          <span className="font-semibold text-foreground" style={bodyStyle}>
-            {article.author_name || "U.S. Ski & Snowboard Training & Development"}
-          </span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-foreground" style={bodyStyle}>
+              {article.author_name || "U.S. Ski & Snowboard Training & Development"}
+            </span>
+            {article.author_title && (
+              <span className="text-sm text-muted-foreground" style={bodyStyle}>
+                {article.author_title}
+              </span>
+            )}
+            {article.author_affiliation && (
+              <span className="text-xs text-muted-foreground italic" style={bodyStyle}>
+                {article.author_affiliation}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Article body — rendered as HTML from rich text editor.

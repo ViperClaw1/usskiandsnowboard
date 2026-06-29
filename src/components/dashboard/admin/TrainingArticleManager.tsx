@@ -900,9 +900,21 @@ export const TrainingArticleManager = () => {
                     {(previewArticle.author_name || "US")[0]}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-semibold text-foreground" style={typographyStyle}>
-                  {previewArticle.author_name || "U.S. Ski & Snowboard Training & Development"}
-                </span>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-foreground" style={typographyStyle}>
+                    {previewArticle.author_name || "U.S. Ski & Snowboard Training & Development"}
+                  </span>
+                  {previewArticle.author_title && (
+                    <span className="text-sm text-muted-foreground" style={typographyStyle}>
+                      {previewArticle.author_title}
+                    </span>
+                  )}
+                  {previewArticle.author_affiliation && (
+                    <span className="text-xs text-muted-foreground italic" style={typographyStyle}>
+                      {previewArticle.author_affiliation}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Article body */}
