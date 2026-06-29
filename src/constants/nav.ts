@@ -20,7 +20,7 @@ export const NAV_ITEMS: NavItem[] = [
     ? ([{ to: "/employers", label: "Employers" }] as NavItem[])
     : []),
   { to: "/jobs", label: "Jobs" },
+  { to: "/training", label: "Training", allowedRoles: ["athlete", "admin"] },
   { to: "/schedule", label: "Schedule" },
   { to: "/news", label: "News" },
-  { to: "/training", label: "Training", allowedRoles: ["athlete", "admin"] },
 ];
