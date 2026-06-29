@@ -7,7 +7,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, X, Linkedin } from "lucide-react";
+import { Search, Plus, X, Linkedin, Lock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobCard, type JobPostListItem } from "@/components/jobs/JobCard";
 import { EMPLOYMENT_TYPES, ARCHIVE_AFTER_DAYS } from "@/constants/jobBoard";
@@ -107,6 +108,37 @@ const JobBoard = () => {
   };
 
   const canRequestConnection = role === "athlete";
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">
+              Job Board
+            </h1>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+              Opportunities shared by experts in our community
+            </p>
+          </div>
+        </section>
+        <section className="py-12 flex items-center justify-center">
+          <Card className="max-w-md mx-4 shadow-xl">
+            <CardContent className="pt-6 text-center space-y-4">
+              <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Sign In to View Jobs</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create an account or sign in to explore opportunities shared by experts in our community
+                </p>
+              </div>
+              <Button onClick={() => navigate("/auth")}>Sign In</Button>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
