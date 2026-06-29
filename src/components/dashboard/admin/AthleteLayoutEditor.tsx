@@ -37,6 +37,12 @@ const MOCK = {
     { id: "3", name: "Peak Athletics", industry: "Sports & Fitness" },
     { id: "4", name: "Alpine Finance", industry: "Financial Services" },
   ],
+  experts: [
+    { id: "1", name: "Taylor Morgan", title: "Performance Coach", company: "Summit Performance" },
+    { id: "2", name: "Jordan Lee", title: "Career Mentor", company: "Peak Advisory" },
+    { id: "3", name: "Riley Park", title: "Sports Psychologist", company: "Mindset Labs" },
+    { id: "4", name: "Casey Brooks", title: "Strength Coach", company: "Alpine Athletics" },
+  ],
 };
 
 export const AthleteLayoutEditor = () => {
@@ -369,7 +375,7 @@ export const AthleteLayoutEditor = () => {
             <div className="flex items-center justify-between">
               <CardTitle>
                 <EditableText
-                  value="Featured Employers"
+                  value="Featured Experts"
                   textKey="featured.title"
                   overrides={o}
                   onUpdate={updateTextOverride}
@@ -388,17 +394,18 @@ export const AthleteLayoutEditor = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {MOCK.partners.map((p) => (
-                <Card key={p.id} className="cursor-default hover:shadow-md transition-shadow">
+              {MOCK.experts.map((e) => (
+                <Card key={e.id} className="cursor-default hover:shadow-md transition-shadow">
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-3">
                       <Avatar className="h-16 w-16">
-                        <AvatarFallback>{p.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{e.name.split(" ").map((n) => n[0]).join("").toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold">{p.name}</p>
+                        <p className="font-semibold">{e.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{e.title}</p>
                         <Badge variant="secondary" className="mt-2">
-                          {p.industry}
+                          {e.company}
                         </Badge>
                       </div>
                     </div>
