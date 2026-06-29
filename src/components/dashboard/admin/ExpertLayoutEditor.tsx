@@ -417,50 +417,6 @@ export const ExpertLayoutEditor = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>
-                <EditableText
-                  value="Featured Partners"
-                  textKey="featured_partners.title"
-                  overrides={o}
-                  onUpdate={updateTextOverride}
-                />
-              </CardTitle>
-              <Button variant="link">
-                <EditableText
-                  value="View All"
-                  textKey="featured_partners.view_all"
-                  overrides={o}
-                  onUpdate={updateTextOverride}
-                />
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {MOCK.partners.map((p) => (
-                <Card key={p.id} className="cursor-default hover:shadow-md transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col items-center text-center space-y-3">
-                      <Avatar className="h-16 w-16">
-                        <AvatarFallback>{p.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">{p.name}</p>
-                        <Badge variant="secondary" className="mt-2">
-                          {p.industry}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </section>
     </div>
   );
