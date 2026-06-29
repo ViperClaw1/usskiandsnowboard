@@ -242,11 +242,13 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     retryDelay: (attempt) => 1000 * (attempt + 1),
   });
 
-  const { data: featuredPartners = [], isLoading: partnersLoading } = useQuery<EmployerProfile[]>({
-    queryKey: athleteFeaturedPartnersKey,
-    queryFn: fetchFeaturedPartners,
-    initialData: () => queryClient.getQueryData<EmployerProfile[]>(athleteFeaturedPartnersKey),
+  const athleteInterests = dashboardData?.profile?.career_interests ?? [];
+  const { data: featuredExperts = [], isLoading: expertsLoading } = useQuery<ExpertProfile[]>({
+    queryKey: athleteFeaturedExpertsKey(athleteInterests),
+    queryFn: () => fetchFeaturedExperts(athleteInterests),
+    initialData: () => queryClient.getQueryData<ExpertProfile[]>(athleteFeaturedExpertsKey(athleteInterests)),
     staleTime: 5 * 60 * 1000,
+    enabled: !!dashboardData?.profile,
   });
 
   const profile = dashboardData?.profile ?? null;
