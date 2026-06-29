@@ -106,7 +106,7 @@ const Experts = () => {
           <>
             <section className="py-8 sm:py-12 bg-gradient-to-b from-background to-muted">
               <div className="container mx-auto px-4 text-center">
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Meet the Experts</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4">Industry Experts</h1>
                 <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
                   Discover industry experts to expand your professional network
                 </p>
