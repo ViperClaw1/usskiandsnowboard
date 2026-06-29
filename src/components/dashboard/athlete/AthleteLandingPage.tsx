@@ -196,8 +196,8 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
-  const [selectedPartner, setSelectedPartner] = useState<EmployerProfile | null>(null);
-  const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
+  const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
+  const [expertDialogOpen, setExpertDialogOpen] = useState(false);
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
