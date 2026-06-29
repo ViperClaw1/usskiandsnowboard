@@ -721,10 +721,14 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                       </Avatar>
                       <div>
                         <p className="font-semibold text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
-                        {athlete.sport_discipline && (
-                          <Badge variant="secondary" className="mt-2 text-xs">
-                            {athlete.sport_discipline.join(", ")}
-                          </Badge>
+                        {athlete.sport_discipline && athlete.sport_discipline.length > 0 && (
+                          <div className="mt-2 flex flex-wrap justify-center gap-1">
+                            {athlete.sport_discipline.map((d) => (
+                              <Badge key={d} variant="secondary" className="text-xs">
+                                {d}
+                              </Badge>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
