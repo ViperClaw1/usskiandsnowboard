@@ -15,7 +15,7 @@ import { DistributionCharts } from "./admin/DistributionCharts";
 import { UserManagementTable } from "./admin/UserManagementTable";
 import { TopProfilesTable } from "./admin/TopProfilesTable";
 import { AthleteLayoutEditor } from "./admin/AthleteLayoutEditor";
-import { PartnerLayoutEditor } from "./admin/PartnerLayoutEditor";
+
 import { ExpertLayoutEditor } from "./admin/ExpertLayoutEditor";
 import { TrainingArticleManager } from "./admin/TrainingArticleManager";
 import { WaitlistManager } from "./admin/WaitlistManager";

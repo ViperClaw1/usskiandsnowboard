@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, Briefcase, Shield } from "lucide-react";
-import { EMPLOYER_REGISTRATION_ENABLED } from "@/config/features";
+import { User, Shield } from "lucide-react";
 
 interface RoleSelectionProps {
   userId: string;
@@ -14,7 +13,7 @@ interface RoleSelectionProps {
 const RoleSelection = ({ userId, onRoleSet }: RoleSelectionProps) => {
   const [loading, setLoading] = useState(false);
 
-  const setRole = async (role: "athlete" | "employer") => {
+  const setRole = async (role: "athlete") => {
     setLoading(true);
     try {
       const { error } = await supabase
@@ -23,7 +22,7 @@ const RoleSelection = ({ userId, onRoleSet }: RoleSelectionProps) => {
 
       if (error) throw error;
 
-      toast.success(`Welcome! You're now registered as ${role === "athlete" ? "an athlete" : role === "employer" ? "an employer" : "an admin"}`);
+      toast.success(`Welcome! You're now registered as an athlete`);
       onRoleSet(role);
     } catch (error: any) {
       toast.error(error.message || "Failed to set role");
@@ -40,7 +39,7 @@ const RoleSelection = ({ userId, onRoleSet }: RoleSelectionProps) => {
           <p className="text-muted-foreground">Choose your role to get started</p>
         </div>
 
-        <div className={EMPLOYER_REGISTRATION_ENABLED ? "grid md:grid-cols-2 gap-6" : "grid gap-6 max-w-md mx-auto"}>
+        <div className="grid gap-6 max-w-md mx-auto">
           <Card className="shadow-elegant hover:shadow-hover transition-shadow cursor-pointer" onClick={() => !loading && setRole("athlete")}>
             <CardHeader>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -63,31 +62,6 @@ const RoleSelection = ({ userId, onRoleSet }: RoleSelectionProps) => {
               </Button>
             </CardContent>
           </Card>
-
-          {EMPLOYER_REGISTRATION_ENABLED && (
-            <Card className="shadow-elegant hover:shadow-hover transition-shadow cursor-pointer" onClick={() => !loading && setRole("employer")}>
-              <CardHeader>
-                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                  <Briefcase className="h-6 w-6 text-accent" />
-                </div>
-                <CardTitle>I'm an Employer</CardTitle>
-                <CardDescription>
-                  Discover talented athletes for your organization
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-                  <li>• Search athlete profiles</li>
-                  <li>• Filter by skills and interests</li>
-                  <li>• Request connections</li>
-                  <li>• Post opportunities</li>
-                </ul>
-                <Button className="w-full" variant="secondary" disabled={loading}>
-                  Get Started as Employer
-                </Button>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         <Card className="mt-6 shadow-elegant">

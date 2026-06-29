@@ -11,14 +11,9 @@ export interface NavItem {
 }
 
 /** Primary nav links shown in both mobile and desktop headers */
-import { EMPLOYER_REGISTRATION_ENABLED } from "@/config/features";
-
 export const NAV_ITEMS: NavItem[] = [
   { to: "/athletes", label: "Athletes" },
   { to: "/experts", label: "Experts" },
-  ...(EMPLOYER_REGISTRATION_ENABLED
-    ? ([{ to: "/employers", label: "Employers" }] as NavItem[])
-    : []),
   { to: "/jobs", label: "Jobs" },
   { to: "/training", label: "Training", allowedRoles: ["athlete", "admin"] },
   { to: "/schedule", label: "Schedule" },

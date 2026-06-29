@@ -96,7 +96,7 @@ const Home = () => {
         >
           <div className="relative z-10 container mx-auto px-4 text-center py-12 sm:py-20">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-fade-in">
-              {userRole === "employer" ? "Connect With Olympians" : "Launch Your Next Chapter"}
+              Launch Your Next Chapter
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Connecting U.S. Ski and Snowboard athletes with careers that honor their dedication,

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AthleteOnboardingWizard } from "@/components/athlete/AthleteOnboardingWizard";
 import ProfileForm from "@/components/athlete/ProfileForm";
-import EmployerDirectory from "@/components/athlete/EmployerDirectory";
+
 import ConnectionRequestsManager from "@/components/athlete/ConnectionRequestsManager";
 import ConnectionsList from "@/components/athlete/ConnectionsList";
 import { ConnectionActivityBoard } from "@/components/connections/ConnectionActivityBoard";
@@ -282,14 +282,6 @@ const AthleteDashboard = ({
           </FadeIn>
         );
 
-      case "directory":
-        return (
-          <FadeIn key={viewKey}>
-            <DashboardSectionLayout title="Employers Directory" onBack={() => handleNavigate("home")}>
-              <EmployerDirectory />
-            </DashboardSectionLayout>
-          </FadeIn>
-        );
 
 
       case "connections":

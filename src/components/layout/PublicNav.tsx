@@ -1,7 +1,7 @@
 // ==============================
 // PublicNav — Presentational Component
 // Renders the unauthenticated header with logo, nav links, and mobile nav.
-// Shown for logged-out users on Athletes, Employers, Schedule, and News.
+// Shown for logged-out users on Athletes, Experts, Schedule, and News.
 // Training is hidden for logged-out users (allowedRoles-only items are excluded).
 // ==============================
 
