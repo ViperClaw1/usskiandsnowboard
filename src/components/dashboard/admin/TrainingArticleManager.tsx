@@ -102,6 +102,8 @@ interface ArticleForm {
   body: string;
   category: string;
   author_name: string;
+  author_title: string;
+  author_affiliation: string;
   slug: string;
   isPublished: boolean;
 }
@@ -127,6 +129,8 @@ const EMPTY_FORM: ArticleForm = {
   body: "",
   category: "",
   author_name: "",
+  author_title: "",
+  author_affiliation: "",
   slug: "",
   isPublished: false,
 };
@@ -242,6 +246,8 @@ export const TrainingArticleManager = () => {
       body: sanitizeArticleHtml(a.body),
       category: a.category || "",
       author_name: a.author_name || "",
+      author_title: a.author_title || "",
+      author_affiliation: a.author_affiliation || "",
       slug: a.slug,
       isPublished: a.status === "published",
     });
@@ -297,6 +303,8 @@ export const TrainingArticleManager = () => {
         category: form.category || null,
         hero_image_url: heroUrl,
         author_name: form.author_name.trim() || null,
+        author_title: form.author_title.trim() || null,
+        author_affiliation: form.author_affiliation.trim() || null,
         author_image_url: authorUrl,
         status: form.isPublished ? "published" : "draft",
         reading_time_minutes: readingTime,
@@ -701,7 +709,23 @@ export const TrainingArticleManager = () => {
               <Input
                 value={form.author_name}
                 onChange={(e) => setForm((f) => ({ ...f, author_name: e.target.value }))}
-                placeholder="e.g. Michele Roberts, Head of Athlete Programs"
+                placeholder="e.g. Michele Roberts"
+              />
+            </div>
+            <div>
+              <Label>Author Title</Label>
+              <Input
+                value={form.author_title}
+                onChange={(e) => setForm((f) => ({ ...f, author_title: e.target.value }))}
+                placeholder="e.g. Head of Athlete Programs"
+              />
+            </div>
+            <div>
+              <Label>US Ski &amp; Snowboard Affiliation (If Applicable)</Label>
+              <Input
+                value={form.author_affiliation}
+                onChange={(e) => setForm((f) => ({ ...f, author_affiliation: e.target.value }))}
+                placeholder="e.g. Next Gen Council, Gold Pass"
               />
             </div>
             <div>

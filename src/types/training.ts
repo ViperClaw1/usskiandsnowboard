@@ -14,6 +14,8 @@ export interface TrainingArticle {
   category: string | null;
   hero_image_url: string | null;
   author_name: string | null;
+  author_title: string | null;
+  author_affiliation: string | null;
   author_image_url: string | null;
   status: string;
   reading_time_minutes: number | null;
