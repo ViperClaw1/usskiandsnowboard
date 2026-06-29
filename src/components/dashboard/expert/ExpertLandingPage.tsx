@@ -302,7 +302,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
     };
   }, [disciplinePreview, primaryIndustry]);
 
-  if (dashboardLoading || athletesLoading || partnersLoading) {
+  if (dashboardLoading || athletesLoading) {
     return (
       <div className="flex items-center justify-center py-24">
         <LoadingSpinner />
