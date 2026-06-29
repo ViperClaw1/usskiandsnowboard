@@ -629,17 +629,82 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
           </Card>
         )}
 
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>{getText("featured.title", "Featured Experts")}</CardTitle>
+              <Button variant="link" onClick={() => onNavigate("experts")}>
+                {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {featuredExperts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No experts match your interests yet — explore the full directory.
+              </p>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {featuredExperts.map((expert) => (
+                  <Card
+                    key={expert.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => {
+                      setSelectedExpert(expert);
+                      setExpertDialogOpen(true);
+                    }}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={expert.photo_url || ""} />
+                          <AvatarFallback>
+                            {(expert.full_name || "EX")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-sm">{expert.full_name}</p>
+                          {expert.job_title && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{expert.job_title}</p>
+                          )}
+                          {expert.company_name && (
+                            <p className="text-xs text-muted-foreground">{expert.company_name}</p>
+                          )}
+                          {expert.industry && (
+                            <Badge
+                              variant="grayout"
+                              className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                              title={expert.industry}
+                            >
+                              {getShortIndustryBadgeLabel(expert.industry)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
       </section>
 
       <Dialog
-        open={partnerDialogOpen}
+        open={expertDialogOpen}
         onOpenChange={(open) => {
-          setPartnerDialogOpen(open);
-          if (!open) setSelectedPartner(null);
+          setExpertDialogOpen(open);
+          if (!open) setSelectedExpert(null);
         }}
       >
         <DialogContent className="max-w-3xl">
-          {!selectedPartner ? (
+          {!selectedExpert ? (
             <div className="py-8">
               <LoadingSpinner />
             </div>
@@ -647,44 +712,60 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
             <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
               <div className="mt-6 space-y-6">
                 <div className="relative -mx-6 -mt-6">
-                  {selectedPartner.background_image_url ? (
+                  {selectedExpert.background_image_url ? (
                     <div
                       className="h-28 rounded-t-lg overflow-hidden bg-cover bg-center"
-                      style={{ backgroundImage: `url(${selectedPartner.background_image_url})` }}
+                      style={{ backgroundImage: `url(${selectedExpert.background_image_url})` }}
                     />
                   ) : (
-                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted flex items-center justify-center">
-                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
-                    </div>
+                    <div className="h-28 rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-muted" />
                   )}
                   <Avatar className="absolute -bottom-8 left-8 h-16 w-16 border-4 border-background shadow-lg">
-                    <AvatarImage src={selectedPartner.logo_url ?? undefined} className="object-contain p-1" />
-                    <AvatarFallback>{selectedPartner.company_name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={selectedExpert.photo_url ?? undefined} />
+                    <AvatarFallback>
+                      {(selectedExpert.full_name || "EX")
+                        .split(" ")
+                        .map((n) => n[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="pt-10">
-                  <h3 className="font-semibold text-lg">{selectedPartner.company_name}</h3>
-                  {selectedPartner.industry ? <p className="text-sm text-muted-foreground">{selectedPartner.industry}</p> : null}
+                  <h3 className="font-semibold text-lg">{selectedExpert.full_name}</h3>
+                  {selectedExpert.job_title && (
+                    <p className="text-sm text-muted-foreground">{selectedExpert.job_title}</p>
+                  )}
+                  {selectedExpert.company_name && (
+                    <p className="text-sm text-muted-foreground">{selectedExpert.company_name}</p>
+                  )}
                 </div>
                 {[
-                  { label: "About", value: selectedPartner.about },
-                  { label: "Opportunities Offered", value: selectedPartner.opportunities_offered },
-                  { label: "Company Size", value: selectedPartner.company_size },
-                  { label: "Location", value: selectedPartner.hq_location },
+                  { label: "Bio", value: selectedExpert.bio, preserveWhitespace: true },
+                  { label: "Area of Expertise", value: selectedExpert.area_of_expertise },
+                  { label: "Industry", value: selectedExpert.industry },
                   {
-                    label: "Contact Person",
-                    value: selectedPartner.contact_person
-                      ? `${selectedPartner.contact_person}${selectedPartner.contact_title ? ` (${selectedPartner.contact_title})` : ""}`
-                      : null,
+                    label: "US Ski & Snowboard Affiliation",
+                    value:
+                      selectedExpert.ussa_affiliate && selectedExpert.ussa_affiliate !== "No formal affiliation"
+                        ? selectedExpert.ussa_affiliate
+                        : null,
                   },
-                  { label: "Website", value: selectedPartner.website },
-                  { label: "LinkedIn", value: selectedPartner.linkedin_url },
+                  { label: "LinkedIn", value: selectedExpert.linkedin_url },
                 ].map((item) => (
                   <div key={item.label}>
                     <h4 className="font-medium mb-1">{item.label}</h4>
-                    <p className="text-sm text-muted-foreground break-all">{item.value || "Not specified"}</p>
+                    <p
+                      className={`text-sm text-muted-foreground break-all ${item.preserveWhitespace ? "whitespace-pre-line" : ""}`}
+                    >
+                      {item.value || "Not specified"}
+                    </p>
                   </div>
                 ))}
+                <Button className="w-full" onClick={() => onNavigate("experts")}>
+                  Request Connection
+                </Button>
               </div>
             </div>
           )}
