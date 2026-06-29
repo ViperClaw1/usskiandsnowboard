@@ -12,7 +12,7 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Athletes from "./pages/Athletes";
-import Employers from "./pages/Employers";
+
 import Schedule from "./pages/Schedule";
 import News from "./pages/News";
 import NotFound from "./pages/NotFound";
@@ -67,7 +67,7 @@ const AppRoutes = () => (
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/athletes" element={<Athletes />} />
-      <Route path="/employers" element={<Employers />} />
+      
       <Route path="/schedule" element={<Schedule />} />
       <Route path="/news" element={<News />} />
       <Route path="/training" element={<Training />} />

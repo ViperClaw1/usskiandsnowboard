@@ -5,13 +5,12 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Users, Briefcase, GraduationCap } from "lucide-react";
+import { Users, GraduationCap } from "lucide-react";
 import heroMainImage from "@/assets/hero-main.webp";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { PageFooter } from "@/components/layout/PageFooter";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
 import { JoinLegacySection } from "@/components/home/JoinLegacySection";
-import { EMPLOYER_REGISTRATION_ENABLED } from "@/config/features";
 
 // ==============================
 // Component Definition
@@ -63,14 +62,6 @@ const Index = () => {
                   I'm an Athlete
                 </Button>
               </Link>
-              {EMPLOYER_REGISTRATION_ENABLED && (
-                <Link to="/auth?type=employer" className="w-full sm:w-auto">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                    <Briefcase className="mr-2 h-5 w-5" />
-                    I'm a Partner
-                  </Button>
-                </Link>
-              )}
               <Link to="/auth?type=expert" className="w-full sm:w-auto">
                 <Button
                   size="lg"

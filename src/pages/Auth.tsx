@@ -30,7 +30,7 @@ import {
 import usSkiLogo from "@/assets/us-ski-snowboard-logo.png";
 import usSkiMobileLogo from "@/assets/us-ski-mobile-logo.png";
 import { SPORT_DISCIPLINES_OPTIONS } from "@/data/suggestions";
-import { EMPLOYER_REGISTRATION_ENABLED } from "@/config/features";
+
 
 // ==============================
 // Utilities
@@ -136,10 +136,9 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const typeParam = searchParams.get("type");
-  const normalizedTypeParam =
-    !EMPLOYER_REGISTRATION_ENABLED && typeParam === "employer" ? "athlete" : typeParam;
+  const normalizedTypeParam = typeParam === "employer" ? "athlete" : typeParam;
   const initialType =
-    normalizedTypeParam === "athlete" || normalizedTypeParam === "employer" || normalizedTypeParam === "expert"
+    normalizedTypeParam === "athlete" || normalizedTypeParam === "expert"
       ? normalizedTypeParam
       : null;
 
@@ -820,9 +819,6 @@ const Auth = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="athlete">Athlete</SelectItem>
-                  {EMPLOYER_REGISTRATION_ENABLED && (
-                    <SelectItem value="employer">Employer</SelectItem>
-                  )}
                   <SelectItem value="expert">Expert</SelectItem>
                 </SelectContent>
               </Select>

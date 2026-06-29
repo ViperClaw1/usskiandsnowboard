@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
-import EmployerDirectory from "@/components/athlete/EmployerDirectory";
+
 import { ExpertLandingPage, expertDashboardKey } from "@/components/dashboard/expert/ExpertLandingPage";
 import { UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ interface ExpertDashboardProps {
 
 const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onRequestAI }: ExpertDashboardProps) => {
   const queryClient = useQueryClient();
-  const [currentView, setCurrentView] = useState<"home" | "athletes" | "employers" | "connections">("home");
+  const [currentView, setCurrentView] = useState<"home" | "athletes" | "connections">("home");
   const [editOpen, setEditOpen] = useState(false);
   const [dialogStep, setDialogStep] = useState<"choice" | "manual">("choice");
   const [updatingRequestId, setUpdatingRequestId] = useState<string | null>(null);
@@ -93,7 +93,7 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
       return;
     }
 
-    if (view === "athletes" || view === "employers" || view === "connections" || view === "home") {
+    if (view === "athletes" || view === "connections" || view === "home") {
       setCurrentView(view);
     }
   };
@@ -224,17 +224,6 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
     );
   }
 
-  if (currentView === "employers") {
-    return (
-      <div className="min-h-screen bg-background overflow-x-hidden">
-        <main>
-          <DashboardSectionLayout title="Employers Directory" onBack={() => setCurrentView("home")}>
-          <EmployerDirectory />
-          </DashboardSectionLayout>
-        </main>
-      </div>
-    );
-  }
 
   if (currentView === "connections") {
     return (

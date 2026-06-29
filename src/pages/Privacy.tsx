@@ -39,7 +39,7 @@ const Privacy = () => {
           <div>
             <h2 className="text-2xl font-semibold text-foreground mb-3">How We Use Your Information</h2>
             <p>
-              We use the information we collect to provide, maintain, and improve our services, to communicate with you, and to facilitate connections between athletes and employers.
+              We use the information we collect to provide, maintain, and improve our services, to communicate with you, and to facilitate connections between athletes and experts.
             </p>
           </div>
 
