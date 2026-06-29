@@ -37,6 +37,12 @@ const MOCK = {
     { id: "3", name: "Peak Athletics", industry: "Sports & Fitness" },
     { id: "4", name: "Alpine Finance", industry: "Financial Services" },
   ],
+  experts: [
+    { id: "1", name: "Taylor Morgan", title: "Performance Coach", company: "Summit Performance" },
+    { id: "2", name: "Jordan Lee", title: "Career Mentor", company: "Peak Advisory" },
+    { id: "3", name: "Riley Park", title: "Sports Psychologist", company: "Mindset Labs" },
+    { id: "4", name: "Casey Brooks", title: "Strength Coach", company: "Alpine Athletics" },
+  ],
 };
 
 export const AthleteLayoutEditor = () => {
