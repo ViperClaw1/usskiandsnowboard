@@ -82,7 +82,7 @@ const Experts = () => {
     return out;
   }, [experts]);
 
-  const isLoading = authLoading || (!user && expertsLoading);
+  const isLoading = authLoading || (!!user && expertsLoading);
 
   return (
     <div className="min-h-screen bg-background">

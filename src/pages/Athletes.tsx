@@ -98,7 +98,7 @@ const Athletes = () => {
   // ==============================
   // Derived Values
   // ==============================
-  const isLoading = authLoading || athletesLoading;
+  const isLoading = authLoading || (!!user && athletesLoading);
 
   /** Stable sliced skills list per athlete */
   const athletesWithSlicedSkills = useMemo(
