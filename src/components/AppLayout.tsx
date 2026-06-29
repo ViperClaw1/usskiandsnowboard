@@ -13,7 +13,7 @@ import { PublicNav } from "@/components/layout/PublicNav";
 // ==============================
 const MemoizedOutlet = memo(Outlet);
 
-const PUBLIC_NAV_PATHS = ["/athletes", "/experts", "/schedule", "/news"];
+const PUBLIC_NAV_PATHS = ["/athletes", "/experts", "/jobs", "/schedule", "/news"];
 
 // ==============================
 // Component Definition
