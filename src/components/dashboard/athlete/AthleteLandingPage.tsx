@@ -125,10 +125,10 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
   }
 
   const [{ data: allConnections }, { data: acceptedConnections }] = await Promise.all([
-    supabase.from("connection_requests").select("status").eq("athlete_id", profileData.id),
+    supabase.from("expert_connection_requests").select("status").eq("athlete_id", profileData.id),
     supabase
-      .from("connection_requests")
-      .select("id, employer_id, employer_profiles(company_name, logo_url, industry)")
+      .from("expert_connection_requests")
+      .select("id, expert_id, expert_profiles!inner(full_name, photo_url, job_title, company_name, industry)")
       .eq("athlete_id", profileData.id)
       .eq("status", "accepted"),
   ]);
@@ -142,7 +142,7 @@ const fetchAthleteDashboard = async (userId: string): Promise<AthleteDashboardDa
   return {
     profile: profileData as AthleteProfile,
     connectionStats,
-    connections: (acceptedConnections as Connection[]) ?? [],
+    connections: (acceptedConnections as unknown as Connection[]) ?? [],
   };
 };
 
