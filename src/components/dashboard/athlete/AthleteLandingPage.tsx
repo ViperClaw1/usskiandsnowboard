@@ -605,20 +605,23 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                     <CardContent className="pt-6">
                       <div className="flex flex-col items-center text-center space-y-3">
                         <Avatar className="h-16 w-16">
-                          <AvatarImage src={connection.employer_profiles.logo_url || ""} />
+                          <AvatarImage src={connection.expert_profiles.photo_url || ""} />
                           <AvatarFallback>
-                            {connection.employer_profiles.company_name.substring(0, 2).toUpperCase()}
+                            {connection.expert_profiles.full_name.split(" ").map((n) => n[0]).join("").toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-semibold text-sm">{connection.employer_profiles.company_name}</p>
-                          {connection.employer_profiles.industry && (
+                          <p className="font-semibold text-sm">{connection.expert_profiles.full_name}</p>
+                          {connection.expert_profiles.job_title && (
+                            <p className="text-xs text-muted-foreground mt-1">{connection.expert_profiles.job_title}</p>
+                          )}
+                          {connection.expert_profiles.industry && (
                             <Badge
                               variant="grayout"
                               className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                              title={connection.employer_profiles.industry}
+                              title={connection.expert_profiles.industry}
                             >
-                              {getShortIndustryBadgeLabel(connection.employer_profiles.industry)}
+                              {getShortIndustryBadgeLabel(connection.expert_profiles.industry)}
                             </Badge>
                           )}
                         </div>
