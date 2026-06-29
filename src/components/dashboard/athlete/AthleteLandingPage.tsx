@@ -67,20 +67,20 @@ interface AthleteProfile {
   } | null;
 }
 
-interface EmployerProfile {
+interface ExpertProfile {
   id: string;
-  company_name: string;
-  logo_url: string | null;
-  industry: string | null;
-  opportunities_offered: string | null;
+  user_id: string;
+  full_name: string;
+  photo_url: string | null;
   background_image_url: string | null;
-  company_size: string | null;
-  hq_location: string | null;
-  about: string | null;
-  contact_person: string | null;
-  contact_title: string | null;
-  website: string | null;
+  job_title: string | null;
+  company_name: string | null;
+  area_of_expertise: string | null;
+  bio: string | null;
+  industry: string | null;
   linkedin_url: string | null;
+  ussa_affiliate: string | null;
+  profile_views: number | null;
 }
 
 interface ConnectionStats {
