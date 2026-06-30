@@ -318,6 +318,4 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
   return null;
 };
 
-const AcceptedDialogPortal = () => null;
-
 export default ExpertDashboard;
