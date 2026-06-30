@@ -326,7 +326,7 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
                 introduction to {acceptedAthleteName} shortly.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
+            <AlertDialogFooter className="justify-center sm:justify-center">
               <AlertDialogAction onClick={() => setAcceptedAthleteName(null)}>
                 Got it
               </AlertDialogAction>
