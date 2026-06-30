@@ -109,7 +109,11 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
     }
   };
 
-  const handleRequestDecision = async (requestId: string, status: "accepted" | "rejected") => {
+  const handleRequestDecision = async (
+    requestId: string,
+    status: "accepted" | "rejected",
+    athleteName?: string,
+  ) => {
     setUpdatingRequestId(requestId);
     try {
       const { error } = await supabase.from("expert_connection_requests").update({ status }).eq("id", requestId);
@@ -125,7 +129,11 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
       queryClient.invalidateQueries({ queryKey: ["expert-inbound-requests", profile?.id] });
       queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
 
-      toast.success(status === "accepted" ? "Connection approved." : "Connection rejected.");
+      if (status === "accepted") {
+        setAcceptedAthleteName(athleteName ?? "the athlete");
+      } else {
+        toast.success("Connection rejected.");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to update request";
       toast.error(msg);
