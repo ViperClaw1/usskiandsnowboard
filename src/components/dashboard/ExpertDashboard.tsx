@@ -311,6 +311,28 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
           </Card>
           </DashboardSectionLayout>
         </main>
+        <AlertDialog
+          open={!!acceptedAthleteName}
+          onOpenChange={(open) => !open && setAcceptedAthleteName(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <AlertDialogTitle className="text-center">Connection Approved</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                Thank you for supporting U.S. Ski &amp; Snowboard. You will receive an email
+                introduction to {acceptedAthleteName} shortly.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setAcceptedAthleteName(null)}>
+                Got it
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
