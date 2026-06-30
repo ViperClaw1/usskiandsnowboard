@@ -6,6 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Mail } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ExpertProfileForm } from "@/components/experts/ExpertProfileForm";
 import AthleteDirectory from "@/components/employer/AthleteDirectory";
@@ -30,6 +40,7 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
   const [editOpen, setEditOpen] = useState(false);
   const [dialogStep, setDialogStep] = useState<"choice" | "manual">("choice");
   const [updatingRequestId, setUpdatingRequestId] = useState<string | null>(null);
+  const [acceptedAthleteName, setAcceptedAthleteName] = useState<string | null>(null);
   const { hasShown, markShown } = useOneTimeOnboardingFlag(`onboarding_shown_expert_${user.id}`);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -98,7 +109,11 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
     }
   };
 
-  const handleRequestDecision = async (requestId: string, status: "accepted" | "rejected") => {
+  const handleRequestDecision = async (
+    requestId: string,
+    status: "accepted" | "rejected",
+    athleteName?: string,
+  ) => {
     setUpdatingRequestId(requestId);
     try {
       const { error } = await supabase.from("expert_connection_requests").update({ status }).eq("id", requestId);
@@ -114,7 +129,11 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
       queryClient.invalidateQueries({ queryKey: ["expert-inbound-requests", profile?.id] });
       queryClient.invalidateQueries({ queryKey: expertDashboardKey(user.id) });
 
-      toast.success(status === "accepted" ? "Connection approved." : "Connection rejected.");
+      if (status === "accepted") {
+        setAcceptedAthleteName(athleteName ?? "the athlete");
+      } else {
+        toast.success("Connection rejected.");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to update request";
       toast.error(msg);
@@ -259,7 +278,13 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
                         <div className="flex items-center gap-2 shrink-0">
                           <Button
                             size="sm"
-                            onClick={() => handleRequestDecision(req.id, "accepted")}
+                            onClick={() =>
+                              handleRequestDecision(
+                                req.id,
+                                "accepted",
+                                req.athlete_profiles?.profiles?.full_name,
+                              )
+                            }
                             disabled={updatingRequestId === req.id}
                           >
                             Approve
@@ -286,6 +311,28 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
           </Card>
           </DashboardSectionLayout>
         </main>
+        <AlertDialog
+          open={!!acceptedAthleteName}
+          onOpenChange={(open) => !open && setAcceptedAthleteName(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <AlertDialogTitle className="text-center">Connection Approved</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                Thank you for supporting U.S. Ski &amp; Snowboard. You will receive an email
+                introduction to {acceptedAthleteName} shortly.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setAcceptedAthleteName(null)}>
+                Got it
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
