@@ -278,7 +278,13 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
                         <div className="flex items-center gap-2 shrink-0">
                           <Button
                             size="sm"
-                            onClick={() => handleRequestDecision(req.id, "accepted")}
+                            onClick={() =>
+                              handleRequestDecision(
+                                req.id,
+                                "accepted",
+                                req.athlete_profiles?.profiles?.full_name,
+                              )
+                            }
                             disabled={updatingRequestId === req.id}
                           >
                             Approve
