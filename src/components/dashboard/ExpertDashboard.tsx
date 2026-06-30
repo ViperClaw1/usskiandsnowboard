@@ -41,6 +41,7 @@ const ExpertDashboard = ({ user, openProfileDialog, onProfileDialogOpened, onReq
   const [dialogStep, setDialogStep] = useState<"choice" | "manual">("choice");
   const [updatingRequestId, setUpdatingRequestId] = useState<string | null>(null);
   const [acceptedAthleteName, setAcceptedAthleteName] = useState<string | null>(null);
+  const { hasShown, markShown } = useOneTimeOnboardingFlag(`onboarding_shown_expert_${user.id}`);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["expert-own-profile", user.id],
