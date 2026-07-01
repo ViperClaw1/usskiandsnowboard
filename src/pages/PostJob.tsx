@@ -138,7 +138,7 @@ const PostJob = () => {
     setSubmitting(true);
     try {
       const payload = {
-        source_url: url.trim(),
+        source_url: url.trim() || null,
         job_title: form.job_title.trim(),
         company: form.company.trim() || null,
         location: form.location.trim() || null,
