@@ -847,7 +847,7 @@ export type Database = {
           job_title: string
           location: string | null
           remote_status: Database["public"]["Enums"]["job_remote_status"] | null
-          source_url: string
+          source_url: string | null
           status: Database["public"]["Enums"]["job_post_status"]
           updated_at: string
         }
@@ -864,7 +864,7 @@ export type Database = {
           remote_status?:
             | Database["public"]["Enums"]["job_remote_status"]
             | null
-          source_url: string
+          source_url?: string | null
           status?: Database["public"]["Enums"]["job_post_status"]
           updated_at?: string
         }
@@ -881,7 +881,7 @@ export type Database = {
           remote_status?:
             | Database["public"]["Enums"]["job_remote_status"]
             | null
-          source_url?: string
+          source_url?: string | null
           status?: Database["public"]["Enums"]["job_post_status"]
           updated_at?: string
         }

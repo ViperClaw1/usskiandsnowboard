@@ -1,0 +1,1 @@
+ALTER TABLE public.job_posts ALTER COLUMN source_url DROP NOT NULL;
