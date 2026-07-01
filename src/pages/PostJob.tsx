@@ -121,8 +121,9 @@ const PostJob = () => {
   };
 
   const handleSkipToManual = () => {
-    if (!/^https?:\/\//i.test(url.trim())) {
-      toast.error("Enter a valid URL starting with http(s)://");
+    const trimmed = url.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      toast.error("If provided, URL must start with http(s)://");
       return;
     }
     setStep("details");
@@ -137,7 +138,7 @@ const PostJob = () => {
     setSubmitting(true);
     try {
       const payload = {
-        source_url: url.trim(),
+        source_url: url.trim() || null,
         job_title: form.job_title.trim(),
         company: form.company.trim() || null,
         location: form.location.trim() || null,
