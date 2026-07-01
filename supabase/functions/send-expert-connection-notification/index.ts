@@ -9,7 +9,6 @@ const corsHeaders = {
 };
 
 const CC_ADDRESSES = ["michele.lowry@usskiandsnowboard.org"];
-const CC_INTRO_EXTRA = ["bryan@cardinallands.com"];
 
 const uniqEmails = (arr: (string | null | undefined)[]) =>
   Array.from(new Set(arr.filter((x): x is string => !!x && x.trim().length > 0).map((x) => x.trim())));
@@ -244,7 +243,7 @@ Deno.serve(async (req) => {
         </p>
         ${messageCard(`Message from ${athleteFirstName}`)}
         <p style="font-size:15px; color:#444; margin:0 0 24px; line-height:1.6;">
-          <strong>${expertFirstName}</strong> will take it from here to introduce themselves and find time to connect.
+          <strong>${athleteFirstName}</strong> will take it from here to introduce themselves and find time to connect.
         </p>
         <p style="font-size:14px; color:#666; margin:0; line-height:1.6; border-top:1px solid #eee; padding-top:20px;">
           Cheers,<br/>
@@ -270,7 +269,7 @@ Deno.serve(async (req) => {
         await sendEmail(resend, {
           from: FROM_ADDRESS,
           to: [expertEmail],
-          cc: uniqEmails([...CC_ADDRESSES, ...CC_INTRO_EXTRA, athleteEmail]),
+          cc: uniqEmails([...CC_ADDRESSES, athleteEmail]),
           subject: expertSubject,
           html,
         });
