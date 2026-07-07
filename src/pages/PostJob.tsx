@@ -153,20 +153,24 @@ const PostJob = () => {
         if (error) throw error;
         toast.success("Job updated!");
       } else {
-        const { data: expertProfile, error: expertErr } = await supabase
-          .from("expert_profiles")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (expertErr) throw expertErr;
-        if (!expertProfile) {
-          toast.error("Complete your expert profile before posting.");
-          setSubmitting(false);
-          return;
+        let expertId: string | null = null;
+        if (role !== "admin") {
+          const { data: expertProfile, error: expertErr } = await supabase
+            .from("expert_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (expertErr) throw expertErr;
+          if (!expertProfile) {
+            toast.error("Complete your expert profile before posting.");
+            setSubmitting(false);
+            return;
+          }
+          expertId = expertProfile.id;
         }
         const { error } = await supabase.from("job_posts").insert({
           ...payload,
-          expert_id: expertProfile.id,
+          expert_id: expertId,
           status: "active",
         });
         if (error) {
