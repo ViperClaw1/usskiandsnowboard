@@ -73,7 +73,7 @@ const PostJob = () => {
           return;
         }
       }
-      setUrl(post.source_url);
+      setUrl(post.source_url ?? "");
       setForm({
         job_title: post.job_title ?? "",
         company: post.company ?? "",
