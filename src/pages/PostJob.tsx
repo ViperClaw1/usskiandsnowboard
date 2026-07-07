@@ -49,7 +49,7 @@ const PostJob = () => {
 
   // Load existing post for edit mode and verify ownership
   useEffect(() => {
-    if (!editId || !user) return;
+    if (!editId || !user || !role) return;
     (async () => {
       const { data: post, error } = await supabase
         .from("job_posts")
