@@ -840,7 +840,7 @@ export type Database = {
           company: string | null
           created_at: string
           employment_type: string | null
-          expert_id: string
+          expert_id: string | null
           expert_note: string | null
           id: string
           industry: string | null
@@ -855,7 +855,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           employment_type?: string | null
-          expert_id: string
+          expert_id?: string | null
           expert_note?: string | null
           id?: string
           industry?: string | null
@@ -872,7 +872,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           employment_type?: string | null
-          expert_id?: string
+          expert_id?: string | null
           expert_note?: string | null
           id?: string
           industry?: string | null
