@@ -85,7 +85,7 @@ const PostJob = () => {
       });
       setLoadingEdit(false);
     })();
-  }, [editId, user, navigate]);
+  }, [editId, user, role, navigate]);
 
   const handleParse = async () => {
     if (!/^https?:\/\//i.test(url.trim())) {
