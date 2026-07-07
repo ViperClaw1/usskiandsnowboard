@@ -8,8 +8,8 @@ import { formatDistanceToNow } from "date-fns";
 
 export interface JobPostListItem {
   id: string;
-  expert_id: string;
-  source_url: string;
+  expert_id: string | null;
+  source_url: string | null;
   job_title: string;
   company: string | null;
   location: string | null;
