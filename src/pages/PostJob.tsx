@@ -49,7 +49,7 @@ const PostJob = () => {
 
   // Load existing post for edit mode and verify ownership
   useEffect(() => {
-    if (!editId || !user) return;
+    if (!editId || !user || !role) return;
     (async () => {
       const { data: post, error } = await supabase
         .from("job_posts")
@@ -61,17 +61,19 @@ const PostJob = () => {
         navigate("/jobs");
         return;
       }
-      const { data: ep } = await supabase
-        .from("expert_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!ep || ep.id !== post.expert_id) {
-        toast.error("You can only edit your own posts.");
-        navigate("/jobs");
-        return;
+      if (role !== "admin") {
+        const { data: ep } = await supabase
+          .from("expert_profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!ep || ep.id !== post.expert_id) {
+          toast.error("You can only edit your own posts.");
+          navigate("/jobs");
+          return;
+        }
       }
-      setUrl(post.source_url);
+      setUrl(post.source_url ?? "");
       setForm({
         job_title: post.job_title ?? "",
         company: post.company ?? "",
@@ -83,7 +85,7 @@ const PostJob = () => {
       });
       setLoadingEdit(false);
     })();
-  }, [editId, user, navigate]);
+  }, [editId, user, role, navigate]);
 
   const handleParse = async () => {
     if (!/^https?:\/\//i.test(url.trim())) {
@@ -153,20 +155,24 @@ const PostJob = () => {
         if (error) throw error;
         toast.success("Job updated!");
       } else {
-        const { data: expertProfile, error: expertErr } = await supabase
-          .from("expert_profiles")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (expertErr) throw expertErr;
-        if (!expertProfile) {
-          toast.error("Complete your expert profile before posting.");
-          setSubmitting(false);
-          return;
+        let expertId: string | null = null;
+        if (role !== "admin") {
+          const { data: expertProfile, error: expertErr } = await supabase
+            .from("expert_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (expertErr) throw expertErr;
+          if (!expertProfile) {
+            toast.error("Complete your expert profile before posting.");
+            setSubmitting(false);
+            return;
+          }
+          expertId = expertProfile.id;
         }
         const { error } = await supabase.from("job_posts").insert({
           ...payload,
-          expert_id: expertProfile.id,
+          expert_id: expertId,
           status: "active",
         });
         if (error) {

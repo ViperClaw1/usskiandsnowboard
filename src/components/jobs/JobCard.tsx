@@ -8,8 +8,8 @@ import { formatDistanceToNow } from "date-fns";
 
 export interface JobPostListItem {
   id: string;
-  expert_id: string;
-  source_url: string;
+  expert_id: string | null;
+  source_url: string | null;
   job_title: string;
   company: string | null;
   location: string | null;
@@ -92,22 +92,36 @@ export const JobCard = ({ job, isOwner, onExpertClick, onEdit, onDelete }: JobCa
         )}
 
         <div className="mt-auto pt-3 border-t flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => onExpertClick?.(job.expert_id)}
-            className="flex items-center gap-2 min-w-0 hover:opacity-80 text-left"
-          >
-            <Avatar className="h-8 w-8 shrink-0">
-              <AvatarImage src={job.expert?.photo_url ?? undefined} />
-              <AvatarFallback>{initials(job.expert?.full_name)}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="text-xs font-medium truncate">{job.expert?.full_name ?? "Expert"}</p>
-              <p className="text-[11px] text-muted-foreground">
-                {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
-              </p>
+          {job.expert_id ? (
+            <button
+              type="button"
+              onClick={() => onExpertClick?.(job.expert_id!)}
+              className="flex items-center gap-2 min-w-0 hover:opacity-80 text-left"
+            >
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarImage src={job.expert?.photo_url ?? undefined} />
+                <AvatarFallback>{initials(job.expert?.full_name)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-xs font-medium truncate">{job.expert?.full_name ?? "Expert"}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+                </p>
+              </div>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 min-w-0">
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarFallback className="text-[10px]">US</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-xs font-medium truncate">Posted by U.S. Ski &amp; Snowboard</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+                </p>
+              </div>
             </div>
-          </button>
+          )}
           <div className="flex items-center gap-1">
             {isOwner && (
               <>
@@ -119,11 +133,13 @@ export const JobCard = ({ job, isOwner, onExpertClick, onEdit, onDelete }: JobCa
                 </Button>
               </>
             )}
-            <Button asChild size="sm" variant="outline">
-              <a href={job.source_url} target="_blank" rel="noopener noreferrer">
-                View <ExternalLink className="ml-1 h-3 w-3" />
-              </a>
-            </Button>
+            {job.source_url && (
+              <Button asChild size="sm" variant="outline">
+                <a href={job.source_url} target="_blank" rel="noopener noreferrer">
+                  View <ExternalLink className="ml-1 h-3 w-3" />
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

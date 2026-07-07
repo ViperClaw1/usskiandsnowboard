@@ -222,7 +222,7 @@ const JobBoard = () => {
                 <JobCard
                   key={job.id}
                   job={job}
-                  isOwner={!!myExpertId && myExpertId === job.expert_id}
+                  isOwner={(!!myExpertId && myExpertId === job.expert_id) || role === "admin"}
                   onExpertClick={openExpert}
                   onEdit={() => navigate(`/jobs/post?edit=${job.id}`)}
                   onDelete={() => handleDelete(job.id)}
