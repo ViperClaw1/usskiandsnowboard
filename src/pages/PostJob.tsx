@@ -61,15 +61,17 @@ const PostJob = () => {
         navigate("/jobs");
         return;
       }
-      const { data: ep } = await supabase
-        .from("expert_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!ep || ep.id !== post.expert_id) {
-        toast.error("You can only edit your own posts.");
-        navigate("/jobs");
-        return;
+      if (role !== "admin") {
+        const { data: ep } = await supabase
+          .from("expert_profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!ep || ep.id !== post.expert_id) {
+          toast.error("You can only edit your own posts.");
+          navigate("/jobs");
+          return;
+        }
       }
       setUrl(post.source_url);
       setForm({
