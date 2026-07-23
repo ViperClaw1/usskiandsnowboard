@@ -21,6 +21,64 @@ type Row = {
   gap: number;
 };
 
+// Map both athlete career interests and expert industries to a shared canonical
+// bucket so close-enough labels line up (e.g. "Finance" ↔ "Finance & Banking").
+const CANONICAL_MAP: Record<string, string> = {
+  // Finance
+  "finance": "Finance & Banking",
+  "finance & banking": "Finance & Banking",
+  "banking": "Finance & Banking",
+  "insurance": "Finance & Banking",
+  // Marketing / brand / PR / social
+  "marketing": "Marketing & Advertising",
+  "marketing & advertising": "Marketing & Advertising",
+  "brand management": "Marketing & Advertising",
+  "public relations": "Marketing & Advertising",
+  "social media": "Marketing & Advertising",
+  "sponsorship": "Marketing & Advertising",
+  // Media
+  "content creation": "Media & Entertainment",
+  "broadcasting": "Media & Entertainment",
+  "journalism": "Media & Entertainment",
+  "publishing": "Media & Entertainment",
+  "media & entertainment": "Media & Entertainment",
+  // Consulting / professional services
+  "consulting": "Consulting & Professional Services",
+  "consulting & professional services": "Consulting & Professional Services",
+  "legal services": "Consulting & Professional Services",
+  "human resources": "Consulting & Professional Services",
+  // Sports
+  "coaching": "Sports & Recreation",
+  "sports management": "Sports & Recreation",
+  "athlete development": "Sports & Recreation",
+  "sports analytics": "Sports & Recreation",
+  "sports & recreation": "Sports & Recreation",
+  // Sales / BD
+  "sales": "Sales & Business Development",
+  "business development": "Sales & Business Development",
+  // Tech
+  "product management": "Technology & Software",
+  "technology & software": "Technology & Software",
+  // Education
+  "training & development": "Education & Training",
+  "education & training": "Education & Training",
+  // Non-profit
+  "non-profit management": "Non-Profit & Social Services",
+  "community outreach": "Non-Profit & Social Services",
+  "non-profit & social services": "Non-Profit & Social Services",
+  // Hospitality
+  "event planning": "Hospitality & Tourism",
+  "hospitality & tourism": "Hospitality & Tourism",
+};
+
+const canonicalize = (raw: string): { key: string; label: string } | null => {
+  const label = (raw || "").trim();
+  if (!label) return null;
+  const lower = label.toLowerCase();
+  const mapped = CANONICAL_MAP[lower] ?? label;
+  return { key: mapped.toLowerCase(), label: mapped };
+};
+
 export const MentorshipGapChart = () => {
   const { data = [] } = useQuery<Row[]>({
     queryKey: ["mentorship-gap"],
@@ -32,18 +90,17 @@ export const MentorshipGapChart = () => {
       if (athleteRes.error) throw athleteRes.error;
       if (expertRes.error) throw expertRes.error;
 
-      const norm = (s: string) => s.trim().toLowerCase();
       const displayFor = new Map<string, string>();
+      const bump = (map: Map<string, number>, raw: string) => {
+        const c = canonicalize(raw);
+        if (!c) return;
+        if (!displayFor.has(c.key)) displayFor.set(c.key, c.label);
+        map.set(c.key, (map.get(c.key) ?? 0) + 1);
+      };
 
       const athleteCounts = new Map<string, number>();
       (athleteRes.data ?? []).forEach((row: { career_interests: string[] | null }) => {
-        (row.career_interests ?? []).forEach((raw) => {
-          const label = (raw || "").trim();
-          if (!label) return;
-          const key = norm(label);
-          if (!displayFor.has(key)) displayFor.set(key, label);
-          athleteCounts.set(key, (athleteCounts.get(key) ?? 0) + 1);
-        });
+        (row.career_interests ?? []).forEach((raw) => bump(athleteCounts, raw));
       });
 
       const expertCounts = new Map<string, number>();
@@ -52,11 +109,7 @@ export const MentorshipGapChart = () => {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean)
-          .forEach((label) => {
-            const key = norm(label);
-            if (!displayFor.has(key)) displayFor.set(key, label);
-            expertCounts.set(key, (expertCounts.get(key) ?? 0) + 1);
-          });
+          .forEach((label) => bump(expertCounts, label));
       });
 
       const keys = new Set<string>([...athleteCounts.keys(), ...expertCounts.keys()]);
