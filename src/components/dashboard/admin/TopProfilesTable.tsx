@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Eye, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExpertsByIndustryChart } from "./ExpertsByIndustryChart";
+import { AthletesByCareerInterestChart } from "./AthletesByCareerInterestChart";
+import { MentorshipGapChart } from "./MentorshipGapChart";
 
 export const TopProfilesTable = () => {
   const { data: topAthletes, isLoading: athletesLoading } = useQuery({
@@ -131,6 +133,12 @@ export const TopProfilesTable = () => {
 
       {/* ── Experts by Industry ── */}
       <ExpertsByIndustryChart />
+
+      {/* ── Athlete Industry Interest ── */}
+      <AthletesByCareerInterestChart />
+
+      {/* ── Mentorship Supply vs. Demand ── */}
+      <MentorshipGapChart />
 
       {/* ── Top Experts ── */}
       <Card>
