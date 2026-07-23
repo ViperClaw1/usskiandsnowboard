@@ -29,46 +29,73 @@ const CANONICAL_MAP: Record<string, string> = {
   "finance & banking": "Finance & Banking",
   "banking": "Finance & Banking",
   "insurance": "Finance & Banking",
-  // Marketing / brand / PR / social
+  // Marketing / brand / PR / social / communications
   "marketing": "Marketing & Advertising",
   "marketing & advertising": "Marketing & Advertising",
   "brand management": "Marketing & Advertising",
   "public relations": "Marketing & Advertising",
   "social media": "Marketing & Advertising",
   "sponsorship": "Marketing & Advertising",
+  "content creation": "Marketing & Advertising",
+  "consumer goods": "Marketing & Advertising",
   // Media
-  "content creation": "Media & Entertainment",
   "broadcasting": "Media & Entertainment",
   "journalism": "Media & Entertainment",
   "publishing": "Media & Entertainment",
   "media & entertainment": "Media & Entertainment",
-  // Consulting / professional services
+  // Consulting / professional services / business operations
   "consulting": "Consulting & Professional Services",
   "consulting & professional services": "Consulting & Professional Services",
   "legal services": "Consulting & Professional Services",
   "human resources": "Consulting & Professional Services",
+  "project management": "Consulting & Professional Services",
+  "entrepreneurship": "Consulting & Professional Services",
+  "operations": "Consulting & Professional Services",
   // Sports
   "coaching": "Sports & Recreation",
   "sports management": "Sports & Recreation",
   "athlete development": "Sports & Recreation",
   "sports analytics": "Sports & Recreation",
   "sports & recreation": "Sports & Recreation",
+  "athletic training": "Sports & Recreation",
+  "physical fitness": "Sports & Recreation",
+  "nutrition": "Sports & Recreation",
   // Sales / BD
   "sales": "Sales & Business Development",
   "business development": "Sales & Business Development",
-  // Tech
+  "retail & e-commerce": "Sales & Business Development",
+  // Tech / product
   "product management": "Technology & Software",
   "technology & software": "Technology & Software",
+  "data analysis": "Technology & Software",
   // Education
   "training & development": "Education & Training",
   "education & training": "Education & Training",
-  // Non-profit
+  // Non-profit / community
   "non-profit management": "Non-Profit & Social Services",
   "community outreach": "Non-Profit & Social Services",
   "non-profit & social services": "Non-Profit & Social Services",
-  // Hospitality
+  "fundraising": "Non-Profit & Social Services",
+  // Hospitality / events / tourism
   "event planning": "Hospitality & Tourism",
   "hospitality & tourism": "Hospitality & Tourism",
+  "food & beverage": "Hospitality & Tourism",
+  // Healthcare / wellness
+  "healthcare & medical": "Healthcare & Wellness",
+  "biotechnology & pharmaceuticals": "Healthcare & Wellness",
+  "environmental services": "Healthcare & Wellness",
+  // Government / public sector
+  "government & public sector": "Government & Public Sector",
+  // Manufacturing / industrials
+  "manufacturing": "Manufacturing & Industrials",
+  "construction & real estate": "Manufacturing & Industrials",
+  "transportation & logistics": "Manufacturing & Industrials",
+  "automotive": "Manufacturing & Industrials",
+  "aerospace & defense": "Manufacturing & Industrials",
+  "agriculture & farming": "Manufacturing & Industrials",
+  "mining & metals": "Manufacturing & Industrials",
+  "energy & utilities": "Manufacturing & Industrials",
+  "telecommunications": "Manufacturing & Industrials",
 };
 
 const canonicalize = (raw: string): { key: string; label: string } | null => {
