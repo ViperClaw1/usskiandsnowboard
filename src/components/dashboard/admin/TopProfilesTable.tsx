@@ -132,6 +132,12 @@ export const TopProfilesTable = () => {
       {/* ── Experts by Industry ── */}
       <ExpertsByIndustryChart />
 
+      {/* ── Athlete Industry Interest ── */}
+      <AthletesByCareerInterestChart />
+
+      {/* ── Mentorship Supply vs. Demand ── */}
+      <MentorshipGapChart />
+
       {/* ── Top Experts ── */}
       <Card>
         <CardHeader>
