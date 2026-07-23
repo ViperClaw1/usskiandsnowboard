@@ -191,11 +191,13 @@ export const MentorshipGapChart = () => {
         };
       });
 
-      // Only categories with at least some athlete demand, sorted by gap desc
+      // Show categories with any activity, ranked by total engagement so
+      // high-demand buckets surface even when experts outnumber athletes.
       return rows
-        .filter((r) => r.athletes > 0)
-        .sort((a, b) => b.gap - a.gap)
-        .slice(0, 12);
+        .filter((r) => r.athletes + r.experts >= 2)
+        .sort((a, b) => (b.athletes + b.experts) - (a.athletes + a.experts))
+        .slice(0, 14);
+
     },
   });
 
