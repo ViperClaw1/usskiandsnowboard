@@ -1,3 +1,5 @@
+import DOMPurify from "dompurify";
+
 /**
  * Strips font-size and font-family from inline style attributes in an HTML string.
  * All other style properties (color, margin, text-align, etc.) are preserved.
