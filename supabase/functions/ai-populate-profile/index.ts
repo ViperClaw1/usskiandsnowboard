@@ -501,6 +501,8 @@ ${mustCallInstruction}`;
       : `I could not scrape ${formattedUrl}. Call the ${toolName} function with ONLY the values you can derive from the URL itself and the name "${name}". Set ${urlFieldName} to ${formattedUrl}. Do NOT invent any other content — leave all other fields empty.`;
 
     const makeAiCall = async (model: string) => {
+      // GPT-5.6-family models reject `temperature` and require `reasoning_effort: "none"` with tools.
+      const isGpt56 = model.startsWith("openai/gpt-5.6");
       return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -515,15 +517,15 @@ ${mustCallInstruction}`;
           ],
           tools: [tool],
           tool_choice: { type: "function", function: { name: toolName } },
-          temperature: 0.1,
+          ...(isGpt56 ? { reasoning_effort: "none" } : { temperature: 0.1 }),
         }),
       });
     };
 
-    // Experts & athletes: prefer the stronger model first since content is sparse and identity matters.
+    // Experts & athletes: prefer the strongest model first since content is sparse and identity matters.
     const models = isExpert || isAthlete
-      ? ["openai/gpt-5-mini", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"]
-      : ["google/gemini-3-flash-preview", "openai/gpt-5-mini", "google/gemini-2.5-flash"];
+      ? ["openai/gpt-5.6-terra", "google/gemini-3.8-flash", "google/gemini-3-flash-preview"]
+      : ["google/gemini-3.8-flash", "openai/gpt-5.6-terra", "google/gemini-3-flash-preview"];
     let aiResp: Response | null = null;
     for (const model of models) {
       console.log("Trying model:", model);
