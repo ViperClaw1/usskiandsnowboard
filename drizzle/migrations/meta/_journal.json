@@ -15,6 +15,13 @@
       "when": 1789691409071,
       "tag": "0001_profile_embedding_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789691984776,
+      "tag": "0002_tighten_rls_policies",
+      "breakpoints": true
     }
   ]
 }
