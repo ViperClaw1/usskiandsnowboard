@@ -366,6 +366,17 @@ const AthleteDirectory = () => {
   }, [existingRequests, expertRequests]);
 
   // ==============================
+  // Suggested Athletes for You — top semantic matches, shown atop the directory
+  // ==============================
+  const suggestedAthletes = useMemo(() => {
+    if (!hasMatchScores || !isExpertViewer) return [];
+    return athletes
+      .filter((a) => matchScoreMap[a.id] !== undefined && connectionStatusMap[a.id] !== "accepted")
+      .sort((a, b) => (matchScoreMap[b.id] ?? 0) - (matchScoreMap[a.id] ?? 0))
+      .slice(0, 4);
+  }, [athletes, matchScoreMap, connectionStatusMap, hasMatchScores, isExpertViewer]);
+
+  // ==============================
   // Derived Values — Filtered Athletes
   // ==============================
   const filteredAthletes = useMemo(() => {
