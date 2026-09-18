@@ -479,6 +479,7 @@ ${mustCallInstruction}`
 ABSOLUTE RULES — read carefully:
 - NEVER invent, guess, or infer facts that are not literally in the provided content. Do not guess based on the athlete's name, the URL, or what's common in their discipline.
 - Only attribute information to "${name}" if the content explicitly mentions them by name (or an obvious variation). Do NOT attribute generic team/discipline information to this individual.
+- If the content mentions several athletes with similar names, use ONLY the content that also matches the "${discipline}" discipline or the U.S. Ski & Snowboard team. When in doubt, leave the field out.
 - sport_discipline MUST be "${discipline}" — do not change it.
 - first_name and last_name: split from "${name}".
 - bio: 2-4 sentences summarizing ONLY facts found about this specific athlete in the content. If almost nothing is available, write one sentence stating the athlete's name and discipline.
