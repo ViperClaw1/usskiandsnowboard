@@ -360,6 +360,12 @@ Deno.serve(async (req) => {
       const searchMd = await searchWeb(searchQuery, 4);
       if (searchMd) segments.push(`## Web search results for ${searchQuery}\n\n${searchMd}`);
 
+      // 3) Additional search for news / interviews / speaking — often holds the richest bio detail
+      const newsQuery = `"${name}" "${companyName}" interview OR news OR podcast OR speaker OR appointment`;
+      console.log("Searching web:", newsQuery);
+      const newsMd = await searchWeb(newsQuery, 4);
+      if (newsMd) segments.push(`## News and media search results for ${newsQuery}\n\n${newsMd}`);
+
       // 3) Optional LinkedIn (best-effort; do NOT fail if blocked)
       if (linkedinUrl) {
         const lnUrl = ensureProtocol(linkedinUrl);
@@ -414,6 +420,12 @@ Deno.serve(async (req) => {
       const searchMd = await searchWeb(query, 5);
       if (searchMd) segments.push(`## Web search results for ${query}\n\n${searchMd}`);
 
+      // 3) Competition results and team/roster mentions — strongest signal for athletic bios
+      const resultsQuery = `"${name}" ${discipline} results standings`;
+      console.log("Searching web:", resultsQuery);
+      const resultsMd = await searchWeb(resultsQuery, 4);
+      if (resultsMd) segments.push(`## Competition results search for ${resultsQuery}\n\n${resultsMd}`);
+
       combinedContent = segments.join("\n\n===\n\n").slice(0, 28000);
       formattedUrl = ig;
 
@@ -450,6 +462,7 @@ Deno.serve(async (req) => {
 ABSOLUTE RULES — read carefully:
 - NEVER invent, guess, or infer facts that are not literally in the provided content. Do not guess based on the person's name, the URL slug, or what's common in their industry.
 - Only attribute information to "${name}" if the content explicitly mentions them by name (or by an obvious variation/initials). Do NOT attribute generic company information to this individual.
+- If the content mentions several people with similar names, use ONLY the content that also matches "${companyName}" or this person's specific role. When in doubt, leave the field out.
 - If a field is not clearly supported by the content, OMIT it. For required fields (job_title, area_of_expertise, bio): if you can't derive them from content that explicitly mentions the person, use "Unknown" for job_title / area_of_expertise, and write a one-sentence bio stating the person's name, the company, and that no further public details were available.
 - company_name MUST be "${companyName}" unless content clearly shows they no longer work there.
 - bio: 2-4 sentences, ONLY facts found about this specific person in the content.
@@ -466,6 +479,7 @@ ${mustCallInstruction}`
 ABSOLUTE RULES — read carefully:
 - NEVER invent, guess, or infer facts that are not literally in the provided content. Do not guess based on the athlete's name, the URL, or what's common in their discipline.
 - Only attribute information to "${name}" if the content explicitly mentions them by name (or an obvious variation). Do NOT attribute generic team/discipline information to this individual.
+- If the content mentions several athletes with similar names, use ONLY the content that also matches the "${discipline}" discipline or the U.S. Ski & Snowboard team. When in doubt, leave the field out.
 - sport_discipline MUST be "${discipline}" — do not change it.
 - first_name and last_name: split from "${name}".
 - bio: 2-4 sentences summarizing ONLY facts found about this specific athlete in the content. If almost nothing is available, write one sentence stating the athlete's name and discipline.
@@ -489,6 +503,8 @@ ${mustCallInstruction}`;
       : `I could not scrape ${formattedUrl}. Call the ${toolName} function with ONLY the values you can derive from the URL itself and the name "${name}". Set ${urlFieldName} to ${formattedUrl}. Do NOT invent any other content — leave all other fields empty.`;
 
     const makeAiCall = async (model: string) => {
+      // GPT-5.6-family models reject `temperature` and require `reasoning_effort: "none"` with tools.
+      const isGpt56 = model.startsWith("openai/gpt-5.6");
       return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -503,15 +519,15 @@ ${mustCallInstruction}`;
           ],
           tools: [tool],
           tool_choice: { type: "function", function: { name: toolName } },
-          temperature: 0.1,
+          ...(isGpt56 ? { reasoning_effort: "none" } : { temperature: 0.1 }),
         }),
       });
     };
 
-    // Experts & athletes: prefer the stronger model first since content is sparse and identity matters.
+    // Experts & athletes: prefer the strongest model first since content is sparse and identity matters.
     const models = isExpert || isAthlete
-      ? ["openai/gpt-5-mini", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"]
-      : ["google/gemini-3-flash-preview", "openai/gpt-5-mini", "google/gemini-2.5-flash"];
+      ? ["openai/gpt-5.6-terra", "google/gemini-3.8-flash", "google/gemini-3-flash-preview"]
+      : ["google/gemini-3.8-flash", "openai/gpt-5.6-terra", "google/gemini-3-flash-preview"];
     let aiResp: Response | null = null;
     for (const model of models) {
       console.log("Trying model:", model);

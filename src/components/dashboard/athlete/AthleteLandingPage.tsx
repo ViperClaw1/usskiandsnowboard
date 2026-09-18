@@ -183,6 +183,53 @@ const fetchFeaturedExperts = async (interests: string[]): Promise<ExpertProfile[
   return [...matched, ...fillers].slice(0, 4);
 };
 
+interface SuggestedExpert {
+  expert: ExpertProfile;
+  similarity: number;
+}
+
+const fetchSuggestedExperts = async (athleteProfileId: string): Promise<SuggestedExpert[]> => {
+  const { data: matches, error } = await supabase.rpc("match_experts_for_athlete", {
+    _athlete_profile_id: athleteProfileId,
+    _match_count: 4,
+  });
+  if (error || !matches?.length) return [];
+
+  const ids = matches.map((m: { expert_profile_id: string }) => m.expert_profile_id);
+  const { data } = await supabase
+    .from("expert_profiles")
+    .select(
+      "id, user_id, full_name, photo_url, background_image_url, job_title, company_name, area_of_expertise, bio, industry, linkedin_url, ussa_affiliate, profile_views",
+    )
+    .in("id", ids)
+    .eq("is_public", true);
+
+  const byId = new Map(((data as ExpertProfile[]) ?? []).map((e) => [e.id, e]));
+  return matches
+    .map((m: { expert_profile_id: string; similarity: number }) => ({
+      expert: byId.get(m.expert_profile_id),
+      similarity: m.similarity,
+    }))
+    .filter((s: SuggestedExpert | { expert: ExpertProfile | undefined; similarity: number }): s is SuggestedExpert =>
+      Boolean(s.expert),
+    );
+};
+
+/** Human-readable "why we suggested this" — overlaps between the athlete's interests/skills and the expert's profile. */
+const getMatchNote = (expert: ExpertProfile, interests: string[], skills: string[]): string => {
+  const expertText = `${expert.industry ?? ""} ${expert.area_of_expertise ?? ""} ${expert.job_title ?? ""} ${
+    (expert.bio ?? "").slice(0, 500)
+  }`.toLowerCase();
+  const shared = [...interests, ...skills]
+    .map((t) => t.toLowerCase().trim())
+    .filter((t) => t.length > 2 && expertText.includes(t));
+  const unique = Array.from(new Set(shared)).slice(0, 3);
+  if (unique.length === 0) {
+    return "Strong overall alignment with your profile and career goals.";
+  }
+  return `Strong alignment with your interests in ${unique.join(", ")}.`;
+};
+
 const getShortIndustryBadgeLabel = (industry: string | null) => {
   if (!industry) return null;
   const primary = industry
@@ -200,6 +247,7 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
   const [localBgUrl, setLocalBgUrl] = useState<string | null>(null);
   const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
   const [expertDialogOpen, setExpertDialogOpen] = useState(false);
+  const [selectedMatchNote, setSelectedMatchNote] = useState<string | null>(null);
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -249,6 +297,14 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     queryKey: athleteFeaturedExpertsKey(athleteInterests),
     queryFn: () => fetchFeaturedExperts(athleteInterests),
     initialData: () => queryClient.getQueryData<ExpertProfile[]>(athleteFeaturedExpertsKey(athleteInterests)),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!dashboardData?.profile,
+  });
+
+  // AI smart matching: falls back to the keyword-scored Featured Experts above when empty.
+  const { data: suggestedExperts = [] } = useQuery<SuggestedExpert[]>({
+    queryKey: ["athlete-landing-suggested-experts", dashboardData?.profile?.id],
+    queryFn: () => fetchSuggestedExperts(dashboardData!.profile!.id),
     staleTime: 5 * 60 * 1000,
     enabled: !!dashboardData?.profile,
   });
@@ -634,28 +690,25 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
           </Card>
         )}
 
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{getText("featured.title", "Featured Experts")}</CardTitle>
-              <Button variant="link" onClick={() => onNavigate("experts")}>
-                {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {featuredExperts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No experts match your interests yet — explore the full directory.
-              </p>
-            ) : (
+        {suggestedExperts.length > 0 ? (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{getText("suggested.title", "Suggested Experts for You")}</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("experts")}>
+                  {getText("suggested.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {featuredExperts.map((expert) => (
+                {suggestedExperts.map(({ expert, similarity }) => (
                   <Card
                     key={expert.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => {
                       setSelectedExpert(expert);
+                      setSelectedMatchNote(getMatchNote(expert, athleteInterests, dashboardData?.profile?.skills ?? []));
                       setExpertDialogOpen(true);
                     }}
                   >
@@ -680,24 +733,95 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           {expert.company_name && (
                             <p className="text-xs text-muted-foreground">{expert.company_name}</p>
                           )}
-                          {expert.industry && (
-                            <Badge
-                              variant="grayout"
-                              className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                              title={expert.industry}
-                            >
-                              {getShortIndustryBadgeLabel(expert.industry)}
+                          <div className="flex flex-wrap justify-center gap-1 mt-2">
+                            <Badge variant="grayout" className="text-xs">
+                              {Math.round(similarity * 100)}% match
                             </Badge>
-                          )}
+                            {expert.industry && (
+                              <Badge
+                                variant="grayout"
+                                className="text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                                title={expert.industry}
+                              >
+                                {getShortIndustryBadgeLabel(expert.industry)}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{getText("featured.title", "Featured Experts")}</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("experts")}>
+                  {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {featuredExperts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No experts match your interests yet — explore the full directory.
+                </p>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {featuredExperts.map((expert) => (
+                    <Card
+                      key={expert.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => {
+                        setSelectedExpert(expert);
+                        setSelectedMatchNote(null);
+                        setExpertDialogOpen(true);
+                      }}
+                    >
+                      <CardContent className="pt-6">
+                        <div className="flex flex-col items-center text-center space-y-3">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={expert.photo_url || ""} />
+                            <AvatarFallback>
+                              {(expert.full_name || "EX")
+                                .split(" ")
+                                .map((n) => n[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-sm">{expert.full_name}</p>
+                            {expert.job_title && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{expert.job_title}</p>
+                            )}
+                            {expert.company_name && (
+                              <p className="text-xs text-muted-foreground">{expert.company_name}</p>
+                            )}
+                            {expert.industry && (
+                              <Badge
+                                variant="grayout"
+                                className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                                title={expert.industry}
+                              >
+                                {getShortIndustryBadgeLabel(expert.industry)}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       </section>
 
@@ -768,6 +892,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                     </p>
                   </div>
                 ))}
+                {selectedMatchNote && (
+                  <div className="rounded-lg border bg-muted/40 p-3">
+                    <h4 className="font-medium mb-1">Why we suggested this</h4>
+                    <p className="text-sm text-muted-foreground">{selectedMatchNote}</p>
+                  </div>
+                )}
                 <Button className="w-full" onClick={() => onNavigate("experts")}>
                   Request Connection
                 </Button>
