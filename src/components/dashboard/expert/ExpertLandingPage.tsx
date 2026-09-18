@@ -219,6 +219,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
   const [wrapDisciplineBadge, setWrapDisciplineBadge] = useState(false);
   const [selectedAthlete, setSelectedAthlete] = useState<FeaturedAthlete | null>(null);
   const [athleteDialogOpen, setAthleteDialogOpen] = useState(false);
+  const [selectedMatchNote, setSelectedMatchNote] = useState<string | null>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
   const badgesRowRef = useRef<HTMLDivElement>(null);
   const industryBadgeRef = useRef<HTMLDivElement>(null);
