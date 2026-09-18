@@ -50,7 +50,7 @@ export const PublicNav = memo(() => {
             width={57}
             height={80}
             className="h-10 min-[478px]:h-14 md:h-16 lg:h-20 w-auto object-contain"
-            fetchPriority="high"
+            {...({ fetchpriority: "high" } as React.ImgHTMLAttributes<HTMLImageElement>)}
           />
         </Link>
 
