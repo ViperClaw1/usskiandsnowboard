@@ -165,6 +165,50 @@ const fetchFeaturedAthletes = async (): Promise<FeaturedAthlete[]> => {
   return (data as FeaturedAthlete[]) ?? [];
 };
 
+interface SuggestedAthlete {
+  athlete: FeaturedAthlete;
+  similarity: number;
+}
+
+const fetchSuggestedAthletes = async (expertProfileId: string): Promise<SuggestedAthlete[]> => {
+  const { data: matches, error } = await supabase.rpc("match_athletes_for_expert", {
+    _expert_profile_id: expertProfileId,
+    _match_count: 4,
+  });
+  if (error || !matches?.length) return [];
+
+  const ids = matches.map((m: { athlete_profile_id: string }) => m.athlete_profile_id);
+  const { data } = await supabase
+    .from("athlete_profiles")
+    .select(
+      "id, photo_url, background_image_url, bio, professional_highlights, sport_discipline, skills, availability, career_interests, geographic_preferences, profiles(full_name)",
+    )
+    .in("id", ids)
+    .eq("is_public", true);
+
+  const byId = new Map(((data as FeaturedAthlete[]) ?? []).map((a) => [a.id, a]));
+  return matches
+    .map((m: { athlete_profile_id: string; similarity: number }) => ({
+      athlete: byId.get(m.athlete_profile_id),
+      similarity: m.similarity,
+    }))
+    .filter((s): s is SuggestedAthlete => Boolean(s.athlete));
+};
+
+/** Human-readable "why we suggested this" — overlaps between the expert's profile and the athlete's interests/skills. */
+const getAthleteMatchNote = (athlete: FeaturedAthlete, expert?: { industry: string | null; area_of_expertise: string | null; job_title: string | null }): string => {
+  if (!expert) return "Strong overall alignment with your profile and mentorship areas.";
+  const expertText = `${expert.industry ?? ""} ${expert.area_of_expertise ?? ""} ${expert.job_title ?? ""}`.toLowerCase();
+  const athleteTerms = [...(athlete.career_interests ?? []), ...(athlete.skills ?? [])]
+    .map((t) => t.toLowerCase().trim())
+    .filter((t) => t.length > 2 && expertText.includes(t));
+  const unique = Array.from(new Set(athleteTerms)).slice(0, 3);
+  if (unique.length === 0) {
+    return "Strong overall alignment with your profile and mentorship areas.";
+  }
+  return `Strong alignment with your background in ${unique.join(", ")}.`;
+};
+
 
 export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: ExpertLandingPageProps) => {
   const queryClient = useQueryClient();
