@@ -420,6 +420,12 @@ Deno.serve(async (req) => {
       const searchMd = await searchWeb(query, 5);
       if (searchMd) segments.push(`## Web search results for ${query}\n\n${searchMd}`);
 
+      // 3) Competition results and team/roster mentions — strongest signal for athletic bios
+      const resultsQuery = `"${name}" ${discipline} results standings`;
+      console.log("Searching web:", resultsQuery);
+      const resultsMd = await searchWeb(resultsQuery, 4);
+      if (resultsMd) segments.push(`## Competition results search for ${resultsQuery}\n\n${resultsMd}`);
+
       combinedContent = segments.join("\n\n===\n\n").slice(0, 28000);
       formattedUrl = ig;
 
