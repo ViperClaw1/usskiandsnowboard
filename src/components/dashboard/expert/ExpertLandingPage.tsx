@@ -716,7 +716,7 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           <Card className="mb-8">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>{getText("suggested_athletes.title", "Athletes to Mentor")}</CardTitle>
+                <CardTitle>{getText("suggested_athletes.title", "Athletes to Expert")}</CardTitle>
                 <Button variant="link" onClick={() => onNavigate("athletes")}>
                   {getText("suggested_athletes.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
