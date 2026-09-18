@@ -887,6 +887,13 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                     <p className="text-sm text-muted-foreground">Not specified</p>
                   )}
                 </div>
+
+                {selectedMatchNote && (
+                  <div className="rounded-lg border bg-muted/40 p-3">
+                    <h4 className="font-medium mb-1">Why we suggested this</h4>
+                    <p className="text-sm text-muted-foreground">{selectedMatchNote}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
