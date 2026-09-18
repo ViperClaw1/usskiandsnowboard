@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getMatchCategory, MATCH_CATEGORY_LABEL, MATCH_CATEGORY_CLASS } from "@/lib/matchCategory";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

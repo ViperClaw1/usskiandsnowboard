@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { getMatchCategory, MATCH_CATEGORY_LABEL, MATCH_CATEGORY_CLASS } from "@/lib/matchCategory";
 import { User } from "@supabase/supabase-js";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {

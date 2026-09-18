@@ -4,6 +4,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { supabase } from "@/integrations/supabase/client";
+import { getMatchCategory, MATCH_CATEGORY_LABEL, MATCH_CATEGORY_CLASS } from "@/lib/matchCategory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
