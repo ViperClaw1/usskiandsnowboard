@@ -177,6 +177,22 @@ const fetchExistingRequests = async (employerId: string): Promise<Map<string, Co
   return new Map((data ?? []).map((r) => [r.athlete_id, r.status as ConnectionRequestStatus]));
 };
 
+/** Human-readable "why we suggested this" — overlaps between the expert's background and the athlete's interests/skills. */
+const getAthleteMatchNote = (
+  athlete: AthleteProfile,
+  expert?: { industry: string | null; area_of_expertise: string | null; job_title: string | null },
+): string => {
+  if (!expert) return "Strong overall alignment with your profile and mentorship areas.";
+  const expertText = `${expert.industry ?? ""} ${expert.area_of_expertise ?? ""} ${expert.job_title ?? ""}`.toLowerCase();
+  const athleteTerms = [...(athlete.career_interests ?? []), ...(athlete.skills ?? [])]
+    .map((t) => t.toLowerCase().trim())
+    .filter((t) => t.length > 2 && expertText.includes(t));
+  const unique = Array.from(new Set(athleteTerms)).slice(0, 3);
+  return unique.length === 0
+    ? "Strong overall alignment with your profile and mentorship areas."
+    : `Strong alignment with your background in ${unique.join(", ")}.`;
+};
+
 // ==============================
 // Component Definition
 // Data fetching migrated from useState/useEffect to useQuery throughout.
