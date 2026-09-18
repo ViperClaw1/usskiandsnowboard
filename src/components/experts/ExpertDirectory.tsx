@@ -369,6 +369,20 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                 </CardHeader>
                 <CardContent className="space-y-3 flex-1 flex flex-col">
                   <div className="flex flex-wrap gap-1 justify-center">
+                    {requestStatus === "accepted" && (
+                      <Badge className="text-xs bg-emerald-600 text-white border-transparent hover:bg-emerald-600">
+                        ✓ Connected
+                      </Badge>
+                    )}
+                    {typeof matchScore === "number" && (
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-primary/40 text-primary"
+                        title="How closely this expert's background lines up with your interests, skills and goals."
+                      >
+                        {matchScore}% match
+                      </Badge>
+                    )}
                     {expert.created_at &&
                       Date.now() - new Date(expert.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000 && (
                         <Badge className="text-xs bg-emerald-500 text-white border-transparent hover:bg-emerald-500">
