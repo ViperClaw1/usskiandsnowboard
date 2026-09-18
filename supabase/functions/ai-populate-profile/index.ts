@@ -360,6 +360,12 @@ Deno.serve(async (req) => {
       const searchMd = await searchWeb(searchQuery, 4);
       if (searchMd) segments.push(`## Web search results for ${searchQuery}\n\n${searchMd}`);
 
+      // 3) Additional search for news / interviews / speaking — often holds the richest bio detail
+      const newsQuery = `"${name}" "${companyName}" interview OR news OR podcast OR speaker OR appointment`;
+      console.log("Searching web:", newsQuery);
+      const newsMd = await searchWeb(newsQuery, 4);
+      if (newsMd) segments.push(`## News and media search results for ${newsQuery}\n\n${newsMd}`);
+
       // 3) Optional LinkedIn (best-effort; do NOT fail if blocked)
       if (linkedinUrl) {
         const lnUrl = ensureProtocol(linkedinUrl);
