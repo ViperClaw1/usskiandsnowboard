@@ -1,70 +1,39 @@
-# Job Board Feature Plan
+# AI Enhancements Plan: Smart Matching + Richer Profile Fill
 
-Adding a job board where experts post openings and athletes browse them. Reuses existing expert profiles, "New" badge styling, and connection request flow.
+Two features: (1) embedding-powered connection suggestions for athletes and experts, (2) upgraded "Complete with AI" accuracy.
 
-## 1. Database (new migration)
+## Part 1 — Smart Connection Matching
 
-**Table: `job_posts`**
-- `id`, `expert_id` (FK → `expert_profiles.id`), `source_url`, `job_title`, `company`
-- `location` (text), `remote_status` (enum: remote/hybrid/onsite)
-- `employment_type` (text), `industry` (text), `expert_note` (text)
-- `status` (enum: active/filled/expired/pending), `created_at`, `updated_at`
-- UNIQUE (`expert_id`, `source_url`) — prevents duplicate posts
+### How it works
+Store a semantic embedding of every athlete and expert profile, then rank matches by cosine similarity instead of today's keyword-overlap. Embeddings are computed only when a profile is saved, so browsing suggestions costs nothing at request time.
 
-**Table: `job_board_settings`** (single row, admin-managed)
-- `require_approval` (bool, default false)
-- `industries` (text[]) — editable list
+### Database (new migration)
+- Enable `pgvector` extension.
+- New table `profile_embeddings`: `profile_id uuid`, `role text` ('athlete' | 'expert'), `content text`, `embedding vector(3072)`, `model text`, `updated_at`.
+- RLS enabled, **no client policies** — only the service role (edge functions) reads/writes it.
+- SQL functions `match_experts_for_athlete` and `match_athletes_for_expert` (SECURITY DEFINER): given the caller's profile id, return ranked profile ids + similarity scores. Small dataset, so indexed cosine distance is plenty.
 
-**RLS + GRANTs:**
-- Public SELECT on `job_posts` WHERE `status = 'active'` (anon + authenticated)
-- Experts INSERT/UPDATE/DELETE own posts (`expert_id` resolves via `auth.uid()`)
-- Admins ALL via `has_role(auth.uid(), 'admin')`
-- `job_board_settings`: public SELECT, admin UPDATE
+### New edge functions
+- `update-profile-embedding` — auth-guarded; builds embedding text from the caller's profile (athlete: bio, sport disciplines, career interests, skills, highlights · expert: bio, job title, expertise, industry, company), calls the Lovable AI embeddings endpoint (`google/gemini-embedding-2`), upserts the vector. Called after profile save in onboarding and profile editing.
+- One-time admin backfill of all existing public profiles after the migration ships.
 
-**Cron:** Daily job to auto-archive posts older than 60 days (set status='expired').
+### Frontend
+- **AthleteLandingPage** — new "Suggested Experts for You" section (above Featured Experts, same card grid + detail dialog). Calls `match_experts_for_athlete`, then renders profiles with a small match-strength badge. Existing keyword-scoring in `fetchFeaturedExperts` becomes the fallback when no embedding exists yet.
+- **ExpertLandingPage** — new "Athletes to Mentor" section, same pattern (the expert page currently has no matching at all).
+- **Connection dialog** (`ExpertConnectionRequestDialog`) — when opened from a suggestion card, shows a one-line "Why we suggested this" note derived from the shared interest signals.
 
-## 2. Edge function: `parse-job-url`
+## Part 2 — Richer AI Profile Fill (`ai-populate-profile`)
 
-- Auth-guarded (require expert or admin role)
-- Uses existing Firecrawl connector to scrape the URL (markdown + metadata)
-- Falls back to Lovable AI Gateway (`google/gemini-3-flash-preview`) with structured output to extract: title, company, location, employment_type, industry, remote_status
-- Returns parsed fields + a `parse_status` flag; never blocks on failure (returns blanks so expert fills manually)
+- **Model upgrade**: primary model becomes `openai/gpt-6-astra` (reasoning low, no temperature — this model's requirements), keeping fast Gemini fallbacks for rate-limit recovery.
+- **Stronger identity guardrails in the system prompt**: only extract facts corroborated by at least one source that matches the person's name/company/discipline; leave fields empty rather than guessing; ignore namesakes. Directly addresses the "pulls irrelevant info" problem.
+- **More sources**:
+  - Athletes: additional Firecrawl searches for competition results and team/roster mentions (e.g. `"name" results`, `"name" "U.S. Ski & Snowboard" team`), scrape the top 2–3 most relevant hits.
+  - Experts: additional searches for news mentions and industry/conference appearances alongside the current LinkedIn + company-site scrape.
+- **Bug fix**: `upsertExpertProfile` never writes the AI-derived `industry` to `expert_profiles` — add it (the edge function already normalizes it against the approved industry list).
 
-## 3. Frontend
+## Out of scope
+- AI job-fit summaries and semantic search (deferred — can follow later).
 
-**New routes:**
-- `/jobs` — public job board (feed/grid, filters, search)
-- `/jobs/post` — expert posting flow (2-step: paste URL → review/edit → publish)
-- `/admin/jobs` — admin management table
-
-**New components:**
-- `src/pages/JobBoard.tsx`, `src/pages/PostJob.tsx`
-- `src/components/jobs/JobCard.tsx` — title, company, 3 tag badges, expert chip (clickable → `/experts` profile), "New" badge (reuses existing 30-day pill styling from `ExpertBadgeManager`/expert cards), date, external link
-- `src/components/jobs/JobFilters.tsx` — Location, Type, Industry filters + search
-- `src/components/jobs/PostJobWizard.tsx` — paste URL → call edge fn → editable confirmation form → submit
-- `src/components/jobs/ExpertJobsManager.tsx` — expert's "My Posts" w/ Filled/Expired controls (added to ExpertLandingPage)
-- `src/components/dashboard/admin/JobPostsManager.tsx` — admin CRUD + industry list editor + approval toggle
-- `src/components/dashboard/admin/JobBoardStatsCards.tsx` — Total Jobs Posted + Last 30 Days, added to `AdminStatsCards` block
-
-**Nav:** Add "Jobs" entry to authenticated nav + mobile nav.
-
-**Controlled lists (constants file `src/constants/jobBoard.ts`):**
-- `EMPLOYMENT_TYPES = ['Full-time','Part-time','Contract','Internship','Seasonal','Temporary']`
-- `DEFAULT_INDUSTRIES = ['Sports & Recreation','Marketing & Media','Finance','Technology','Hospitality','Healthcare','Education','Nonprofit','Sales','Operations','Other']` (overridden by `job_board_settings.industries`)
-- `REMOTE_STATUSES = ['Remote','Hybrid','On-site']`
-
-## 4. Connection flow
-
-No new code — JobCard's expert chip links to the existing expert profile route, where the existing Request Connection button handles everything.
-
-## 5. Mobile
-
-All new screens use existing responsive patterns (grid → stack, badges wrap, same Tailwind tokens). Filters collapse into a Sheet on mobile (matches existing pattern).
-
-## Open questions
-
-1. **Approval default off** — confirmed in spec, but should pending posts be visible to the posting expert before approval? (Assuming yes.)
-2. **Industry list edits** — should renaming an industry retroactively update existing posts, or leave old values orphaned in filters? (Default: leave as-is, show all distinct values in filter.)
-3. **Auto-archive** — needs `pg_cron` + `pg_net` enabled. OK to enable?
-
-Approve and I'll ship it.
+## Verification
+- Test embedding generation + match ranking with real athlete/expert accounts.
+- Run Complete-with-AI for an athlete (name + discipline + Instagram) and an expert (name + company + LinkedIn) and inspect the extracted fields and sources used.
