@@ -329,6 +329,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {paginatedExperts.map((expert) => {
             const requestStatus = requestStatusMap[expert.id];
+            const matchScore = matchScoreMap[expert.id];
             return (
               <Card
                 key={expert.id}
