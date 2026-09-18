@@ -103,6 +103,7 @@ export const upsertExpertProfile = async (userId: string, profileData: any, name
     job_title: profileData.job_title || null,
     company_name: profileData.company_name || null,
     area_of_expertise: profileData.area_of_expertise || null,
+    industry: normalizeEmployerIndustryTitle(profileData.industry) ?? null,
     bio: profileData.bio || null,
     photo_url: uploadedPhotoUrl || existing?.photo_url || null,
     linkedin_url: profileData.linkedin_url || (url?.trim() || null),
