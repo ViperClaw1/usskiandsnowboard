@@ -25,3 +25,22 @@ export function sanitizeArticleHtml(html: string): string {
     }
   );
 }
+
+const ALLOWED_TAGS = [
+  "p", "strong", "b", "em", "i", "u", "s", "ul", "ol", "li", "a", "blockquote",
+  "h1", "h2", "h3", "h4", "br", "hr", "img", "figure", "figcaption", "span",
+  "div", "table", "thead", "tbody", "tr", "th", "td",
+];
+const ALLOWED_ATTR = ["href", "src", "alt", "title", "style", "target", "rel"];
+
+/**
+ * Real XSS sanitization layered on top of the style cleanup above. Strips
+ * <script>, event handlers, javascript: URLs, iframes, etc. Article bodies
+ * are rendered with dangerouslySetInnerHTML, so this is the safety net.
+ */
+export function sanitizeArticleHtmlSafe(html: string): string {
+  return DOMPurify.sanitize(sanitizeArticleHtml(html), {
+    ALLOWED_TAGS,
+    ALLOWED_ATTR,
+  }) as string;
+}
