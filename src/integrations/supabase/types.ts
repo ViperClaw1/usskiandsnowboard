@@ -1016,6 +1016,36 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_embeddings: {
+        Row: {
+          content: string
+          embedding: string
+          id: string
+          model: string
+          profile_id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          embedding: string
+          id?: string
+          model?: string
+          profile_id: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          embedding?: string
+          id?: string
+          model?: string
+          profile_id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1272,6 +1302,20 @@ export type Database = {
       increment_expert_profile_views: {
         Args: { expert_profile_id: string }
         Returns: undefined
+      }
+      match_athletes_for_expert: {
+        Args: { _expert_profile_id: string; _match_count?: number }
+        Returns: {
+          athlete_profile_id: string
+          similarity: number
+        }[]
+      }
+      match_experts_for_athlete: {
+        Args: { _athlete_profile_id: string; _match_count?: number }
+        Returns: {
+          expert_profile_id: string
+          similarity: number
+        }[]
       }
       purge_old_email_verification_logs: { Args: never; Returns: number }
       setup_admin_user: {
