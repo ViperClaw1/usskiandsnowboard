@@ -930,6 +930,22 @@ const AthleteDirectory = () => {
                         {selectedAthlete.sport_discipline && (
                           <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
                         )}
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {connectionStatusMap[selectedAthlete.id] === "accepted" && (
+                            <Badge className="text-xs bg-emerald-600 text-white border-transparent hover:bg-emerald-600">
+                              ✓ Connected
+                            </Badge>
+                          )}
+                          {typeof matchScoreMap[selectedAthlete.id] === "number" && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs border-primary/40 text-primary"
+                              title="How closely this athlete's interests, skills and goals line up with your background."
+                            >
+                              {matchScoreMap[selectedAthlete.id]}% match
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     {canSendRequest && (
