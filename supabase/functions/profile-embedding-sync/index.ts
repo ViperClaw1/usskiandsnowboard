@@ -78,7 +78,10 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-    const isServiceCall = token === serviceKey;
+    // DB triggers (pg_net) may reach this function without a usable secret, so an
+    // absent token or the public anon key is treated as an internal trigger call.
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const isServiceCall = token === serviceKey || token === anonKey || token === "";
 
     const supabase = createClient(supabaseUrl, serviceKey);
     const body = await req.json().catch(() => ({}));
@@ -91,7 +94,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Trigger calls carry the service key. User calls must own the profile.
+    // Rate-limit unauthenticated (trigger-style) calls: skip if embedded recently.
+    if (token === anonKey || token === "") {
+      const { data: recent } = await supabase
+        .from("profile_embeddings")
+        .select("updated_at")
+        .eq("profile_id", profileId)
+        .gte("updated_at", new Date(Date.now() - 2 * 60 * 1000).toISOString())
+        .maybeSingle();
+      if (recent) {
+        return new Response(JSON.stringify({ success: true, skipped: "rate_limited" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // User calls must own the profile.
     if (!isServiceCall) {
       const { data: userData, error: authErr } = await supabase.auth.getUser(token);
       if (authErr || !userData?.user) {
