@@ -295,6 +295,17 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
             <SelectItem value="Next Gen Council">Next Gen Council</SelectItem>
           </SelectContent>
         </Select>
+        {hasMatchScores && (
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as "match" | "newest")}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="match">Best match for you</SelectItem>
+              <SelectItem value="newest">Newest first</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         {(filterIndustry !== "all" || filterAffiliation !== "all" || search) && (
           <Button
             variant="outline"
