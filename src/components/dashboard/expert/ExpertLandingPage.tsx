@@ -238,6 +238,14 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
     staleTime: 5 * 60 * 1000,
   });
 
+  // AI smart matching: falls back to the plain Featured Athletes above when empty.
+  const { data: suggestedAthletes = [] } = useQuery<SuggestedAthlete[]>({
+    queryKey: ["expert-landing-suggested-athletes", dashboardData?.profile?.id],
+    queryFn: () => fetchSuggestedAthletes(dashboardData!.profile!.id),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!dashboardData?.profile,
+  });
+
 
   const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
