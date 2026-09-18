@@ -757,6 +757,25 @@ const AthleteDirectory = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3 flex-1 flex flex-col">
+              {(connectionStatusMap[athlete.id] === "accepted" ||
+                typeof matchScoreMap[athlete.id] === "number") && (
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {connectionStatusMap[athlete.id] === "accepted" && (
+                    <Badge className="text-xs bg-emerald-600 text-white border-transparent hover:bg-emerald-600">
+                      ✓ Connected
+                    </Badge>
+                  )}
+                  {typeof matchScoreMap[athlete.id] === "number" && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/40 text-primary"
+                      title="How closely this athlete's interests, skills and goals line up with your background."
+                    >
+                      {matchScoreMap[athlete.id]}% match
+                    </Badge>
+                  )}
+                </div>
+              )}
               {athlete.bio && (
                 <div>
                   <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
