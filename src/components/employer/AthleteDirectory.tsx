@@ -640,6 +640,71 @@ const AthleteDirectory = () => {
         </div>
       )}
 
+      {/* Suggested Athletes for You — AI smart matching */}
+      {suggestedAthletes.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Suggested Athletes for You</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Top matches based on your background and mentorship areas.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {suggestedAthletes.map((athlete) => (
+                <div
+                  key={athlete.id}
+                  className="cursor-pointer rounded-lg border bg-card p-4 text-center hover:shadow-md hover:border-primary/50 transition-all"
+                  onClick={async () => {
+                    setSelectedAthlete(athlete);
+                    try {
+                      await supabase.rpc("increment_athlete_profile_views", {
+                        athlete_profile_id: athlete.id,
+                      });
+                    } catch (error) {
+                      console.error("Error tracking view:", error);
+                    }
+                  }}
+                >
+                  <Avatar className="h-16 w-16 mx-auto">
+                    <AvatarImage
+                      src={athlete.photo_url ?? undefined}
+                      alt={athlete.profiles.full_name ?? "Athlete"}
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {(athlete.profiles.full_name ?? "A")
+                        .split(" ")
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((n) => n[0]?.toUpperCase())
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="mt-2 font-medium leading-tight">{athlete.profiles.full_name ?? "Athlete"}</p>
+                  {athlete.sport_discipline && athlete.sport_discipline.length > 0 && (
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {athlete.sport_discipline.slice(0, 2).join(", ")}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap justify-center">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/40 text-primary"
+                      title="How closely this athlete's interests, skills and goals line up with your background."
+                    >
+                      {matchScoreMap[athlete.id]}% match
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                    {getAthleteMatchNote(athlete, expertProfile ?? undefined)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Search and Filters */}
       <div className="mb-6 space-y-4">
         <div className="relative">
