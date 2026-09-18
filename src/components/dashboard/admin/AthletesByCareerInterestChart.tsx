@@ -60,7 +60,7 @@ export const AthletesByCareerInterestChart = () => {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={(entry) => entry.interest}
+                label={(entry) => (entry as unknown as { interest: string }).interest}
               >
                 {data.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
