@@ -213,6 +213,9 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const unauthorized = await requireUserOrService(req, corsHeaders);
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await req.json();
     const { role, name } = body;
