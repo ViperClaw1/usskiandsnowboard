@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getMatchCategory, MATCH_CATEGORY_LABEL, MATCH_CATEGORY_CLASS } from "@/lib/matchCategory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -745,10 +746,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           <div className="flex flex-wrap justify-center gap-1 mt-2">
                             <Badge
                               variant="grayout"
-                              className="text-xs"
+                              className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(similarity)]}`}
                               title="How closely this athlete's interests and goals match your expertise, based on their profile"
                             >
-                              {Math.round(similarity * 100)}% match
+                              {MATCH_CATEGORY_LABEL[getMatchCategory(similarity)]}
                             </Badge>
                             {athlete.sport_discipline?.map((d) => (
                               <Badge key={d} variant="secondary" className="text-xs">

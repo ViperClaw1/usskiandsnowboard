@@ -4,6 +4,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { supabase } from "@/integrations/supabase/client";
+import { getMatchCategory, MATCH_CATEGORY_LABEL, MATCH_CATEGORY_CLASS } from "@/lib/matchCategory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -689,10 +690,10 @@ const AthleteDirectory = () => {
                   <div className="mt-2 flex flex-wrap justify-center">
                     <Badge
                       variant="outline"
-                      className="text-xs border-primary/40 text-primary"
+                      className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(matchScoreMap[athlete.id] / 100)]}`}
                       title="How closely this athlete's interests, skills and goals line up with your background."
                     >
-                      {matchScoreMap[athlete.id]}% match
+                      {MATCH_CATEGORY_LABEL[getMatchCategory(matchScoreMap[athlete.id] / 100)]}
                     </Badge>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
@@ -866,10 +867,10 @@ const AthleteDirectory = () => {
                   {typeof matchScoreMap[athlete.id] === "number" && (
                     <Badge
                       variant="outline"
-                      className="text-xs border-primary/40 text-primary"
+                      className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(matchScoreMap[athlete.id] / 100)]}`}
                       title="How closely this athlete's interests, skills and goals line up with your background."
                     >
-                      {matchScoreMap[athlete.id]}% match
+                      {MATCH_CATEGORY_LABEL[getMatchCategory(matchScoreMap[athlete.id] / 100)]}
                     </Badge>
                   )}
                 </div>
@@ -1037,10 +1038,10 @@ const AthleteDirectory = () => {
                           {typeof matchScoreMap[selectedAthlete.id] === "number" && (
                             <Badge
                               variant="outline"
-                              className="text-xs border-primary/40 text-primary"
+                              className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(matchScoreMap[selectedAthlete.id] / 100)]}`}
                               title="How closely this athlete's interests, skills and goals line up with your background."
                             >
-                              {matchScoreMap[selectedAthlete.id]}% match
+                              {MATCH_CATEGORY_LABEL[getMatchCategory(matchScoreMap[selectedAthlete.id] / 100)]}
                             </Badge>
                           )}
                         </div>

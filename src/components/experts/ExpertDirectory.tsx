@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getMatchCategory, MATCH_CATEGORY_LABEL, MATCH_CATEGORY_CLASS } from "@/lib/matchCategory";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -326,10 +327,10 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                   <div className="mt-2 flex flex-wrap justify-center">
                     <Badge
                       variant="outline"
-                      className="text-xs border-primary/40 text-primary"
+                      className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(matchScoreMap[expert.id] / 100)]}`}
                       title="How closely this expert's background lines up with your interests, skills and goals."
                     >
-                      {matchScoreMap[expert.id]}% match
+                      {MATCH_CATEGORY_LABEL[getMatchCategory(matchScoreMap[expert.id] / 100)]}
                     </Badge>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
@@ -460,10 +461,10 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                     {typeof matchScore === "number" && (
                       <Badge
                         variant="outline"
-                        className="text-xs border-primary/40 text-primary"
+                        className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(matchScore / 100)]}`}
                         title="How closely this expert's background lines up with your interests, skills and goals."
                       >
-                        {matchScore}% match
+                        {MATCH_CATEGORY_LABEL[getMatchCategory(matchScore / 100)]}
                       </Badge>
                     )}
                     {expert.created_at &&
@@ -563,10 +564,10 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
                 {typeof matchScoreMap[selectedExpert.id] === "number" && (
                   <Badge
                     variant="outline"
-                    className="border-primary/40 text-primary"
+                    className={MATCH_CATEGORY_CLASS[getMatchCategory(matchScoreMap[selectedExpert.id] / 100)]}
                     title="How closely this expert's background lines up with your interests, skills and goals."
                   >
-                    {matchScoreMap[selectedExpert.id]}% match
+                    {MATCH_CATEGORY_LABEL[getMatchCategory(matchScoreMap[selectedExpert.id] / 100)]}
                   </Badge>
                 )}
                 {splitIndustries(selectedExpert.industry).map((ind) => (
