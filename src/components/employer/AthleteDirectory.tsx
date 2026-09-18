@@ -177,6 +177,22 @@ const fetchExistingRequests = async (employerId: string): Promise<Map<string, Co
   return new Map((data ?? []).map((r) => [r.athlete_id, r.status as ConnectionRequestStatus]));
 };
 
+/** Human-readable "why we suggested this" — overlaps between the expert's background and the athlete's interests/skills. */
+const getAthleteMatchNote = (
+  athlete: AthleteProfile,
+  expert?: { industry: string | null; area_of_expertise: string | null; job_title: string | null },
+): string => {
+  if (!expert) return "Strong overall alignment with your profile and mentorship areas.";
+  const expertText = `${expert.industry ?? ""} ${expert.area_of_expertise ?? ""} ${expert.job_title ?? ""}`.toLowerCase();
+  const athleteTerms = [...(athlete.career_interests ?? []), ...(athlete.skills ?? [])]
+    .map((t) => t.toLowerCase().trim())
+    .filter((t) => t.length > 2 && expertText.includes(t));
+  const unique = Array.from(new Set(athleteTerms)).slice(0, 3);
+  return unique.length === 0
+    ? "Strong overall alignment with your profile and mentorship areas."
+    : `Strong alignment with your background in ${unique.join(", ")}.`;
+};
+
 // ==============================
 // Component Definition
 // Data fetching migrated from useState/useEffect to useQuery throughout.
@@ -282,18 +298,24 @@ const AthleteDirectory = () => {
   // ==============================
   const isExpertViewer = userRole === "expert";
 
-  const { data: expertProfileId = null } = useQuery({
-    queryKey: ["athlete-directory-expert-profile-id", user?.id],
+  const { data: expertProfile = null } = useQuery({
+    queryKey: ["athlete-directory-expert-profile", user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("expert_profiles")
-        .select("id")
+        .select("id, industry, area_of_expertise, job_title")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return data?.id ?? null;
+      return (data ?? null) as {
+        id: string;
+        industry: string | null;
+        area_of_expertise: string | null;
+        job_title: string | null;
+      } | null;
     },
     enabled: !!user && isExpertViewer,
   });
+  const expertProfileId = expertProfile?.id ?? null;
 
   const { data: matchRows = [] } = useQuery({
     queryKey: ["athlete-directory-matches", expertProfileId],
@@ -342,6 +364,17 @@ const AthleteDirectory = () => {
     });
     return m;
   }, [existingRequests, expertRequests]);
+
+  // ==============================
+  // Suggested Athletes for You — top semantic matches, shown atop the directory
+  // ==============================
+  const suggestedAthletes = useMemo(() => {
+    if (!hasMatchScores || !isExpertViewer) return [];
+    return athletes
+      .filter((a) => matchScoreMap[a.id] !== undefined && connectionStatusMap[a.id] !== "accepted")
+      .sort((a, b) => (matchScoreMap[b.id] ?? 0) - (matchScoreMap[a.id] ?? 0))
+      .slice(0, 4);
+  }, [athletes, matchScoreMap, connectionStatusMap, hasMatchScores, isExpertViewer]);
 
   // ==============================
   // Derived Values — Filtered Athletes
@@ -605,6 +638,71 @@ const AthleteDirectory = () => {
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           <span className="ml-2 text-sm">{isRefreshing ? "Refreshing..." : "Pull to refresh"}</span>
         </div>
+      )}
+
+      {/* Suggested Athletes for You — AI smart matching */}
+      {suggestedAthletes.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Suggested Athletes for You</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Top matches based on your background and mentorship areas.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {suggestedAthletes.map((athlete) => (
+                <div
+                  key={athlete.id}
+                  className="cursor-pointer rounded-lg border bg-card p-4 text-center hover:shadow-md hover:border-primary/50 transition-all"
+                  onClick={async () => {
+                    setSelectedAthlete(athlete);
+                    try {
+                      await supabase.rpc("increment_athlete_profile_views", {
+                        athlete_profile_id: athlete.id,
+                      });
+                    } catch (error) {
+                      console.error("Error tracking view:", error);
+                    }
+                  }}
+                >
+                  <Avatar className="h-16 w-16 mx-auto">
+                    <AvatarImage
+                      src={athlete.photo_url ?? undefined}
+                      alt={athlete.profiles.full_name ?? "Athlete"}
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {(athlete.profiles.full_name ?? "A")
+                        .split(" ")
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((n) => n[0]?.toUpperCase())
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="mt-2 font-medium leading-tight">{athlete.profiles.full_name ?? "Athlete"}</p>
+                  {athlete.sport_discipline && athlete.sport_discipline.length > 0 && (
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {athlete.sport_discipline.slice(0, 2).join(", ")}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap justify-center">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/40 text-primary"
+                      title="How closely this athlete's interests, skills and goals line up with your background."
+                    >
+                      {matchScoreMap[athlete.id]}% match
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                    {getAthleteMatchNote(athlete, expertProfile ?? undefined)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Search and Filters */}

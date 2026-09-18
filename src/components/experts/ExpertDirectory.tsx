@@ -65,6 +65,20 @@ function getPrimaryIndustry(industry: string | null): string | null {
   return splitIndustries(industry)[0] ?? null;
 }
 
+/** Human-readable "why we suggested this" — overlaps between the athlete's interests/skills and the expert's profile. */
+function getMatchNote(expert: ExpertProfile, interests: string[], skills: string[]): string {
+  const expertText = `${expert.industry ?? ""} ${expert.area_of_expertise ?? ""} ${expert.job_title ?? ""} ${
+    (expert.bio ?? "").slice(0, 500)
+  }`.toLowerCase();
+  const shared = [...interests, ...skills]
+    .map((t) => t.toLowerCase().trim())
+    .filter((t) => t.length > 2 && expertText.includes(t));
+  const unique = Array.from(new Set(shared)).slice(0, 3);
+  return unique.length === 0
+    ? "Strong overall alignment with your profile and career goals."
+    : `Strong alignment with your interests in ${unique.join(", ")}.`;
+}
+
 // ==============================
 // Fetch
 // ==============================
@@ -118,19 +132,20 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     queryFn: fetchExperts,
   });
 
-  // This athlete's own profile id (needed for match scores + request status)
-  const { data: athleteProfileId = null } = useQuery({
-    queryKey: ["expert-directory-athlete-profile-id", user?.id],
+  // This athlete's own profile (id + interests/skills for match notes)
+  const { data: athleteProfile = null } = useQuery({
+    queryKey: ["expert-directory-athlete-profile", user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("athlete_profiles")
-        .select("id")
+        .select("id, career_interests, skills")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return data?.id ?? null;
+      return (data ?? null) as { id: string; career_interests: string[] | null; skills: string[] | null } | null;
     },
     enabled: !!user && role === "athlete",
   });
+  const athleteProfileId = athleteProfile?.id ?? null;
 
   // Semantic match scores (same engine as "Suggested Experts for You")
   const { data: matchRows = [] } = useQuery({
@@ -176,6 +191,17 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     });
     return m;
   }, [existingRequests]);
+
+  // ==============================
+  // Suggested Experts for You — top semantic matches, shown atop the directory
+  // ==============================
+  const suggestedExperts = useMemo(() => {
+    if (!hasMatchScores || adminMode || role !== "athlete") return [];
+    return experts
+      .filter((e) => matchScoreMap[e.id] !== undefined && requestStatusMap[e.id] !== "accepted")
+      .sort((a, b) => (matchScoreMap[b.id] ?? 0) - (matchScoreMap[a.id] ?? 0))
+      .slice(0, 4);
+  }, [experts, matchScoreMap, requestStatusMap, hasMatchScores, adminMode, role]);
 
   const filtered = useMemo(() => {
     let res = experts;
@@ -259,6 +285,63 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
   return (
     <div className="space-y-6">
+      {/* Suggested Experts for You — AI smart matching */}
+      {suggestedExperts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Suggested Experts for You</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Top matches based on your interests, skills and goals.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {suggestedExperts.map((expert) => (
+                <div
+                  key={expert.id}
+                  className="cursor-pointer rounded-lg border bg-card p-4 text-center hover:shadow-md hover:border-primary/50 transition-all"
+                  onClick={async () => {
+                    setSelectedExpert(expert);
+                    try {
+                      await supabase.rpc("increment_expert_profile_views", {
+                        expert_profile_id: expert.id,
+                      });
+                    } catch (error) {
+                      console.error("Error tracking expert view:", error);
+                    }
+                  }}
+                >
+                  <Avatar className="h-16 w-16 mx-auto">
+                    <AvatarImage src={expert.photo_url ?? undefined} alt={expert.full_name} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {getInitials(expert.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="mt-2 font-medium leading-tight">{expert.full_name}</p>
+                  {(expert.job_title || expert.company_name) && (
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {[expert.job_title, expert.company_name].filter(Boolean).join(", ")}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap justify-center">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/40 text-primary"
+                      title="How closely this expert's background lines up with your interests, skills and goals."
+                    >
+                      {matchScoreMap[expert.id]}% match
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                    {getMatchNote(expert, athleteProfile?.career_interests ?? [], athleteProfile?.skills ?? [])}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
