@@ -298,18 +298,24 @@ const AthleteDirectory = () => {
   // ==============================
   const isExpertViewer = userRole === "expert";
 
-  const { data: expertProfileId = null } = useQuery({
-    queryKey: ["athlete-directory-expert-profile-id", user?.id],
+  const { data: expertProfile = null } = useQuery({
+    queryKey: ["athlete-directory-expert-profile", user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("expert_profiles")
-        .select("id")
+        .select("id, industry, area_of_expertise, job_title")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return data?.id ?? null;
+      return (data ?? null) as {
+        id: string;
+        industry: string | null;
+        area_of_expertise: string | null;
+        job_title: string | null;
+      } | null;
     },
     enabled: !!user && isExpertViewer,
   });
+  const expertProfileId = expertProfile?.id ?? null;
 
   const { data: matchRows = [] } = useQuery({
     queryKey: ["athlete-directory-matches", expertProfileId],
