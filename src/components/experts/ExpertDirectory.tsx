@@ -285,6 +285,63 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
 
   return (
     <div className="space-y-6">
+      {/* Suggested Experts for You — AI smart matching */}
+      {suggestedExperts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Suggested Experts for You</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Top matches based on your interests, skills and goals.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {suggestedExperts.map((expert) => (
+                <div
+                  key={expert.id}
+                  className="cursor-pointer rounded-lg border bg-card p-4 text-center hover:shadow-md hover:border-primary/50 transition-all"
+                  onClick={async () => {
+                    setSelectedExpert(expert);
+                    try {
+                      await supabase.rpc("increment_expert_profile_views", {
+                        expert_profile_id: expert.id,
+                      });
+                    } catch (error) {
+                      console.error("Error tracking expert view:", error);
+                    }
+                  }}
+                >
+                  <Avatar className="h-16 w-16 mx-auto">
+                    <AvatarImage src={expert.photo_url ?? undefined} alt={expert.full_name} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {getInitials(expert.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="mt-2 font-medium leading-tight">{expert.full_name}</p>
+                  {(expert.job_title || expert.company_name) && (
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {[expert.job_title, expert.company_name].filter(Boolean).join(", ")}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap justify-center">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/40 text-primary"
+                      title="How closely this expert's background lines up with your interests, skills and goals."
+                    >
+                      {matchScoreMap[expert.id]}% match
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                    {getMatchNote(expert, athleteProfile?.career_interests ?? [], athleteProfile?.skills ?? [])}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
