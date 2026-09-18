@@ -278,6 +278,72 @@ const AthleteDirectory = () => {
   const existingRequests = existingRequestsMap;
 
   // ==============================
+  // Expert viewer — own profile id, semantic match scores and connection status
+  // ==============================
+  const isExpertViewer = userRole === "expert";
+
+  const { data: expertProfileId = null } = useQuery({
+    queryKey: ["athlete-directory-expert-profile-id", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("expert_profiles")
+        .select("id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data?.id ?? null;
+    },
+    enabled: !!user && isExpertViewer,
+  });
+
+  const { data: matchRows = [] } = useQuery({
+    queryKey: ["athlete-directory-matches", expertProfileId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("match_athletes_for_expert", {
+        _expert_profile_id: expertProfileId!,
+        _match_count: 200,
+      });
+      if (error) throw error;
+      return (data ?? []) as { athlete_profile_id: string; similarity: number }[];
+    },
+    enabled: !!expertProfileId,
+  });
+
+  const matchScoreMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    matchRows.forEach((r) => {
+      m[r.athlete_profile_id] = Math.round(Math.max(0, Math.min(1, r.similarity)) * 100);
+    });
+    return m;
+  }, [matchRows]);
+
+  const hasMatchScores = Object.keys(matchScoreMap).length > 0;
+  const [sortBy, setSortBy] = useState<"match" | "newest">("match");
+
+  const { data: expertRequests = [] } = useQuery({
+    queryKey: ["athlete-directory-expert-requests", expertProfileId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("expert_connection_requests")
+        .select("athlete_id, status")
+        .eq("expert_id", expertProfileId!);
+      return data ?? [];
+    },
+    enabled: !!expertProfileId,
+  });
+
+  /** athlete_id -> status, combining employer and expert connection records */
+  const connectionStatusMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    existingRequests.forEach((status, athleteId) => {
+      m[athleteId] = status;
+    });
+    expertRequests.forEach((r: { athlete_id: string; status: string }) => {
+      m[r.athlete_id] = r.status;
+    });
+    return m;
+  }, [existingRequests, expertRequests]);
+
+  // ==============================
   // Derived Values — Filtered Athletes
   // ==============================
   const filteredAthletes = useMemo(() => {
@@ -317,8 +383,22 @@ const AthleteDirectory = () => {
       );
     }
 
+    if (hasMatchScores && sortBy === "match") {
+      result = [...result].sort((a, b) => (matchScoreMap[b.id] ?? -1) - (matchScoreMap[a.id] ?? -1));
+    }
+
     return result;
-  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
+  }, [
+    athletes,
+    searchTerm,
+    filterSport,
+    filterAvailability,
+    filterSkills,
+    filterCareerInterests,
+    hasMatchScores,
+    sortBy,
+    matchScoreMap,
+  ]);
 
   const totalFilteredAthletes = filteredAthletes.length;
   const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredAthletes, [
@@ -327,6 +407,7 @@ const AthleteDirectory = () => {
     filterAvailability,
     filterSkills,
     filterCareerInterests,
+    sortBy,
   ]);
 
   const paginatedAthletes = useMemo(
@@ -583,6 +664,20 @@ const AthleteDirectory = () => {
           />
         </div>
 
+        {hasMatchScores && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as "match" | "newest")}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="match">Best match for you</SelectItem>
+                <SelectItem value="newest">Newest first</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {(filterSport.length > 0 ||
           filterAvailability !== "all" ||
           filterSkills ||
@@ -662,6 +757,25 @@ const AthleteDirectory = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3 flex-1 flex flex-col">
+              {(connectionStatusMap[athlete.id] === "accepted" ||
+                typeof matchScoreMap[athlete.id] === "number") && (
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {connectionStatusMap[athlete.id] === "accepted" && (
+                    <Badge className="text-xs bg-emerald-600 text-white border-transparent hover:bg-emerald-600">
+                      ✓ Connected
+                    </Badge>
+                  )}
+                  {typeof matchScoreMap[athlete.id] === "number" && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/40 text-primary"
+                      title="How closely this athlete's interests, skills and goals line up with your background."
+                    >
+                      {matchScoreMap[athlete.id]}% match
+                    </Badge>
+                  )}
+                </div>
+              )}
               {athlete.bio && (
                 <div>
                   <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
@@ -816,6 +930,22 @@ const AthleteDirectory = () => {
                         {selectedAthlete.sport_discipline && (
                           <p className="text-sm text-muted-foreground">{selectedAthlete.sport_discipline}</p>
                         )}
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {connectionStatusMap[selectedAthlete.id] === "accepted" && (
+                            <Badge className="text-xs bg-emerald-600 text-white border-transparent hover:bg-emerald-600">
+                              ✓ Connected
+                            </Badge>
+                          )}
+                          {typeof matchScoreMap[selectedAthlete.id] === "number" && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs border-primary/40 text-primary"
+                              title="How closely this athlete's interests, skills and goals line up with your background."
+                            >
+                              {matchScoreMap[selectedAthlete.id]}% match
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     {canSendRequest && (
