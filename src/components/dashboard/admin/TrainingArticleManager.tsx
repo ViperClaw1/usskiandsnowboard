@@ -31,7 +31,7 @@ import { Plus, Pencil, Trash2, Eye, EyeOff, FileText, Type, Save, Link as LinkIc
 import { format } from "date-fns";
 import { TrainingArticle } from "@/types/training";
 import { ARTICLE_CATEGORIES, getCategoryColor } from "@/constants/training";
-import { sanitizeArticleHtml } from "@/lib/sanitizeArticleHtml";
+import { sanitizeArticleHtml, sanitizeArticleHtmlSafe } from "@/lib/sanitizeArticleHtml";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import usLogo from "@/assets/us-logo-new.png";
 
@@ -932,7 +932,7 @@ export const TrainingArticleManager = () => {
                   '--article-font-family': typographyStyle.fontFamily ?? 'inherit',
                   fontFamily: typographyStyle.fontFamily,
                 } as React.CSSProperties}
-                dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(previewArticle.body) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeArticleHtmlSafe(previewArticle.body) }}
               />
             </article>
           )}

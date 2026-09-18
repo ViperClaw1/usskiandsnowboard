@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +48,7 @@ const JobBoard = () => {
   const { role } = useUserRole(user?.id);
 
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [locationFilter, setLocationFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [industryFilter, setIndustryFilter] = useState<string>("all");
@@ -73,13 +74,13 @@ const JobBoard = () => {
       if (typeFilter !== "all" && j.employment_type !== typeFilter) return false;
       if (industryFilter !== "all" && j.industry !== industryFilter) return false;
       if (locationFilter && !(j.location ?? "").toLowerCase().includes(locationFilter.toLowerCase())) return false;
-      if (search) {
+      if (deferredSearch) {
         const hay = `${j.job_title} ${j.company ?? ""} ${j.expert?.full_name ?? ""}`.toLowerCase();
-        if (!hay.includes(search.toLowerCase())) return false;
+        if (!hay.includes(deferredSearch.toLowerCase())) return false;
       }
       return true;
     });
-  }, [jobs, search, locationFilter, typeFilter, industryFilter]);
+  }, [jobs, deferredSearch, locationFilter, typeFilter, industryFilter]);
 
   const canPost = role === "expert" || role === "admin";
 

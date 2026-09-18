@@ -734,7 +734,11 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                             <p className="text-xs text-muted-foreground">{expert.company_name}</p>
                           )}
                           <div className="flex flex-wrap justify-center gap-1 mt-2">
-                            <Badge variant="grayout" className="text-xs">
+                            <Badge
+                              variant="grayout"
+                              className="text-xs"
+                              title="How closely this expert's background matches your interests and goals, based on your profile"
+                            >
                               {Math.round(similarity * 100)}% match
                             </Badge>
                             {expert.industry && (

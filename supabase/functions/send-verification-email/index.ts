@@ -87,6 +87,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Server-side invite code gate for new account creation — the client-side
+    // check is UX only; this is the enforcement point.
+    const inviteCode = typeof body?.invite_code === "string" ? body.invite_code.trim().toUpperCase() : "";
+    const validInviteCode = Deno.env.get("INVITE_CODE");
+    if (source === "signup" && validInviteCode && inviteCode !== validInviteCode.trim().toUpperCase()) {
+      return new Response(JSON.stringify({ error: "A valid invite code is required to create an account." }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const requesterIp = getRequesterIp(req);
     const sourceCooldown = SOURCE_COOLDOWN_SECONDS[source];
     const emailCutoffIso = new Date(Date.now() - sourceCooldown * 1000).toISOString();
