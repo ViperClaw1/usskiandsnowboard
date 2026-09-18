@@ -183,6 +183,53 @@ const fetchFeaturedExperts = async (interests: string[]): Promise<ExpertProfile[
   return [...matched, ...fillers].slice(0, 4);
 };
 
+interface SuggestedExpert {
+  expert: ExpertProfile;
+  similarity: number;
+}
+
+const fetchSuggestedExperts = async (athleteProfileId: string): Promise<SuggestedExpert[]> => {
+  const { data: matches, error } = await supabase.rpc("match_experts_for_athlete", {
+    _athlete_profile_id: athleteProfileId,
+    _match_count: 4,
+  });
+  if (error || !matches?.length) return [];
+
+  const ids = matches.map((m: { expert_profile_id: string }) => m.expert_profile_id);
+  const { data } = await supabase
+    .from("expert_profiles")
+    .select(
+      "id, user_id, full_name, photo_url, background_image_url, job_title, company_name, area_of_expertise, bio, industry, linkedin_url, ussa_affiliate, profile_views",
+    )
+    .in("id", ids)
+    .eq("is_public", true);
+
+  const byId = new Map(((data as ExpertProfile[]) ?? []).map((e) => [e.id, e]));
+  return matches
+    .map((m: { expert_profile_id: string; similarity: number }) => ({
+      expert: byId.get(m.expert_profile_id),
+      similarity: m.similarity,
+    }))
+    .filter((s: SuggestedExpert | { expert: ExpertProfile | undefined; similarity: number }): s is SuggestedExpert =>
+      Boolean(s.expert),
+    );
+};
+
+/** Human-readable "why we suggested this" — overlaps between the athlete's interests/skills and the expert's profile. */
+const getMatchNote = (expert: ExpertProfile, interests: string[], skills: string[]): string => {
+  const expertText = `${expert.industry ?? ""} ${expert.area_of_expertise ?? ""} ${expert.job_title ?? ""} ${
+    (expert.bio ?? "").slice(0, 500)
+  }`.toLowerCase();
+  const shared = [...interests, ...skills]
+    .map((t) => t.toLowerCase().trim())
+    .filter((t) => t.length > 2 && expertText.includes(t));
+  const unique = Array.from(new Set(shared)).slice(0, 3);
+  if (unique.length === 0) {
+    return "Strong overall alignment with your profile and career goals.";
+  }
+  return `Strong alignment with your interests in ${unique.join(", ")}.`;
+};
+
 const getShortIndustryBadgeLabel = (industry: string | null) => {
   if (!industry) return null;
   const primary = industry
