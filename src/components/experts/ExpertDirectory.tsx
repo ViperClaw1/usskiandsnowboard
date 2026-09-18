@@ -108,6 +108,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
   const [search, setSearch] = useState("");
   const [filterIndustry, setFilterIndustry] = useState("all");
   const [filterAffiliation, setFilterAffiliation] = useState("all");
+  const [sortBy, setSortBy] = useState<"match" | "newest">("match");
   const [selectedExpert, setSelectedExpert] = useState<ExpertProfile | null>(null);
   const [connectionDialogExpert, setConnectionDialogExpert] = useState<ExpertProfile | null>(null);
   
@@ -117,20 +118,55 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     queryFn: fetchExperts,
   });
 
+  // This athlete's own profile id (needed for match scores + request status)
+  const { data: athleteProfileId = null } = useQuery({
+    queryKey: ["expert-directory-athlete-profile-id", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("athlete_profiles")
+        .select("id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data?.id ?? null;
+    },
+    enabled: !!user && role === "athlete",
+  });
+
+  // Semantic match scores (same engine as "Suggested Experts for You")
+  const { data: matchRows = [] } = useQuery({
+    queryKey: ["expert-directory-matches", athleteProfileId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("match_experts_for_athlete", {
+        _athlete_profile_id: athleteProfileId!,
+        _match_count: 200,
+      });
+      if (error) throw error;
+      return (data ?? []) as { expert_profile_id: string; similarity: number }[];
+    },
+    enabled: !!athleteProfileId,
+  });
+
+  const matchScoreMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    matchRows.forEach((r) => {
+      m[r.expert_profile_id] = Math.round(Math.max(0, Math.min(1, r.similarity)) * 100);
+    });
+    return m;
+  }, [matchRows]);
+
+  const hasMatchScores = Object.keys(matchScoreMap).length > 0;
+
   // Existing requests by this athlete
   const { data: existingRequests = [] } = useQuery({
-    queryKey: ["expert-requests", user?.id],
+    queryKey: ["expert-requests", athleteProfileId],
     queryFn: async () => {
-      if (!user || role !== "athlete") return [];
-      const { data: ap } = await supabase.from("athlete_profiles").select("id").eq("user_id", user.id).maybeSingle();
-      if (!ap) return [];
       const { data } = await supabase
         .from("expert_connection_requests")
         .select("expert_id, status")
-        .eq("athlete_id", ap.id);
+        .eq("athlete_id", athleteProfileId!);
       return data ?? [];
     },
-    enabled: !!user && role === "athlete",
+    enabled: !!athleteProfileId,
   });
 
   const requestStatusMap = useMemo(() => {
