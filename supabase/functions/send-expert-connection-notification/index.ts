@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { emailTemplate, sendEmail } from "../_shared/email-template.ts";
+import { requireUserOrService } from "../_shared/auth-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,6 +58,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const unauthorized = await requireUserOrService(req, corsHeaders);
+  if (unauthorized) return unauthorized;
 
   try {
     const { request_id, notification_type = "request_created" } = await req.json();
