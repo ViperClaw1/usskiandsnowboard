@@ -383,8 +383,22 @@ const AthleteDirectory = () => {
       );
     }
 
+    if (hasMatchScores && sortBy === "match") {
+      result = [...result].sort((a, b) => (matchScoreMap[b.id] ?? -1) - (matchScoreMap[a.id] ?? -1));
+    }
+
     return result;
-  }, [athletes, searchTerm, filterSport, filterAvailability, filterSkills, filterCareerInterests]);
+  }, [
+    athletes,
+    searchTerm,
+    filterSport,
+    filterAvailability,
+    filterSkills,
+    filterCareerInterests,
+    hasMatchScores,
+    sortBy,
+    matchScoreMap,
+  ]);
 
   const totalFilteredAthletes = filteredAthletes.length;
   const { visibleCount, sentinelRef, hasMore } = useInfiniteScroll(totalFilteredAthletes, [
@@ -393,6 +407,7 @@ const AthleteDirectory = () => {
     filterAvailability,
     filterSkills,
     filterCareerInterests,
+    sortBy,
   ]);
 
   const paginatedAthletes = useMemo(
