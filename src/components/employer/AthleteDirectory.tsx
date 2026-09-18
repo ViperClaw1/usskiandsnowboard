@@ -664,6 +664,20 @@ const AthleteDirectory = () => {
           />
         </div>
 
+        {hasMatchScores && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as "match" | "newest")}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="match">Best match for you</SelectItem>
+                <SelectItem value="newest">Newest first</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {(filterSport.length > 0 ||
           filterAvailability !== "all" ||
           filterSkills ||
