@@ -892,6 +892,12 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                     </p>
                   </div>
                 ))}
+                {selectedMatchNote && (
+                  <div className="rounded-lg border bg-muted/40 p-3">
+                    <h4 className="font-medium mb-1">Why we suggested this</h4>
+                    <p className="text-sm text-muted-foreground">{selectedMatchNote}</p>
+                  </div>
+                )}
                 <Button className="w-full" onClick={() => onNavigate("experts")}>
                   Request Connection
                 </Button>
