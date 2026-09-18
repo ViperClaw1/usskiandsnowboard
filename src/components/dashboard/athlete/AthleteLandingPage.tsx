@@ -690,28 +690,25 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
           </Card>
         )}
 
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{getText("featured.title", "Featured Experts")}</CardTitle>
-              <Button variant="link" onClick={() => onNavigate("experts")}>
-                {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {featuredExperts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No experts match your interests yet — explore the full directory.
-              </p>
-            ) : (
+        {suggestedExperts.length > 0 ? (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{getText("suggested.title", "Suggested Experts for You")}</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("experts")}>
+                  {getText("suggested.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {featuredExperts.map((expert) => (
+                {suggestedExperts.map(({ expert, similarity }) => (
                   <Card
                     key={expert.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => {
                       setSelectedExpert(expert);
+                      setSelectedMatchNote(getMatchNote(expert, athleteInterests, dashboardData?.profile?.skills ?? []));
                       setExpertDialogOpen(true);
                     }}
                   >
@@ -736,24 +733,95 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           {expert.company_name && (
                             <p className="text-xs text-muted-foreground">{expert.company_name}</p>
                           )}
-                          {expert.industry && (
-                            <Badge
-                              variant="grayout"
-                              className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                              title={expert.industry}
-                            >
-                              {getShortIndustryBadgeLabel(expert.industry)}
+                          <div className="flex flex-wrap justify-center gap-1 mt-2">
+                            <Badge variant="grayout" className="text-xs">
+                              {Math.round(similarity * 100)}% match
                             </Badge>
-                          )}
+                            {expert.industry && (
+                              <Badge
+                                variant="grayout"
+                                className="text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                                title={expert.industry}
+                              >
+                                {getShortIndustryBadgeLabel(expert.industry)}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{getText("featured.title", "Featured Experts")}</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("experts")}>
+                  {getText("featured.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {featuredExperts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No experts match your interests yet — explore the full directory.
+                </p>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {featuredExperts.map((expert) => (
+                    <Card
+                      key={expert.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => {
+                        setSelectedExpert(expert);
+                        setSelectedMatchNote(null);
+                        setExpertDialogOpen(true);
+                      }}
+                    >
+                      <CardContent className="pt-6">
+                        <div className="flex flex-col items-center text-center space-y-3">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={expert.photo_url || ""} />
+                            <AvatarFallback>
+                              {(expert.full_name || "EX")
+                                .split(" ")
+                                .map((n) => n[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-sm">{expert.full_name}</p>
+                            {expert.job_title && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{expert.job_title}</p>
+                            )}
+                            {expert.company_name && (
+                              <p className="text-xs text-muted-foreground">{expert.company_name}</p>
+                            )}
+                            {expert.industry && (
+                              <Badge
+                                variant="grayout"
+                                className="mt-2 text-xs max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                                title={expert.industry}
+                              >
+                                {getShortIndustryBadgeLabel(expert.industry)}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       </section>
 
