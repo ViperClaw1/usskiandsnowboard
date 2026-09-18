@@ -472,6 +472,20 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
               </div>
 
               <div className="flex flex-wrap gap-2">
+                {requestStatusMap[selectedExpert.id] === "accepted" && (
+                  <Badge className="bg-emerald-600 text-white border-transparent hover:bg-emerald-600">
+                    ✓ Connected
+                  </Badge>
+                )}
+                {typeof matchScoreMap[selectedExpert.id] === "number" && (
+                  <Badge
+                    variant="outline"
+                    className="border-primary/40 text-primary"
+                    title="How closely this expert's background lines up with your interests, skills and goals."
+                  >
+                    {matchScoreMap[selectedExpert.id]}% match
+                  </Badge>
+                )}
                 {splitIndustries(selectedExpert.industry).map((ind) => (
                   <Badge key={ind} variant="secondary">{ind}</Badge>
                 ))}
