@@ -221,7 +221,7 @@ export const EditUserProfileDialog = ({
 
     const { error } = await supabase
       .from(tableFor(role))
-      .update(payload)
+      .update(payload as never)
       .eq("id", profileId);
     setSaving(false);
     if (error) {
