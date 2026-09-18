@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     }
 
     const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const token = authHeader.replace(/^Bearer\s*/i, "").trim();
     // DB triggers (pg_net) may reach this function without a usable secret, so an
     // absent token or the public anon key is treated as an internal trigger call.
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
