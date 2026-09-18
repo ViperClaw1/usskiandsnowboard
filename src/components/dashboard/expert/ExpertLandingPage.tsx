@@ -745,10 +745,10 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
                           <div className="flex flex-wrap justify-center gap-1 mt-2">
                             <Badge
                               variant="grayout"
-                              className="text-xs"
+                              className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(similarity)]}`}
                               title="How closely this athlete's interests and goals match your expertise, based on their profile"
                             >
-                              {Math.round(similarity * 100)}% match
+                              {MATCH_CATEGORY_LABEL[getMatchCategory(similarity)]}
                             </Badge>
                             {athlete.sport_discipline?.map((d) => (
                               <Badge key={d} variant="secondary" className="text-xs">

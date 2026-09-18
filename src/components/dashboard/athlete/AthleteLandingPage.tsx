@@ -736,10 +736,10 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
                           <div className="flex flex-wrap justify-center gap-1 mt-2">
                             <Badge
                               variant="grayout"
-                              className="text-xs"
+                              className={`text-xs ${MATCH_CATEGORY_CLASS[getMatchCategory(similarity)]}`}
                               title="How closely this expert's background matches your interests and goals, based on your profile"
                             >
-                              {Math.round(similarity * 100)}% match
+                              {MATCH_CATEGORY_LABEL[getMatchCategory(similarity)]}
                             </Badge>
                             {expert.industry && (
                               <Badge
