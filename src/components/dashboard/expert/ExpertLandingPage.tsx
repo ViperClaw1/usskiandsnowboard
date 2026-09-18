@@ -712,51 +712,102 @@ export const ExpertLandingPage = ({ user, onNavigate, onProfileUpdated }: Expert
           </Card>
         )}
 
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{getText("featured_athletes.title", "Featured Athletes")}</CardTitle>
-              <Button variant="link" onClick={() => onNavigate("athletes")}>
-                {getText("featured_athletes.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {featuredAthletes.map((athlete) => (
-                <Card
-                  key={athlete.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => {
-                    setSelectedAthlete(athlete);
-                    setAthleteDialogOpen(true);
-                  }}
-                >
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col items-center text-center space-y-3">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={athlete.photo_url || ""} />
-                        <AvatarFallback>{getInitials(athlete.profiles?.full_name || "Athlete") || "AT"}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
-                        {athlete.sport_discipline && athlete.sport_discipline.length > 0 && (
-                          <div className="mt-2 flex flex-wrap justify-center gap-1">
-                            {athlete.sport_discipline.map((d) => (
+        {suggestedAthletes.length > 0 ? (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{getText("suggested_athletes.title", "Athletes to Mentor")}</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("athletes")}>
+                  {getText("suggested_athletes.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {suggestedAthletes.map(({ athlete, similarity }) => (
+                  <Card
+                    key={athlete.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => {
+                      setSelectedAthlete(athlete);
+                      setSelectedMatchNote(getAthleteMatchNote(athlete, profile));
+                      setAthleteDialogOpen(true);
+                    }}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={athlete.photo_url || ""} />
+                          <AvatarFallback>{getInitials(athlete.profiles?.full_name || "Athlete") || "AT"}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
+                          <div className="flex flex-wrap justify-center gap-1 mt-2">
+                            <Badge variant="grayout" className="text-xs">
+                              {Math.round(similarity * 100)}% match
+                            </Badge>
+                            {athlete.sport_discipline?.map((d) => (
                               <Badge key={d} variant="secondary" className="text-xs">
                                 {d}
                               </Badge>
                             ))}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{getText("featured_athletes.title", "Featured Athletes")}</CardTitle>
+                <Button variant="link" onClick={() => onNavigate("athletes")}>
+                  {getText("featured_athletes.view_all", "View All")} <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {featuredAthletes.map((athlete) => (
+                  <Card
+                    key={athlete.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => {
+                      setSelectedAthlete(athlete);
+                      setSelectedMatchNote(null);
+                      setAthleteDialogOpen(true);
+                    }}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={athlete.photo_url || ""} />
+                          <AvatarFallback>{getInitials(athlete.profiles?.full_name || "Athlete") || "AT"}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-sm">{athlete.profiles?.full_name || "Athlete"}</p>
+                          {athlete.sport_discipline && athlete.sport_discipline.length > 0 && (
+                            <div className="mt-2 flex flex-wrap justify-center gap-1">
+                              {athlete.sport_discipline.map((d) => (
+                                <Badge key={d} variant="secondary" className="text-xs">
+                                  {d}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       </section>
 
