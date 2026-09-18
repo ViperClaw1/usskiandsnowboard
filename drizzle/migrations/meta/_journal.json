@@ -22,6 +22,13 @@
       "when": 1789691984776,
       "tag": "0002_tighten_rls_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789692236141,
+      "tag": "0003_grant_has_role_execute_to_anon",
+      "breakpoints": true
     }
   ]
 }
