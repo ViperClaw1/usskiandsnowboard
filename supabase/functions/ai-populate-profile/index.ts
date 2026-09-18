@@ -462,6 +462,7 @@ Deno.serve(async (req) => {
 ABSOLUTE RULES — read carefully:
 - NEVER invent, guess, or infer facts that are not literally in the provided content. Do not guess based on the person's name, the URL slug, or what's common in their industry.
 - Only attribute information to "${name}" if the content explicitly mentions them by name (or by an obvious variation/initials). Do NOT attribute generic company information to this individual.
+- If the content mentions several people with similar names, use ONLY the content that also matches "${companyName}" or this person's specific role. When in doubt, leave the field out.
 - If a field is not clearly supported by the content, OMIT it. For required fields (job_title, area_of_expertise, bio): if you can't derive them from content that explicitly mentions the person, use "Unknown" for job_title / area_of_expertise, and write a one-sentence bio stating the person's name, the company, and that no further public details were available.
 - company_name MUST be "${companyName}" unless content clearly shows they no longer work there.
 - bio: 2-4 sentences, ONLY facts found about this specific person in the content.
