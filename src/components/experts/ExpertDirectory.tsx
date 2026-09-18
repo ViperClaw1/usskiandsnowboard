@@ -192,6 +192,17 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     return m;
   }, [existingRequests]);
 
+  // ==============================
+  // Suggested Experts for You — top semantic matches, shown atop the directory
+  // ==============================
+  const suggestedExperts = useMemo(() => {
+    if (!hasMatchScores || adminMode || role !== "athlete") return [];
+    return experts
+      .filter((e) => matchScoreMap[e.id] !== undefined && requestStatusMap[e.id] !== "accepted")
+      .sort((a, b) => (matchScoreMap[b.id] ?? 0) - (matchScoreMap[a.id] ?? 0))
+      .slice(0, 4);
+  }, [experts, matchScoreMap, requestStatusMap, hasMatchScores, adminMode, role]);
+
   const filtered = useMemo(() => {
     let res = experts;
     if (search.trim()) {
