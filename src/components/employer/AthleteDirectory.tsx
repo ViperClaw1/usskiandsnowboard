@@ -278,6 +278,72 @@ const AthleteDirectory = () => {
   const existingRequests = existingRequestsMap;
 
   // ==============================
+  // Expert viewer — own profile id, semantic match scores and connection status
+  // ==============================
+  const isExpertViewer = userRole === "expert";
+
+  const { data: expertProfileId = null } = useQuery({
+    queryKey: ["athlete-directory-expert-profile-id", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("expert_profiles")
+        .select("id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data?.id ?? null;
+    },
+    enabled: !!user && isExpertViewer,
+  });
+
+  const { data: matchRows = [] } = useQuery({
+    queryKey: ["athlete-directory-matches", expertProfileId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("match_athletes_for_expert", {
+        _expert_profile_id: expertProfileId!,
+        _match_count: 200,
+      });
+      if (error) throw error;
+      return (data ?? []) as { athlete_profile_id: string; similarity: number }[];
+    },
+    enabled: !!expertProfileId,
+  });
+
+  const matchScoreMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    matchRows.forEach((r) => {
+      m[r.athlete_profile_id] = Math.round(Math.max(0, Math.min(1, r.similarity)) * 100);
+    });
+    return m;
+  }, [matchRows]);
+
+  const hasMatchScores = Object.keys(matchScoreMap).length > 0;
+  const [sortBy, setSortBy] = useState<"match" | "newest">("match");
+
+  const { data: expertRequests = [] } = useQuery({
+    queryKey: ["athlete-directory-expert-requests", expertProfileId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("expert_connection_requests")
+        .select("athlete_id, status")
+        .eq("expert_id", expertProfileId!);
+      return data ?? [];
+    },
+    enabled: !!expertProfileId,
+  });
+
+  /** athlete_id -> status, combining employer and expert connection records */
+  const connectionStatusMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    existingRequests.forEach((status, athleteId) => {
+      m[athleteId] = status;
+    });
+    expertRequests.forEach((r: { athlete_id: string; status: string }) => {
+      m[r.athlete_id] = r.status;
+    });
+    return m;
+  }, [existingRequests, expertRequests]);
+
+  // ==============================
   // Derived Values — Filtered Athletes
   // ==============================
   const filteredAthletes = useMemo(() => {
