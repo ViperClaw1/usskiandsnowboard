@@ -65,6 +65,20 @@ function getPrimaryIndustry(industry: string | null): string | null {
   return splitIndustries(industry)[0] ?? null;
 }
 
+/** Human-readable "why we suggested this" — overlaps between the athlete's interests/skills and the expert's profile. */
+function getMatchNote(expert: ExpertProfile, interests: string[], skills: string[]): string {
+  const expertText = `${expert.industry ?? ""} ${expert.area_of_expertise ?? ""} ${expert.job_title ?? ""} ${
+    (expert.bio ?? "").slice(0, 500)
+  }`.toLowerCase();
+  const shared = [...interests, ...skills]
+    .map((t) => t.toLowerCase().trim())
+    .filter((t) => t.length > 2 && expertText.includes(t));
+  const unique = Array.from(new Set(shared)).slice(0, 3);
+  return unique.length === 0
+    ? "Strong overall alignment with your profile and career goals."
+    : `Strong alignment with your interests in ${unique.join(", ")}.`;
+}
+
 // ==============================
 // Fetch
 // ==============================
@@ -118,19 +132,20 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     queryFn: fetchExperts,
   });
 
-  // This athlete's own profile id (needed for match scores + request status)
-  const { data: athleteProfileId = null } = useQuery({
-    queryKey: ["expert-directory-athlete-profile-id", user?.id],
+  // This athlete's own profile (id + interests/skills for match notes)
+  const { data: athleteProfile = null } = useQuery({
+    queryKey: ["expert-directory-athlete-profile", user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from("athlete_profiles")
-        .select("id")
+        .select("id, career_interests, skills")
         .eq("user_id", user!.id)
         .maybeSingle();
-      return data?.id ?? null;
+      return (data ?? null) as { id: string; career_interests: string[] | null; skills: string[] | null } | null;
     },
     enabled: !!user && role === "athlete",
   });
+  const athleteProfileId = athleteProfile?.id ?? null;
 
   // Semantic match scores (same engine as "Suggested Experts for You")
   const { data: matchRows = [] } = useQuery({
