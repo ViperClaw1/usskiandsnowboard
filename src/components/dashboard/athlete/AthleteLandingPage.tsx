@@ -300,6 +300,14 @@ export const AthleteLandingPage = ({ user, onNavigate, onProfileUpdated }: Athle
     enabled: !!dashboardData?.profile,
   });
 
+  // AI smart matching: falls back to the keyword-scored Featured Experts above when empty.
+  const { data: suggestedExperts = [] } = useQuery<SuggestedExpert[]>({
+    queryKey: ["athlete-landing-suggested-experts", dashboardData?.profile?.id],
+    queryFn: () => fetchSuggestedExperts(dashboardData!.profile!.id),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!dashboardData?.profile,
+  });
+
   const profile = dashboardData?.profile ?? null;
   const connectionStats = dashboardData?.connectionStats ?? { pending: 0, accepted: 0, rejected: 0 };
   const connections = dashboardData?.connections ?? [];
