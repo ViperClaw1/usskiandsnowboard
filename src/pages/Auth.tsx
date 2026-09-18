@@ -368,6 +368,7 @@ const Auth = () => {
     password: string;
     fullName: string;
     userType: "athlete" | "employer" | "expert";
+    inviteCode?: string;
   }) => {
     const { data, error } = await supabase.functions.invoke("send-verification-email", {
       body: {
@@ -376,6 +377,7 @@ const Auth = () => {
         full_name: params.fullName,
         user_type: params.userType,
         source: "signup",
+        invite_code: params.inviteCode || "",
         redirect_to: `${window.location.origin}/dashboard`,
       },
     });
@@ -436,10 +438,8 @@ const Auth = () => {
       setInviteCodeError("Please enter your invite code.");
       return;
     }
-    if (inviteCodeInput.trim().toUpperCase() !== "USSS26") {
-      setInviteCodeError("Invalid invite code. Please check and try again.");
-      return;
-    }
+    // The code itself is validated server-side at account creation; the client
+    // never sees the real value.
     setInviteCodeError("");
     setInviteCode(inviteCodeInput.trim().toUpperCase());
     setStep("signup-with-code");
@@ -466,20 +466,12 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      if (step === "signup-with-code") {
-        const validInviteCode = "USSS26";
-        if (inviteCode.trim().toLowerCase() !== validInviteCode.toLowerCase()) {
-          setFormError("Invalid invite code.");
-          setLoading(false);
-          return;
-        }
-      }
-
       const signupCooldown = await signUpWithCustomVerification({
         email: normalizedEmail,
         password,
         fullName,
         userType,
+        inviteCode: step === "signup-with-code" ? inviteCode.trim() : "",
       });
 
       toast.success("Account created! Please check your email to verify your account.");
