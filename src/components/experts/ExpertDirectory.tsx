@@ -205,21 +205,26 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
         );
       }
     }
-    // Sort: experts created within the last 30 days first (newest first), then the rest by created_at desc
+    // Sort: best match first when scores exist and that sort is selected,
+    // otherwise experts created within the last 30 days first, then created_at desc
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
     const isNewExpert = (e: ExpertProfile) =>
       e.created_at ? now - new Date(e.created_at).getTime() <= THIRTY_DAYS_MS : false;
-    res = [...res].sort((a, b) => {
-      const aNew = isNewExpert(a) ? 1 : 0;
-      const bNew = isNewExpert(b) ? 1 : 0;
-      if (aNew !== bNew) return bNew - aNew;
-      const at = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return bt - at;
-    });
+    if (hasMatchScores && sortBy === "match") {
+      res = [...res].sort((a, b) => (matchScoreMap[b.id] ?? -1) - (matchScoreMap[a.id] ?? -1));
+    } else {
+      res = [...res].sort((a, b) => {
+        const aNew = isNewExpert(a) ? 1 : 0;
+        const bNew = isNewExpert(b) ? 1 : 0;
+        if (aNew !== bNew) return bNew - aNew;
+        const at = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bt = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bt - at;
+      });
+    }
     return res;
-  }, [experts, search, filterIndustry, filterAffiliation]);
+  }, [experts, search, filterIndustry, filterAffiliation, sortBy, hasMatchScores, matchScoreMap]);
 
 
   const totalFilteredExperts = filtered.length;
@@ -227,6 +232,7 @@ export const ExpertDirectory = ({ adminMode = false, onAddExpert }: ExpertDirect
     search,
     filterIndustry,
     filterAffiliation,
+    sortBy,
   ]);
 
   const paginatedExperts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
